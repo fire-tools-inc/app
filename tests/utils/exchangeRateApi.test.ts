@@ -15,17 +15,18 @@ vi.mock('../../src/utils/priceApi', () => ({
 
 // Mock global fetch
 const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
 
 describe('Exchange Rate API Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearExchangeRateCache();
     mockFetch.mockReset();
+    vi.stubGlobal('fetch', mockFetch);
   });
 
   afterEach(() => {
     clearExchangeRateCache();
+    vi.unstubAllGlobals();
   });
 
   describe('toExchangeRatesMap', () => {

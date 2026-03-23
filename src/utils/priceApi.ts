@@ -154,9 +154,9 @@ export async function fetchMonthlyClosingPrices(
   try {
     // Calculate date range: go back `months` months from now
     const endDate = Math.floor(Date.now() / 1000);
-    const startDate = Math.floor(
-      new Date(Date.now() - months * 30 * 24 * 60 * 60 * 1000).getTime() / 1000
-    );
+    const startDateObj = new Date();
+    startDateObj.setMonth(startDateObj.getMonth() - months);
+    const startDate = Math.floor(startDateObj.getTime() / 1000);
 
     const url = `${YAHOO_CHART_API_URL}/${encodeURIComponent(ticker)}?interval=1mo&period1=${startDate}&period2=${endDate}`;
 

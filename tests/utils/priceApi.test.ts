@@ -11,17 +11,18 @@ import { PriceFetchResult, YAHOO_DAILY_LIMIT } from '../../src/types/priceApi';
 
 // Mock global fetch
 const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
 
 describe('Price API Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearPriceCache();
     mockFetch.mockReset();
+    vi.stubGlobal('fetch', mockFetch);
   });
 
   afterEach(() => {
     clearPriceCache();
+    vi.unstubAllGlobals();
   });
 
   describe('hasRateLimitCapacity', () => {
