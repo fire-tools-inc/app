@@ -70,6 +70,7 @@ export function useAssetPrices(): UseAssetPricesReturn {
         }
 
         // Update marketPrice and recalculate currentValue if shares are tracked
+        // Preserve acquisitionPrice — if not set, default to the original pricePerShare
         const shares = asset.shares ?? 1;
         const newValue = shares * newPrice;
 
@@ -78,6 +79,7 @@ export function useAssetPrices(): UseAssetPricesReturn {
           ...asset,
           marketPrice: newPrice,
           currentValue: newValue,
+          acquisitionPrice: asset.acquisitionPrice ?? asset.pricePerShare,
         };
       });
 

@@ -125,6 +125,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
   const [isin, setIsin] = useState('');
   const [shares, setShares] = useState<string>('1');
   const [pricePerShare, setPricePerShare] = useState<string>('');
+  const [acquisitionPrice, setAcquisitionPrice] = useState<string>('');
   const [currency, setCurrency] = useState<SupportedCurrency>(defaultCurrency);
   const [targetMode, setTargetMode] = useState<AllocationMode>('PERCENTAGE');
   const [targetPercent, setTargetPercent] = useState<string>('0');
@@ -178,6 +179,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
         setIsin(asset.isin || '');
         setShares(asset.shares?.toString() || '1');
         setPricePerShare(asset.pricePerShare?.toString() || '');
+        setAcquisitionPrice(asset.acquisitionPrice?.toString() || '');
         setCurrency(asset.originalCurrency || 'EUR');
         setTargetMode(asset.targetMode);
         setTargetPercent(asset.targetPercent?.toString() || '0');
@@ -206,6 +208,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
         setTicker(holding.ticker);
         setShares(holding.shares.toString());
         setPricePerShare(holding.pricePerShare.toString());
+        setAcquisitionPrice(holding.acquisitionPrice?.toString() || '');
         setCurrency(holding.currency);
         setNote(holding.note || '');
         setInstitutionCode('');
@@ -246,6 +249,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
       setIsin('');
       setShares('1');
       setPricePerShare('');
+      setAcquisitionPrice('');
       setCurrency(defaultCurrency);
       setTargetMode('PERCENTAGE');
       setTargetPercent('0');
@@ -514,6 +518,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
     if (mode === 'assetAllocation') {
       // Asset Allocation mode
+      const acqPriceNum = parseFloat(acquisitionPrice) || undefined;
       const asset: Omit<Asset, 'id'> & { id?: string } = {
         ...(initialData && { id: (initialData as Asset).id }),
         name: name.trim(),
@@ -524,6 +529,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
         currentValue: valueInEUR,
         shares: sharesNum,
         pricePerShare: priceNum,
+        acquisitionPrice: acqPriceNum,
         marketPrice: priceNum,
         originalCurrency: currency !== 'EUR' ? currency : undefined,
         originalValue: currency !== 'EUR' ? valueNum : undefined,
@@ -539,12 +545,14 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
       onSubmit(asset);
     } else {
       // Net Worth Tracker mode
+      const acqPriceNum = parseFloat(acquisitionPrice) || undefined;
       const holding: Omit<AssetHolding, 'id'> & { id?: string } = {
         ...(initialData && { id: (initialData as AssetHolding).id }),
         name: name.trim(),
         ticker: generatedTicker,
         shares: sharesNum,
         pricePerShare: priceNum,
+        acquisitionPrice: acqPriceNum,
         currency,
         assetClass: mapToNetWorthAssetClass(assetClass, subAssetType),
         note: note.trim() || undefined,
@@ -562,6 +570,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
     setIsin('');
     setShares('1');
     setPricePerShare('');
+    setAcquisitionPrice('');
     setCurrency(defaultCurrency);
     setTargetPercent('0');
     setNote('');
@@ -838,37 +847,61 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
           {/* Only show shares and price fields for non-cash accounts, non-value-only assets, or for MONEY_ETF */}
           {(assetClass !== 'CASH' || subAssetType === 'MONEY_ETF') && !VALUE_ONLY_TYPES.includes(subAssetType) && (
-            <div className="form-row">
-              <div className="form-group">
-                <label>Number of Shares *</label>
-                <input
-                  type="number"
-                  value={shares}
-                  onChange={(e) => handleSharesChange(e.target.value)}
-                  placeholder="e.g., 100"
-                  className="dialog-input"
-                  min="0"
-                  step="any"
-                  required
-                />
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Number of Shares *</label>
+                  <input
+                    type="number"
+                    value={shares}
+                    onChange={(e) => handleSharesChange(e.target.value)}
+                    placeholder="e.g., 100"
+                    className="dialog-input"
+                    min="0"
+                    step="any"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Price per Share (Market)</label>
+                  <input
+                    type="text"
+                    value={pricePerShare ? `${parseFloat(pricePerShare).toFixed(2)}` : '—'}
+                    className="dialog-input dialog-input-calculated"
+                    disabled
+                    title="Fetched automatically from Yahoo Finance"
+                  />
+                  {!pricePerShare && needsTicker && ticker.trim() && (
+                    <span className="setting-help" style={{ color: 'var(--warning)' }}>
+                      Click the fetch button next to the ticker to get the price
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Price per Share (Market)</label>
-                <input
-                  type="text"
-                  value={pricePerShare ? `${parseFloat(pricePerShare).toFixed(2)}` : '—'}
-                  className="dialog-input dialog-input-calculated"
-                  disabled
-                  title="Fetched automatically from Yahoo Finance"
-                />
-                {!pricePerShare && needsTicker && ticker.trim() && (
-                  <span className="setting-help" style={{ color: 'var(--warning)' }}>
-                    Click the fetch button next to the ticker to get the price
-                  </span>
-                )}
-              </div>
-            </div>
+              {/* Acquisition price — editable, shown for share-based assets */}
+              {needsTicker && (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Acquisition Price per Share</label>
+                    <input
+                      type="number"
+                      value={acquisitionPrice}
+                      onChange={(e) => setAcquisitionPrice(e.target.value)}
+                      placeholder={pricePerShare ? `Defaults to ${parseFloat(pricePerShare).toFixed(2)}` : 'Price you paid'}
+                      className="dialog-input"
+                      min="0"
+                      step="any"
+                      title="The price at which you originally bought this asset"
+                    />
+                    <span className="setting-help">
+                      Leave blank to use market price as acquisition price
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Value is directly editable for cash accounts (not MONEY_ETF) and PROPERTY assets */}

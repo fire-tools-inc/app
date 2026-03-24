@@ -34,6 +34,8 @@ import { loadSettings, saveSettings, type DateFormat } from '../utils/cookieSett
 import { formatDate } from '../utils/dateFormatter';
 import { generateDemoNetWorthDataForYear } from '../utils/defaults';
 import { syncAssetAllocationToNetWorth, syncNetWorthToAssetAllocation, DEFAULT_ASSET_CLASS_TARGETS } from '../utils/dataSync';
+import { fetchMultipleClosingPricesForMonth } from '../utils/priceApi';
+import { fetchAssetPrices } from '../utils/dcaCalculator';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
 import { DataManagement } from './DataManagement';
 import { HistoricalNetWorthChart, ChartViewMode } from './HistoricalNetWorthChart';
@@ -396,14 +398,64 @@ export function NetWorthTrackerPage() {
         const existingCashNames = new Set(monthData.cashEntries.map(c => c.accountName.toLowerCase()));
         const existingPensionNames = new Set(monthData.pensions.map(p => p.name.toLowerCase()));
         
+        // Collect tickers for price fetching
+        const tickersToFetch: string[] = [];
+        
         // Add assets that don't already exist (by name)
+        // Carry forward acquisitionPrice, pricePerShare will be updated by month-end fetch
         for (const asset of prevMonthData.assets) {
           if (!existingAssetNames.has(asset.name.toLowerCase())) {
             monthData.assets.push({
               ...asset,
               id: generateNetWorthId(),
+              acquisitionPrice: asset.acquisitionPrice ?? asset.pricePerShare,
             });
             existingAssetNames.add(asset.name.toLowerCase());
+            if (asset.ticker && asset.ticker.trim().length > 0) {
+              tickersToFetch.push(asset.ticker.trim().toUpperCase());
+            }
+          }
+        }
+        
+        // Fetch month-end closing prices for inherited ticker-based assets
+        if (tickersToFetch.length > 0) {
+          const isCurrentMonth = selectedYear === currentYear && selectedMonth === currentMonth;
+          if (isCurrentMonth) {
+            // For current month: fetch latest market prices
+            fetchAssetPrices([...new Set(tickersToFetch)]).then(prices => {
+              setData(prevData => {
+                const updated = deepCloneData(prevData);
+                const yr = updated.years.find(y => y.year === selectedYear);
+                const mo = yr?.months.find(m => m.month === selectedMonth);
+                if (mo) {
+                  for (const asset of mo.assets) {
+                    const ticker = asset.ticker?.trim().toUpperCase();
+                    if (ticker && prices[ticker] != null) {
+                      asset.pricePerShare = prices[ticker]!;
+                    }
+                  }
+                }
+                return updated;
+              });
+            });
+          } else {
+            // For past months: fetch closing price for that month's last trading day
+            fetchMultipleClosingPricesForMonth([...new Set(tickersToFetch)], selectedYear, selectedMonth).then(prices => {
+              setData(prevData => {
+                const updated = deepCloneData(prevData);
+                const yr = updated.years.find(y => y.year === selectedYear);
+                const mo = yr?.months.find(m => m.month === selectedMonth);
+                if (mo) {
+                  for (const asset of mo.assets) {
+                    const ticker = asset.ticker?.trim().toUpperCase();
+                    if (ticker && prices[ticker]) {
+                      asset.pricePerShare = prices[ticker]!.price;
+                    }
+                  }
+                }
+                return updated;
+              });
+            });
           }
         }
         
@@ -1033,7 +1085,8 @@ export function NetWorthTrackerPage() {
                       <th>Ticker</th>
                       <th>Class</th>
                       <th>Shares</th>
-                      <th className="amount-col">Price</th>
+                      <th className="amount-col">Mkt Price</th>
+                      <th className="amount-col">Acq. Price</th>
                       <th className="amount-col">Value</th>
                       <th className="actions-col">Actions</th>
                     </tr>
@@ -1050,6 +1103,7 @@ export function NetWorthTrackerPage() {
                           <td>{ASSET_CLASSES.find(c => c.id === asset.assetClass)?.name || asset.assetClass}</td>
                           <td>{isValueOnlyAsset ? '-' : <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayNumber(asset.shares)}</PrivacyBlur>}</td>
                           <td className="amount-col">{isValueOnlyAsset ? '-' : <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(asset.pricePerShare, asset.currency)}</PrivacyBlur>}</td>
+                          <td className="amount-col">{isValueOnlyAsset || !asset.acquisitionPrice ? '-' : <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(asset.acquisitionPrice, asset.currency)}</PrivacyBlur>}</td>
                           <td className="amount-col"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(asset.shares * asset.pricePerShare, asset.currency)}</PrivacyBlur></td>
                           <td className="actions-col">
                             <button

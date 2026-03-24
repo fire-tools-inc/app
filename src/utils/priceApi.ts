@@ -223,3 +223,85 @@ export function getDataFreshnessMessage(result: PriceFetchResult): string {
   const latest = result.prices[result.prices.length - 1];
   return `Last data from ${latest.date} via Yahoo Finance`;
 }
+
+/**
+ * Fetch the closing price for a specific month's last trading day.
+ * For past months, returns the closing price from the last trading day of that month.
+ * For the current month, returns the most recent closing price available.
+ *
+ * @param ticker - Stock/ETF ticker symbol
+ * @param year - Target year
+ * @param month - Target month (1-12)
+ * @returns The closing price and date, or null if unavailable
+ */
+export async function fetchClosingPriceForMonth(
+  ticker: string,
+  year: number,
+  month: number
+): Promise<{ price: number; date: string } | null> {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // Calculate how many months back we need to look
+  const monthsBack = (currentYear - year) * 12 + (currentMonth - month) + 1;
+
+  // Fetch enough monthly data to cover the target month
+  const result = await fetchMonthlyClosingPrices(ticker, Math.max(monthsBack + 1, 2));
+
+  if (result.prices.length === 0) return null;
+
+  // Find the price entry whose date falls within the target month
+  // Yahoo Finance monthly data gives the closing price for each month
+  const targetPrice = result.prices.find(p => {
+    const d = new Date(p.date);
+    return d.getFullYear() === year && d.getMonth() + 1 === month;
+  });
+
+  if (targetPrice) {
+    return { price: targetPrice.close, date: targetPrice.date };
+  }
+
+  // If exact month not found, find the closest earlier date
+  const targetEnd = new Date(year, month, 0); // last day of target month
+  let closest = null;
+  for (const p of result.prices) {
+    const d = new Date(p.date);
+    if (d <= targetEnd) {
+      closest = p;
+    }
+  }
+
+  if (closest) {
+    return { price: closest.close, date: closest.date };
+  }
+
+  return null;
+}
+
+/**
+ * Fetch closing prices for multiple tickers for a specific month.
+ * Returns a map of ticker → closing price.
+ *
+ * @param tickers - Array of ticker symbols
+ * @param year - Target year
+ * @param month - Target month (1-12)
+ * @returns Map of ticker to { price, date } or null if unavailable
+ */
+export async function fetchMultipleClosingPricesForMonth(
+  tickers: string[],
+  year: number,
+  month: number
+): Promise<Record<string, { price: number; date: string } | null>> {
+  const results: Record<string, { price: number; date: string } | null> = {};
+
+  const uniqueTickers = [...new Set(
+    tickers.filter(t => t && t.trim().length > 0).map(t => t.trim().toUpperCase())
+  )];
+
+  for (const ticker of uniqueTickers) {
+    results[ticker] = await fetchClosingPriceForMonth(ticker, year, month);
+  }
+
+  return results;
+}

@@ -55,6 +55,7 @@ export interface Asset {
   currentValue: number; // Value in EUR (converted if entered in another currency)
   shares?: number; // Number of shares owned (optional, for stocks/ETFs/bonds)
   pricePerShare?: number; // Price per share (optional, for stocks/ETFs/bonds)
+  acquisitionPrice?: number; // Price per share at which the asset was acquired (editable)
   originalCurrency?: SupportedCurrency; // The currency the value was originally entered in (defaults to EUR)
   originalValue?: number; // The original value before conversion to EUR
   targetMode: AllocationMode;

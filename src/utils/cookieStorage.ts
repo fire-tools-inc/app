@@ -107,6 +107,12 @@ export function loadAssetAllocation(): {
         const parsedAssets = JSON.parse(decryptedAssets);
         if (Array.isArray(parsedAssets) && parsedAssets.every(isValidAsset)) {
           assets = parsedAssets;
+          // Migration: backfill acquisitionPrice for assets that don't have it
+          for (const asset of assets) {
+            if (asset.acquisitionPrice === undefined && asset.pricePerShare !== undefined) {
+              asset.acquisitionPrice = asset.pricePerShare;
+            }
+          }
         }
       }
     }
@@ -423,6 +429,22 @@ export function saveNetWorthTrackerData(data: NetWorthTrackerData): void {
 }
 
 /**
+ * Migration: backfill acquisitionPrice for assets that don't have it.
+ * Sets acquisitionPrice = pricePerShare for existing data where acquisitionPrice is missing.
+ */
+function migrateAcquisitionPrice(data: NetWorthTrackerData): void {
+  for (const yearData of data.years) {
+    for (const monthData of yearData.months) {
+      for (const asset of monthData.assets) {
+        if (asset.acquisitionPrice === undefined) {
+          asset.acquisitionPrice = asset.pricePerShare;
+        }
+      }
+    }
+  }
+}
+
+/**
  * Load Net Worth Tracker data from encrypted localStorage
  */
 export function loadNetWorthTrackerData(): NetWorthTrackerData | null {
@@ -448,6 +470,8 @@ export function loadNetWorthTrackerData(): NetWorthTrackerData | null {
       if (decryptedData) {
         const parsed = JSON.parse(decryptedData);
         if (isValidNetWorthTrackerData(parsed)) {
+          // Migration: backfill acquisitionPrice for assets that don't have it
+          migrateAcquisitionPrice(parsed);
           return parsed;
         }
       }

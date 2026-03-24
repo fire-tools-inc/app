@@ -482,6 +482,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.pricePerShare')}>
                       Price/Share <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.pricePerShare')}</span>
                     </th>
+                    <th>Acq. Price</th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.currentValue')}>
                       Current Value <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentValue')}</span>
                     </th>
@@ -615,6 +616,13 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                             </div>
                           ) : (
                             '-'
+                          )}
+                        </td>
+                        <td className="currency-value">
+                          {isCashAsset || isValueOnlyAsset || !asset.acquisitionPrice ? (
+                            '-'
+                          ) : (
+                            <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(asset.acquisitionPrice, currency)}</PrivacyBlur>
                           )}
                         </td>
                         <td className="currency-value">

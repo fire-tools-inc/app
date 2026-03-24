@@ -62,7 +62,8 @@ export interface AssetHolding {
   ticker: string;
   name: string;
   shares: number; // Number of shares owned
-  pricePerShare: number; // Price per share at the time of entry
+  pricePerShare: number; // Current market price per share (closing price for the month)
+  acquisitionPrice?: number; // Price per share at which the asset was acquired (editable)
   currency: SupportedCurrency;
   assetClass: 'STOCKS' | 'BONDS' | 'ETF' | 'CRYPTO' | 'REAL_ESTATE' | 'PRIVATE_EQUITY' | 'VEHICLE' | 'COLLECTIBLE' | 'ART' | 'COMMODITIES' | 'OTHER';
   note?: string;

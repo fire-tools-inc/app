@@ -203,6 +203,7 @@ export function syncAssetAllocationToNetWorth(
         name: asset.name,
         shares,
         pricePerShare,
+        acquisitionPrice: asset.acquisitionPrice ?? pricePerShare,
         currency: (asset.originalCurrency || 'EUR') as SupportedCurrency,
         assetClass: mapAssetClassToNetWorth(asset.assetClass),
         // Preserve sync metadata (hidden from UI)
@@ -272,6 +273,7 @@ export function syncNetWorthToAssetAllocation(
       currentValue: holding.shares * holding.pricePerShare,
       shares: holding.shares,
       pricePerShare: holding.pricePerShare,
+      acquisitionPrice: holding.acquisitionPrice,
       originalCurrency: holding.currency as SupportedCurrency,
       originalValue: holding.shares * holding.pricePerShare,
       isin: holding.isin,
