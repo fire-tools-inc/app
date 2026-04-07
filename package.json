@@ -29,10 +29,10 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.2",
-    "jsdom": "^29.0.1",
+    "@vitest/coverage-v8": "^4.1.3",
+    "jsdom": "^29.0.2",
     "typescript": "^6.0.2",
-    "vite": "^8.0.5",
+    "vite": "^8.0.6",
     "vitest": "^4.0.18"
   },
   "dependencies": {
@@ -42,7 +42,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-is": "^19.2.4",
-    "react-router-dom": "^7.13.2",
+    "react-router-dom": "^7.14.0",
     "recharts": "^3.8.1"
   }
 }
