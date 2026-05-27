@@ -1,0 +1,143 @@
+/* PDF Import Dialog — extends the shared .dialog-* styles */
+
+.pdf-import-dialog {
+  max-width: 1100px;
+  width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-import-dialog .dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.pdf-import-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.pdf-import-controls .form-group {
+  margin-bottom: 0;
+}
+
+.pdf-import-llm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pdf-import-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  min-height: 1.5em;
+}
+
+.pdf-import-status.error {
+  color: #dc2626;
+}
+
+.pdf-import-summary {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+
+.pdf-import-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.pdf-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.pdf-import-table th,
+.pdf-import-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.pdf-import-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.pdf-import-table tr.excluded td {
+  opacity: 0.45;
+}
+
+.pdf-import-table tr.low-confidence td {
+  background: #fff7ed;
+}
+
+.pdf-import-table input[type="text"],
+.pdf-import-table input[type="number"],
+.pdf-import-table input[type="date"],
+.pdf-import-table select {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.pdf-import-table .col-include {
+  width: 36px;
+  text-align: center;
+}
+
+.pdf-import-table .col-amount {
+  width: 110px;
+}
+
+.pdf-import-table .col-kind,
+.pdf-import-table .col-date {
+  width: 130px;
+}
+
+.pdf-import-table .col-category,
+.pdf-import-table .col-extra {
+  width: 160px;
+}
+
+.pdf-import-table .pdf-row-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+}
+
+.pdf-import-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.pdf-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
