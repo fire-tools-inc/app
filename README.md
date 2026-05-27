@@ -52,6 +52,9 @@ Run thousands of probabilistic simulations accounting for market volatility and 
 **📊 Asset Allocation Manager**  
 Track your portfolio allocation across stocks, bonds, real estate, commodities, and cash. Get intelligent rebalancing recommendations to maintain your target allocation with customizable allocation targets and visual feedback.
 
+**🍩 Portfolio Breakdown**  
+Slice your current portfolio across multiple dimensions — currency, holding, sector, continent, region, market (exchange), and ETF provider — to spot concentration risk and diversification gaps. ETF sector exposure is automatically expanded using Yahoo Finance sector weightings, and metadata is cached locally for 7 days to minimise API calls.
+
 **💵 DCA Helper**  
 Plan your dollar-cost averaging strategy with built-in calculations that help you invest systematically and reduce market timing risk.
 

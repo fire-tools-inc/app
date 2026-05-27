@@ -2704,3 +2704,17 @@ select:disabled {
   font-weight: 600;
 }
 
+
+/* Link to the Portfolio Breakdown page from the Graphs section */
+.breakdown-link-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.breakdown-page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
 import { DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
@@ -790,6 +791,11 @@ export const AssetAllocationPage: React.FC = () => {
               )}
             </div>
           )}
+          <div className="breakdown-link-row">
+            <Link to="/portfolio-breakdown" className="action-btn breakdown-page-link">
+              <MaterialIcon name="donut_large" /> View Detailed Portfolio Breakdown
+            </Link>
+          </div>
         </section>
 
         <section className="allocation-section" aria-labelledby="portfolio-details-heading" data-tour="asset-list">
