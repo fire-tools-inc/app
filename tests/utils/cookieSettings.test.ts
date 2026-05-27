@@ -341,4 +341,31 @@ describe('Cookie Settings utilities', () => {
       expect(result.errors).toContain('Date format must be "DD/MM/YYYY", "MM/DD/YYYY", or "YYYY-MM-DD"');
     });
   });
+
+  describe('experimental features', () => {
+    it('defaults portfolioBreakdown to false', () => {
+      expect(DEFAULT_SETTINGS.experimentalFeatures.portfolioBreakdown).toBe(false);
+    });
+
+    it('preserves enabled experimental flags through save/load roundtrip', () => {
+      const updated: UserSettings = {
+        ...DEFAULT_SETTINGS,
+        experimentalFeatures: { portfolioBreakdown: true },
+      };
+      saveSettings(updated);
+      const loaded = loadSettings();
+      expect(loaded.experimentalFeatures.portfolioBreakdown).toBe(true);
+    });
+
+    it('back-fills experimentalFeatures when missing in saved cookie', () => {
+      // Simulate an older cookie that pre-dated the experimentalFeatures field.
+      const legacy = { ...DEFAULT_SETTINGS } as Partial<UserSettings>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (legacy as any).experimentalFeatures;
+      saveSettings(legacy as UserSettings);
+      const loaded = loadSettings();
+      expect(loaded.experimentalFeatures).toBeDefined();
+      expect(loaded.experimentalFeatures.portfolioBreakdown).toBe(false);
+    });
+  });
 });

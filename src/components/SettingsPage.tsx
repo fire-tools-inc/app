@@ -35,7 +35,7 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['account', 'fire', 'display', 'privacy', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support'] as const;
+const SETTINGS_SECTIONS = ['account', 'fire', 'display', 'privacy', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
@@ -963,6 +963,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   }
                   return null;
                 })()}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Experimental Features */}
+        <section className="settings-section collapsible-section">
+          <button 
+            className="collapsible-header" 
+            onClick={() => toggleSection('experimental')}
+            aria-expanded={!collapsedSections.has('experimental')}
+            aria-controls="experimental-content"
+          >
+            <h2><MaterialIcon name="science" /> Experimental Features <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('experimental') ? '▶' : '▼'}</span></h2>
+          </button>
+          {!collapsedSections.has('experimental') && (
+            <div id="experimental-content" className="collapsible-content">
+              <p className="setting-help" style={{ marginBottom: '1rem' }}>
+                <MaterialIcon name="warning" size="small" /> These features are still in preview. They may be incomplete, change without notice, or rely on third-party data that may be inaccurate or unavailable.
+              </p>
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="experimentalPortfolioBreakdown">Portfolio Breakdown page</label>
+                  <Tooltip content="Adds a new Portfolio Breakdown page that slices your current portfolio by currency, holding, sector, continent, region, market, and ETF provider. ETF metadata is inferred from fund names (Yahoo Finance does not expose holdings data without authentication), so results are heuristic.">
+                    <span className="info-icon" aria-label="More information">i</span>
+                  </Tooltip>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!settings.experimentalFeatures?.portfolioBreakdown ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, portfolioBreakdown: false })}
+                  >
+                    Disabled
+                  </button>
+                  <button
+                    className={`toggle-btn ${settings.experimentalFeatures?.portfolioBreakdown ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, portfolioBreakdown: true })}
+                  >
+                    Enabled
+                  </button>
+                </div>
+                <span className="setting-help">Enable the Portfolio Breakdown page in navigation</span>
               </div>
             </div>
           )}

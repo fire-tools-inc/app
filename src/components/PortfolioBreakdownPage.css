@@ -1,0 +1,124 @@
+.portfolio-breakdown-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 4rem;
+}
+
+.portfolio-breakdown-page .page-header {
+  margin-bottom: 1.5rem;
+}
+
+.portfolio-breakdown-page .page-header-link {
+  margin-top: 0.25rem;
+}
+
+.portfolio-breakdown-page .inline-link {
+  color: var(--accent-color, #5568d4);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.portfolio-breakdown-page .inline-link:hover {
+  text-decoration: underline;
+}
+
+.portfolio-breakdown-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.portfolio-breakdown-page .breakdown-refresh-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.empty-portfolio-banner,
+.breakdown-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(85, 104, 212, 0.12);
+  border: 1px solid rgba(85, 104, 212, 0.35);
+  color: #F8FAFC;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  font-size: 0.95rem;
+}
+
+.empty-portfolio-banner .inline-link,
+.breakdown-info-banner .inline-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.breakdowns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.25rem;
+}
+
+.breakdown-chart {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.breakdown-chart h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  color: #F8FAFC;
+}
+
+.breakdown-chart-description {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: rgba(248, 250, 252, 0.7);
+  line-height: 1.35;
+}
+
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #F8FAFC;
+}
+
+.breakdown-table th,
+.breakdown-table td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.breakdown-table th.numeric,
+.breakdown-table td.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-color-dot {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 640px) {
+  .breakdowns-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
 import { DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
@@ -110,6 +111,10 @@ export const AssetAllocationPage: React.FC = () => {
     const settings = loadSettings();
     return settings.privacyMode;
   });
+  // Feature flags from user settings (e.g., experimental Portfolio Breakdown page)
+  const [showPortfolioBreakdown] = useState<boolean>(
+    () => loadSettings().experimentalFeatures?.portfolioBreakdown ?? false,
+  );
   
   // Track if we're currently syncing to prevent infinite loops
   const isSyncingRef = useRef(false);
@@ -788,6 +793,13 @@ export const AssetAllocationPage: React.FC = () => {
                   currency={currency}
                 />
               )}
+            </div>
+          )}
+          {showPortfolioBreakdown && (
+            <div className="breakdown-link-row">
+              <Link to="/portfolio-breakdown" className="action-btn breakdown-page-link">
+                <MaterialIcon name="donut_large" /> View Detailed Portfolio Breakdown
+              </Link>
             </div>
           )}
         </section>

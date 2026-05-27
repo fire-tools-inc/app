@@ -13,6 +13,20 @@ import { encryptData, decryptData } from './cookieEncryption';
 
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
+/**
+ * Opt-in experimental / preview features. All default to false so they don't
+ * appear in the UI for users who haven't explicitly enabled them.
+ */
+export interface ExperimentalFeatures {
+  /** Portfolio Breakdown page — slices the current portfolio by currency,
+   *  holding, sector, region, market, and ETF provider. */
+  portfolioBreakdown: boolean;
+}
+
+export const DEFAULT_EXPERIMENTAL_FEATURES: ExperimentalFeatures = {
+  portfolioBreakdown: false,
+};
+
 export interface UserSettings {
   accountName: string;
   decimalSeparator: '.' | ',';
@@ -24,6 +38,7 @@ export interface UserSettings {
   fireAssetClassInclusion: Record<AssetClass, boolean>;
   includePrimaryResidenceInFIRE: boolean;
   searchThreshold: number;
+  experimentalFeatures: ExperimentalFeatures;
 }
 
 export const DEFAULT_FIRE_ASSET_CLASS_INCLUSION: Record<AssetClass, boolean> = {
@@ -49,6 +64,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   fireAssetClassInclusion: DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
   includePrimaryResidenceInFIRE: true, // Default to including primary residence
   searchThreshold: 8,
+  experimentalFeatures: DEFAULT_EXPERIMENTAL_FEATURES,
 };
 
 const SETTINGS_KEY = 'fire-calculator-settings';
@@ -102,6 +118,10 @@ export function loadSettings(): UserSettings {
           fireAssetClassInclusion: {
             ...DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
             ...(parsed.fireAssetClassInclusion || {}),
+          },
+          experimentalFeatures: {
+            ...DEFAULT_EXPERIMENTAL_FEATURES,
+            ...(parsed.experimentalFeatures || {}),
           },
         };
       }
