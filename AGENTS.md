@@ -285,7 +285,7 @@ Serves the production build locally for testing.
 
 ### Deployment
 - Automatic deployment to GitHub Pages via GitHub Actions
-- Triggered on push to `main` branch
+- Triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed
 - Base path configured as `/fire-tools/` for GitHub Pages
 - Workflow file: `.github/workflows/deploy.yml`
 
