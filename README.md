@@ -53,7 +53,7 @@ Run thousands of probabilistic simulations accounting for market volatility and 
 Track your portfolio allocation across stocks, bonds, real estate, commodities, and cash. Get intelligent rebalancing recommendations to maintain your target allocation with customizable allocation targets and visual feedback.
 
 **🍩 Portfolio Breakdown**  
-Slice your current portfolio across multiple dimensions — currency, holding, sector, continent, region, market (exchange), and ETF provider — to spot concentration risk and diversification gaps. ETF sector exposure is automatically expanded using Yahoo Finance sector weightings, and metadata is cached locally for 7 days to minimise API calls.
+Slice your current portfolio across multiple dimensions — currency, holding, sector, continent, region, market (exchange), and ETF provider — to spot concentration risk and diversification gaps. Stock sector and exchange come from Yahoo Finance's anonymous search endpoint; stock country is derived from the ISIN prefix. For ETFs (where Yahoo's holdings endpoint requires authentication), the provider, region theme, and asset focus are inferred from the fund's name. Metadata is cached locally for 7 days to minimise API calls.
 
 **💵 DCA Helper**  
 Plan your dollar-cost averaging strategy with built-in calculations that help you invest systematically and reduce market timing risk.

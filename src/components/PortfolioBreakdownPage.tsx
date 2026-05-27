@@ -51,19 +51,19 @@ const DIMENSIONS: DimensionConfig[] = [
     dimension: 'sector',
     title: 'By Sector',
     description:
-      'For ETFs and funds, sector exposure is expanded using Yahoo Finance sector weightings. Individual stocks use their listed sector.',
+      'Individual stocks use their listed sector from Yahoo Finance. ETFs use a sector label inferred from their fund name (e.g. "Technology", "Government Bonds"), as Yahoo no longer exposes per-ETF holdings without authentication.',
     needsMetadata: true,
   },
   {
     dimension: 'continent',
     title: 'By Continent',
-    description: 'Derived from each stock’s country of incorporation. ETFs fall back to their asset class.',
+    description: 'For stocks, derived from the ISIN country prefix. For ETFs, derived from the fund name (e.g. an "MSCI World" ETF maps to Global).',
     needsMetadata: true,
   },
   {
     dimension: 'region',
     title: 'By Region',
-    description: 'Finer-grained region (e.g., Western Europe, East Asia) derived from country of incorporation.',
+    description: 'Finer-grained region (e.g., Western Europe, East Asia, Emerging Markets) derived from ISIN country (stocks) or fund name (ETFs).',
     needsMetadata: true,
   },
   {
@@ -76,7 +76,7 @@ const DIMENSIONS: DimensionConfig[] = [
     dimension: 'etfProvider',
     title: 'By ETF Provider',
     description:
-      'The fund family / issuer (e.g., Vanguard, iShares). Direct stock holdings are grouped under “Direct holding”.',
+      'The fund family / issuer inferred from the fund name (e.g., Vanguard, iShares). Direct stock holdings are grouped under "Direct holding".',
     needsMetadata: true,
   },
 ];

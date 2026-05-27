@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock yahooProxy BEFORE importing the module under test so the mock is
-// used during evaluation.
 vi.mock('../../src/utils/yahooProxy', () => {
   return {
     yahooFetch: vi.fn(),
@@ -19,7 +17,6 @@ import {
   fetchAssetMetadata,
   fetchAssetMetadataBatch,
   clearAssetMetadataCache,
-  _internal,
 } from '../../src/utils/yahooMetadata';
 import { yahooFetch, hasRateLimitCapacity } from '../../src/utils/yahooProxy';
 
@@ -33,92 +30,134 @@ describe('yahooMetadata', () => {
     clearAssetMetadataCache();
   });
 
-  describe('parseSectorWeightings', () => {
-    it('normalizes Yahoo sector keys', () => {
-      expect(_internal.normalizeSectorName('realestate')).toBe('Real Estate');
-      expect(_internal.normalizeSectorName('consumer_cyclical')).toBe('Consumer Cyclical');
-      expect(_internal.normalizeSectorName('technology')).toBe('Technology');
-    });
-
-    it('parses the array-of-objects shape with raw values', () => {
-      const result = _internal.parseSectorWeightings({
-        quoteSummary: {
-          result: [
-            {
-              topHoldings: {
-                sectorWeightings: [
-                  { technology: { raw: 0.3 } },
-                  { healthcare: { raw: 0.2 } },
-                  { financial_services: { raw: 0.5 } },
-                ],
-              },
-            },
-          ],
-        },
-      });
-      expect(result).toHaveLength(3);
-      expect(result?.find(s => s.sector === 'Technology')?.weight).toBeCloseTo(0.3);
-    });
-
-    it('returns undefined when no weightings are present', () => {
-      expect(_internal.parseSectorWeightings({})).toBeUndefined();
-    });
-  });
-
-  describe('fetchAssetMetadata', () => {
-    it('returns parsed metadata on success and caches it', async () => {
+  describe('fetchAssetMetadata (search endpoint)', () => {
+    it('parses sector / industry / exchange / longName for an EQUITY', async () => {
       mockedFetch.mockResolvedValueOnce({
-        quoteSummary: {
-          result: [
-            {
-              summaryProfile: {
-                sector: 'Technology',
-                industry: 'Consumer Electronics',
-                country: 'United States',
-              },
-              fundProfile: { family: 'Apple Inc' },
-              topHoldings: { sectorWeightings: [] },
-              quoteType: {
-                quoteType: 'EQUITY',
-                longName: 'Apple Inc.',
-                exchange: 'NMS',
-                currency: 'USD',
-              },
-            },
-          ],
-        },
+        quotes: [
+          {
+            symbol: 'AAPL',
+            shortname: 'Apple Inc.',
+            longname: 'Apple Inc.',
+            quoteType: 'EQUITY',
+            exchange: 'NMS',
+            exchDisp: 'NASDAQ',
+            sector: 'Technology',
+            sectorDisp: 'Technology',
+            industry: 'Consumer Electronics',
+            industryDisp: 'Consumer Electronics',
+          },
+        ],
       });
 
       const meta = await fetchAssetMetadata('AAPL');
       expect(meta.error).toBeUndefined();
       expect(meta.ticker).toBe('AAPL');
+      expect(meta.quoteType).toBe('EQUITY');
       expect(meta.sector).toBe('Technology');
-      expect(meta.country).toBe('United States');
-      expect(meta.exchange).toBe('NMS');
-      expect(meta.fundFamily).toBe('Apple Inc');
+      expect(meta.industry).toBe('Consumer Electronics');
+      expect(meta.exchange).toBe('NASDAQ');
+      expect(meta.longName).toBe('Apple Inc.');
+      expect(meta.country).toBeUndefined();
+    });
 
-      // Second call should hit the cache and not call yahooFetch again
-      const meta2 = await fetchAssetMetadata('aapl');
-      expect(meta2.sector).toBe('Technology');
+    it('derives country code from ISIN for stocks', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          {
+            symbol: 'AAPL',
+            quoteType: 'EQUITY',
+            sector: 'Technology',
+            exchDisp: 'NASDAQ',
+          },
+        ],
+      });
+
+      const meta = await fetchAssetMetadata('AAPL', { isin: 'US0378331005' });
+      expect(meta.country).toBe('US');
+    });
+
+    it('applies ETF heuristics for an ETF', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          {
+            symbol: 'VWCE.DE',
+            shortname: 'Vanguard FTSE All-World U.ETF R',
+            longname: 'Vanguard FTSE All-World UCITS ETF USD Accumulation',
+            quoteType: 'ETF',
+            exchange: 'GER',
+            exchDisp: 'XETRA',
+          },
+        ],
+      });
+
+      const meta = await fetchAssetMetadata('VWCE.DE');
+      expect(meta.quoteType).toBe('ETF');
+      expect(meta.fundFamily).toBe('Vanguard');
+      expect(meta.exchange).toBe('XETRA');
+      expect(meta.country).toBe('Global');
+      expect(meta.sector).toBe('Global Equity');
+      expect(meta.regionWeightings?.[0]).toEqual({ region: 'Global', weight: 1 });
+    });
+
+    it('caches successful results and reuses on second call', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          {
+            symbol: 'AAPL',
+            quoteType: 'EQUITY',
+            sector: 'Technology',
+            exchDisp: 'NASDAQ',
+          },
+        ],
+      });
+
+      const first = await fetchAssetMetadata('AAPL');
+      const second = await fetchAssetMetadata('aapl');
+      expect(first.sector).toBe('Technology');
+      expect(second.sector).toBe('Technology');
       expect(mockedFetch).toHaveBeenCalledTimes(1);
     });
 
-    it('returns an error object when rate limited', async () => {
+    it('layers ISIN-derived country onto cached entries that lacked one', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          { symbol: 'AAPL', quoteType: 'EQUITY', sector: 'Technology' },
+        ],
+      });
+
+      const first = await fetchAssetMetadata('AAPL');
+      expect(first.country).toBeUndefined();
+
+      const second = await fetchAssetMetadata('AAPL', { isin: 'US0378331005' });
+      expect(second.country).toBe('US');
+      expect(mockedFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('prefers exact-symbol match in quotes array', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          { symbol: 'AAPL.MX', quoteType: 'EQUITY', sector: 'Wrong' },
+          { symbol: 'AAPL', quoteType: 'EQUITY', sector: 'Technology' },
+        ],
+      });
+      const meta = await fetchAssetMetadata('AAPL');
+      expect(meta.sector).toBe('Technology');
+    });
+
+    it('returns an error when no quotes returned', async () => {
+      mockedFetch.mockResolvedValueOnce({ quotes: [] });
+      const meta = await fetchAssetMetadata('ZZZZ');
+      expect(meta.error).toMatch(/No data/i);
+    });
+
+    it('returns an error when rate limited', async () => {
       mockedCapacity.mockReturnValue(false);
       const meta = await fetchAssetMetadata('AAPL');
       expect(meta.error).toMatch(/rate limit/i);
       expect(mockedFetch).not.toHaveBeenCalled();
     });
 
-    it('returns an error object when Yahoo returns an error description', async () => {
-      mockedFetch.mockResolvedValueOnce({
-        quoteSummary: { error: { description: 'Quote not found' } },
-      });
-      const meta = await fetchAssetMetadata('NOPE');
-      expect(meta.error).toMatch(/Quote not found/);
-    });
-
-    it('returns an error object when fetch throws', async () => {
+    it('returns an error when fetch throws', async () => {
       mockedFetch.mockRejectedValueOnce(new Error('network kaboom'));
       const meta = await fetchAssetMetadata('AAPL');
       expect(meta.error).toBe('network kaboom');
@@ -132,21 +171,27 @@ describe('yahooMetadata', () => {
   });
 
   describe('fetchAssetMetadataBatch', () => {
-    it('fetches unique tickers and returns a keyed map', async () => {
+    it('passes per-ticker ISIN through for country derivation', async () => {
       mockedFetch.mockResolvedValue({
-        quoteSummary: {
-          result: [
-            {
-              summaryProfile: { sector: 'Technology' },
-              quoteType: { quoteType: 'EQUITY' },
-            },
-          ],
-        },
+        quotes: [
+          { symbol: 'AAPL', quoteType: 'EQUITY', sector: 'Technology' },
+        ],
       });
-
-      const out = await fetchAssetMetadataBatch(['aapl', 'AAPL', '', 'msft']);
-      expect(Object.keys(out).sort()).toEqual(['AAPL', 'MSFT']);
+      const out = await fetchAssetMetadataBatch(
+        ['AAPL', 'MSFT'],
+        { AAPL: 'US0378331005', MSFT: 'US5949181045' },
+      );
+      expect(out.AAPL.country).toBe('US');
+      expect(out.MSFT.country).toBe('US');
       expect(mockedFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('deduplicates tickers', async () => {
+      mockedFetch.mockResolvedValue({
+        quotes: [{ symbol: 'AAPL', quoteType: 'EQUITY', sector: 'Technology' }],
+      });
+      const out = await fetchAssetMetadataBatch(['aapl', 'AAPL', '']);
+      expect(Object.keys(out)).toEqual(['AAPL']);
     });
   });
 });

@@ -53,7 +53,15 @@ export function useAssetMetadata(assets: Asset[]): UseAssetMetadataReturn {
     setError(null);
 
     try {
-      const result = await fetchAssetMetadataBatch(tickers);
+      // Build ticker → ISIN map so the fetcher can derive country for stocks
+      const isinByTicker: Record<string, string | undefined> = {};
+      for (const a of currentAssets) {
+        if (a.ticker && a.isin) {
+          isinByTicker[a.ticker.trim().toUpperCase()] = a.isin;
+        }
+      }
+
+      const result = await fetchAssetMetadataBatch(tickers, isinByTicker);
       const failed: string[] = [];
       let fetched = 0;
       for (const [t, meta] of Object.entries(result)) {

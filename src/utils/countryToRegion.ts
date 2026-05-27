@@ -16,7 +16,9 @@ export type Continent =
   | 'Asia'
   | 'Africa'
   | 'Oceania'
-  | 'Antarctica';
+  | 'Antarctica'
+  | 'Global'
+  | 'Emerging Markets';
 
 export interface CountryRegionInfo {
   countryCode: string; // ISO 3166-1 alpha-2
@@ -150,8 +152,34 @@ const NAME_ALIASES: Record<string, string> = {
 };
 
 /**
- * Look up region info by country code (preferred) or free-text country name.
- * Returns undefined if no mapping found.
+ * Synthetic region themes used for ETFs whose underlying holdings span many
+ * countries. They are not real countries but they ARE meaningful buckets in
+ * the Continent / Region breakdowns.
+ */
+const SYNTHETIC_REGIONS: Record<string, { continent: string; region: string }> = {
+  global: { continent: 'Global', region: 'Global' },
+  'developed markets ex-us': { continent: 'Global', region: 'Developed Markets ex-US' },
+  'emerging markets': { continent: 'Emerging Markets', region: 'Emerging Markets' },
+  'asia pacific': { continent: 'Asia', region: 'Asia Pacific' },
+  'asia ex-japan': { continent: 'Asia', region: 'Asia ex-Japan' },
+  europe: { continent: 'Europe', region: 'Europe' },
+  'eastern europe': { continent: 'Europe', region: 'Eastern Europe' },
+  'western europe': { continent: 'Europe', region: 'Western Europe' },
+  'southern europe': { continent: 'Europe', region: 'Southern Europe' },
+  'northern europe': { continent: 'Europe', region: 'Northern Europe' },
+  'north america': { continent: 'North America', region: 'North America' },
+  'latin america': { continent: 'South America', region: 'Latin America' },
+  'middle east': { continent: 'Asia', region: 'Middle East' },
+  africa: { continent: 'Africa', region: 'Africa' },
+  oceania: { continent: 'Oceania', region: 'Oceania' },
+  'east asia': { continent: 'Asia', region: 'East Asia' },
+  'south asia': { continent: 'Asia', region: 'South Asia' },
+  'southeast asia': { continent: 'Asia', region: 'Southeast Asia' },
+};
+
+/**
+ * Look up region info by country code (preferred), free-text country name, or
+ * synthetic ETF region theme. Returns undefined if no mapping found.
  */
 export function lookupCountry(input: string | undefined | null): CountryRegionInfo | undefined {
   if (!input) return undefined;
@@ -173,6 +201,17 @@ export function lookupCountry(input: string | undefined | null): CountryRegionIn
   const canonical = NAME_ALIASES[lower];
   if (canonical) {
     return BY_NAME.get(canonical.toLowerCase());
+  }
+
+  // Try synthetic region theme (used for ETFs)
+  const synthetic = SYNTHETIC_REGIONS[lower];
+  if (synthetic) {
+    return {
+      countryCode: '',
+      countryName: trimmed,
+      continent: synthetic.continent as Continent,
+      region: synthetic.region,
+    };
   }
 
   return undefined;
