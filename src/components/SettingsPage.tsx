@@ -1006,6 +1006,89 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <span className="setting-help">Enable the Portfolio Breakdown page in navigation</span>
               </div>
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="experimentalPdfImport">PDF expense/income import</label>
+                  <Tooltip content="Adds an 'Import PDF' button in the Expense Tracker. PDFs (receipts, invoices, bank/credit-card statements, payslips) are parsed fully in your browser. An optional AI categorization step uses an OpenAI-compatible endpoint that you configure below — only enable that if you trust the endpoint with your transaction descriptions.">
+                    <span className="info-icon" aria-label="More information">i</span>
+                  </Tooltip>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!settings.experimentalFeatures?.pdfImport ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, pdfImport: false })}
+                  >
+                    Disabled
+                  </button>
+                  <button
+                    className={`toggle-btn ${settings.experimentalFeatures?.pdfImport ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, pdfImport: true })}
+                  >
+                    Enabled
+                  </button>
+                </div>
+                <span className="setting-help">Parse receipts, invoices, bank statements, and payslips locally. No network calls unless you opt into AI categorization — which itself can be pointed at a self-hosted open-source model so nothing leaves your machine.</span>
+              </div>
+
+              {settings.experimentalFeatures?.pdfImport && (
+                <div className="setting-item">
+                  <div className="label-with-tooltip">
+                    <label>AI categorization (optional)</label>
+                    <Tooltip content="Optional OpenAI-compatible endpoint used only when you tick 'Use AI categorization' inside the PDF import dialog. Works with OpenAI and Azure OpenAI, with hosted aggregators like OpenRouter or Together, and — importantly — with self-hosted open-source models you run yourself via Ollama, LM Studio, llama.cpp, vLLM, or any other server that exposes an OpenAI-compatible /chat/completions endpoint. Leave blank to keep everything heuristic.">
+                      <span className="info-icon" aria-label="More information">i</span>
+                    </Tooltip>
+                  </div>
+                  <p className="setting-help" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+                    Plug in any OpenAI-compatible endpoint — cloud (OpenAI, Azure OpenAI, OpenRouter, Together…) or a <strong>self-hosted open-source model</strong> via Ollama, LM Studio, llama.cpp, vLLM, etc. For fully local categorization, point Base URL at e.g. <code>http://localhost:11434/v1</code>, leave the API key as any non-empty string, and use a model you've already pulled (<code>llama3.1:8b</code>, <code>qwen2.5</code>, …).
+                  </p>
+                  <div className="form-group">
+                    <label htmlFor="llmBaseUrl">Base URL</label>
+                    <input
+                      id="llmBaseUrl"
+                      type="text"
+                      placeholder="https://api.openai.com/v1 or http://localhost:11434/v1"
+                      value={settings.llmCategorization?.baseUrl ?? ''}
+                      onChange={(e) => handleSettingChange('llmCategorization', {
+                        baseUrl: e.target.value,
+                        apiKey: settings.llmCategorization?.apiKey ?? '',
+                        model: settings.llmCategorization?.model ?? '',
+                      })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="llmApiKey">API key</label>
+                    <input
+                      id="llmApiKey"
+                      type="password"
+                      placeholder="sk-… (any non-empty value for local servers)"
+                      value={settings.llmCategorization?.apiKey ?? ''}
+                      onChange={(e) => handleSettingChange('llmCategorization', {
+                        baseUrl: settings.llmCategorization?.baseUrl ?? '',
+                        apiKey: e.target.value,
+                        model: settings.llmCategorization?.model ?? '',
+                      })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="llmModel">Model</label>
+                    <input
+                      id="llmModel"
+                      type="text"
+                      placeholder="gpt-4o-mini, llama3.1:8b, qwen2.5, …"
+                      value={settings.llmCategorization?.model ?? ''}
+                      onChange={(e) => handleSettingChange('llmCategorization', {
+                        baseUrl: settings.llmCategorization?.baseUrl ?? '',
+                        apiKey: settings.llmCategorization?.apiKey ?? '',
+                        model: e.target.value,
+                      })}
+                    />
+                  </div>
+                  <span className="setting-help">
+                    Stored encrypted with your other settings. Only used when you tick "Use AI categorization" in the PDF import dialog.
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </section>

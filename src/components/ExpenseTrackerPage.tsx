@@ -55,6 +55,7 @@ import { MaterialIcon } from './MaterialIcon';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
+import { PDFImportDialog } from './PDFImportDialog';
 import './ExpenseTrackerPage.css';
 
 // Month names for display
@@ -151,6 +152,11 @@ export function ExpenseTrackerPage() {
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<IncomeEntry | ExpenseEntry | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [showPdfImport, setShowPdfImport] = useState(false);
+  const [pdfImportEnabled, setPdfImportEnabled] = useState<boolean>(() => {
+    return Boolean(loadSettings().experimentalFeatures?.pdfImport);
+  });
+  const [llmConfig, setLlmConfig] = useState(() => loadSettings().llmCategorization);
   
   // Filter/sort state
   const [filter, setFilter] = useState<TransactionFilter>({});
@@ -190,6 +196,8 @@ export function ExpenseTrackerPage() {
       const settings = loadSettings();
       setDateFormat(settings.dateFormat);
       setIsPrivacyMode(settings.privacyMode);
+      setPdfImportEnabled(Boolean(settings.experimentalFeatures?.pdfImport));
+      setLlmConfig(settings.llmCategorization);
     };
     
     window.addEventListener('storage', handleStorageChange);
@@ -1014,6 +1022,15 @@ export function ExpenseTrackerPage() {
                 <button className="btn-add expense" onClick={() => setShowExpenseForm(true)}>
                   <MaterialIcon name="add" /> Add Expense
                 </button>
+                {pdfImportEnabled && (
+                  <button
+                    className="btn-add"
+                    onClick={() => setShowPdfImport(true)}
+                    aria-label="Import transactions from PDF"
+                  >
+                    <MaterialIcon name="picture_as_pdf" /> Import PDF
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1520,6 +1537,19 @@ export function ExpenseTrackerPage() {
             currency={data.currency}
             defaultDate={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`}
             searchThreshold={searchThreshold}
+          />
+        )}
+
+        {/* PDF Import Dialog (experimental) */}
+        {showPdfImport && pdfImportEnabled && (
+          <PDFImportDialog
+            onClose={() => setShowPdfImport(false)}
+            onAddIncome={handleAddIncome}
+            onAddExpense={handleAddExpense}
+            defaultCurrency={data.currency}
+            customCategories={data.customCategories}
+            categoryOverrides={data.categoryOverrides}
+            llmConfig={llmConfig}
           />
         )}
 

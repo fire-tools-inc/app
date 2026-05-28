@@ -55,6 +55,9 @@ Track your portfolio allocation across stocks, bonds, real estate, commodities, 
 **🍩 Portfolio Breakdown** *(experimental — disabled by default)*  
 Slice your current portfolio across multiple dimensions — currency, holding, sector, continent, region, market (exchange), and ETF provider — to spot concentration risk and diversification gaps. Stock sector and exchange come from Yahoo Finance's anonymous search endpoint; stock country is derived from the ISIN prefix. For ETFs (where Yahoo's holdings endpoint requires authentication), the provider, region theme, and asset focus are inferred from the fund's name. Metadata is cached locally for 7 days to minimise API calls. Enable it under **Settings → Experimental Features**.
 
+**📄 PDF Expense / Income Import** *(experimental — disabled by default)*  
+Upload receipts, invoices, bank / credit-card statements, or payslips and the Expense Tracker turns them into editable transactions before they're committed. PDFs are parsed **fully in your browser** with `pdfjs-dist` — nothing is uploaded anywhere. An **optional**, opt-in OpenAI-compatible LLM step (OpenAI, Azure OpenAI, Ollama, LM Studio, OpenRouter, …) can re-categorize the parsed rows; only the extracted descriptions/amounts are sent, never the PDF bytes, and the heuristic results are used on any error. Enable under **Settings → Experimental Features**. Full details in [`docs/pdf-import.md`](docs/pdf-import.md).
+
 **💵 DCA Helper**  
 Plan your dollar-cost averaging strategy with built-in calculations that help you invest systematically and reduce market timing risk.
 

@@ -1,0 +1,221 @@
+/* PDF Import Dialog — extends the shared .dialog-* styles.
+   Selector uses .dialog.pdf-import-dialog (specificity 0,2,0) to win
+   over the global .dialog (0,1,0) rule that sets max-width: 500px. */
+
+.dialog.pdf-import-dialog {
+  max-width: 1100px;
+  width: min(95vw, 1100px);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialog.pdf-import-dialog .dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  min-height: 0;
+  align-items: stretch;
+}
+
+/* Controls stack vertically — same pattern as the rest of the app's
+   dialogs. No grid, no flex-wrap surprises on narrow viewports. */
+.pdf-import-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pdf-import-controls .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.pdf-import-controls .form-group input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+/* AI toggle row */
+.pdf-import-llm-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+}
+
+.pdf-import-llm-toggle.is-disabled {
+  opacity: 0.6;
+}
+
+.pdf-import-llm-toggle.is-disabled label,
+.pdf-import-llm-toggle.is-disabled input {
+  cursor: not-allowed;
+}
+
+.pdf-import-llm-toggle input[type="checkbox"] {
+  width: auto !important;
+  flex: 0 0 auto;
+  margin: 0.2rem 0 0 0;
+  accent-color: var(--accent-primary);
+}
+
+.pdf-import-llm-toggle label {
+  margin: 0 !important;
+  display: block !important;
+  line-height: 1.35;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  flex: 1 1 auto;
+}
+
+.pdf-import-llm-toggle .pdf-row-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.pdf-import-llm-toggle .disabled-tag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.pdf-import-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  min-height: 1.5em;
+}
+
+.pdf-import-status.error {
+  color: #f87171;
+}
+
+.pdf-import-summary {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.pdf-import-table-wrapper {
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  max-height: 50vh;
+}
+
+.pdf-import-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.pdf-import-table th,
+.pdf-import-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.pdf-import-table th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.pdf-import-table tr.excluded td {
+  opacity: 0.45;
+}
+
+.pdf-import-table tr.low-confidence td {
+  background: rgba(251, 146, 60, 0.08);
+}
+
+.pdf-import-table input[type="text"],
+.pdf-import-table input[type="number"],
+.pdf-import-table input[type="date"],
+.pdf-import-table select {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.pdf-import-table input[type="checkbox"] {
+  width: auto !important;
+  accent-color: var(--accent-primary);
+}
+
+.pdf-import-table .col-include {
+  width: 36px;
+  text-align: center;
+}
+
+.pdf-import-table .col-amount {
+  width: 110px;
+}
+
+.pdf-import-table .col-kind,
+.pdf-import-table .col-date {
+  width: 130px;
+}
+
+.pdf-import-table .col-category,
+.pdf-import-table .col-extra {
+  width: 160px;
+}
+
+.pdf-import-table .pdf-row-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.pdf-import-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-subtle);
+  border-radius: 8px;
+}
+
+.pdf-import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}

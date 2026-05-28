@@ -9,6 +9,7 @@ import {
   DEFAULT_CURRENCY_SETTINGS,
 } from '../types/currency';
 import { AssetClass } from '../types/assetAllocation';
+import { LlmCategorizationConfig } from '../types/pdfImport';
 import { encryptData, decryptData } from './cookieEncryption';
 
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
@@ -21,10 +22,14 @@ export interface ExperimentalFeatures {
   /** Portfolio Breakdown page — slices the current portfolio by currency,
    *  holding, sector, region, market, and ETF provider. */
   portfolioBreakdown: boolean;
+  /** PDF import in the Expense Tracker — parse receipts, invoices,
+   *  bank/credit-card statements, and payslips into transactions. */
+  pdfImport: boolean;
 }
 
 export const DEFAULT_EXPERIMENTAL_FEATURES: ExperimentalFeatures = {
   portfolioBreakdown: false,
+  pdfImport: false,
 };
 
 export interface UserSettings {
@@ -39,6 +44,9 @@ export interface UserSettings {
   includePrimaryResidenceInFIRE: boolean;
   searchThreshold: number;
   experimentalFeatures: ExperimentalFeatures;
+  /** Optional OpenAI-compatible LLM config for PDF import categorization.
+   *  Stored encrypted with the rest of the settings. */
+  llmCategorization?: LlmCategorizationConfig;
 }
 
 export const DEFAULT_FIRE_ASSET_CLASS_INCLUSION: Record<AssetClass, boolean> = {
