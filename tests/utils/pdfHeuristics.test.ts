@@ -225,6 +225,39 @@ describe('parsePayslip', () => {
     const extracted = makeExtracted('nope.pdf', ['no payroll info here']);
     expect(parsePayslip(extracted)).toHaveLength(0);
   });
+
+  it('matches Total net payment when amount is on a later line', () => {
+    const extracted = makeExtracted('two-line.pdf', [
+      'Payslip - March 2024',
+      'Employee John Doe',
+      '15/03/2024',
+      'Net pay',
+      'Some intervening line',
+      'Total net payment 2.500,00 EUR',
+    ]);
+    const result = parsePayslip(extracted);
+    expect(result).toHaveLength(1);
+    expect(result[0].amount).toBeCloseTo(2500);
+    expect(result[0].kind).toBe('income');
+  });
+
+  it('emits a low-confidence opt-out row for blank templates', () => {
+    const extracted = makeExtracted('template.pdf', [
+      'Pay slip template',
+      'Employer placeholder',
+      'Pay period: insert date',
+      'Total gross payment $00.00',
+      'NET PAY',
+      'Bank details: insert bank',
+      'Total net payment $00.00',
+    ]);
+    const result = parsePayslip(extracted);
+    expect(result).toHaveLength(1);
+    expect(result[0].amount).toBe(0);
+    expect(result[0].include).toBe(false);
+    expect(result[0].confidence).toBeLessThan(0.3);
+    expect(result[0].description.toLowerCase()).toContain('template');
+  });
 });
 
 describe('parseBankStatement', () => {

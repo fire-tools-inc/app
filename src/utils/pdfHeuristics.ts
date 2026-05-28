@@ -441,7 +441,7 @@ export function parseInvoice(
   }];
 }
 
-const NET_PAY_LABELS_RE = /(net\s*pay|net\s*amount|net\s*salary|take[\-\s]*home|net\s*income|netto\s*a\s*pagare|stipendio\s*netto|importo\s*netto|salaire\s*net|sueldo\s*neto)/i;
+const NET_PAY_LABELS_RE = /(total\s*net\s*pay(?:ment)?|net\s*pay(?:ment)?|net\s*amount|net\s*salary|take[\-\s]*home(?:\s*pay)?|net\s*income|netto\s*a\s*pagare|stipendio\s*netto|importo\s*netto|salaire\s*net|sueldo\s*neto|nettolohn|netto\s*lohn)/i;
 
 export function parsePayslip(
   extracted: ExtractedPdf,
@@ -451,36 +451,54 @@ export function parsePayslip(
 
   let netLine: string | null = null;
   let netAmount: number | null = null;
-  for (const line of lines) {
-    if (NET_PAY_LABELS_RE.test(line)) {
-      const amt = parseAmount(line);
-      if (amt !== null && amt > 0) {
-        netLine = line;
-        netAmount = amt;
-        break;
+  let labelOnlyMatch = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!NET_PAY_LABELS_RE.test(line)) continue;
+    // First try: amount on the same line.
+    const same = parseAmount(line);
+    if (same !== null) {
+      netLine = line;
+      netAmount = same;
+      if (Math.abs(same) > 0.001) break;
+    }
+    // Fallback: scan the next few lines for an amount.
+    for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+      const candidate = parseAmount(lines[j]);
+      if (candidate !== null) {
+        netLine = `${line} → ${lines[j]}`;
+        netAmount = candidate;
+        labelOnlyMatch = true;
+        if (Math.abs(candidate) > 0.001) break;
       }
     }
+    if (netAmount !== null && Math.abs(netAmount) > 0.001) break;
   }
 
   if (netAmount === null) return [];
 
+  const isZero = Math.abs(netAmount) < 0.001;
   const date = findFirstDate(extracted.fullText) ?? '';
   const description = deriveDescription(extracted, 'Salary');
   const currency = detectCurrency(extracted.fullText) ?? fallbackCurrency;
 
+  // Templates often have only zero placeholders. Surface them as a low-
+  // confidence, opt-out-by-default draft so the user knows what we found
+  // and can either fill the amount in or skip the row.
   return [{
     id: genId(),
     kind: 'income',
     date,
-    amount: netAmount,
+    amount: Math.abs(netAmount),
     currency,
-    description,
+    description: isZero ? `${description} (template?)` : description,
     suggestedIncomeSource: 'SALARY' as IncomeSource,
     docType: 'payslip',
     sourceFile: extracted.fileName,
     rawLine: netLine ?? undefined,
-    include: true,
-    confidence: date ? 0.8 : 0.6,
+    include: !isZero,
+    confidence: isZero ? 0.1 : (labelOnlyMatch ? 0.6 : (date ? 0.8 : 0.6)),
   }];
 }
 

@@ -124,11 +124,14 @@ export function PDFImportDialog({
       }
 
       setDrafts(final);
-      setStatus(
-        final.length === 0
-          ? 'No transactions detected. Try a different document type.'
-          : `Detected ${final.length} transaction${final.length === 1 ? '' : 's'}. Review and confirm below.`,
-      );
+      const allZero = final.length > 0 && final.every(d => !(d.amount > 0));
+      if (final.length === 0) {
+        setStatus('No transactions detected. Try a different document type.');
+      } else if (allZero) {
+        setStatus(`Detected ${final.length} row${final.length === 1 ? '' : 's'} but every amount is 0 — looks like a blank template. Fill the amounts in and re-upload, or edit each row below before importing.`);
+      } else {
+        setStatus(`Detected ${final.length} transaction${final.length === 1 ? '' : 's'}. Review and confirm below.`);
+      }
     } finally {
       setBusy(false);
     }
