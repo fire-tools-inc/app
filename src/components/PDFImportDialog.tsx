@@ -54,6 +54,10 @@ const DOC_TYPE_OPTIONS: { value: PdfDocType; label: string }[] = [
   { value: 'payslip', label: 'Payslip' },
 ];
 
+function appendError(prev: string, msg: string): string {
+  return prev ? `${prev}\n${msg}` : msg;
+}
+
 export function PDFImportDialog({
   onClose,
   onAddIncome,
@@ -93,13 +97,18 @@ export function PDFImportDialog({
         try {
           const extracted = await extractor(file);
           const { drafts: parsed } = parsePdf(extracted, docType, defaultCurrency);
+          if (parsed.length === 0 && extracted.lines.length === 0) {
+            setError(prev => appendError(prev,
+              `"${file.name}" has no extractable text (it may be a scanned image — run it through OCR first).`));
+          } else if (parsed.length === 0) {
+            setError(prev => appendError(prev,
+              `No transactions found in "${file.name}". Try a different document type.`));
+          }
           collected.push(...parsed);
         } catch (err) {
           console.error('Failed to parse PDF', file.name, err);
-          setError(prev =>
-            prev
-              ? `${prev}\nFailed to read "${file.name}".`
-              : `Failed to read "${file.name}".`);
+          const reason = err instanceof Error ? err.message : 'unknown error';
+          setError(prev => appendError(prev, `Failed to read "${file.name}": ${reason}`));
         }
       }
 
@@ -230,7 +239,7 @@ export function PDFImportDialog({
 
           <div className={`pdf-import-status${error ? ' error' : ''}`} role="status" aria-live="polite">
             {busy && <MaterialIcon name="hourglass_top" size="small" />}
-            <span>{error || status}</span>
+            <span style={{ whiteSpace: 'pre-line' }}>{error || status}</span>
           </div>
 
           {drafts.length > 0 && (

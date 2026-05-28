@@ -5,7 +5,10 @@
  * the heuristic parsers can match transaction rows.
  *
  * pdfjs-dist is loaded dynamically so that importing this module does not
- * pull the (browser-only) PDF engine into jsdom / SSR contexts.
+ * pull the (browser-only) PDF engine into jsdom / SSR contexts. The worker
+ * is instantiated via Vite's `?worker` helper which produces a real Web
+ * Worker constructor with the correct `type: 'module'` — required because
+ * pdfjs v5 only ships an ESM worker bundle.
  */
 
 export interface PdfTextLine {
@@ -35,11 +38,16 @@ async function loadPdfJs() {
   const pdfjsLib = await import('pdfjs-dist');
   if (!workerConfigured) {
     try {
-      const workerUrlModule = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrlModule.default;
+      // Vite's `?worker` returns a Worker constructor with the correct
+      // module type. Handing pdfjs a workerPort skips its internal
+      // `new Worker(workerSrc)` call (which loads a classic worker and
+      // fails on the ESM-only pdfjs v5 worker bundle).
+      const WorkerCtor = (await import('pdfjs-dist/build/pdf.worker.min.mjs?worker')).default;
+      pdfjsLib.GlobalWorkerOptions.workerPort = new WorkerCtor();
       workerConfigured = true;
     } catch (error) {
       console.error('Failed to configure pdfjs worker:', error);
+      throw new Error('PDF engine could not be initialised. Please reload and try again.');
     }
   }
   return pdfjsLib;
@@ -88,18 +96,25 @@ function groupItemsIntoLines(
 
 /**
  * Extract text and line layout from a PDF File. Throws if the file is not a
- * valid PDF or cannot be parsed.
+ * valid PDF or cannot be parsed. If the PDF has no text layer (e.g. a
+ * scan), an empty result is returned so callers can show a helpful message.
  */
 export async function extractPdfText(file: File): Promise<ExtractedPdf> {
   const pdfjsLib = await loadPdfJs();
   const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buffer) }).promise;
 
   const allLines: PdfTextLine[] = [];
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    allLines.push(...groupItemsIntoLines(textContent.items, pageNum));
+  try {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      allLines.push(...groupItemsIntoLines(textContent.items, pageNum));
+      page.cleanup();
+    }
+  } finally {
+    await pdf.cleanup().catch(() => undefined);
+    await pdf.destroy().catch(() => undefined);
   }
 
   const fullText = allLines.map(l => l.text).join('\n');

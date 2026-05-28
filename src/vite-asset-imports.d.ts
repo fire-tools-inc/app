@@ -6,6 +6,11 @@ declare module '*?url' {
   export default src;
 }
 
+declare module '*?worker' {
+  const workerCtor: { new (): Worker };
+  export default workerCtor;
+}
+
 declare module '*?worker&inline' {
   const workerCtor: { new (): Worker };
   export default workerCtor;
