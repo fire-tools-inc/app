@@ -221,7 +221,7 @@ export function PDFImportDialog({
               <label htmlFor="pdf-use-llm">
                 Use AI categorization
                 {!llmConfigured && (
-                  <span className="pdf-row-meta"> — configure an OpenAI-compatible endpoint in Settings first.</span>
+                  <span className="pdf-row-meta">Configure an OpenAI-compatible endpoint in Settings first.</span>
                 )}
               </label>
             </div>

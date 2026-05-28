@@ -6,6 +6,7 @@
   max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .pdf-import-dialog .dialog-form {
@@ -13,23 +14,63 @@
   flex-direction: column;
   gap: 1rem;
   overflow-y: auto;
+  min-height: 0;
 }
 
+/* Controls row: doc-type + file picker + AI toggle */
 .pdf-import-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr) auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+@media (max-width: 720px) {
+  .pdf-import-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pdf-import-controls .form-group {
   margin-bottom: 0;
+  min-width: 0;
 }
 
+.pdf-import-controls .form-group input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* AI toggle: checkbox stays small, label wraps inside the cell */
 .pdf-import-llm-toggle {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
+  padding: 0.4rem 0;
+  max-width: 320px;
+}
+
+.pdf-import-llm-toggle input[type="checkbox"] {
+  width: auto !important;
+  flex: 0 0 auto;
+  margin: 0.25rem 0 0 0;
+  accent-color: var(--accent-primary);
+}
+
+.pdf-import-llm-toggle label {
+  margin: 0 !important;
+  display: block !important;
+  line-height: 1.3;
+  font-size: 0.9rem;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.pdf-import-llm-toggle .pdf-row-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .pdf-import-status {
@@ -37,12 +78,12 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   min-height: 1.5em;
 }
 
 .pdf-import-status.error {
-  color: #dc2626;
+  color: #f87171;
 }
 
 .pdf-import-summary {
@@ -51,13 +92,15 @@
   font-size: 0.9rem;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  background: #f3f4f6;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .pdf-import-table-wrapper {
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
   border-radius: 8px;
+  max-height: 55vh;
 }
 
 .pdf-import-table {
@@ -69,13 +112,14 @@
 .pdf-import-table th,
 .pdf-import-table td {
   padding: 0.5rem 0.6rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-subtle);
   text-align: left;
   vertical-align: middle;
 }
 
 .pdf-import-table th {
-  background: #f9fafb;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   font-weight: 600;
   position: sticky;
   top: 0;
@@ -87,7 +131,7 @@
 }
 
 .pdf-import-table tr.low-confidence td {
-  background: #fff7ed;
+  background: rgba(251, 146, 60, 0.08);
 }
 
 .pdf-import-table input[type="text"],
@@ -96,10 +140,17 @@
 .pdf-import-table select {
   width: 100%;
   padding: 0.3rem 0.4rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-subtle);
   border-radius: 4px;
   font-size: 0.85rem;
   box-sizing: border-box;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.pdf-import-table input[type="checkbox"] {
+  width: auto !important;
+  accent-color: var(--accent-primary);
 }
 
 .pdf-import-table .col-include {
@@ -123,15 +174,15 @@
 
 .pdf-import-table .pdf-row-meta {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin-top: 0.2rem;
 }
 
 .pdf-import-empty {
   padding: 1.5rem;
   text-align: center;
-  color: #6b7280;
-  border: 1px dashed #d1d5db;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-subtle);
   border-radius: 8px;
 }
 
