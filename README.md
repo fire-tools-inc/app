@@ -108,6 +108,52 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+### Run locally with Docker (backend + frontend)
+
+A self-hosted stack is wired in [`docker-compose.yml`](docker-compose.yml).
+Backend (Node + SQLite) + frontend (Vite SPA served via nginx + `/api` proxy):
+
+```bash
+docker compose build --no-cache
+docker compose up -d
+# UI:  http://localhost:8080
+# API: http://localhost:8080/api/v1/health
+```
+
+The backend is still a **scaffold** — `/health` and `/users/me` are real;
+the rest of the OpenAPI contract replies `501 not_implemented`. Full guide:
+[`docs/deployment/README.md`](docs/deployment/README.md). Tracks
+issues [#129](https://github.com/mbianchidev/fire-tools/issues/129) and
+[#195](https://github.com/mbianchidev/fire-tools/issues/195).
+
+### Desktop app (Electron)
+
+A hardened Electron wrapper is in [`electron/`](electron/) (issue
+[#132](https://github.com/mbianchidev/fire-tools/issues/132)). Build
+installers for macOS / Windows / Linux:
+
+```bash
+npm install
+npm run electron:dist   # produces installers under release/
+```
+
+Code-signing + notarization are env-driven; see
+[`electron/README.md`](electron/README.md).
+
+### Landing page
+
+Marketing landing page lives in [`website/`](website/) (issue
+[#138](https://github.com/mbianchidev/fire-tools/issues/138)) and is
+copied into `dist/landing/` during `npm run build:landing`. The existing
+GitHub Pages workflow then serves it at `/fire-tools/landing/`.
+
+### Mobile
+
+The mobile app is intentionally a **separate Flutter repo**
+(`fire-tools-mobile`) that consumes the same OpenAPI contract. Rationale
++ stack choice in [`docs/mobile/README.md`](docs/mobile/README.md). Tracks
+issue [#134](https://github.com/mbianchidev/fire-tools/issues/134).
+
 ---
 
 ## Documentation
@@ -117,8 +163,12 @@ The built files will be in the `dist` directory.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 - **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
 - **[SUPPORT.md](SUPPORT.md)** - Getting help and support
-- **[docs/api/](docs/api/)** - OpenAPI contract for the planned local-deployment backend (see issue [#133](https://github.com/mbianchidev/fire-tools/issues/133))
-- **[docs/database/](docs/database/)** - Database schema (SQLite-first, Postgres-compatible) for the planned backend
+- **[docs/api/](docs/api/)** - OpenAPI contract for the local-deployment backend (see issue [#133](https://github.com/mbianchidev/fire-tools/issues/133))
+- **[docs/database/](docs/database/)** - Database schema (SQLite-first, Postgres-compatible)
+- **[docs/deployment/](docs/deployment/)** - Docker Compose deployment guide
+- **[docs/mobile/](docs/mobile/)** - Flutter mobile app plan (separate repo)
+- **[electron/README.md](electron/README.md)** - Desktop app build, signing, security posture
+- **[server/README.md](server/README.md)** - Local-deployment backend scaffold
 - **[docs/pdf-import.md](docs/pdf-import.md)** - PDF expense/income import (experimental)
 
 ---
@@ -126,15 +176,19 @@ The built files will be in the `dist` directory.
 ## Architecture & APIs
 
 Fire Tools today runs **entirely client-side** with encrypted cookies. A
-**local-deployment backend** (Docker / Electron) is being designed so users
-who prefer a real database can run their data on their own machine. The
-backend itself is not yet implemented, but the **contract** is:
+**local-deployment backend** (Docker / Electron) is being scaffolded so
+users who prefer a real database can run their data on their own machine.
+The backend is wired end-to-end with health + a small user endpoint;
+remaining endpoints reply `501 not_implemented` against the contract:
 
 - **OpenAPI 3.0.3 spec**: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — see [`docs/api/README.md`](docs/api/README.md)
-- **Database schema**: [`docs/database/schema.sql`](docs/database/schema.sql) — **SQLite is the first-class target**, **PostgreSQL is fully compatible**. See [`docs/database/README.md`](docs/database/README.md) for dialect notes and the ERD.
+- **Database schema**: [`docs/database/schema.sql`](docs/database/schema.sql) — **SQLite is the first-class target**, **PostgreSQL is fully compatible**. See [`docs/database/README.md`](docs/database/README.md).
+- **Backend scaffold**: [`server/`](server/) — Node + Express + better-sqlite3.
+- **Docker stack**: [`docker-compose.yml`](docker-compose.yml) + [`docs/deployment/README.md`](docs/deployment/README.md).
+- **Desktop wrapper**: [`electron/`](electron/) — hardened Electron, code-sign-ready.
 
-Both files cover every feature currently shipped (FIRE calculator, asset
-allocation, expense / income tracker, net worth tracker, notifications,
+Both contract files cover every feature currently shipped (FIRE calculator,
+asset allocation, expense / income tracker, net worth tracker, notifications,
 questionnaire, PDF import, portfolio breakdown, banks lookup).
 
 Single-user by default; the schema and API are already multi-tenant-ready
@@ -158,10 +212,19 @@ Tracking issues: [#133](https://github.com/mbianchidev/fire-tools/issues/133) (t
 - **crypto-js** - AES encryption for data security
 - **js-cookie** - Secure cookie management
 
-### Backend (planned, contract-only)
-- **REST API** described in [`docs/api/openapi.yaml`](docs/api/openapi.yaml) (OpenAPI 3.0.3)
-- **Database**: SQLite (first-class) + PostgreSQL-compatible, schema in [`docs/database/schema.sql`](docs/database/schema.sql)
-- Implementation language is not yet decided; the spec is implementation-agnostic.
+### Backend (scaffold — see [`server/`](server/))
+- **Node.js 22** + **Express 4** + **TypeScript** (strict, ESM)
+- **better-sqlite3** for the first-class SQLite target
+- **Docker Compose** orchestrates backend + frontend + optional Postgres profile
+- REST API described in [`docs/api/openapi.yaml`](docs/api/openapi.yaml) (OpenAPI 3.0.3)
+- DB schema in [`docs/database/schema.sql`](docs/database/schema.sql) — SQLite first-class, Postgres-compatible
+
+### Desktop ([`electron/`](electron/))
+- **Electron 33** with hardened defaults (contextIsolation, sandbox, no nodeIntegration)
+- **electron-builder** producing `dmg` / `nsis` / `AppImage`
+
+### Mobile (separate repo — see [`docs/mobile/README.md`](docs/mobile/README.md))
+- **Flutter** consuming the same OpenAPI contract — lives in `fire-tools-mobile`.
 
 ---
 
