@@ -1,0 +1,72 @@
+# Local-deployment stack for fire-tools.
+#
+# Usage:
+#   docker compose build --no-cache
+#   docker compose up -d
+#   docker compose --profile postgres up -d   # if you want Postgres instead of SQLite
+#
+# See docs/deployment/README.md for the full guide.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: firetools/backend:dev
+    environment:
+      NODE_ENV: production
+      PORT: 8787
+      HOST: 0.0.0.0
+      DATABASE_URL: file:/data/firetools.db
+      SCHEMA_PATH: /app/schema/schema.sql
+      CORS_ORIGIN: http://localhost:8080
+    volumes:
+      - firetools-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - firetools
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    image: firetools/frontend:dev
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - firetools
+
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: firetools
+      POSTGRES_PASSWORD: firetools
+      POSTGRES_DB: firetools
+    volumes:
+      - firetools-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firetools -d firetools"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - firetools
+
+volumes:
+  firetools-data:
+  firetools-pg:
+
+networks:
+  firetools:
+    driver: bridge
