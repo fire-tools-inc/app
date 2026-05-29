@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fire Tools — Plan your path to financial independence</title>
+    <meta name="description" content="Open-source FIRE planning suite. Free, private, runs in your browser, on your desktop or self-hosted." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./">🔥 Fire Tools</a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="https://github.com/mbianchidev/fire-tools" rel="noopener">GitHub</a>
+        <a class="cta" href="https://mbianchidev.github.io/fire-tools/">Open the app</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Plan your path to <span class="accent">Financial Independence</span>.</h1>
+        <p>FIRE calculator, Monte Carlo simulations, asset allocation, expense and net-worth tracking — all in one open-source toolbox. Runs in your browser, on your desktop, or self-hosted. Your data never leaves your device unless you decide otherwise.</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="https://mbianchidev.github.io/fire-tools/">Open the web app</a>
+          <a class="btn ghost" href="#download">Download desktop</a>
+          <a class="btn ghost" href="https://github.com/mbianchidev/fire-tools" rel="noopener">View on GitHub</a>
+        </div>
+      </section>
+
+      <section id="features" class="features">
+        <h2>What you get</h2>
+        <div class="grid">
+          <article>
+            <h3>FIRE calculator</h3>
+            <p>Project years-to-FIRE from savings rate, expenses, returns and inflation. Share scenarios via URL.</p>
+          </article>
+          <article>
+            <h3>Monte Carlo</h3>
+            <p>Probabilistic projections with configurable volatility and black-swan events.</p>
+          </article>
+          <article>
+            <h3>Asset allocation</h3>
+            <p>Track portfolio breakdown and get buy / sell / hold rebalancing hints.</p>
+          </article>
+          <article>
+            <h3>Expense &amp; net-worth tracking</h3>
+            <p>Lightweight ledgers with CSV import/export — your bank, your rules.</p>
+          </article>
+          <article>
+            <h3>Privacy-first</h3>
+            <p>Client-side only by default. Sensitive data lives in AES-256-encrypted cookies on your device.</p>
+          </article>
+          <article>
+            <h3>Self-hostable</h3>
+            <p>A local backend (SQLite-first, Postgres-ready) ships via Docker Compose for power users.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="download" class="download">
+        <h2>Get Fire Tools</h2>
+        <div class="grid">
+          <article>
+            <h3>Web</h3>
+            <p>No install. Latest version always live.</p>
+            <a class="btn primary" href="https://mbianchidev.github.io/fire-tools/">Open in browser</a>
+          </article>
+          <article>
+            <h3>Desktop</h3>
+            <p>macOS, Windows, Linux. Built with Electron — same UX as the web app, offline-first.</p>
+            <a class="btn primary" href="https://github.com/mbianchidev/fire-tools/releases">Releases</a>
+          </article>
+          <article>
+            <h3>Self-host</h3>
+            <p>One <code>docker compose up</code>. SQLite by default, Postgres via profile.</p>
+            <a class="btn primary" href="https://github.com/mbianchidev/fire-tools/blob/main/docs/deployment/README.md">Deployment guide</a>
+          </article>
+          <article>
+            <h3>Mobile</h3>
+            <p>Flutter app, tracked in <a href="https://github.com/mbianchidev/fire-tools/issues/134">#134</a>. Coming as a separate repo.</p>
+            <span class="badge">Planned</span>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>MIT-licensed · Built by <a href="https://github.com/mbianchidev" rel="noopener">@mbianchidev</a> and contributors.</p>
+    </footer>
+  </body>
+</html>
