@@ -26,10 +26,31 @@ This document provides comprehensive instructions for AI agents working on the F
 ### Node.js Version Requirements
 - Node.js ^20.19.0 || ^22.12.0 || >=24.0.0
 
+### Planned Backend (contract-only, not yet implemented)
+Local-deployment / Electron path (issues [#133](https://github.com/mbianchidev/fire-tools/issues/133),
+[#189](https://github.com/mbianchidev/fire-tools/issues/189),
+[#195](https://github.com/mbianchidev/fire-tools/issues/195),
+[#222](https://github.com/mbianchidev/fire-tools/issues/222)):
+- **REST API**: OpenAPI 3.0.3 contract at [`docs/api/openapi.yaml`](docs/api/openapi.yaml). See [`docs/api/README.md`](docs/api/README.md) for conventions, type mapping, and client generation.
+- **Database**: SQLite as the **first-class** target, **PostgreSQL-compatible** schema. DDL at [`docs/database/schema.sql`](docs/database/schema.sql); design notes and ERD at [`docs/database/README.md`](docs/database/README.md).
+- **Auth model**: single-user-by-default; schema/API are already multi-tenant-ready (a `users` table exists and every domain row carries `user_id`).
+- **Status**: contract only. No server implementation yet. The implementation language is intentionally not chosen — the spec is implementation-agnostic.
+
+When adding or changing a domain type in `src/types/*.ts`, update **all three**:
+1. The TS interface / union
+2. The matching schema/enum in [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
+3. The matching column / `CHECK (... IN (...))` constraint in [`docs/database/schema.sql`](docs/database/schema.sql)
+
+Validate after edits:
+```sh
+npx @redocly/cli lint docs/api/openapi.yaml --config docs/api/redocly.yaml
+sqlite3 :memory: < docs/database/schema.sql
+```
+
 ## Architecture Overview
 
 ### Application Structure
-Fire Tools is a **client-side only** React application for FIRE (Financial Independence Retire Early) planning. It consists of multiple tools accessible through a single-page application architecture:
+Fire Tools is **today** a **client-side only** React application for FIRE (Financial Independence Retire Early) planning. A local-deployment backend (see "Planned Backend" above) is contract-only — the frontend is still the only running component. It consists of multiple tools accessible through a single-page application architecture:
 
 1. **Homepage** - Landing page with tool overview
 2. **FIRE Calculator** - Main calculator with projections and Monte Carlo simulations
@@ -39,9 +60,9 @@ Fire Tools is a **client-side only** React application for FIRE (Financial Indep
 ### Key Design Principles
 
 #### Privacy-First Architecture
-- **No backend servers** - All data processing happens client-side
-- **Encrypted local storage** - AES-256 encryption for all sensitive data
-- **No data transmission** - Nothing is sent to external servers
+- **No backend servers (today)** - All data processing happens client-side. The planned backend (above) runs **locally** on the user's machine; data never leaves the device.
+- **Encrypted local storage** - AES-256 encryption for all sensitive data stored in browser cookies
+- **No data transmission** - Nothing is sent to external servers (Yahoo Finance is the only opt-in external call)
 - **Secure cookies** - `SameSite=Strict` and `Secure` flags for HTTPS
 
 #### State Management

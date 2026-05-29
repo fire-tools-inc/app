@@ -1,0 +1,2554 @@
+openapi: 3.0.3
+info:
+  title: Fire Tools API
+  version: 0.1.0
+  description: |
+    REST API contract for the Fire Tools backend (local-deployment / Electron).
+
+    Fire Tools is currently a client-side React app that stores everything in
+    encrypted cookies. This OpenAPI contract describes the **planned** backend
+    that will power local deployments (Docker / Electron) — see
+    [issue #133](https://github.com/mbianchidev/fire-tools/issues/133).
+
+    **Status — contract only.** No server implementation exists yet.
+
+    Conventions
+    -----------
+    * Base path: `/api/v1`
+    * Payload casing: **camelCase** (matches `src/types/*.ts`)
+    * Date format: ISO-8601 strings (`YYYY-MM-DD` for dates, full ISO for timestamps)
+    * Money: floating-point numbers in the account's display currency
+    * Errors: `{ "error": { "code": string, "message": string, "details"?: any } }`
+    * Pagination: cursor-style (`?cursor=&limit=`) on list endpoints that can grow large
+    * IDs: every resource exposes a numeric server `id` **and** a stable
+      `externalId` (client-minted) — clients pass `externalId` on upsert.
+    * Auth: single-user deployments accept unauthenticated requests; the bearer
+      scheme below is reserved for multi-tenant deployments and is opt-in.
+  license:
+    name: MIT
+    url: https://github.com/mbianchidev/fire-tools/blob/main/LICENSE
+  contact:
+    name: Fire Tools
+    url: https://github.com/mbianchidev/fire-tools
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local dev / Docker
+
+tags:
+  - name: System
+    description: Service health and metadata
+  - name: Users
+    description: User identity (multi-tenant ready, single bootstrap user by default)
+  - name: Settings
+    description: Per-user UI, currency, FIRE, and experimental-feature settings
+  - name: Notifications
+    description: In-app notification feed and channel preferences
+  - name: Calculator
+    description: Stored FIRE calculator inputs
+  - name: MonteCarlo
+    description: Persisted Monte Carlo simulation runs and per-run logs
+  - name: AssetAllocation
+    description: Portfolio holdings, allocation targets, and configuration
+  - name: ExpenseTracker
+    description: Monthly cashflow tracker (incomes, expenses, budgets, custom categories)
+  - name: NetWorthTracker
+    description: Monthly net worth snapshots and financial operations
+  - name: Questionnaire
+    description: FIRE-persona questionnaire results
+  - name: PdfImport
+    description: Experimental — drafts parsed from PDFs (receipts, statements, payslips)
+  - name: PortfolioBreakdown
+    description: Experimental — cached ticker metadata and breakdown computations
+  - name: Banks
+    description: Read-mostly lookup of supported banks/brokers with OpenBanking support flag
+
+security: []   # default: no auth (single-user). Per-operation may require bearer.
+
+# =============================================================================
+# Paths
+# =============================================================================
+paths:
+  # ---------------------------------------------------------------------------
+  # System
+  # ---------------------------------------------------------------------------
+  /health:
+    get:
+      tags: [System]
+      summary: Liveness probe
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is up
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+
+  # ---------------------------------------------------------------------------
+  # Users (only useful for multi-tenant deployments; single-user uses id=1)
+  # ---------------------------------------------------------------------------
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get the current user (or the bootstrap user in single-user mode)
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  # ---------------------------------------------------------------------------
+  # Settings
+  # ---------------------------------------------------------------------------
+  /settings:
+    get:
+      tags: [Settings]
+      summary: Get user settings
+      operationId: getSettings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSettings' }
+    put:
+      tags: [Settings]
+      summary: Replace user settings
+      operationId: replaceSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserSettings' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSettings' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+    patch:
+      tags: [Settings]
+      summary: Update user settings (partial)
+      operationId: updateSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserSettingsPatch' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserSettings' }
+
+  /settings/notifications:
+    get:
+      tags: [Settings, Notifications]
+      summary: Get notification preferences
+      operationId: getNotificationPreferences
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationPreferences' }
+    put:
+      tags: [Settings, Notifications]
+      summary: Replace notification preferences
+      operationId: replaceNotificationPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NotificationPreferences' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationPreferences' }
+
+  # ---------------------------------------------------------------------------
+  # Notifications
+  # ---------------------------------------------------------------------------
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      operationId: listNotifications
+      parameters:
+        - { in: query, name: unreadOnly, schema: { type: boolean, default: false } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationList' }
+    post:
+      tags: [Notifications]
+      summary: Create a notification (typically server-generated)
+      operationId: createNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NotificationCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Notification' }
+
+  /notifications/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    get:
+      tags: [Notifications]
+      summary: Get a notification
+      operationId: getNotification
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Notification' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Notifications]
+      summary: Update a notification (e.g. mark read)
+      operationId: updateNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Notification' }
+    delete:
+      tags: [Notifications]
+      summary: Delete a notification
+      operationId: deleteNotification
+      responses:
+        '204': { description: Deleted }
+
+  /notifications/mark-all-read:
+    post:
+      tags: [Notifications]
+      summary: Mark every unread notification as read
+      operationId: markAllNotificationsRead
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+
+  # ---------------------------------------------------------------------------
+  # FIRE calculator inputs
+  # ---------------------------------------------------------------------------
+  /calculator/inputs:
+    get:
+      tags: [Calculator]
+      summary: Get saved calculator inputs
+      operationId: getCalculatorInputs
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculatorInputs' }
+    put:
+      tags: [Calculator]
+      summary: Replace calculator inputs
+      operationId: replaceCalculatorInputs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CalculatorInputs' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculatorInputs' }
+
+  # ---------------------------------------------------------------------------
+  # Monte Carlo runs (history)
+  # ---------------------------------------------------------------------------
+  /calculator/monte-carlo/runs:
+    get:
+      tags: [MonteCarlo]
+      summary: List saved Monte Carlo runs
+      operationId: listMonteCarloRuns
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonteCarloRunList' }
+    post:
+      tags: [MonteCarlo]
+      summary: Save a Monte Carlo run
+      operationId: createMonteCarloRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonteCarloRunCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonteCarloRun' }
+
+  /calculator/monte-carlo/runs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [MonteCarlo]
+      summary: Get a Monte Carlo run (including logs if stored)
+      operationId: getMonteCarloRun
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonteCarloRunWithLogs' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [MonteCarlo]
+      summary: Delete a Monte Carlo run
+      operationId: deleteMonteCarloRun
+      responses:
+        '204': { description: Deleted }
+
+  # ---------------------------------------------------------------------------
+  # Asset Allocation
+  # ---------------------------------------------------------------------------
+  /asset-allocation/config:
+    get:
+      tags: [AssetAllocation]
+      summary: Get asset allocation config
+      operationId: getAssetAllocationConfig
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetAllocationConfig' }
+    put:
+      tags: [AssetAllocation]
+      summary: Replace asset allocation config
+      operationId: replaceAssetAllocationConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetAllocationConfig' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetAllocationConfig' }
+
+  /asset-allocation/assets:
+    get:
+      tags: [AssetAllocation]
+      summary: List assets
+      operationId: listAssets
+      parameters:
+        - in: query
+          name: assetClass
+          schema: { $ref: '#/components/schemas/AssetClass' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Asset' }
+    post:
+      tags: [AssetAllocation]
+      summary: Create an asset
+      operationId: createAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Asset' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Asset' }
+
+  /asset-allocation/assets/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    get:
+      tags: [AssetAllocation]
+      summary: Get an asset
+      operationId: getAsset
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Asset' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [AssetAllocation]
+      summary: Replace an asset (upsert by externalId)
+      operationId: replaceAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Asset' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Asset' }
+    delete:
+      tags: [AssetAllocation]
+      summary: Delete an asset
+      operationId: deleteAsset
+      responses:
+        '204': { description: Deleted }
+
+  # ---------------------------------------------------------------------------
+  # Expense tracker
+  # ---------------------------------------------------------------------------
+  /expense-tracker/config:
+    get:
+      tags: [ExpenseTracker]
+      summary: Get expense tracker config
+      operationId: getExpenseTrackerConfig
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpenseTrackerConfig' }
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace expense tracker config
+      operationId: replaceExpenseTrackerConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpenseTrackerConfig' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpenseTrackerConfig' }
+
+  /expense-tracker/months/{year}/{month}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [ExpenseTracker]
+      summary: Get a month (incomes, expenses, budgets)
+      operationId: getExpenseMonth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthData' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace a month wholesale (bulk upsert)
+      operationId: replaceExpenseMonth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonthData' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthData' }
+    patch:
+      tags: [ExpenseTracker]
+      summary: Update month metadata (e.g. isClosed)
+      operationId: updateExpenseMonth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isClosed: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthData' }
+
+  /expense-tracker/expenses:
+    get:
+      tags: [ExpenseTracker]
+      summary: List expense entries (with filters)
+      operationId: listExpenses
+      parameters:
+        - { in: query, name: startDate, schema: { type: string, format: date } }
+        - { in: query, name: endDate,   schema: { type: string, format: date } }
+        - { in: query, name: category,  schema: { type: string } }
+        - { in: query, name: expenseType, schema: { type: string, enum: [NEED, WANT] } }
+        - { in: query, name: isRecurring, schema: { type: boolean } }
+        - { in: query, name: searchTerm,  schema: { type: string } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpenseEntryList' }
+    post:
+      tags: [ExpenseTracker]
+      summary: Create an expense entry
+      operationId: createExpense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpenseEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpenseEntry' }
+
+  /expense-tracker/expenses/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace an expense entry
+      operationId: replaceExpense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpenseEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpenseEntry' }
+    delete:
+      tags: [ExpenseTracker]
+      summary: Delete an expense entry
+      operationId: deleteExpense
+      responses:
+        '204': { description: Deleted }
+
+  /expense-tracker/incomes:
+    get:
+      tags: [ExpenseTracker]
+      summary: List income entries
+      operationId: listIncomes
+      parameters:
+        - { in: query, name: startDate, schema: { type: string, format: date } }
+        - { in: query, name: endDate,   schema: { type: string, format: date } }
+        - { in: query, name: source,    schema: { $ref: '#/components/schemas/IncomeSource' } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IncomeEntryList' }
+    post:
+      tags: [ExpenseTracker]
+      summary: Create an income entry
+      operationId: createIncome
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IncomeEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IncomeEntry' }
+
+  /expense-tracker/incomes/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace an income entry
+      operationId: replaceIncome
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IncomeEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IncomeEntry' }
+    delete:
+      tags: [ExpenseTracker]
+      summary: Delete an income entry
+      operationId: deleteIncome
+      responses:
+        '204': { description: Deleted }
+
+  /expense-tracker/budgets:
+    get:
+      tags: [ExpenseTracker]
+      summary: List budgets (global and per-month)
+      operationId: listBudgets
+      parameters:
+        - { in: query, name: monthKey, schema: { type: string, description: 'YYYY-MM or "global"' } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CategoryBudget' }
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace the full budget list
+      operationId: replaceBudgets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/CategoryBudget' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CategoryBudget' }
+
+  /expense-tracker/custom-categories:
+    get:
+      tags: [ExpenseTracker]
+      summary: List user-defined custom categories
+      operationId: listCustomCategories
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CustomCategory' }
+    post:
+      tags: [ExpenseTracker]
+      summary: Create a custom category
+      operationId: createCustomCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomCategory' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomCategory' }
+
+  /expense-tracker/custom-categories/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace a custom category
+      operationId: replaceCustomCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomCategory' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomCategory' }
+    delete:
+      tags: [ExpenseTracker]
+      summary: Delete a custom category
+      operationId: deleteCustomCategory
+      responses:
+        '204': { description: Deleted }
+
+  /expense-tracker/category-overrides:
+    get:
+      tags: [ExpenseTracker]
+      summary: List built-in category overrides
+      operationId: listCategoryOverrides
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CategoryOverride' }
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace the full category-override list
+      operationId: replaceCategoryOverrides
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/CategoryOverride' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CategoryOverride' }
+
+  # ---------------------------------------------------------------------------
+  # Net Worth tracker
+  # ---------------------------------------------------------------------------
+  /net-worth/config:
+    get:
+      tags: [NetWorthTracker]
+      summary: Get net worth tracker config
+      operationId: getNetWorthConfig
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetWorthConfig' }
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace net worth tracker config
+      operationId: replaceNetWorthConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NetWorthConfig' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetWorthConfig' }
+
+  /net-worth/snapshot:
+    get:
+      tags: [NetWorthTracker]
+      summary: Aggregate snapshot (whole NetWorthTrackerData payload)
+      description: |
+        Convenience endpoint that returns the entire tracker state in the same
+        shape the frontend keeps in cookies today. Useful for one-shot
+        hydration and migration tooling.
+      operationId: getNetWorthSnapshot
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetWorthTrackerData' }
+
+  /net-worth/months/{year}/{month}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      summary: Get a monthly snapshot
+      operationId: getNetWorthMonth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthlySnapshot' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a monthly snapshot wholesale
+      operationId: replaceNetWorthMonth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonthlySnapshot' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthlySnapshot' }
+    patch:
+      tags: [NetWorthTracker]
+      summary: Update month metadata (freeze / unfreeze, notes)
+      operationId: updateNetWorthMonth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isFrozen: { type: boolean }
+                monthNote: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MonthlySnapshot' }
+
+  # Granular child collections, scoped to a month
+  /net-worth/months/{year}/{month}/holdings:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      operationId: listAssetHoldings
+      summary: List asset holdings for a month
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AssetHolding' }
+    post:
+      tags: [NetWorthTracker]
+      operationId: createAssetHolding
+      summary: Add a holding to a month
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetHolding' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetHolding' }
+
+  /net-worth/months/{year}/{month}/holdings/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      operationId: replaceAssetHolding
+      summary: Replace a holding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetHolding' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetHolding' }
+    delete:
+      tags: [NetWorthTracker]
+      operationId: deleteAssetHolding
+      summary: Delete a holding
+      responses:
+        '204': { description: Deleted }
+
+  /net-worth/months/{year}/{month}/cash:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      operationId: listCashEntries
+      summary: List cash entries for a month
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CashEntry' }
+    post:
+      tags: [NetWorthTracker]
+      operationId: createCashEntry
+      summary: Add a cash entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CashEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashEntry' }
+
+  /net-worth/months/{year}/{month}/cash/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a cash entry
+      operationId: replaceCashEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CashEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CashEntry' }
+    delete:
+      tags: [NetWorthTracker]
+      summary: Delete a cash entry
+      operationId: deleteCashEntry
+      responses:
+        '204': { description: Deleted }
+
+  /net-worth/months/{year}/{month}/pensions:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      summary: List pension entries for a month
+      operationId: listPensions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PensionEntry' }
+    post:
+      tags: [NetWorthTracker]
+      summary: Add a pension entry
+      operationId: createPension
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PensionEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PensionEntry' }
+
+  /net-worth/months/{year}/{month}/pensions/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a pension entry
+      operationId: replacePension
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PensionEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PensionEntry' }
+    delete:
+      tags: [NetWorthTracker]
+      summary: Delete a pension entry
+      operationId: deletePension
+      responses:
+        '204': { description: Deleted }
+
+  /net-worth/months/{year}/{month}/debts:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      summary: List debt entries for a month
+      operationId: listDebts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DebtEntry' }
+    post:
+      tags: [NetWorthTracker]
+      summary: Add a debt entry
+      operationId: createDebt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DebtEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DebtEntry' }
+
+  /net-worth/months/{year}/{month}/debts/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a debt entry
+      operationId: replaceDebt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DebtEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DebtEntry' }
+    delete:
+      tags: [NetWorthTracker]
+      summary: Delete a debt entry
+      operationId: deleteDebt
+      responses:
+        '204': { description: Deleted }
+
+  /net-worth/months/{year}/{month}/taxes:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      summary: List tax entries for a month
+      operationId: listTaxes
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TaxEntry' }
+    post:
+      tags: [NetWorthTracker]
+      summary: Add a tax entry
+      operationId: createTax
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaxEntry' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaxEntry' }
+
+  /net-worth/months/{year}/{month}/taxes/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a tax entry
+      operationId: replaceTax
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TaxEntry' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaxEntry' }
+    delete:
+      tags: [NetWorthTracker]
+      summary: Delete a tax entry
+      operationId: deleteTax
+      responses:
+        '204': { description: Deleted }
+
+  /net-worth/months/{year}/{month}/operations:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+    get:
+      tags: [NetWorthTracker]
+      summary: List financial operations for a month
+      operationId: listFinancialOperations
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FinancialOperationList' }
+    post:
+      tags: [NetWorthTracker]
+      summary: Add a financial operation
+      operationId: createFinancialOperation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FinancialOperation' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FinancialOperation' }
+
+  /net-worth/months/{year}/{month}/operations/{externalId}:
+    parameters:
+      - $ref: '#/components/parameters/Year'
+      - $ref: '#/components/parameters/Month'
+      - $ref: '#/components/parameters/ExternalId'
+    put:
+      tags: [NetWorthTracker]
+      summary: Replace a financial operation
+      operationId: replaceFinancialOperation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FinancialOperation' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FinancialOperation' }
+    delete:
+      tags: [NetWorthTracker]
+      summary: Delete a financial operation
+      operationId: deleteFinancialOperation
+      responses:
+        '204': { description: Deleted }
+
+  # ---------------------------------------------------------------------------
+  # Questionnaire
+  # ---------------------------------------------------------------------------
+  /questionnaire/results:
+    get:
+      tags: [Questionnaire]
+      summary: List questionnaire result history
+      operationId: listQuestionnaireResults
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/QuestionnaireResults' }
+    post:
+      tags: [Questionnaire]
+      summary: Persist a completed questionnaire result
+      operationId: createQuestionnaireResult
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuestionnaireResults' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionnaireResults' }
+
+  /questionnaire/results/latest:
+    get:
+      tags: [Questionnaire]
+      summary: Get the most recent questionnaire result
+      operationId: getLatestQuestionnaireResult
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionnaireResults' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------------------
+  # PDF import (experimental)
+  # ---------------------------------------------------------------------------
+  /pdf-imports:
+    get:
+      tags: [PdfImport]
+      summary: List PDF import sessions
+      operationId: listPdfImports
+      parameters:
+        - { in: query, name: status, schema: { type: string, enum: [pending, reviewed, committed, discarded] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PdfImport' }
+    post:
+      tags: [PdfImport]
+      summary: Persist a parsed PDF (drafts produced client-side)
+      operationId: createPdfImport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PdfImportCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PdfImport' }
+
+  /pdf-imports/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [PdfImport]
+      summary: Get a PDF import session
+      operationId: getPdfImport
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PdfImport' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [PdfImport]
+      summary: Update drafts / change status
+      operationId: updatePdfImport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, reviewed, committed, discarded]
+                drafts:
+                  type: array
+                  items: { $ref: '#/components/schemas/ParsedTransactionDraft' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PdfImport' }
+    delete:
+      tags: [PdfImport]
+      summary: Delete a PDF import session
+      operationId: deletePdfImport
+      responses:
+        '204': { description: Deleted }
+
+  /pdf-imports/{id}/commit:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    post:
+      tags: [PdfImport]
+      summary: Commit selected drafts into the expense tracker
+      operationId: commitPdfImport
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importedExpenses: { type: integer }
+                  importedIncomes:  { type: integer }
+
+  # ---------------------------------------------------------------------------
+  # Portfolio breakdown
+  # ---------------------------------------------------------------------------
+  /portfolio-breakdown/metadata/{ticker}:
+    parameters:
+      - in: path
+        name: ticker
+        required: true
+        schema: { type: string }
+    get:
+      tags: [PortfolioBreakdown]
+      summary: Get cached asset metadata for a ticker
+      operationId: getAssetMetadata
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetMetadata' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [PortfolioBreakdown]
+      summary: Upsert cached asset metadata
+      operationId: replaceAssetMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetMetadata' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetMetadata' }
+
+  /portfolio-breakdown:
+    get:
+      tags: [PortfolioBreakdown]
+      summary: Compute portfolio breakdown across one or more dimensions
+      operationId: getPortfolioBreakdown
+      parameters:
+        - in: query
+          name: dimension
+          required: true
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/BreakdownDimension' }
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BreakdownResult' }
+
+  # ---------------------------------------------------------------------------
+  # Banks lookup
+  # ---------------------------------------------------------------------------
+  /banks:
+    get:
+      tags: [Banks]
+      summary: List supported banks / brokers
+      operationId: listBanks
+      parameters:
+        - { in: query, name: countryCode,         schema: { type: string } }
+        - { in: query, name: supportsOpenBanking, schema: { type: boolean } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/BankInfo' }
+
+  /banks/{code}:
+    parameters:
+      - in: path
+        name: code
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Banks]
+      summary: Get a single bank/broker by code
+      operationId: getBank
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BankInfo' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+# =============================================================================
+# Components
+# =============================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Reserved for multi-tenant deployments. Single-user deployments leave
+        this off.
+
+  parameters:
+    IdPath:
+      in: path
+      name: id
+      required: true
+      schema: { type: integer, format: int64 }
+    ExternalId:
+      in: path
+      name: externalId
+      required: true
+      schema: { type: string }
+      description: Client-minted stable id (e.g. "txn-123-abc")
+    Year:
+      in: path
+      name: year
+      required: true
+      schema: { type: integer, minimum: 1900, maximum: 9999 }
+    Month:
+      in: path
+      name: month
+      required: true
+      schema: { type: integer, minimum: 1, maximum: 12 }
+    Cursor:
+      in: query
+      name: cursor
+      schema: { type: string }
+      description: Opaque pagination cursor returned in a prior response
+    Limit:
+      in: query
+      name: limit
+      schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+
+  responses:
+    BadRequest:
+      description: Request payload failed validation
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: Resource conflict (e.g. duplicate externalId)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    # -- Shared --------------------------------------------------------------
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:    { type: string, example: VALIDATION_FAILED }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+
+    Health:
+      type: object
+      properties:
+        status:    { type: string, enum: [ok] }
+        version:   { type: string }
+        timestamp: { type: string, format: date-time }
+
+    PaginationCursor:
+      type: object
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+
+    SupportedCurrency:
+      type: string
+      enum: [EUR, USD, GBP, CHF, JPY, AUD, CAD]
+
+    # -- Users / Settings ----------------------------------------------------
+    User:
+      type: object
+      required: [id, email]
+      properties:
+        id:          { type: integer, format: int64, example: 1 }
+        email:       { type: string, format: email }
+        displayName: { type: string, nullable: true }
+        createdAt:   { type: string, format: date-time }
+        updatedAt:   { type: string, format: date-time }
+
+    ExperimentalFeatures:
+      type: object
+      properties:
+        portfolioBreakdown: { type: boolean, default: false }
+        pdfImport:          { type: boolean, default: false }
+
+    LlmCategorizationConfig:
+      type: object
+      required: [baseUrl, apiKey, model]
+      properties:
+        baseUrl: { type: string }
+        apiKey:  { type: string, format: password }
+        model:   { type: string }
+
+    CurrencySettings:
+      type: object
+      required: [defaultCurrency, fallbackRates, useApiRates]
+      properties:
+        defaultCurrency: { $ref: '#/components/schemas/SupportedCurrency' }
+        fallbackRates:
+          type: object
+          additionalProperties: { type: number }
+        useApiRates:   { type: boolean }
+        lastApiUpdate: { type: string, format: date-time, nullable: true }
+
+    AssetClassInclusionMap:
+      type: object
+      properties:
+        STOCKS:       { type: boolean }
+        BONDS:        { type: boolean }
+        CASH:         { type: boolean }
+        CRYPTO:       { type: boolean }
+        REAL_ESTATE:  { type: boolean }
+        COMMODITIES:  { type: boolean }
+        VEHICLE:      { type: boolean }
+        COLLECTIBLE:  { type: boolean }
+        ART:          { type: boolean }
+
+    UserSettings:
+      type: object
+      required:
+        - accountName
+        - decimalSeparator
+        - decimalPlaces
+        - currencySettings
+        - privacyMode
+        - dateFormat
+        - fireAssetClassInclusion
+        - includePrimaryResidenceInFIRE
+        - searchThreshold
+        - experimentalFeatures
+      properties:
+        accountName:      { type: string }
+        decimalSeparator: { type: string, enum: ['.', ','] }
+        decimalPlaces:    { type: integer }
+        currencySettings: { $ref: '#/components/schemas/CurrencySettings' }
+        privacyMode:      { type: boolean }
+        country:          { type: string, nullable: true }
+        dateFormat:       { type: string, enum: [DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD] }
+        fireAssetClassInclusion: { $ref: '#/components/schemas/AssetClassInclusionMap' }
+        includePrimaryResidenceInFIRE: { type: boolean }
+        searchThreshold:        { type: integer }
+        experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
+
+    UserSettingsPatch:
+      description: Same shape as UserSettings, but every field is optional
+      type: object
+      properties:
+        accountName:      { type: string }
+        decimalSeparator: { type: string, enum: ['.', ','] }
+        decimalPlaces:    { type: integer }
+        currencySettings: { $ref: '#/components/schemas/CurrencySettings' }
+        privacyMode:      { type: boolean }
+        country:          { type: string, nullable: true }
+        dateFormat:       { type: string, enum: [DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD] }
+        fireAssetClassInclusion: { $ref: '#/components/schemas/AssetClassInclusionMap' }
+        includePrimaryResidenceInFIRE: { type: boolean }
+        searchThreshold:        { type: integer }
+        experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
+
+    # -- Notifications -------------------------------------------------------
+    NotificationType:
+      type: string
+      enum:
+        - NEW_MONTH
+        - NEW_QUARTER
+        - TAX_REMINDER
+        - INCOME_LOGGED
+        - EXPENSE_LOGGED
+        - NET_WORTH_UPDATE
+        - DCA_REMINDER
+        - FIRE_MILESTONE
+        - PORTFOLIO_REBALANCE
+        - SYSTEM
+        - WELCOME
+
+    NotificationPriority:
+      type: string
+      enum: [LOW, MEDIUM, HIGH]
+
+    Notification:
+      type: object
+      required: [id, externalId, type, title, message, timestamp, read, priority]
+      properties:
+        id:          { type: integer, format: int64 }
+        externalId:  { type: string }
+        type:        { $ref: '#/components/schemas/NotificationType' }
+        title:       { type: string }
+        message:     { type: string }
+        timestamp:   { type: string, format: date-time }
+        read:        { type: boolean }
+        priority:    { $ref: '#/components/schemas/NotificationPriority' }
+        actionUrl:   { type: string, nullable: true }
+        actionLabel: { type: string, nullable: true }
+        expiresAt:   { type: string, format: date-time, nullable: true }
+
+    NotificationCreate:
+      type: object
+      required: [type, title, message]
+      properties:
+        externalId:  { type: string }
+        type:        { $ref: '#/components/schemas/NotificationType' }
+        title:       { type: string }
+        message:     { type: string }
+        priority:    { $ref: '#/components/schemas/NotificationPriority' }
+        actionUrl:   { type: string, nullable: true }
+        actionLabel: { type: string, nullable: true }
+        expiresAt:   { type: string, format: date-time, nullable: true }
+
+    NotificationList:
+      allOf:
+        - $ref: '#/components/schemas/PaginationCursor'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Notification' }
+
+    NotificationPreferences:
+      type: object
+      required:
+        - enableInAppNotifications
+        - newMonthReminders
+        - newQuarterReminders
+        - taxReminders
+        - dcaReminders
+        - portfolioAlerts
+        - fireMilestones
+        - enableEmailNotifications
+        - emailAddress
+        - emailFrequency
+        - taxReminderMonths
+        - taxReminderDaysBefore
+      properties:
+        enableInAppNotifications: { type: boolean }
+        newMonthReminders:        { type: boolean }
+        newQuarterReminders:      { type: boolean }
+        taxReminders:             { type: boolean }
+        dcaReminders:             { type: boolean }
+        portfolioAlerts:          { type: boolean }
+        fireMilestones:           { type: boolean }
+        enableEmailNotifications: { type: boolean }
+        emailAddress:             { type: string }
+        emailFrequency:           { type: string, enum: [DAILY, WEEKLY, MONTHLY, NEVER] }
+        taxReminderMonths:
+          type: array
+          items: { type: integer, minimum: 1, maximum: 12 }
+        taxReminderDaysBefore:    { type: integer, minimum: 0 }
+        lastChecked: { type: string, format: date-time, nullable: true }
+
+    # -- Calculator ----------------------------------------------------------
+    CalculatorInputs:
+      type: object
+      required:
+        - initialSavings
+        - stocksPercent
+        - bondsPercent
+        - cashPercent
+        - currentAnnualExpenses
+        - fireAnnualExpenses
+        - annualLaborIncome
+        - laborIncomeGrowthRate
+        - savingsRate
+        - desiredWithdrawalRate
+        - yearsOfExpenses
+        - expectedStockReturn
+        - expectedBondReturn
+        - expectedCashReturn
+        - yearOfBirth
+        - retirementAge
+        - statePensionIncome
+        - privatePensionIncome
+        - otherIncome
+        - stopWorkingAtFIRE
+        - maxAge
+        - useAssetAllocationValue
+        - useExpenseTrackerExpenses
+        - useExpenseTrackerIncome
+      properties:
+        initialSavings:               { type: number }
+        stocksPercent:                { type: number }
+        bondsPercent:                 { type: number }
+        cashPercent:                  { type: number }
+        currentAnnualExpenses:        { type: number }
+        fireAnnualExpenses:           { type: number }
+        annualLaborIncome:            { type: number }
+        laborIncomeGrowthRate:        { type: number }
+        savingsRate:                  { type: number }
+        desiredWithdrawalRate:        { type: number }
+        yearsOfExpenses:              { type: number }
+        expectedStockReturn:          { type: number }
+        expectedBondReturn:           { type: number }
+        expectedCashReturn:           { type: number }
+        yearOfBirth:                  { type: integer }
+        retirementAge:                { type: integer }
+        statePensionIncome:           { type: number }
+        privatePensionIncome:         { type: number }
+        otherIncome:                  { type: number }
+        stopWorkingAtFIRE:            { type: boolean }
+        maxAge:                       { type: integer }
+        useAssetAllocationValue:      { type: boolean }
+        useExpenseTrackerExpenses:    { type: boolean }
+        useExpenseTrackerIncome:      { type: boolean }
+
+    MonteCarloFixedParameters:
+      type: object
+      properties:
+        initialSavings:           { type: number }
+        stocksPercent:            { type: number }
+        bondsPercent:             { type: number }
+        cashPercent:              { type: number }
+        currentAnnualExpenses:    { type: number }
+        fireAnnualExpenses:       { type: number }
+        annualLaborIncome:        { type: number }
+        savingsRate:              { type: number }
+        desiredWithdrawalRate:    { type: number }
+        expectedStockReturn:      { type: number }
+        expectedBondReturn:       { type: number }
+        expectedCashReturn:       { type: number }
+        numSimulations:           { type: integer }
+        stockVolatility:          { type: number }
+        bondVolatility:           { type: number }
+        blackSwanProbability:     { type: number }
+        blackSwanImpact:          { type: number }
+        stopWorkingAtFIRE:        { type: boolean }
+
+    SimulationFailureReason:
+      type: string
+      enum:
+        - portfolio_depleted
+        - sequence_of_returns_risk
+        - unsustainable_ending
+        - fire_too_late
+        - withdrawal_rate_breach
+        - fire_lost
+        - forced_return_to_work
+        - healthcare_expense_shock
+
+    SimulationYearData:
+      type: object
+      properties:
+        year:              { type: integer }
+        age:               { type: integer }
+        stockReturn:       { type: number }
+        bondReturn:        { type: number }
+        cashReturn:        { type: number }
+        simulatedInflation: { type: number }
+        portfolioReturn:   { type: number }
+        isBlackSwan:       { type: boolean }
+        expenses:          { type: number }
+        laborIncome:       { type: number }
+        totalIncome:       { type: number }
+        portfolioValue:    { type: number }
+        isFIREAchieved:    { type: boolean }
+        withdrawalRate:    { type: number }
+
+    SimulationLogEntry:
+      type: object
+      required: [simulationId, timestamp, success, yearlyData]
+      properties:
+        simulationId:   { type: integer }
+        timestamp:      { type: string, format: date-time }
+        success:        { type: boolean }
+        yearsToFIRE:    { type: integer, nullable: true }
+        finalPortfolio: { type: number }
+        yearlyData:
+          type: array
+          items: { $ref: '#/components/schemas/SimulationYearData' }
+        failureReasons:
+          type: array
+          items: { $ref: '#/components/schemas/SimulationFailureReason' }
+
+    MonteCarloRunCreate:
+      type: object
+      required:
+        - numSimulations
+        - stockVolatility
+        - bondVolatility
+        - blackSwanProbability
+        - blackSwanImpact
+        - successCount
+        - failureCount
+        - successRate
+        - fixedParameters
+      properties:
+        numSimulations:        { type: integer }
+        stockVolatility:       { type: number }
+        bondVolatility:        { type: number }
+        blackSwanProbability:  { type: number }
+        blackSwanImpact:       { type: number }
+        successCount:          { type: integer }
+        failureCount:          { type: integer }
+        successRate:           { type: number }
+        medianYearsToFIRE:     { type: number, nullable: true }
+        fixedParameters:       { $ref: '#/components/schemas/MonteCarloFixedParameters' }
+        logs:
+          type: array
+          items: { $ref: '#/components/schemas/SimulationLogEntry' }
+
+    MonteCarloRun:
+      allOf:
+        - $ref: '#/components/schemas/MonteCarloRunCreate'
+        - type: object
+          required: [id, runAt]
+          properties:
+            id:    { type: integer, format: int64 }
+            runAt: { type: string, format: date-time }
+
+    MonteCarloRunWithLogs:
+      allOf:
+        - $ref: '#/components/schemas/MonteCarloRun'
+
+    MonteCarloRunList:
+      allOf:
+        - $ref: '#/components/schemas/PaginationCursor'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/MonteCarloRun' }
+
+    # -- Asset allocation ----------------------------------------------------
+    AssetClass:
+      type: string
+      enum: [STOCKS, BONDS, CASH, CRYPTO, REAL_ESTATE, COMMODITIES, VEHICLE, COLLECTIBLE, ART]
+
+    SubAssetType:
+      type: string
+      enum:
+        - ETF
+        - SINGLE_STOCK
+        - SINGLE_BOND
+        - SAVINGS_ACCOUNT
+        - CHECKING_ACCOUNT
+        - BROKERAGE_ACCOUNT
+        - MONEY_ETF
+        - COIN
+        - PROPERTY
+        - REIT
+        - PRIVATE_EQUITY
+        - PHYSICAL_GOLD
+        - GOLD_ETC
+        - SILVER_ETC
+        - OIL_ETC
+        - NATURAL_GAS_ETC
+        - COPPER_ETC
+        - PLATINUM_ETC
+        - PALLADIUM_ETC
+        - AGRICULTURAL_ETC
+        - COMMODITY_ETF
+        - CAR
+        - MOTORCYCLE
+        - BOAT
+        - OTHER_VEHICLE
+        - WATCH
+        - WINE
+        - JEWELRY
+        - SPORTS_MEMORABILIA
+        - OTHER_COLLECTIBLE
+        - PAINTING
+        - SCULPTURE
+        - DIGITAL_ART
+        - OTHER_ART
+        - NONE
+
+    AllocationMode:
+      type: string
+      enum: [PERCENTAGE, OFF, SET]
+
+    MortgageData:
+      type: object
+      required:
+        - principalAmount
+        - currentBalance
+        - interestRate
+        - termYears
+        - remainingYears
+        - monthlyPayment
+        - startDate
+        - propertyValue
+      properties:
+        principalAmount: { type: number }
+        currentBalance:  { type: number }
+        interestRate:    { type: number }
+        termYears:       { type: integer }
+        remainingYears:  { type: integer }
+        monthlyPayment:  { type: number }
+        startDate:       { type: string, format: date }
+        propertyValue:   { type: number }
+        lender:          { type: string }
+
+    Asset:
+      type: object
+      required:
+        - externalId
+        - name
+        - ticker
+        - assetClass
+        - subAssetType
+        - currentValue
+        - targetMode
+      properties:
+        id:               { type: integer, format: int64, readOnly: true }
+        externalId:       { type: string }
+        name:             { type: string }
+        ticker:           { type: string }
+        isin:             { type: string, nullable: true }
+        assetClass:       { $ref: '#/components/schemas/AssetClass' }
+        subAssetType:     { $ref: '#/components/schemas/SubAssetType' }
+        currentValue:     { type: number }
+        shares:           { type: number, nullable: true }
+        pricePerShare:    { type: number, nullable: true }
+        acquisitionPrice: { type: number, nullable: true }
+        originalCurrency: { $ref: '#/components/schemas/SupportedCurrency' }
+        originalValue:    { type: number, nullable: true }
+        targetMode:       { $ref: '#/components/schemas/AllocationMode' }
+        targetValue:      { type: number, nullable: true }
+        targetPercent:    { type: number, nullable: true }
+        institutionCode:  { type: string, nullable: true }
+        institutionName:  { type: string, nullable: true }
+        mortgageData:     { $ref: '#/components/schemas/MortgageData' }
+        isPrimaryResidence: { type: boolean }
+        marketPrice:      { type: number, nullable: true }
+
+    AssetAllocationConfig:
+      type: object
+      required: [currency, allowNegativeCash, targetAllocationTolerance]
+      properties:
+        currency:                   { type: string, description: 'ISO 4217 (typically EUR)' }
+        allowNegativeCash:          { type: boolean }
+        targetAllocationTolerance:  { type: number }
+
+    # -- Expense tracker -----------------------------------------------------
+    ExpenseType:
+      type: string
+      enum: [NEED, WANT]
+
+    IncomeSource:
+      type: string
+      enum: [SALARY, FREELANCE, BUSINESS, INVESTMENTS, RENTAL, PENSION, SOCIAL_SECURITY, BONUS, GIFT, OTHER]
+
+    ExpenseEntry:
+      type: object
+      required: [externalId, type, date, amount, description, category, expenseType]
+      properties:
+        id:           { type: integer, format: int64, readOnly: true }
+        externalId:   { type: string }
+        type:         { type: string, enum: [expense] }
+        date:         { type: string, format: date }
+        amount:       { type: number }
+        description:  { type: string }
+        currency:     { $ref: '#/components/schemas/SupportedCurrency' }
+        category:     { type: string, description: 'Built-in ExpenseCategory id or custom category id' }
+        subCategory:  { type: string, nullable: true }
+        expenseType:  { $ref: '#/components/schemas/ExpenseType' }
+        isRecurring:  { type: boolean }
+
+    IncomeEntry:
+      type: object
+      required: [externalId, type, date, amount, description, source]
+      properties:
+        id:          { type: integer, format: int64, readOnly: true }
+        externalId:  { type: string }
+        type:        { type: string, enum: [income] }
+        date:        { type: string, format: date }
+        amount:      { type: number }
+        description: { type: string }
+        currency:    { $ref: '#/components/schemas/SupportedCurrency' }
+        source:      { $ref: '#/components/schemas/IncomeSource' }
+        isRecurring: { type: boolean }
+
+    CategoryBudget:
+      type: object
+      required: [category, monthlyBudget]
+      properties:
+        category:      { type: string }
+        monthlyBudget: { type: number }
+        currency:      { $ref: '#/components/schemas/SupportedCurrency' }
+        monthKey:
+          type: string
+          description: '`YYYY-MM` for per-month budgets; omitted for global budgets'
+
+    CustomCategory:
+      type: object
+      required: [externalId, name, icon, color, defaultExpenseType]
+      properties:
+        externalId:         { type: string }
+        name:               { type: string }
+        icon:               { type: string }
+        color:              { type: string }
+        defaultExpenseType: { $ref: '#/components/schemas/ExpenseType' }
+
+    CategoryOverride:
+      type: object
+      required: [categoryId]
+      properties:
+        categoryId: { type: string, description: 'Built-in ExpenseCategory id' }
+        name:       { type: string, nullable: true }
+        icon:       { type: string, nullable: true }
+        color:      { type: string, nullable: true }
+
+    MonthData:
+      type: object
+      required: [year, month, incomes, expenses, budgets]
+      properties:
+        year:     { type: integer }
+        month:    { type: integer, minimum: 1, maximum: 12 }
+        isClosed: { type: boolean }
+        incomes:
+          type: array
+          items: { $ref: '#/components/schemas/IncomeEntry' }
+        expenses:
+          type: array
+          items: { $ref: '#/components/schemas/ExpenseEntry' }
+        budgets:
+          type: array
+          items: { $ref: '#/components/schemas/CategoryBudget' }
+
+    ExpenseTrackerConfig:
+      type: object
+      required: [currency, currentYear, currentMonth]
+      properties:
+        currency:     { $ref: '#/components/schemas/SupportedCurrency' }
+        currentYear:  { type: integer }
+        currentMonth: { type: integer, minimum: 1, maximum: 12 }
+
+    ExpenseEntryList:
+      allOf:
+        - $ref: '#/components/schemas/PaginationCursor'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/ExpenseEntry' }
+
+    IncomeEntryList:
+      allOf:
+        - $ref: '#/components/schemas/PaginationCursor'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/IncomeEntry' }
+
+    # -- Net worth tracker ---------------------------------------------------
+    DepreciationMethod:
+      type: string
+      enum: [STRAIGHT_LINE, DECLINING_BALANCE, MANUAL]
+
+    VehicleDepreciation:
+      type: object
+      required: [method, purchasePrice, purchaseDate, salvageValue, usefulLifeYears]
+      properties:
+        method:                 { $ref: '#/components/schemas/DepreciationMethod' }
+        purchasePrice:          { type: number }
+        purchaseDate:           { type: string, format: date }
+        salvageValue:           { type: number }
+        usefulLifeYears:        { type: integer }
+        currentDepreciation:    { type: number, nullable: true }
+        annualDepreciationRate: { type: number, nullable: true }
+
+    MortgageInfo:
+      type: object
+      required: [principalAmount, currentBalance, interestRate, termYears, remainingYears, monthlyPayment, startDate]
+      properties:
+        principalAmount: { type: number }
+        currentBalance:  { type: number }
+        interestRate:    { type: number }
+        termYears:       { type: integer }
+        remainingYears:  { type: integer }
+        monthlyPayment:  { type: number }
+        startDate:       { type: string, format: date }
+        lender:          { type: string, nullable: true }
+
+    AssetHolding:
+      type: object
+      required: [externalId, ticker, name, shares, pricePerShare, currency, assetClass]
+      properties:
+        id:                  { type: integer, format: int64, readOnly: true }
+        externalId:          { type: string }
+        ticker:              { type: string }
+        name:                { type: string }
+        shares:              { type: number }
+        pricePerShare:       { type: number }
+        acquisitionPrice:    { type: number, nullable: true }
+        currency:            { $ref: '#/components/schemas/SupportedCurrency' }
+        assetClass:
+          type: string
+          enum: [STOCKS, BONDS, ETF, CRYPTO, REAL_ESTATE, PRIVATE_EQUITY, VEHICLE, COLLECTIBLE, ART, COMMODITIES, OTHER]
+        note:                { type: string, nullable: true }
+        isin:                { type: string, nullable: true }
+        isPrimaryResidence:  { type: boolean }
+        targetMode:          { $ref: '#/components/schemas/AllocationMode' }
+        targetPercent:       { type: number, nullable: true }
+        targetValue:         { type: number, nullable: true }
+        syncAssetClass:      { $ref: '#/components/schemas/AssetClass' }
+        syncSubAssetType:    { type: string, nullable: true }
+        vehicleDepreciation: { $ref: '#/components/schemas/VehicleDepreciation' }
+        mortgageInfo:        { $ref: '#/components/schemas/MortgageInfo' }
+
+    CashEntry:
+      type: object
+      required: [externalId, accountName, accountType, balance, currency]
+      properties:
+        id:               { type: integer, format: int64, readOnly: true }
+        externalId:       { type: string }
+        accountName:      { type: string }
+        accountType:
+          type: string
+          enum: [SAVINGS, CHECKING, BROKERAGE, CREDIT_CARD, OTHER]
+        balance:          { type: number }
+        currency:         { $ref: '#/components/schemas/SupportedCurrency' }
+        note:             { type: string, nullable: true }
+        institutionCode:  { type: string, nullable: true }
+        institutionName:  { type: string, nullable: true }
+        shares:           { type: number, nullable: true }
+        pricePerShare:    { type: number, nullable: true }
+        targetMode:       { $ref: '#/components/schemas/AllocationMode' }
+        targetPercent:    { type: number, nullable: true }
+        targetValue:      { type: number, nullable: true }
+        syncSubAssetType: { type: string, nullable: true }
+
+    PensionEntry:
+      type: object
+      required: [externalId, name, currentValue, currency, pensionType]
+      properties:
+        id:           { type: integer, format: int64, readOnly: true }
+        externalId:   { type: string }
+        name:         { type: string }
+        currentValue: { type: number }
+        currency:     { $ref: '#/components/schemas/SupportedCurrency' }
+        pensionType:
+          type: string
+          enum: [STATE, PRIVATE, EMPLOYER, OTHER]
+        note:         { type: string, nullable: true }
+
+    DebtEntry:
+      type: object
+      required: [externalId, name, debtType, currentBalance, currency]
+      properties:
+        id:              { type: integer, format: int64, readOnly: true }
+        externalId:      { type: string }
+        name:            { type: string }
+        debtType:
+          type: string
+          enum: [CREDIT_CARD, PERSONAL_LOAN, STUDENT_LOAN, CAR_LOAN, MORTGAGE, OTHER]
+        currentBalance:  { type: number }
+        interestRate:    { type: number, nullable: true }
+        monthlyPayment:  { type: number, nullable: true }
+        currency:        { $ref: '#/components/schemas/SupportedCurrency' }
+        note:            { type: string, nullable: true }
+        creditor:        { type: string, nullable: true }
+
+    TaxEntry:
+      type: object
+      required: [externalId, name, taxType, amount, currency, isPaid]
+      properties:
+        id:         { type: integer, format: int64, readOnly: true }
+        externalId: { type: string }
+        name:       { type: string }
+        taxType:
+          type: string
+          enum: [INCOME_TAX, PROPERTY_TAX, CAPITAL_GAINS_TAX, OTHER]
+        amount:     { type: number }
+        dueDate:    { type: string, format: date, nullable: true }
+        currency:   { $ref: '#/components/schemas/SupportedCurrency' }
+        note:       { type: string, nullable: true }
+        isPaid:     { type: boolean }
+
+    OperationType:
+      type: string
+      enum:
+        - PURCHASE
+        - SALE
+        - DIVIDEND
+        - EXPENSE_REIMBURSEMENT
+        - GIFT_RECEIVED
+        - GIFT_GIVEN
+        - TAX_PAID
+        - CASH_TRANSFER
+        - PENSION_CONTRIBUTION
+        - PENSION_ADJUSTMENT
+        - PRICE_UPDATE
+        - OTHER
+
+    FinancialOperation:
+      type: object
+      required: [externalId, date, type, description, amount, currency]
+      properties:
+        id:                { type: integer, format: int64, readOnly: true }
+        externalId:        { type: string }
+        date:              { type: string, format: date }
+        type:              { $ref: '#/components/schemas/OperationType' }
+        description:       { type: string }
+        amount:            { type: number }
+        currency:          { $ref: '#/components/schemas/SupportedCurrency' }
+        relatedAssetId:    { type: string, nullable: true, description: 'externalId of related asset' }
+        relatedAccountId:  { type: string, nullable: true, description: 'externalId of related cash account' }
+        note:              { type: string, nullable: true }
+
+    FinancialOperationList:
+      allOf:
+        - $ref: '#/components/schemas/PaginationCursor'
+        - type: object
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/FinancialOperation' }
+
+    MonthlySnapshot:
+      type: object
+      required: [year, month, assets, cashEntries, pensions, operations, debts, taxes, isFrozen]
+      properties:
+        year:        { type: integer }
+        month:       { type: integer, minimum: 1, maximum: 12 }
+        assets:
+          type: array
+          items: { $ref: '#/components/schemas/AssetHolding' }
+        cashEntries:
+          type: array
+          items: { $ref: '#/components/schemas/CashEntry' }
+        pensions:
+          type: array
+          items: { $ref: '#/components/schemas/PensionEntry' }
+        operations:
+          type: array
+          items: { $ref: '#/components/schemas/FinancialOperation' }
+        debts:
+          type: array
+          items: { $ref: '#/components/schemas/DebtEntry' }
+        taxes:
+          type: array
+          items: { $ref: '#/components/schemas/TaxEntry' }
+        totalAssetValue:    { type: number, readOnly: true }
+        totalCash:          { type: number, readOnly: true }
+        totalPension:       { type: number, readOnly: true }
+        totalTaxesPaid:     { type: number, readOnly: true }
+        totalDebt:          { type: number, readOnly: true }
+        totalTaxLiability:  { type: number, readOnly: true }
+        netWorth:           { type: number, readOnly: true }
+        isFrozen:           { type: boolean }
+        frozenDate:         { type: string, format: date-time, nullable: true }
+        monthNote:          { type: string, nullable: true }
+
+    NetWorthYearData:
+      type: object
+      required: [year, months]
+      properties:
+        year:       { type: integer }
+        months:
+          type: array
+          items: { $ref: '#/components/schemas/MonthlySnapshot' }
+        isArchived: { type: boolean }
+
+    NetWorthConfig:
+      type: object
+      required: [defaultCurrency, currentYear, currentMonth, showPensionInNetWorth, includeUnrealizedGains]
+      properties:
+        defaultCurrency:           { $ref: '#/components/schemas/SupportedCurrency' }
+        currentYear:               { type: integer }
+        currentMonth:              { type: integer, minimum: 1, maximum: 12 }
+        showPensionInNetWorth:     { type: boolean }
+        includeUnrealizedGains:    { type: boolean }
+        syncWithAssetAllocation:   { type: boolean }
+
+    NetWorthTrackerData:
+      type: object
+      required: [years, currentYear, currentMonth, defaultCurrency, settings]
+      properties:
+        years:
+          type: array
+          items: { $ref: '#/components/schemas/NetWorthYearData' }
+        currentYear:     { type: integer }
+        currentMonth:    { type: integer, minimum: 1, maximum: 12 }
+        defaultCurrency: { $ref: '#/components/schemas/SupportedCurrency' }
+        settings:
+          type: object
+          required: [showPensionInNetWorth, includeUnrealizedGains]
+          properties:
+            showPensionInNetWorth:   { type: boolean }
+            includeUnrealizedGains:  { type: boolean }
+            syncWithAssetAllocation: { type: boolean }
+
+    # -- Questionnaire -------------------------------------------------------
+    FIREPersona:
+      type: string
+      enum: [LEAN_FIRE, REGULAR_FIRE, FAT_FIRE, COAST_FIRE, BARISTA_FIRE]
+
+    AssetAllocationTarget:
+      type: object
+      required: [stocks, bonds, cash]
+      properties:
+        stocks:     { type: number }
+        bonds:      { type: number }
+        cash:       { type: number }
+        crypto:     { type: number }
+        realEstate: { type: number }
+
+    QuestionnaireResponse:
+      type: object
+      required: [questionId, selectedOptionId]
+      properties:
+        questionId:       { type: string }
+        selectedOptionId: { type: string }
+
+    QuestionnaireResults:
+      type: object
+      required:
+        - persona
+        - personaExplanation
+        - safeWithdrawalRate
+        - suggestedSavingsRate
+        - assetAllocation
+        - suitableAssets
+        - riskTolerance
+        - responses
+        - completedAt
+      properties:
+        id:                   { type: integer, format: int64, readOnly: true }
+        persona:              { $ref: '#/components/schemas/FIREPersona' }
+        personaExplanation:   { type: string }
+        safeWithdrawalRate:   { type: number }
+        suggestedSavingsRate: { type: number }
+        assetAllocation:      { $ref: '#/components/schemas/AssetAllocationTarget' }
+        suitableAssets:
+          type: array
+          items: { type: string }
+        riskTolerance:
+          type: string
+          enum: [conservative, moderate, aggressive]
+        responses:
+          type: array
+          items: { $ref: '#/components/schemas/QuestionnaireResponse' }
+        completedAt: { type: string, format: date-time }
+
+    # -- PDF import ----------------------------------------------------------
+    PdfDocType:
+      type: string
+      enum: [auto, receipt, invoice, bank_statement, payslip]
+
+    ParsedKind:
+      type: string
+      enum: [income, expense]
+
+    ParsedTransactionDraft:
+      type: object
+      required: [id, kind, date, amount, description, docType, sourceFile, include, confidence]
+      properties:
+        id:                      { type: string }
+        kind:                    { $ref: '#/components/schemas/ParsedKind' }
+        date:                    { type: string }
+        amount:                  { type: number }
+        currency:                { $ref: '#/components/schemas/SupportedCurrency' }
+        description:             { type: string }
+        suggestedCategory:       { type: string, nullable: true }
+        suggestedExpenseType:    { $ref: '#/components/schemas/ExpenseType' }
+        suggestedIncomeSource:   { $ref: '#/components/schemas/IncomeSource' }
+        docType:
+          type: string
+          enum: [receipt, invoice, bank_statement, payslip]
+        sourceFile:    { type: string }
+        rawLine:       { type: string, nullable: true }
+        include:       { type: boolean }
+        confidence:    { type: number, minimum: 0, maximum: 1 }
+        llmEnriched:   { type: boolean }
+
+    PdfImportCreate:
+      type: object
+      required: [sourceFile, docType, drafts]
+      properties:
+        sourceFile: { type: string }
+        docType:    { $ref: '#/components/schemas/PdfDocType' }
+        drafts:
+          type: array
+          items: { $ref: '#/components/schemas/ParsedTransactionDraft' }
+
+    PdfImport:
+      allOf:
+        - $ref: '#/components/schemas/PdfImportCreate'
+        - type: object
+          required: [id, status, createdAt]
+          properties:
+            id:          { type: integer, format: int64 }
+            status:
+              type: string
+              enum: [pending, reviewed, committed, discarded]
+            createdAt:   { type: string, format: date-time }
+            committedAt: { type: string, format: date-time, nullable: true }
+
+    # -- Portfolio breakdown -------------------------------------------------
+    BreakdownDimension:
+      type: string
+      enum: [currency, holding, sector, continent, region, market, etfProvider]
+
+    SectorWeight:
+      type: object
+      required: [sector, weight]
+      properties:
+        sector: { type: string }
+        weight: { type: number }
+
+    RegionWeight:
+      type: object
+      required: [region, weight]
+      properties:
+        region: { type: string }
+        weight: { type: number }
+
+    AssetMetadata:
+      type: object
+      required: [ticker, fetchedAt]
+      properties:
+        ticker:        { type: string }
+        quoteType:     { type: string, nullable: true }
+        longName:      { type: string, nullable: true }
+        shortName:     { type: string, nullable: true }
+        currency:      { type: string, nullable: true }
+        exchange:      { type: string, nullable: true }
+        sector:        { type: string, nullable: true }
+        industry:      { type: string, nullable: true }
+        country:       { type: string, nullable: true }
+        fundFamily:    { type: string, nullable: true }
+        category:      { type: string, nullable: true }
+        sectorWeightings:
+          type: array
+          items: { $ref: '#/components/schemas/SectorWeight' }
+        regionWeightings:
+          type: array
+          items: { $ref: '#/components/schemas/RegionWeight' }
+        fetchedAt: { type: string, format: date-time }
+        error:     { type: string, nullable: true }
+
+    BreakdownEntry:
+      type: object
+      required: [label, value, percentage]
+      properties:
+        label:      { type: string }
+        value:      { type: number }
+        percentage: { type: number }
+        color:      { type: string, nullable: true }
+        ticker:     { type: string, nullable: true }
+
+    BreakdownResult:
+      type: object
+      required: [dimension, entries, totalValue, unknownValue]
+      properties:
+        dimension:    { $ref: '#/components/schemas/BreakdownDimension' }
+        entries:
+          type: array
+          items: { $ref: '#/components/schemas/BreakdownEntry' }
+        totalValue:   { type: number }
+        unknownValue: { type: number }
+
+    # -- Banks ---------------------------------------------------------------
+    InstitutionType:
+      type: string
+      enum: [BANK, BROKER, NEOBANK, CREDIT_UNION, BUILDING_SOCIETY]
+
+    BankInfo:
+      type: object
+      required: [code, name, countryCode, supportsOpenBanking]
+      properties:
+        code:                { type: string }
+        name:                { type: string }
+        countryCode:         { type: string, description: 'ISO 3166-1 alpha-2' }
+        supportsOpenBanking: { type: boolean }
+        bic:                 { type: string, nullable: true }
+        institutionType:     { $ref: '#/components/schemas/InstitutionType' }
+        logoUrl:             { type: string, nullable: true }

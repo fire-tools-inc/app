@@ -1,0 +1,13 @@
+# Redocly lint configuration for docs/api/openapi.yaml
+# https://redocly.com/docs/cli/configuration
+extends:
+  - recommended
+
+rules:
+  # Localhost server URL is intentional — this is a local-deployment / Electron API.
+  no-server-example.com: off
+  # The spec is a forward-looking contract; not every operation needs a 4xx
+  # response documented yet. The shared `Error` envelope applies to all errors.
+  operation-4xx-response: off
+  # A few unreferenced schemas are kept on purpose as future hooks.
+  no-unused-components: off

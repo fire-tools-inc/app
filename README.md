@@ -117,11 +117,39 @@ The built files will be in the `dist` directory.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** - Community guidelines
 - **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
 - **[SUPPORT.md](SUPPORT.md)** - Getting help and support
+- **[docs/api/](docs/api/)** - OpenAPI contract for the planned local-deployment backend (see issue [#133](https://github.com/mbianchidev/fire-tools/issues/133))
+- **[docs/database/](docs/database/)** - Database schema (SQLite-first, Postgres-compatible) for the planned backend
+- **[docs/pdf-import.md](docs/pdf-import.md)** - PDF expense/income import (experimental)
+
+---
+
+## Architecture & APIs
+
+Fire Tools today runs **entirely client-side** with encrypted cookies. A
+**local-deployment backend** (Docker / Electron) is being designed so users
+who prefer a real database can run their data on their own machine. The
+backend itself is not yet implemented, but the **contract** is:
+
+- **OpenAPI 3.0.3 spec**: [`docs/api/openapi.yaml`](docs/api/openapi.yaml) — see [`docs/api/README.md`](docs/api/README.md)
+- **Database schema**: [`docs/database/schema.sql`](docs/database/schema.sql) — **SQLite is the first-class target**, **PostgreSQL is fully compatible**. See [`docs/database/README.md`](docs/database/README.md) for dialect notes and the ERD.
+
+Both files cover every feature currently shipped (FIRE calculator, asset
+allocation, expense / income tracker, net worth tracker, notifications,
+questionnaire, PDF import, portfolio breakdown, banks lookup).
+
+Single-user by default; the schema and API are already multi-tenant-ready
+(see [`docs/database/README.md`](docs/database/README.md#multi-tenant-migration-path)).
+
+Tracking issues: [#133](https://github.com/mbianchidev/fire-tools/issues/133) (this work),
+[#189](https://github.com/mbianchidev/fire-tools/issues/189),
+[#195](https://github.com/mbianchidev/fire-tools/issues/195),
+[#222](https://github.com/mbianchidev/fire-tools/issues/222).
 
 ---
 
 ## Technology Stack
 
+### Frontend (today, shipping)
 - **React 19** - Modern UI framework with hooks
 - **TypeScript** - Type-safe development
 - **React Router** - Client-side routing
@@ -129,6 +157,11 @@ The built files will be in the `dist` directory.
 - **Recharts** - Beautiful data visualizations
 - **crypto-js** - AES encryption for data security
 - **js-cookie** - Secure cookie management
+
+### Backend (planned, contract-only)
+- **REST API** described in [`docs/api/openapi.yaml`](docs/api/openapi.yaml) (OpenAPI 3.0.3)
+- **Database**: SQLite (first-class) + PostgreSQL-compatible, schema in [`docs/database/schema.sql`](docs/database/schema.sql)
+- Implementation language is not yet decided; the spec is implementation-agnostic.
 
 ---
 
