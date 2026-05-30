@@ -22,6 +22,24 @@ interface FireToolsBridge {
   versions?: { electron?: string; chrome?: string; node?: string };
   getEmbeddedBackend?: () => Promise<EmbeddedBackendInfo>;
   openExternal?: (url: string) => Promise<boolean>;
+  showNativeNotification?: (opts: {
+    title: string;
+    body?: string;
+    urgency?: 'low' | 'normal' | 'critical';
+  }) => Promise<boolean>;
+  getDbEncryptionStatus?: () => Promise<{
+    encrypted: boolean;
+    safeStorageAvailable: boolean;
+    hasStoredPassphrase: boolean;
+  }>;
+  setDbPassphrase?: (payload: {
+    action: 'set' | 'rotate' | 'remove';
+    currentPassphrase?: string;
+    newPassphrase?: string;
+  }) => Promise<
+    | { ok: true; encrypted: boolean; backupPath: string | null }
+    | { ok: false; code: string; message: string; backupPath?: string | null }
+  >;
   onNavigate?: (callback: (path: string) => void) => () => void;
   onMenuAction?: (callback: (action: string) => void) => () => void;
 }

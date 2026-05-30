@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import request from 'supertest';
-import { makeApp } from './helpers.js';
+import { rmSync } from 'node:fs';
+import { makeApp, makeFileApp } from './helpers.js';
 
 describe('GET /api/v1/health', () => {
   it('returns ok when DB reachable', async () => {
@@ -265,5 +266,116 @@ describe('unimplemented endpoints', () => {
     const res = await request(app).get('/api/v1/some/contract-only/path');
     expect(res.status).toBe(501);
     expect(res.body.error.code).toBe('not_implemented');
+  });
+});
+
+describe('admin: db encryption', () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    while (dirs.length) {
+      const d = dirs.pop();
+      if (d) rmSync(d, { recursive: true, force: true });
+    }
+  });
+
+  it('GET /admin/db/encryption reports unencrypted by default', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    const res = await request(app).get('/api/v1/admin/db/encryption');
+    expect(res.status).toBe(200);
+    expect(res.body.encrypted).toBe(false);
+  });
+
+  it('set → rotate → remove happy path via HTTP', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+
+    const set = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set', newPassphrase: 'first-pass-12345' });
+    expect(set.status).toBe(200);
+    expect(set.body.encrypted).toBe(true);
+    expect(set.body.backupPath).toMatch(/bak-pre-encryption/);
+
+    const status1 = await request(app).get('/api/v1/admin/db/encryption');
+    expect(status1.body.encrypted).toBe(true);
+
+    const rotate = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({
+        action: 'rotate',
+        currentPassphrase: 'first-pass-12345',
+        newPassphrase: 'second-pass-67890',
+      });
+    expect(rotate.status).toBe(200);
+    expect(rotate.body.encrypted).toBe(true);
+
+    const remove = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'remove', currentPassphrase: 'second-pass-67890' });
+    expect(remove.status).toBe(200);
+    expect(remove.body.encrypted).toBe(false);
+
+    const status2 = await request(app).get('/api/v1/admin/db/encryption');
+    expect(status2.body.encrypted).toBe(false);
+  });
+
+  it('rotate with wrong currentPassphrase returns 401 wrong_passphrase', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set', newPassphrase: 'right-pass-12345' });
+
+    const res = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({
+        action: 'rotate',
+        currentPassphrase: 'wrong-pass-99999',
+        newPassphrase: 'irrelevant-12345',
+      });
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('wrong_passphrase');
+  });
+
+  it('set on already-encrypted DB returns 409', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set', newPassphrase: 'first-pass-12345' });
+    const res = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set', newPassphrase: 'second-pass-67890' });
+    expect(res.status).toBe(409);
+  });
+
+  it('remove on unencrypted DB returns 409', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    const res = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'remove' });
+    expect(res.status).toBe(409);
+  });
+
+  it('rejects body with missing newPassphrase for set', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    const res = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set' });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+  });
+
+  it('rejects too-short newPassphrase via zod', async () => {
+    const { app, dir } = makeFileApp();
+    dirs.push(dir);
+    const res = await request(app)
+      .post('/api/v1/admin/db/passphrase')
+      .send({ action: 'set', newPassphrase: 'short' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
   });
 });

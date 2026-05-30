@@ -1,6 +1,6 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeTheme, Notification } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, nativeTheme, Notification, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -22,6 +22,49 @@ let mainWindow = null;
 let embeddedServer = null;
 let embeddedServerError = null;
 
+// Path where we persist the safeStorage-encrypted passphrase blob. Kept in
+// the same userData dir as the DB so a single backup captures both.
+function passphraseFilePath() {
+  return path.join(app.getPath('userData'), 'db-passphrase.enc');
+}
+
+// Returns the plaintext passphrase if a blob exists and safeStorage can
+// decrypt it; null otherwise. Never throws — keychain failures must not
+// prevent the app from starting unencrypted.
+function loadStoredPassphrase() {
+  try {
+    const file = passphraseFilePath();
+    if (!fs.existsSync(file)) return null;
+    if (!safeStorage.isEncryptionAvailable()) {
+      console.warn('[fire-tools] safeStorage unavailable; cannot decrypt stored passphrase');
+      return null;
+    }
+    const blob = fs.readFileSync(file);
+    return safeStorage.decryptString(blob);
+  } catch (err) {
+    console.error('[fire-tools] failed to load stored passphrase:', err);
+    return null;
+  }
+}
+
+function savePassphrase(passphrase) {
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('OS keychain is not available; cannot store passphrase securely.');
+  }
+  const blob = safeStorage.encryptString(passphrase);
+  const file = passphraseFilePath();
+  fs.writeFileSync(file, blob, { mode: 0o600 });
+}
+
+function removeStoredPassphrase() {
+  try {
+    const file = passphraseFilePath();
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+  } catch (err) {
+    console.error('[fire-tools] failed to remove stored passphrase:', err);
+  }
+}
+
 async function startEmbedded() {
   try {
     const dbPath = path.join(app.getPath('userData'), 'firetools.db');
@@ -42,6 +85,8 @@ async function startEmbedded() {
       );
     }
 
+    const passphrase = loadStoredPassphrase();
+
     const embedModule = await import(
       require('node:url').pathToFileURL(embedEntry).href
     );
@@ -50,9 +95,10 @@ async function startEmbedded() {
       migrationsPath,
       host: '127.0.0.1',
       corsAllowAll: true,
+      passphrase: passphrase || undefined,
     });
     console.log(
-      `[fire-tools] embedded backend started at ${embeddedServer.url} (db: ${embeddedServer.dbPath})`
+      `[fire-tools] embedded backend started at ${embeddedServer.url} (db: ${embeddedServer.dbPath}, encrypted: ${embeddedServer.encrypted})`
     );
   } catch (err) {
     embeddedServerError = err && err.message ? err.message : String(err);
@@ -144,6 +190,111 @@ ipcMain.handle('fire-tools:embedded-backend-info', () => ({
   dbPath: embeddedServer ? embeddedServer.dbPath : null,
   error: embeddedServerError,
 }));
+
+ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
+  encrypted: embeddedServer ? embeddedServer.encrypted : false,
+  safeStorageAvailable: safeStorage.isEncryptionAvailable(),
+  hasStoredPassphrase: fs.existsSync(passphraseFilePath()),
+}));
+
+// Set / rotate / remove the database passphrase. Orchestrates the rekey on
+// the embedded server with the keychain write so the two stay in sync: only
+// persist the new passphrase to safeStorage if the rekey succeeded, and try
+// to roll back the rekey if persisting fails.
+ipcMain.handle('fire-tools:set-db-passphrase', async (_event, payload) => {
+  if (!embeddedServer) {
+    return { ok: false, code: 'server_not_ready', message: 'Embedded server is not running.' };
+  }
+  if (!payload || typeof payload !== 'object') {
+    return { ok: false, code: 'invalid_request', message: 'Missing payload.' };
+  }
+  const { action, currentPassphrase, newPassphrase } = payload;
+  if (action !== 'set' && action !== 'rotate' && action !== 'remove') {
+    return { ok: false, code: 'invalid_action', message: `Unknown action: ${String(action)}` };
+  }
+  const needsNew = action === 'set' || action === 'rotate';
+  if (needsNew && (typeof newPassphrase !== 'string' || newPassphrase.length < 8)) {
+    return {
+      ok: false,
+      code: 'invalid_passphrase',
+      message: 'New passphrase must be at least 8 characters long.',
+    };
+  }
+  if ((action === 'rotate' || action === 'remove') && typeof currentPassphrase !== 'string') {
+    return {
+      ok: false,
+      code: 'invalid_request',
+      message: 'Current passphrase is required.',
+    };
+  }
+  if (needsNew && !safeStorage.isEncryptionAvailable()) {
+    return {
+      ok: false,
+      code: 'safe_storage_unavailable',
+      message:
+        'OS keychain is not available. On Linux, install a keyring (gnome-keyring or kwallet) and re-launch the app.',
+    };
+  }
+
+  let result;
+  try {
+    result = await embeddedServer.rekey({ action, currentPassphrase, newPassphrase });
+  } catch (err) {
+    const code = err && err.code ? err.code : 'rekey_failed';
+    const message = err && err.message ? err.message : 'Failed to update database passphrase.';
+    return { ok: false, code, message };
+  }
+
+  try {
+    if (action === 'remove') {
+      removeStoredPassphrase();
+    } else {
+      savePassphrase(newPassphrase);
+    }
+  } catch (persistErr) {
+    console.error('[fire-tools] rekey succeeded but persisting passphrase failed:', persistErr);
+    // Attempt to roll back so the on-disk DB state matches what's in the keychain.
+    let rollbackOk = false;
+    try {
+      if (action === 'set') {
+        await embeddedServer.rekey({
+          action: 'remove',
+          currentPassphrase: newPassphrase,
+        });
+        rollbackOk = true;
+      } else if (action === 'rotate') {
+        await embeddedServer.rekey({
+          action: 'rotate',
+          currentPassphrase: newPassphrase,
+          newPassphrase: currentPassphrase,
+        });
+        rollbackOk = true;
+      } else if (action === 'remove') {
+        // Removal succeeded but we couldn't delete the keychain blob; the DB
+        // is now unencrypted but we still have an old encrypted blob on disk.
+        // Best effort: try again to delete.
+        removeStoredPassphrase();
+        rollbackOk = true;
+      }
+    } catch (rollbackErr) {
+      console.error('[fire-tools] rollback also failed:', rollbackErr);
+    }
+    return {
+      ok: false,
+      code: 'persist_failed',
+      message: rollbackOk
+        ? 'Failed to save the new passphrase to the OS keychain. Database was reverted; try again.'
+        : `Failed to save passphrase AND failed to revert the database change. Recover from the backup at ${result.backupPath ?? '(no backup)'}.`,
+      backupPath: result.backupPath ?? null,
+    };
+  }
+
+  return {
+    ok: true,
+    encrypted: result.encrypted,
+    backupPath: result.backupPath ?? null,
+  };
+});
 
 ipcMain.handle('fire-tools:open-external', (_event, url) => {
   if (typeof url !== 'string') return false;

@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('fireTools', {
   openExternal: (url) => ipcRenderer.invoke('fire-tools:open-external', url),
   showNativeNotification: (opts) =>
     ipcRenderer.invoke('fire-tools:show-native-notification', opts),
+  getDbEncryptionStatus: () => ipcRenderer.invoke('fire-tools:get-db-encryption-status'),
+  setDbPassphrase: (payload) => ipcRenderer.invoke('fire-tools:set-db-passphrase', payload),
   onNavigate: (callback) => subscribe('fire-tools:navigate', callback),
   onMenuAction: (callback) => subscribe('fire-tools:menu-action', callback),
 });

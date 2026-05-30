@@ -39,11 +39,19 @@ export interface ServerEnv {
   corsAllowAll: boolean;
   rateLimit: RateLimitEnv;
   nodeEnv: 'development' | 'production' | 'test';
+  /**
+   * Optional SQLCipher passphrase used to encrypt the SQLite database at rest.
+   * Sourced from DB_PASSPHRASE for standalone runs; the Electron wrapper passes
+   * it directly via `startEmbeddedServer` after decrypting it with safeStorage.
+   * Empty / undefined means the database is opened unencrypted.
+   */
+  passphrase?: string;
 }
 
 export const loadEnv = (): ServerEnv => {
   const nodeEnv = (process.env.NODE_ENV as ServerEnv['nodeEnv']) ?? 'development';
   const fallbackOrigins = nodeEnv === 'production' ? [] : DEFAULT_DEV_ORIGINS;
+  const rawPassphrase = process.env.DB_PASSPHRASE;
   return {
     port: num(process.env.PORT, 8787),
     host: process.env.HOST ?? '0.0.0.0',
@@ -57,5 +65,6 @@ export const loadEnv = (): ServerEnv => {
       max: num(process.env.RATE_LIMIT_MAX, 300),
     },
     nodeEnv,
+    passphrase: rawPassphrase && rawPassphrase.length > 0 ? rawPassphrase : undefined,
   };
 };

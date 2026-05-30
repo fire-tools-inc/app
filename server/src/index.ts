@@ -1,6 +1,7 @@
 import { loadEnv } from './env.js';
 import { initDb } from './db.js';
 import { buildApp } from './app.js';
+import type { AdminState } from './routes/admin.js';
 
 const env = loadEnv();
 
@@ -16,7 +17,15 @@ if (applied.length > 0) {
   );
 }
 
-const app = buildApp({ db, env, dbPath });
+let encryptedFlag = Boolean(env.passphrase);
+const adminState: AdminState = {
+  isEncrypted: () => encryptedFlag,
+  setEncrypted: (v: boolean) => {
+    encryptedFlag = v;
+  },
+};
+
+const app = buildApp({ db, env, dbPath, adminState });
 
 const server = app.listen(env.port, env.host, () => {
   console.error(`[server] fire-tools backend listening on http://${env.host}:${env.port}`);

@@ -10,6 +10,7 @@ import type { AddressInfo } from 'node:net';
 import { initDb } from './db.js';
 import { buildApp } from './app.js';
 import type { ServerEnv } from './env.js';
+import { rekeyDatabase, type RekeyAction, type RekeyResult } from './rekey.js';
 
 export interface EmbedOptions {
   /** Absolute path to the SQLite file (e.g. `${userData}/firetools.db`). */
@@ -22,6 +23,17 @@ export interface EmbedOptions {
   port?: number;
   /** Allow any origin (recommended when the renderer uses `file://`). */
   corsAllowAll?: boolean;
+  /**
+   * Optional SQLCipher passphrase. When provided, the database is opened in
+   * encrypted mode; the caller (e.g. Electron + safeStorage) owns key storage.
+   */
+  passphrase?: string;
+}
+
+export interface RekeyRequest {
+  action: RekeyAction;
+  currentPassphrase?: string;
+  newPassphrase?: string;
 }
 
 export interface EmbeddedServer {
@@ -29,6 +41,14 @@ export interface EmbeddedServer {
   port: number;
   host: string;
   dbPath: string;
+  /** True when the embedded handle was opened with a passphrase. */
+  encrypted: boolean;
+  /**
+   * Set / rotate / remove the database passphrase on the live handle.
+   * The Electron wrapper is expected to call this directly (bypassing HTTP)
+   * so it can update safeStorage atomically with the rekey result.
+   */
+  rekey: (req: RekeyRequest) => Promise<RekeyResult>;
   /** Close the HTTP listener and the SQLite handle. Idempotent. */
   close: () => Promise<void>;
 }
@@ -48,10 +68,28 @@ export const startEmbeddedServer = async (
     corsAllowAll: opts.corsAllowAll ?? true,
     rateLimit: { windowMs: 15 * 60 * 1000, max: 1000 },
     nodeEnv: 'production',
+    passphrase: opts.passphrase,
   };
 
   const { db, dbPath } = initDb(env);
-  const app = buildApp({ db, env, dbPath, disableRateLimit: true });
+
+  // Shared encryption state — mutated by both the embed-level rekey() and the
+  // HTTP admin router. Lets the two stay in sync without a process restart.
+  const state = { encrypted: Boolean(opts.passphrase) };
+  const adminState = {
+    isEncrypted: () => state.encrypted,
+    setEncrypted: (v: boolean) => {
+      state.encrypted = v;
+    },
+  };
+
+  const app = buildApp({
+    db,
+    env,
+    dbPath,
+    disableRateLimit: true,
+    adminState,
+  });
 
   const server: Server = await new Promise((resolve, reject) => {
     const s = app.listen(port, host, () => resolve(s));
@@ -76,5 +114,28 @@ export const startEmbeddedServer = async (
     }
   };
 
-  return { url, port: actualPort, host, dbPath, close };
+  const rekey = async (req: RekeyRequest): Promise<RekeyResult> => {
+    const result = await rekeyDatabase({
+      db,
+      dbPath,
+      currentlyEncrypted: state.encrypted,
+      action: req.action,
+      currentPassphrase: req.currentPassphrase,
+      newPassphrase: req.newPassphrase,
+    });
+    state.encrypted = result.encrypted;
+    return result;
+  };
+
+  return {
+    url,
+    port: actualPort,
+    host,
+    dbPath,
+    get encrypted() {
+      return state.encrypted;
+    },
+    rekey,
+    close,
+  };
 };
