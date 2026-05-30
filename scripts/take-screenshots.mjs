@@ -4,10 +4,23 @@
 // cookie banner via a pre-set consent cookie, and writes PNGs into
 // docs/user/screenshots/.
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as sleep } from 'node:timers/promises';
+
+const require = createRequire(import.meta.url);
+const CryptoJS = require('crypto-js');
+
+// Matches src/utils/cookieEncryption.ts ENCRYPTION_KEY. The app stores
+// preference flags AES-encrypted with this key; we re-encrypt here so the
+// browser reads them back as already-acknowledged.
+const ENCRYPTION_KEY = 'fire-calculator-secret-key-v1-2024';
+
+function encryptPayload(obj) {
+  return CryptoJS.AES.encrypt(JSON.stringify(obj), ENCRYPTION_KEY).toString();
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -81,6 +94,28 @@ async function main() {
       {
         name: 'fire-tools-cookie-consent',
         value: encodeURIComponent(consent),
+        url: BASE,
+        sameSite: 'Strict',
+      },
+      // Mark the guided tour as completed so its full-screen welcome modal
+      // doesn't cover every screenshot.
+      {
+        name: 'fire-tools-tour-completed',
+        value: encodeURIComponent(encryptPayload({ completed: true })),
+        url: BASE,
+        sameSite: 'Strict',
+      },
+      // Dismiss the questionnaire prompt so it doesn't overlap CTAs.
+      {
+        name: 'fire-tools-questionnaire-prompt-dismissed',
+        value: encodeURIComponent(encryptPayload({ dismissed: true })),
+        url: BASE,
+        sameSite: 'Strict',
+      },
+      // Dismiss the security banner so the top of the page is clean.
+      {
+        name: 'fire-tools-security-banner-dismissed',
+        value: encodeURIComponent(encryptPayload({ dismissed: true })),
         url: BASE,
         sameSite: 'Strict',
       },

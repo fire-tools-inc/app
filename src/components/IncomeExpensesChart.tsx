@@ -93,41 +93,41 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
             className={`zoom-button ${zoomYears === 20 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 20)}
             aria-pressed={zoomYears === 20}
-            aria-label={t('charts.zoomToYears', { years: 20 })}
+            aria-label={t('charts.zoomTo20AriaLabel')}
           >
-            {t('charts.twentyYears')}
+            {t('charts.zoom20Years')}
           </button>
           <button
             onClick={() => onZoomChange(30)}
             className={`zoom-button ${zoomYears === 30 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 30)}
             aria-pressed={zoomYears === 30}
-            aria-label={t('charts.zoomToYears', { years: 30 })}
+            aria-label={t('charts.zoomTo30AriaLabel')}
           >
-            {t('charts.thirtyYears')}
+            {t('charts.zoom30Years')}
           </button>
           <button
             onClick={() => onZoomChange(40)}
             className={`zoom-button ${zoomYears === 40 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 40)}
             aria-pressed={zoomYears === 40}
-            aria-label={t('charts.zoomToYears', { years: 40 })}
+            aria-label={t('charts.zoomTo40AriaLabel')}
           >
-            {t('charts.fortyYears')}
+            {t('charts.zoom40Years')}
           </button>
           <button
             onClick={() => onZoomChange('all')}
             className={`zoom-button ${zoomYears === 'all' ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 'all')}
             aria-pressed={zoomYears === 'all'}
-            aria-label={t('charts.showAllYears')}
+            aria-label={t('charts.showAllYearsAriaLabel')}
           >
-            {t('charts.allYears')}
+            {t('charts.zoomAllYears')}
           </button>
           <input
             type="number"
             inputMode="numeric"
-            placeholder={t('charts.customZoom')}
+            placeholder={t('charts.customZoomPlaceholder')}
             value={customZoomInput}
             onChange={(e) => onCustomZoomInputChange(e.target.value)}
             onKeyPress={handleCustomZoomKeyPress}
