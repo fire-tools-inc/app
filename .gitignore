@@ -13,6 +13,8 @@ node_modules
 # Build outputs
 dist
 dist-ssr
+dist-electron
+release
 .dev-pages
 build
 !electron/build
