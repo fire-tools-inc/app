@@ -155,3 +155,49 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm --prefix server ci
       - run: npm --prefix server test
+
+  docker-stack:
+    name: Docker stack health
+    needs: changes
+    if: ${{ needs.changes.outputs.server == 'true' || needs.changes.outputs.full == 'true' || github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build images (no cache)
+        run: docker compose build --no-cache
+      - name: Start stack
+        run: docker compose up -d
+      - name: Wait for backend to become healthy
+        run: |
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' $(docker compose ps -q backend) 2>/dev/null || echo "starting")
+            echo "attempt $i: backend health = $status"
+            if [ "$status" = "healthy" ]; then exit 0; fi
+            sleep 2
+          done
+          echo "backend never became healthy"
+          docker compose logs backend
+          exit 1
+      - name: Probe backend /health from host
+        run: |
+          backend_id=$(docker compose ps -q backend)
+          ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$backend_id")
+          curl --fail --silent --show-error "http://$ip:8787/api/v1/health" | tee /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+      - name: Probe frontend on host port
+        run: |
+          for i in $(seq 1 20); do
+            if curl --fail --silent --show-error http://localhost:8080/ -o /dev/null; then
+              echo "frontend reachable"; exit 0
+            fi
+            sleep 2
+          done
+          echo "frontend never responded on :8080"
+          docker compose logs frontend
+          exit 1
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Tear down
+        if: always()
+        run: docker compose down --volumes --remove-orphans
