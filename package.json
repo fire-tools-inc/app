@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "postbuild": "node scripts/build-landing.mjs",
     "build:electron": "tsc && vite build --mode electron",
     "build:landing": "node scripts/build-landing.mjs",
     "preview": "vite preview",
