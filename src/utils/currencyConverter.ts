@@ -13,6 +13,7 @@ import { Asset } from '../types/assetAllocation';
 import { NetWorthTrackerData, AssetHolding, CashEntry, PensionEntry, FinancialOperation, MonthlyVariation, NetWorthForecast } from '../types/netWorthTracker';
 import { ExpenseTrackerData, IncomeEntry, ExpenseEntry } from '../types/expenseTracker';
 import { CalculatorInputs } from '../types/calculator';
+import { logger } from './logger';
 
 /**
  * Convert an amount from a given currency to EUR
@@ -34,7 +35,7 @@ export function convertToEUR(
   const rate = rates[fromCurrency] ?? DEFAULT_FALLBACK_RATES[fromCurrency];
   if (rate === undefined || rate <= 0) {
     // This should never happen for SupportedCurrency types, but handle gracefully
-    console.error(`Invalid exchange rate for ${fromCurrency}. Using 1:1 conversion as fallback.`);
+    logger.error('currency-converter', 'invalid-rate', 'invalid exchange rate, using 1:1 conversion as fallback', { pii: { currency: fromCurrency } });
     return amount;
   }
   
@@ -59,7 +60,7 @@ export function convertFromEUR(
   
   const rate = rates[toCurrency] ?? DEFAULT_FALLBACK_RATES[toCurrency];
   if (rate === undefined || rate === 0) {
-    console.warn(`No exchange rate found for ${toCurrency}, returning original amount`);
+    logger.warn('currency-converter', 'missing-rate', 'exchange rate not found, returning original amount', { pii: { currency: toCurrency } });
     return amount;
   }
   

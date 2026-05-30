@@ -7,6 +7,7 @@
 
 import { Asset, AssetClass } from '../types/assetAllocation';
 import { yahooFetch } from './yahooProxy';
+import { logger } from './logger';
 
 export interface DCAAssetAllocation {
   assetId: string;
@@ -143,7 +144,9 @@ export async function fetchAssetPrices(tickers: string[]): Promise<Record<string
         prices[ticker] = price;
       }
     } catch (error) {
-      console.error(`Error fetching price for ${ticker}:`, error);
+      logger.error('dca', 'price-fetch-failed', 'failed to fetch price for asset', {
+        pii: { ticker, error: (error as Error)?.message },
+      });
     }
   }
   

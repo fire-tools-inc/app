@@ -367,7 +367,8 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Modalità test",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Controlla se i log diagnostici includono dettagli finanziari sensibili. I log non lasciano mai il tuo dispositivo a meno che tu non li esporti."
     },
     "triggerTestNotifications": "Invia notifiche di prova",
     "unavailable": "Unavailable",
@@ -406,7 +407,13 @@
       "noBackend": "Nessun backend configurato. Configurane uno nella sezione Backend sopra.",
       "pathMustStartWithSlash": "Il percorso deve iniziare con /",
       "invalidJson": "Il corpo della richiesta non è un JSON valido"
-    }
+    },
+    "loggingPii": "Log diagnostici dettagliati",
+    "loggingPiiOn": "Dettagliato",
+    "loggingPiiOff": "Minimo",
+    "loggingPiiHelp": "Quando disattivato (predefinito), i log diagnostici rimuovono i dettagli finanziari (ticker, importi, nomi conto). Quando attivo, il contesto completo viene mantenuto localmente per facilitare il debug.",
+    "loggingPiiWarning": "I log dettagliati possono contenere dati finanziari. Condividi i log esportati solo con persone fidate.",
+    "exportLogs": "Esporta log diagnostici"
   },
   "assetAllocation": {
     "addAsset": "Aggiungi asset",

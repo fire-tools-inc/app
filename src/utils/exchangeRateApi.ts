@@ -12,6 +12,7 @@ import {
   ExchangeRateFetchResult,
   ExchangeRateCacheEntry,
 } from '../types/priceApi';
+import { logger } from './logger';
 import {
   ExchangeRates,
   DEFAULT_FALLBACK_RATES,
@@ -100,8 +101,9 @@ export async function fetchExchangeRates(): Promise<ExchangeRateFetchResult> {
           date: now,
         });
       } catch (pairError) {
-        // Skip individual pair failures, continue with others
-        console.error(`Failed to fetch rate for ${pair.yahooSymbol}:`, pairError);
+        logger.error('exchange-rate', 'pair-fetch-failed', 'failed to fetch currency pair', {
+          pii: { yahooSymbol: pair.yahooSymbol, error: (pairError as Error)?.message },
+        });
       }
     }
 

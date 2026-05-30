@@ -367,7 +367,8 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Modo de prueba",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Controla si los registros de diagnóstico incluyen detalles financieros sensibles. Los registros nunca salen de su dispositivo a menos que los exporte."
     },
     "triggerTestNotifications": "Enviar notificaciones de prueba",
     "unavailable": "Unavailable",
@@ -406,7 +407,13 @@
       "noBackend": "No hay backend configurado. Configura uno en la sección Backend arriba.",
       "pathMustStartWithSlash": "La ruta debe comenzar con /",
       "invalidJson": "El cuerpo de la solicitud no es un JSON válido"
-    }
+    },
+    "loggingPii": "Registros de diagnóstico detallados",
+    "loggingPiiOn": "Detallado",
+    "loggingPiiOff": "Mínimo",
+    "loggingPiiHelp": "Cuando está desactivado (predeterminado), los registros eliminan los detalles financieros (tickers, importes, nombres de cuenta). Cuando está activado, se conserva el contexto completo de forma local para ayudar a depurar problemas.",
+    "loggingPiiWarning": "Los registros detallados pueden contener datos financieros. Comparta los registros exportados solo con personas de confianza.",
+    "exportLogs": "Exportar registros de diagnóstico"
   },
   "assetAllocation": {
     "addAsset": "Añadir activo",

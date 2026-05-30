@@ -10,6 +10,7 @@ import type { AddressInfo } from 'node:net';
 import { initDb } from './db.js';
 import { buildApp } from './app.js';
 import type { ServerEnv } from './env.js';
+import { logger } from './logger.js';
 
 export interface EmbedOptions {
   /** Absolute path to the SQLite file (e.g. `${userData}/firetools.db`). */
@@ -72,7 +73,9 @@ export const startEmbeddedServer = async (
     try {
       db.close();
     } catch (err) {
-      console.error('[embed] failed to close db', err);
+      logger.error('embed', 'db-close-failed', (err as Error).message, {
+        pii: { stack: (err as Error).stack },
+      });
     }
   };
 

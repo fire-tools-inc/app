@@ -367,7 +367,8 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Test Mode",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Controls whether diagnostic logs include sensitive financial details. Logs never leave your device unless you export them."
     },
     "triggerTestNotifications": "Trigger Test Notifications",
     "unavailable": "Unavailable",
@@ -406,7 +407,13 @@
       "noBackend": "No backend is configured. Set one in the Backend section above.",
       "pathMustStartWithSlash": "Path must start with /",
       "invalidJson": "Request body is not valid JSON"
-    }
+    },
+    "loggingPii": "Detailed diagnostic logging",
+    "loggingPiiOn": "Detailed",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "When off (default), diagnostic logs strip out financial details (tickers, amounts, account names). When on, full context is kept locally to help debug issues.",
+    "loggingPiiWarning": "Detailed logs may contain financial data. Only share exported logs with people you trust.",
+    "exportLogs": "Export diagnostic logs"
   },
   "assetAllocation": {
     "addAsset": "Add Asset",

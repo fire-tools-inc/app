@@ -14,6 +14,7 @@ import {
   ConfirmedDCAAssetAllocation
 } from '../utils/dcaCalculator';
 import { formatAssetName } from '../utils/allocationCalculator';
+import { logger } from '../utils/logger';
 import { MaterialIcon } from './MaterialIcon';
 import { formatDisplayPercent } from '../utils/numberFormatter';
 
@@ -113,7 +114,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('dialogs.dca.errors.calculateFailed'));
-      console.error('DCA calculation error:', err);
+      logger.error('dca-helper-dialog', 'calculate-failed', 'DCA calculation error', { pii: { error: (err as Error)?.message } });
     } finally {
       setIsLoading(false);
     }

@@ -367,7 +367,8 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Testmodus",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Steuert, ob Diagnoseprotokolle sensible Finanzdetails enthalten. Protokolle verlassen Ihr Gerät nur, wenn Sie sie exportieren."
     },
     "triggerTestNotifications": "Test-Benachrichtigungen senden",
     "unavailable": "Unavailable",
@@ -406,7 +407,13 @@
       "noBackend": "Kein Backend konfiguriert. Konfigurieren Sie eines im Abschnitt Backend oben.",
       "pathMustStartWithSlash": "Pfad muss mit / beginnen",
       "invalidJson": "Anfragetext ist kein gültiges JSON"
-    }
+    },
+    "loggingPii": "Detaillierte Diagnoseprotokolle",
+    "loggingPiiOn": "Detailliert",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "Bei deaktivierter Einstellung (Standard) entfernen Diagnoseprotokolle Finanzdetails (Ticker, Beträge, Kontonamen). Bei aktivierter Einstellung wird der vollständige Kontext lokal gespeichert, um die Fehlersuche zu erleichtern.",
+    "loggingPiiWarning": "Detaillierte Protokolle können Finanzdaten enthalten. Teilen Sie exportierte Protokolle nur mit vertrauenswürdigen Personen.",
+    "exportLogs": "Diagnoseprotokolle exportieren"
   },
   "assetAllocation": {
     "addAsset": "Vermögenswert hinzufügen",

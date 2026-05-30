@@ -367,7 +367,8 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Mode test",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Contrôle si les journaux de diagnostic incluent des détails financiers sensibles. Les journaux ne quittent jamais votre appareil à moins que vous ne les exportiez."
     },
     "triggerTestNotifications": "Envoyer des notifications de test",
     "unavailable": "Unavailable",
@@ -406,7 +407,13 @@
       "noBackend": "Aucun backend configuré. Configurez-en un dans la section Backend ci-dessus.",
       "pathMustStartWithSlash": "Le chemin doit commencer par /",
       "invalidJson": "Le corps de la requête n'est pas un JSON valide"
-    }
+    },
+    "loggingPii": "Journaux de diagnostic détaillés",
+    "loggingPiiOn": "Détaillé",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "Lorsqu'il est désactivé (par défaut), les journaux suppriment les détails financiers (tickers, montants, noms de compte). Lorsqu'il est activé, le contexte complet est conservé localement pour faciliter le débogage.",
+    "loggingPiiWarning": "Les journaux détaillés peuvent contenir des données financières. Ne partagez les journaux exportés qu’avec des personnes de confiance.",
+    "exportLogs": "Exporter les journaux de diagnostic"
   },
   "assetAllocation": {
     "addAsset": "Ajouter un actif",

@@ -34,6 +34,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
 import { API_ENDPOINTS, type ApiEndpoint } from '../utils/apiCatalog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { downloadLogs, logger } from '../utils/logger';
 import './SettingsPage.css';
 
 interface SettingsPageProps {
@@ -1132,6 +1133,49 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   </button>
                 </div>
                 <span className="setting-help">{t('settings.privacyModeHelp')}</span>
+              </div>
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="loggingPiiEnabled">{t('settings.loggingPii')}</label>
+                  <Tooltip content={t('settings.tooltips.loggingPii')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
+                  </Tooltip>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!settings.loggingPiiEnabled ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('loggingPiiEnabled', false)}
+                  >
+                    <MaterialIcon name="lock" size="small" /> {t('settings.loggingPiiOff')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${settings.loggingPiiEnabled ? 'active' : ''}`}
+                    onClick={() => {
+                      handleSettingChange('loggingPiiEnabled', true);
+                      logger.userAction('settings', 'logging-pii-enabled', 'user enabled PII logging');
+                    }}
+                  >
+                    <MaterialIcon name="lock_open" size="small" /> {t('settings.loggingPiiOn')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.loggingPiiHelp')}</span>
+                {settings.loggingPiiEnabled && (
+                  <span className="setting-help" style={{ color: 'var(--color-error, #d32f2f)', fontWeight: 600 }}>
+                    ⚠ {t('settings.loggingPiiWarning')}
+                  </span>
+                )}
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      downloadLogs();
+                      logger.userAction('settings', 'export-logs', 'user exported diagnostic logs');
+                    }}
+                  >
+                    <MaterialIcon name="download" size="small" /> {t('settings.exportLogs')}
+                  </button>
+                </div>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">

@@ -18,6 +18,7 @@ import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
 import { buildUiPreferencesRouter } from './routes/uiPreferences.js';
+import { logger } from './logger.js';
 
 export interface BuildAppOptions {
   db: DB;
@@ -85,7 +86,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
       res.status(403).json({ error: { code: 'cors_denied', message: err.message } });
       return;
     }
-    console.error('[express] unhandled', err);
+    logger.error('express', 'unhandled-error', err.message, { pii: { stack: err.stack } });
     res.status(500).json({
       error: { code: 'internal_error', message: err.message },
     });

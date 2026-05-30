@@ -10,6 +10,7 @@
  */
 
 import { loadSettings } from './cookieSettings';
+import { logger } from './logger';
 
 interface EmbeddedBackendInfo {
   url: string | null;
@@ -49,7 +50,7 @@ export const getEmbeddedBackendInfo = async (): Promise<EmbeddedBackendInfo | nu
     cachedEmbedded = await bridge.getEmbeddedBackend();
     return cachedEmbedded;
   } catch (err) {
-    console.error('Failed to resolve embedded backend URL:', err);
+    logger.error('api-base', 'backend-resolution-failed', 'failed to resolve embedded backend URL', { pii: { error: (err as Error)?.message } });
     return null;
   }
 };

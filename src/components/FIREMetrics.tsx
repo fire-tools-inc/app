@@ -2,6 +2,7 @@ import { CalculationResult } from '../types/calculator';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { logger } from '../utils/logger';
 import { PrivacyBlur } from './PrivacyBlur';
 import { AbbreviatedValue } from './AbbreviatedValue';
 
@@ -66,7 +67,7 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
       setCopyFailed(false);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy URL:', err);
+      logger.error('fire-metrics', 'copy-url-failed', 'failed to copy URL to clipboard', { pii: { error: (err as Error)?.message } });
       setCopyFailed(true);
       setTimeout(() => setCopyFailed(false), 3000);
     }

@@ -5,6 +5,7 @@
  */
 
 import CryptoJS from 'crypto-js';
+import { logger } from './logger';
 
 // Encryption key for client-side storage
 // NOTE: In a client-side web application, true secret key security is not achievable
@@ -26,7 +27,7 @@ export function encryptData(plaintext: string): string {
     const encrypted = CryptoJS.AES.encrypt(plaintext, ENCRYPTION_KEY);
     return encrypted.toString();
   } catch (error) {
-    console.error('Failed to encrypt data:', error);
+    logger.error('cookie-encryption', 'encrypt-failed', 'failed to encrypt data', { pii: { error: (error as Error)?.message } });
     throw new Error('Encryption failed');
   }
 }
