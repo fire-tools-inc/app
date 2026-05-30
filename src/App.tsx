@@ -41,6 +41,7 @@ import './components/GuidedTour.css';
 import './components/NotificationBell.css';
 import { MaterialIcon } from './components/MaterialIcon';
 import { FireIcon } from './components/FireIcon';
+import { NAVBAR_LABELS } from './constants/navbarLabels';
 
 // Context for policy modal
 interface PolicyModalContextType {
@@ -57,80 +58,81 @@ export const usePolicyModal = () => useContext(PolicyModalContext);
 
 function Navigation({ accountName, showPortfolioBreakdown }: { accountName: string; showPortfolioBreakdown: boolean }) {
   const location = useLocation();
-  const { t } = useTranslation();
+  // Navbar labels are intentionally NOT routed through useTranslation — they
+  // must always render in English. See src/constants/navbarLabels.ts (#233).
   const [isOpen, setIsOpen] = useState(false);
-  
+
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
-  
+
   return (
-    <nav className="app-nav" aria-label={t('nav.label')}>
-      <button 
-        className="nav-toggle" 
-        onClick={toggleMenu} 
-        aria-label={t('nav.toggle')}
+    <nav className="app-nav" aria-label={NAVBAR_LABELS.ariaLabel}>
+      <button
+        className="nav-toggle"
+        onClick={toggleMenu}
+        aria-label={NAVBAR_LABELS.toggle}
         aria-expanded={isOpen}
       >
         {isOpen ? <MaterialIcon name="close" /> : <MaterialIcon name="menu" />}
       </button>
       <div className={`nav-links ${isOpen ? 'open' : ''}`}>
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/' ? 'page' : undefined}
         >
-          <MaterialIcon name="home" className="nav-icon" /> {t('nav.home')}
+          <MaterialIcon name="home" className="nav-icon" /> {NAVBAR_LABELS.home}
         </Link>
-        <Link 
-          to="/asset-allocation" 
+        <Link
+          to="/asset-allocation"
           className={`nav-link ${location.pathname === '/asset-allocation' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/asset-allocation' ? 'page' : undefined}
         >
-          <MaterialIcon name="pie_chart" className="nav-icon" /> {t('nav.assetAllocation')}
+          <MaterialIcon name="pie_chart" className="nav-icon" /> {NAVBAR_LABELS.assetAllocation}
         </Link>
         {showPortfolioBreakdown && (
-          <Link 
-            to="/portfolio-breakdown" 
+          <Link
+            to="/portfolio-breakdown"
             className={`nav-link ${location.pathname === '/portfolio-breakdown' ? 'active' : ''}`}
             onClick={closeMenu}
             aria-current={location.pathname === '/portfolio-breakdown' ? 'page' : undefined}
           >
-            <MaterialIcon name="donut_large" className="nav-icon" /> {t('nav.portfolioBreakdown')}
+            <MaterialIcon name="donut_large" className="nav-icon" /> {NAVBAR_LABELS.portfolioBreakdown}
           </Link>
         )}
-        <Link 
-          to="/expense-tracker" 
+        <Link
+          to="/expense-tracker"
           className={`nav-link ${location.pathname === '/expense-tracker' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/expense-tracker' ? 'page' : undefined}
         >
-          <MaterialIcon name="account_balance_wallet" className="nav-icon" /> {t('nav.cashflow')}
+          <MaterialIcon name="account_balance_wallet" className="nav-icon" /> {NAVBAR_LABELS.cashflow}
         </Link>
-        <Link 
-          to="/net-worth-tracker" 
+        <Link
+          to="/net-worth-tracker"
           className={`nav-link ${location.pathname === '/net-worth-tracker' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/net-worth-tracker' ? 'page' : undefined}
         >
-          <MaterialIcon name="trending_up" className="nav-icon" /> {t('nav.netWorth')}
+          <MaterialIcon name="trending_up" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
         </Link>
-        <Link 
-          to="/fire-calculator" 
+        <Link
+          to="/fire-calculator"
           className={`nav-link ${location.pathname === '/fire-calculator' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/fire-calculator' ? 'page' : undefined}
         >
-          <MaterialIcon name="local_fire_department" className="nav-icon" /> {t('nav.fireCalculator')}
+          <MaterialIcon name="local_fire_department" className="nav-icon" /> {NAVBAR_LABELS.fireCalculator}
         </Link>
-        <Link 
-          to="/monte-carlo" 
+        <Link
+          to="/monte-carlo"
           className={`nav-link ${location.pathname === '/monte-carlo' ? 'active' : ''}`}
           onClick={closeMenu}
           aria-current={location.pathname === '/monte-carlo' ? 'page' : undefined}
         >
-          <MaterialIcon name="casino" className="nav-icon" /> {t('nav.monteCarlo')}
+          <MaterialIcon name="casino" className="nav-icon" /> {NAVBAR_LABELS.monteCarlo}
         </Link>
       </div>
       <div className="nav-actions">

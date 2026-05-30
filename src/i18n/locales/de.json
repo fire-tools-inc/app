@@ -8,17 +8,6 @@
     "cookiePolicy": "Cookie-Richtlinie",
     "github": "GitHub"
   },
-  "nav": {
-    "label": "Hauptnavigation",
-    "toggle": "Navigationsmenü ein-/ausblenden",
-    "home": "Startseite",
-    "assetAllocation": "Asset-Allokation",
-    "portfolioBreakdown": "Portfolio-Aufschlüsselung",
-    "cashflow": "Cashflow",
-    "netWorth": "Nettovermögen",
-    "fireCalculator": "FIRE-Rechner",
-    "monteCarlo": "Monte Carlo"
-  },
   "common": {
     "save": "Speichern",
     "cancel": "Abbrechen",

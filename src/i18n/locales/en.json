@@ -8,17 +8,6 @@
     "cookiePolicy": "Cookie Policy",
     "github": "GitHub"
   },
-  "nav": {
-    "label": "Main navigation",
-    "toggle": "Toggle navigation menu",
-    "home": "Home",
-    "assetAllocation": "Asset Allocation",
-    "portfolioBreakdown": "Portfolio Breakdown",
-    "cashflow": "Cashflow",
-    "netWorth": "Net Worth",
-    "fireCalculator": "FIRE Calculator",
-    "monteCarlo": "Monte Carlo"
-  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

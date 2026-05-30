@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { NAVBAR_LABELS } from '../constants/navbarLabels';
 import './NotFoundPage.css';
 
 export function NotFoundPage() {
@@ -18,7 +19,8 @@ export function NotFoundPage() {
             <MaterialIcon name="home" /> {t('notFound.backHome')}
           </Link>
           <Link to="/fire-calculator" className="btn-calculator">
-            <MaterialIcon name="local_fire_department" /> {t('nav.fireCalculator')}
+            {/* Navbar label — English only by design (#233). */}
+            <MaterialIcon name="local_fire_department" /> {NAVBAR_LABELS.fireCalculator}
           </Link>
         </div>
         <div className="helpful-links">
