@@ -1,6 +1,6 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeTheme } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, nativeTheme, Notification } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -152,11 +152,47 @@ ipcMain.handle('fire-tools:open-external', (_event, url) => {
   return true;
 });
 
+// Show a native OS notification (macOS NotificationCenter / Windows Action
+// Center / Linux libnotify). Title is required; everything else is opt-in.
+ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
+  try {
+    if (!Notification.isSupported()) return false;
+    if (!opts || typeof opts.title !== 'string' || opts.title.length === 0) {
+      return false;
+    }
+    const body = typeof opts.body === 'string' ? opts.body : '';
+    const urgency =
+      opts.urgency === 'low' || opts.urgency === 'critical'
+        ? opts.urgency
+        : 'normal';
+    const notification = new Notification({
+      title: opts.title,
+      body,
+      silent: false,
+      urgency, // Linux only; ignored elsewhere
+    });
+    notification.on('click', () => {
+      focusMainWindow();
+    });
+    notification.show();
+    return true;
+  } catch (err) {
+    console.error('[fire-tools] failed to show native notification:', err);
+    return false;
+  }
+});
+
 app.on('second-instance', () => {
   focusMainWindow();
 });
 
 app.whenReady().then(async () => {
+  // Required for Windows toasts to register and group under the right
+  // application identity. Must match electron-builder.yml `appId`.
+  if (typeof app.setAppUserModelId === 'function') {
+    app.setAppUserModelId('dev.mb-consulting.firetools');
+  }
+
   // Populate the macOS "About <app>" panel with real metadata.
   if (isMac) {
     app.setAboutPanelOptions({

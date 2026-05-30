@@ -46,7 +46,10 @@ export interface Notification {
 export interface NotificationPreferences {
   // In-app notification settings
   enableInAppNotifications: boolean;
-  
+
+  // Native OS notifications (Electron / browser Notification API)
+  enableNativeNotifications: boolean;
+
   // Specific notification type toggles
   newMonthReminders: boolean;
   newQuarterReminders: boolean;
@@ -79,6 +82,7 @@ export interface NotificationState {
  */
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   enableInAppNotifications: true,
+  enableNativeNotifications: true,
   newMonthReminders: true,
   newQuarterReminders: true,
   taxReminders: true,

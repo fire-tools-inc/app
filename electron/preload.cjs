@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('fireTools', {
   },
   getEmbeddedBackend: () => ipcRenderer.invoke('fire-tools:embedded-backend-info'),
   openExternal: (url) => ipcRenderer.invoke('fire-tools:open-external', url),
+  showNativeNotification: (opts) =>
+    ipcRenderer.invoke('fire-tools:show-native-notification', opts),
   onNavigate: (callback) => subscribe('fire-tools:navigate', callback),
   onMenuAction: (callback) => subscribe('fire-tools:menu-action', callback),
 });

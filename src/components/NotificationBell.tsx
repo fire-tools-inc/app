@@ -11,6 +11,7 @@ import {
   markAllNotificationsAsRead,
   deleteNotification,
   addNotification,
+  NOTIFICATIONS_CHANGED_EVENT,
 } from '../utils/notificationStorage';
 import {
   checkAndGenerateTimeBasedNotifications,
@@ -83,6 +84,26 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       refreshNotifications();
     }
   }, [isOpen, refreshNotifications]);
+
+  // Live refresh whenever notification state changes anywhere in the app
+  // (e.g. SettingsPage "Trigger test notifications", another tab/window
+  // in web mode, etc). Keeps the badge in sync without requiring the user
+  // to open the panel first.
+  useEffect(() => {
+    const handler = () => refreshNotifications();
+    window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, handler);
+    // Cross-tab sync in browser mode: cookies fire `storage` only for
+    // localStorage, so we additionally listen for visibility changes and
+    // re-read on focus to catch any out-of-band updates.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshNotifications();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, handler);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [refreshNotifications]);
 
   // Close panel when clicking outside
   useEffect(() => {

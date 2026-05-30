@@ -14,6 +14,7 @@ import { clearTourPreference } from '../utils/tourPreferences';
 import { clearQuestionnairePromptPreference } from '../utils/questionnairePromptPreferences';
 import { exportAllDataAsJSON, importAllDataFromJSON, serializeAllDataExport } from '../utils/dataExportImport';
 import { loadNotificationState, updateNotificationPreferences, clearNotifications, addNotification } from '../utils/notificationStorage';
+import { ensureNativeNotificationPermission, showNativeNotification } from '../utils/nativeNotifications';
 import { type NotificationPreferences, DEFAULT_NOTIFICATION_PREFERENCES } from '../types/notification';
 import { generateDemoTourNotifications } from '../utils/notificationGenerator';
 import { 
@@ -670,6 +671,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setNotificationPrefs(newPrefs);
     updateNotificationPreferences({ [key]: value });
     showMessage('success', t('settings.messages.notificationPreferencesSaved'));
+
+    // When the user opts in to native OS notifications, prompt the browser
+    // for permission so the very next notification can actually fire. In
+    // Electron this is a no-op (permission is granted by the OS).
+    if (key === 'enableNativeNotifications' && value === true) {
+      void ensureNativeNotificationPermission();
+    }
   };
 
   // Clear all notifications
@@ -681,11 +689,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   };
 
   // Trigger test notifications
-  const handleTriggerTestNotifications = () => {
+  const handleTriggerTestNotifications = async () => {
+    // If the user has native notifications enabled but hasn't granted
+    // browser permission yet, request it now so the test actually fires
+    // a visible OS toast (Electron grants this implicitly).
+    if (notificationPrefs.enableNativeNotifications) {
+      await ensureNativeNotificationPermission();
+    }
+
     const testNotifications = generateDemoTourNotifications();
     testNotifications.forEach(notification => {
       addNotification(notification);
     });
+
+    // Additionally fire one explicit native-only ping so the user can
+    // confirm the OS-level path works even if they have in-app disabled.
+    if (notificationPrefs.enableNativeNotifications) {
+      void showNativeNotification({
+        title: t('settings.testNotificationNativeTitle'),
+        message: t('settings.testNotificationNativeBody'),
+        priority: 'MEDIUM',
+      });
+    }
+
     showMessage('success', t('settings.messages.testNotificationsCreated', { count: testNotifications.length }));
   };
 
@@ -1330,6 +1356,30 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     {t('settings.disabled')}
                   </button>
                 </div>
+              </div>
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label>{t('settings.enableNativeNotifications')}</label>
+                  <Tooltip content={t('settings.tooltips.nativeNotifications')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
+                  </Tooltip>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${notificationPrefs.enableNativeNotifications ? 'active' : ''}`}
+                    onClick={() => handleNotificationPrefChange('enableNativeNotifications', true)}
+                  >
+                    {t('settings.enabled')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${!notificationPrefs.enableNativeNotifications ? 'active' : ''}`}
+                    onClick={() => handleNotificationPrefChange('enableNativeNotifications', false)}
+                  >
+                    {t('settings.disabled')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.enableNativeNotificationsHelp')}</span>
               </div>
 
               {notificationPrefs.enableInAppNotifications && (
