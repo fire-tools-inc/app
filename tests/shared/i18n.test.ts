@@ -43,6 +43,7 @@ Object.defineProperty(document, 'cookie', {
 describe('i18n setup', () => {
   beforeEach(() => {
     cookieMock.clear();
+    try { window.localStorage.clear(); } catch { /* no-op */ }
   });
 
   afterEach(async () => {

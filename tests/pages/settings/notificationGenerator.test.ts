@@ -49,6 +49,7 @@ Object.defineProperty(document, 'cookie', {
 describe('Notification Generator', () => {
   beforeEach(() => {
     cookieMock.clear();
+    try { window.localStorage.clear(); } catch { /* no-op */ }
     vi.useFakeTimers();
   });
 

@@ -30,6 +30,7 @@ Object.defineProperty(document, 'cookie', {
 describe('LanguageSelector', () => {
   beforeEach(() => {
     cookieMock.clear();
+    try { window.localStorage.clear(); } catch { /* no-op */ }
   });
 
   afterEach(async () => {

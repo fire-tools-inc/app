@@ -56,6 +56,14 @@ Object.defineProperty(document, 'cookie', {
 describe('Notification Storage utilities', () => {
   beforeEach(() => {
     cookieMock.clear();
+    // SafeCookies dual-writes to localStorage in addition to cookies; clear it
+    // so state cannot leak between tests in environments where localStorage
+    // is fully functional (CI / modern jsdom).
+    try {
+      window.localStorage.clear();
+    } catch {
+      // localStorage may be unavailable in some test envs; ignore.
+    }
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-06-15T10:00:00Z'));
   });

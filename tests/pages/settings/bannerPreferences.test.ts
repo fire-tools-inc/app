@@ -42,6 +42,7 @@ Object.defineProperty(document, 'cookie', {
 describe('Security banner preferences', () => {
   beforeEach(() => {
     cookieMock.clear();
+    try { window.localStorage.clear(); } catch { /* no-op */ }
   });
 
   it('should default to not dismissed', () => {

@@ -47,6 +47,14 @@ Object.defineProperty(document, 'cookie', {
 describe('Cookie Settings utilities', () => {
   beforeEach(() => {
     cookieMock.clear();
+    // SafeCookies dual-writes to localStorage in addition to cookies; clear it
+    // so state cannot leak between tests in environments where localStorage
+    // is fully functional (CI / modern jsdom).
+    try {
+      window.localStorage.clear();
+    } catch {
+      // localStorage may be unavailable in some test envs; ignore.
+    }
   });
 
   describe('saveSettings', () => {
