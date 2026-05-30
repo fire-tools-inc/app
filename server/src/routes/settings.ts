@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import type { Database } from 'better-sqlite3';
 import { handler, resolveUserId, apiError, bool01, fromBool01, nowIso } from '../http.js';
+import {
+  type SettingsFileStore,
+  type SettingsFileShape,
+  type PerUserSettings,
+} from '../settingsFile.js';
 
 interface SettingsRow {
   account_name: string;
@@ -215,8 +220,13 @@ const replaceNotifPref = (db: Database, userId: number, body: Record<string, unk
   );
 };
 
-export const buildSettingsRouter = (db: Database): Router => {
+export const buildSettingsRouter = (db: Database, fileStore?: SettingsFileStore): Router => {
   const router = Router();
+
+  /** Best-effort sync after a successful DB write. Errors are logged inside. */
+  const mirror = (): void => {
+    if (fileStore) fileStore.syncFromDb(db);
+  };
 
   router.get(
     '/settings',
@@ -247,6 +257,7 @@ export const buildSettingsRouter = (db: Database): Router => {
         if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
       }
       applySettingsPatch(db, userId, body);
+      mirror();
       res.json(mapSettings(ensureSettings(db, userId)));
     }),
   );
@@ -256,6 +267,7 @@ export const buildSettingsRouter = (db: Database): Router => {
     handler((req, res) => {
       const userId = resolveUserId(req);
       applySettingsPatch(db, userId, (req.body ?? {}) as SettingsBody);
+      mirror();
       res.json(mapSettings(ensureSettings(db, userId)));
     }),
   );
@@ -273,9 +285,88 @@ export const buildSettingsRouter = (db: Database): Router => {
     handler((req, res) => {
       const userId = resolveUserId(req);
       replaceNotifPref(db, userId, (req.body ?? {}) as Record<string, unknown>);
+      mirror();
       res.json(mapNotifPref(ensureNotifPref(db, userId)));
     }),
   );
 
+  // ----- settings.json file management -----------------------------------
+
+  router.get(
+    '/settings/file',
+    handler((_req, res) => {
+      if (!fileStore) {
+        throw apiError(503, 'settings_file_unavailable', 'Settings file persistence is disabled');
+      }
+      const contents = fileStore.read();
+      res.json({
+        path: fileStore.path,
+        exists: contents !== null,
+        contents,
+      });
+    }),
+  );
+
+  router.post(
+    '/settings/file/sync',
+    handler((_req, res) => {
+      if (!fileStore) {
+        throw apiError(503, 'settings_file_unavailable', 'Settings file persistence is disabled');
+      }
+      const ok = fileStore.syncFromDb(db);
+      if (!ok) throw apiError(500, 'settings_file_write_failed', 'Failed to write settings.json');
+      res.json({ path: fileStore.path, ok: true });
+    }),
+  );
+
+  router.post(
+    '/settings/file/import',
+    handler((req, res) => {
+      const body = req.body as SettingsFileShape | undefined;
+      if (!body || typeof body !== 'object' || !('users' in body)) {
+        throw apiError(400, 'invalid_body', 'Expected SettingsFileShape with `users` map');
+      }
+      const userId = resolveUserId(req);
+      const perUser = pickUserPayload(body, userId);
+      if (!perUser) {
+        throw apiError(
+          400,
+          'invalid_body',
+          `No settings found for user ${userId} in provided payload`,
+        );
+      }
+      if (perUser.settings && Object.keys(perUser.settings).length > 0) {
+        applySettingsPatch(db, userId, perUser.settings);
+      }
+      if (
+        perUser.notificationPreferences &&
+        Object.keys(perUser.notificationPreferences).length > 0
+      ) {
+        replaceNotifPref(db, userId, perUser.notificationPreferences);
+      }
+      mirror();
+      res.json({
+        settings: mapSettings(ensureSettings(db, userId)),
+        notificationPreferences: mapNotifPref(ensureNotifPref(db, userId)),
+      });
+    }),
+  );
+
   return router;
+};
+
+/**
+ * Choose the user payload from an imported SettingsFileShape. Prefers the
+ * exact user id match; falls back to the only present user when there is
+ * exactly one (covers single-user exports from a different install).
+ */
+const pickUserPayload = (
+  shape: SettingsFileShape,
+  userId: number,
+): PerUserSettings | null => {
+  const direct = shape.users[String(userId)];
+  if (direct) return direct;
+  const keys = Object.keys(shape.users);
+  if (keys.length === 1) return shape.users[keys[0]];
+  return null;
 };
