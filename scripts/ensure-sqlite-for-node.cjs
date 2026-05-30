@@ -6,17 +6,40 @@
 // This script probes the addon and rebuilds against the current Node only
 // if the probe fails. No-op on a healthy local dev environment.
 
-const { execSync } = require('node:child_process');
+const { execSync, spawnSync } = require('node:child_process');
 
 function probe() {
-  try {
-    const Database = require('better-sqlite3');
-    const db = new Database(':memory:');
-    db.close();
-    return true;
-  } catch (err) {
-    return err;
+  const probeScript = `
+    try {
+      const Database = require('better-sqlite3');
+      const db = new Database(':memory:');
+      db.close();
+      process.exit(0);
+    } catch (err) {
+      console.error(err && err.message ? err.message : String(err));
+      process.exit(1);
+    }
+  `;
+
+  const result = spawnSync(process.execPath, ['-e', probeScript], {
+    stdio: 'pipe',
+    encoding: 'utf8',
+  });
+
+  if (result.error) {
+    return result.error;
   }
+  if (result.status === 0) {
+    return true;
+  }
+  if (result.signal) {
+    return new Error(`probe process terminated by signal ${result.signal}`);
+  }
+
+  const stderr = (result.stderr || '').trim();
+  const stdout = (result.stdout || '').trim();
+  const message = stderr || stdout || `probe process exited with code ${result.status}`;
+  return new Error(message);
 }
 
 const initial = probe();
