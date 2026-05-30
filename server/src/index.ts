@@ -1,36 +1,22 @@
-import express, { type NextFunction, type Request, type Response } from 'express';
-import cors from 'cors';
 import { loadEnv } from './env.js';
 import { initDb } from './db.js';
-import { buildHealthRouter } from './routes/health.js';
-import { buildUsersRouter } from './routes/users.js';
-import { buildNotImplementedRouter } from './routes/notImplemented.js';
+import { buildApp } from './app.js';
 
 const env = loadEnv();
 
-const { db, schemaApplied, dbPath } = initDb(env);
-if (schemaApplied) {
-  console.error(`[db] applied schema to fresh database at ${dbPath}`);
+const { db, migrationsResult, dbPath } = initDb(env);
+const applied = migrationsResult.migrationsApplied;
+if (applied.length > 0) {
+  console.error(
+    `[db] applied ${applied.length} migration(s) at ${dbPath}: ${applied.join(', ')}`,
+  );
 } else {
-  console.error(`[db] reusing existing database at ${dbPath}`);
+  console.error(
+    `[db] no pending migrations (${migrationsResult.totalMigrations} total) at ${dbPath}`,
+  );
 }
 
-const app = express();
-app.use(express.json({ limit: '2mb' }));
-app.use(cors({ origin: env.corsOrigin }));
-
-const v1 = express.Router();
-v1.use(buildHealthRouter(db, dbPath));
-v1.use(buildUsersRouter(db));
-v1.use(buildNotImplementedRouter());
-app.use('/api/v1', v1);
-
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('[express] unhandled', err);
-  res.status(500).json({
-    error: { code: 'internal_error', message: err.message },
-  });
-});
+const app = buildApp({ db, env, dbPath });
 
 const server = app.listen(env.port, env.host, () => {
   console.error(`[server] fire-tools backend listening on http://${env.host}:${env.port}`);
