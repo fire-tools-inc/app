@@ -25,6 +25,11 @@ extraMetadata:
 
 asar: true
 
+# After macOS signing (including ad-hoc), re-sign with the correct bundle
+# identifier so NotificationCenter attributes notifications to "Fire Tools"
+# instead of the default "Electron". See scripts/electron-after-sign.cjs.
+afterSign: scripts/electron-after-sign.cjs
+
 mac:
   category: public.app-category.finance
   hardenedRuntime: true

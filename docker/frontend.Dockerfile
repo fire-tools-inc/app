@@ -4,9 +4,11 @@
 FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
-# Install deps first to leverage Docker layer cache.
+# Install deps first to leverage Docker layer cache. Skip lifecycle scripts —
+# the frontend image only needs `vite build`, not Electron or better-sqlite3
+# native rebuilds (those run via root postinstall on developer machines).
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
 
 # Then the rest of the source.
 COPY . .
