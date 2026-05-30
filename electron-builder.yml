@@ -1,6 +1,6 @@
 appId: dev.mb-consulting.firetools
 productName: Fire Tools
-copyright: Copyright © ${author}
+copyright: Copyright © 2026 Fire Tools Contributors
 directories:
   output: release/${version}
   buildResources: electron/build
@@ -47,11 +47,23 @@ mac:
   notarize: false
 
 win:
+  publisherName: Fire Tools Contributors
+  legalTrademarks: ""
   target:
     - target: nsis
       arch:
         - x64
   # Sign via WINDOWS_CERTIFICATE_LINK / WINDOWS_CERTIFICATE_PASSWORD env when available.
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  artifactName: "${productName}-Setup-${version}-${arch}.${ext}"
+  shortcutName: Fire Tools
+  uninstallDisplayName: Fire Tools ${version}
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
 
 linux:
   category: Finance

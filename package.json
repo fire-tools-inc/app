@@ -35,7 +35,19 @@
     "financial-independence",
     "monte-carlo"
   ],
-  "author": "Fire Tools Contributors",
+  "author": {
+    "name": "Fire Tools Contributors",
+    "email": "noreply@mb-consulting.dev",
+    "url": "https://github.com/mbianchidev/fire-tools"
+  },
+  "homepage": "https://github.com/mbianchidev/fire-tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mbianchidev/fire-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mbianchidev/fire-tools/issues"
+  },
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
