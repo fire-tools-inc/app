@@ -245,7 +245,7 @@ boot:
 - **Database schema**: [`docs/database/schema.sql`](docs/database/schema.sql) — **SQLite is the first-class target**, **PostgreSQL is fully compatible**. See [`docs/database/README.md`](docs/database/README.md).
 - **Backend**: [`server/`](server/) — Node + Express + better-sqlite3, full OpenAPI implementation.
 - **Docker stack**: [`docker-compose.yml`](docker-compose.yml) + [`docs/deployment/README.md`](docs/deployment/README.md).
-- **Desktop wrapper**: [`electron/`](electron/) — hardened Electron, code-sign-ready. **Bundles the backend in-process** so the desktop app needs no separate server; SQLite lives at the OS userData path (`~/Library/Application Support/fire-tools/firetools.db` on macOS, `%APPDATA%\fire-tools\firetools.db` on Windows, `~/.config/fire-tools/firetools.db` on Linux). You can also point the app at a separately-running backend via **Settings → Backend → Custom URL**.
+- **Desktop wrapper**: [`electron/`](electron/) — hardened Electron, code-sign-ready. **Bundles the backend in-process** so the desktop app needs no separate server; SQLite lives at the OS userData path (`~/Library/Application Support/fire-tools/firetools.db` on macOS, `%APPDATA%\fire-tools\firetools.db` on Windows, `~/.config/fire-tools/firetools.db` on Linux). User settings are also mirrored to a sibling `settings.json` in the same folder (atomic writes, mirrors the DB on every change) so they are easy to back up, inspect, or carry between installs. You can also point the app at a separately-running backend via **Settings → Backend → Custom URL**.
 
 Both contract files cover every feature currently shipped (FIRE calculator,
 asset allocation, expense / income tracker, net worth tracker, notifications,
