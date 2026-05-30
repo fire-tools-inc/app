@@ -6,10 +6,9 @@ containerize) and
 [#195](https://github.com/mbianchidev/fire-tools/issues/195) (local
 database).
 
-> **Status: scaffold.** The backend currently implements `GET /health`
-> and `GET /users/me` against SQLite and returns `501 not_implemented`
-> for the rest of the OpenAPI contract. The compose stack is wired so
-> the rest can be filled in iteratively without changing the topology.
+The backend implements the full OpenAPI contract against SQLite. Migrations
+are forward-only SQL files in [`../../server/migrations/`](../../server/migrations/)
+and run automatically on boot (also runnable via `npm run migrate`).
 
 ## Stack
 
@@ -57,14 +56,17 @@ docker compose --profile postgres up -d
 
 ## Environment
 
-| Var            | Default                          | Notes |
-|----------------|----------------------------------|-------|
-| `NODE_ENV`     | `production`                     | |
-| `PORT`         | `8787`                           | Inside the container. |
-| `HOST`         | `0.0.0.0`                        | Bind address. |
-| `DATABASE_URL` | `file:/data/firetools.db`        | `file:` SQLite or `postgres://…` |
-| `SCHEMA_PATH`  | `/app/schema/schema.sql`         | Applied only on a fresh DB. |
-| `CORS_ORIGIN`  | `http://localhost:8080`          | Set to your frontend origin. |
+| Var                    | Default                          | Notes |
+|------------------------|----------------------------------|-------|
+| `NODE_ENV`             | `production`                     | |
+| `PORT`                 | `8787`                           | Inside the container. |
+| `HOST`                 | `0.0.0.0`                        | Bind address. |
+| `DATABASE_URL`         | `file:/data/firetools.db`        | `file:` SQLite or `postgres://…` |
+| `MIGRATIONS_PATH`      | `migrations`                     | Relative to `server/` or absolute. |
+| `CORS_ORIGIN`          | `http://localhost:8080`          | Comma-separated allowlist. |
+| `CORS_ALLOW_ALL`       | `false`                          | `true` opens CORS — only for trusted local stacks. |
+| `RATE_LIMIT_WINDOW_MS` | `900000`                         | Sliding window for the rate limiter. |
+| `RATE_LIMIT_MAX`       | `300`                            | Max requests per window per IP. |
 
 ## Volumes & backup
 
@@ -77,12 +79,11 @@ docker compose cp backend:/data/firetools.db ./firetools-backup.db
 
 ## Troubleshooting
 
-- **`501 not_implemented` for most endpoints** — expected. Only `/health`
-  and `/users/me` are wired. Fill in the rest by adding routers under
-  `server/src/routes/` and mounting them in `server/src/index.ts`
-  before the catch-all.
 - **better-sqlite3 build errors in CI** — the Dockerfile installs
   `python3` + `build-essential` precisely to handle the node-gyp
   fallback. If you build outside Docker, ensure those are present.
 - **CORS errors from the browser** — set `CORS_ORIGIN` to the exact
-  scheme+host+port serving the frontend.
+  scheme+host+port serving the frontend, or set `CORS_ALLOW_ALL=true`
+  for trusted local-only stacks.
+- **`429 Too Many Requests`** — bump `RATE_LIMIT_MAX` /
+  `RATE_LIMIT_WINDOW_MS` to fit your usage profile.

@@ -1,9 +1,14 @@
 # API Contract
 
 This folder contains the OpenAPI specification for the Fire Tools backend that
-will power local deployments (Docker / Electron). The backend itself is **not
-yet implemented** — see [issue #133](https://github.com/mbianchidev/fire-tools/issues/133)
-for the rationale and roadmap.
+powers local deployments (Docker / Electron). The backend implementing this
+contract lives in [`../../server/`](../../server/).
+
+## Published docs
+
+The spec is bundled into the GitHub Pages deploy as an interactive
+[ReDoc](https://redocly.com/redoc/) viewer at `/<base>/api/`. The build step
+is `npm run build:landing` (called automatically as a `postbuild`).
 
 ## Files
 
