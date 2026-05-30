@@ -90,7 +90,7 @@ jobs:
       - run: npm test -- --run
 
   page:
-    name: Page tests (${{ matrix.page }})
+    name: Page tests
     needs: changes
     if: ${{ needs.changes.outputs.full != 'true' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
