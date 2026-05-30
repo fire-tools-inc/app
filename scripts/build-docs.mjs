@@ -10,7 +10,9 @@ import { marked } from 'marked';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const docsRoot = resolve(repoRoot, 'docs');
-const distRoot = resolve(repoRoot, 'dist');
+// PAGES_OUT_DIR mirrors the override used by build-landing.mjs so `npm run dev:all`
+// can stage everything into .dev-pages/ instead of dist/.
+const distRoot = resolve(repoRoot, process.env.PAGES_OUT_DIR || 'dist');
 const distDocs = resolve(distRoot, 'docs');
 const websiteDir = resolve(repoRoot, 'website');
 
@@ -161,10 +163,11 @@ async function buildSection(section, allSections) {
 }
 
 export async function buildDocs() {
-  if (!(await exists(distRoot))) {
+  if (!process.env.PAGES_OUT_DIR && !(await exists(distRoot))) {
     console.error('[build-docs] dist/ does not exist — run `npm run build` first.');
     process.exit(1);
   }
+  await mkdir(distRoot, { recursive: true });
   await mkdir(distDocs, { recursive: true });
 
   // Shared stylesheets live one level above each section, so /docs/styles.css.

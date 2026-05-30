@@ -103,6 +103,27 @@ npm run dev
 
 Open your browser to `http://localhost:5173` and start planning your FIRE journey!
 
+#### Serving landing + docs + OpenAPI together (mirrors GitHub Pages)
+
+`npm run dev` only serves the SPA. To preview the landing page, OpenAPI
+viewer and user/engineering docs at the same paths they get on Pages:
+
+```bash
+npm run dev:all
+```
+
+That builds `website/`, `docs/api/openapi.yaml` and `docs/{user,engineering}/`
+into `.dev-pages/` (gitignored) and serves them alongside Vite at:
+
+- SPA — http://localhost:5173/
+- Landing — http://localhost:5173/landing/
+- OpenAPI — http://localhost:5173/api/
+- Docs index — http://localhost:5173/docs/
+- User docs — http://localhost:5173/docs/user/
+- Engineering docs — http://localhost:5173/docs/engineering/
+
+Sources are watched and rebuilt on change.
+
 ### Building for Production
 
 ```bash

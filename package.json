@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:all": "node scripts/dev-all.mjs",
     "build": "tsc && vite build",
     "postbuild": "node scripts/build-landing.mjs && node scripts/build-docs.mjs",
     "build:electron": "tsc && vite build --mode electron",

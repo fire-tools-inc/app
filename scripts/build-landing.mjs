@@ -8,16 +8,21 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const src = resolve(repoRoot, 'website');
-const dest = resolve(repoRoot, 'dist', 'landing');
+// PAGES_OUT_DIR lets dev-all build into a sibling dir so we don't pollute dist/.
+const outRoot = resolve(repoRoot, process.env.PAGES_OUT_DIR || 'dist');
+const dest = resolve(outRoot, 'landing');
 const openapiSrc = resolve(repoRoot, 'docs', 'api', 'openapi.yaml');
-const apiDest = resolve(repoRoot, 'dist', 'api');
+const apiDest = resolve(outRoot, 'api');
 
-try {
-  await access(resolve(repoRoot, 'dist'));
-} catch {
-  console.error('[build-landing] dist/ does not exist — run `npm run build` first.');
-  process.exit(1);
+if (!process.env.PAGES_OUT_DIR) {
+  try {
+    await access(outRoot);
+  } catch {
+    console.error('[build-landing] dist/ does not exist — run `npm run build` first.');
+    process.exit(1);
+  }
 }
+await mkdir(outRoot, { recursive: true });
 
 await mkdir(dest, { recursive: true });
 await cp(src, dest, { recursive: true, filter: (s) => !s.endsWith('README.md') });
