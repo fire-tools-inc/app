@@ -103,7 +103,73 @@ The Electron build is not just a thin web wrapper:
 | `openExternal(url)`    | `(string) => Promise<void>`         | Open in OS browser via `shell.openExternal`    |
 | `onNavigate(cb)`       | `(path => void) => () => void`      | Subscribe to menu → router navigation          |
 | `onMenuAction(cb)`     | `(action => void) => () => void`    | Subscribe to non-nav menu actions (e.g. CSV)   |
+| `updater.*`            | namespace                            | Auto-update IPC (see below)                    |
 
 Both `onNavigate` / `onMenuAction` return an unsubscribe function — use
 in a `useEffect` cleanup.
+
+## Auto-updater (issue #236)
+
+The packaged desktop build can self-update from GitHub Releases using
+[`electron-updater`](https://www.electron.build/auto-update). Updates are
+**guarded by an always-on backup step** so a bad release can never wipe
+your data.
+
+### Flow
+
+1. On app start (when `app.isPackaged === true`), `electron/updater.cjs`
+   asks GitHub Releases for the latest version. Configurable via
+   `settings.updater.autoCheck` (default `true`).
+2. If an update is available, the renderer is notified
+   (`updater:update-available`) and a banner appears in-app.
+3. Download starts either automatically (`autoDownload = true`) or after
+   the user clicks **Download**. Progress events are forwarded so the UI
+   can show a percentage.
+4. When the download is complete:
+   - `backup.cjs::createBackup` snapshots `firetools.db` (+ WAL/SHM),
+     `window-state.json`, and `auto-update.json` into
+     `<userData>/backups/<timestamp>-<version>/`.
+   - The manifest is written as `manifest.json` with schema version `1`,
+     per-file SHA-256, byte counts and total size.
+   - `rotateBackups` then prunes older entries down to
+     `settings.updater.keepBackups` (default `3`, **minimum `1`**).
+5. The UI prompts the user to **Install & restart**; on confirm the app
+   relaunches into the new version.
+
+### Settings
+
+`settings.updater` (encrypted cookie, web build ignores it):
+
+| Field          | Default | Notes                                                 |
+|----------------|---------|-------------------------------------------------------|
+| `autoCheck`    | `true`  | Periodic check for new releases                       |
+| `autoDownload` | `false` | Start downloading without user prompt                 |
+| `notifyOnly`   | `false` | Never download/install — only notify                  |
+| `keepBackups`  | `3`     | Clamped to `[1, 100]`. `0` becomes `1`                |
+
+### Restore
+
+Settings → *Updates & backups* → **Backups** lists every snapshot with
+its timestamp, source version, total size, and validity (manifest +
+SHA-256 verification). Clicking **Restore** runs
+`backup.cjs::restoreBackup`:
+
+1. Takes a *pre-restore* safety snapshot of the current state
+   (`<currentVersion>-prerestore`).
+2. Atomically swaps the chosen backup's files in over the live ones.
+3. Returns the safety backup id so the user can roll back the rollback.
+
+### Files
+
+- `electron/updater.cjs` — `electron-updater` wrapper, IPC + events.
+- `electron/backup.cjs` — pure-Node backup / rotate / restore module.
+- `electron/main.cjs` — registers `updater:*` and `backup:*` IPC handlers.
+- `electron/preload.cjs` — exposes `window.fireTools.updater.*` and
+  `window.fireTools.backup.*` to the renderer.
+- `src/utils/updater.ts` — renderer-side bridge.
+- `src/components/UpdateNotification.tsx` — in-app banner.
+
+See [`docs/engineering/auto-updater.md`](../docs/engineering/auto-updater.md)
+for the full design including manifest schema and rollback flow.
+
 

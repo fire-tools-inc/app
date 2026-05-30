@@ -148,7 +148,8 @@
       "language": "Idioma",
       "disclaimer": "Aviso legal",
       "backend": "Backend",
-      "advanced": "Avanzado"
+      "advanced": "Avanzado",
+      "updater": "Actualizaciones y Copias"
     },
     "accountName": "Nombre de cuenta",
     "accountNameHelp": "Este nombre se mostrará en toda la aplicación",
@@ -406,6 +407,43 @@
       "noBackend": "No hay backend configurado. Configura uno en la sección Backend arriba.",
       "pathMustStartWithSlash": "La ruta debe comenzar con /",
       "invalidJson": "El cuerpo de la solicitud no es un JSON válido"
+    },
+    "updater": {
+      "description": "Configura las actualizaciones automáticas y administra las copias locales.",
+      "desktopOnly": "La actualización automática solo está disponible en la app de escritorio.",
+      "autoCheck": "Buscar actualizaciones automáticamente",
+      "autoCheckHelp": "Al iniciar y periódicamente mientras la app está abierta.",
+      "autoDownload": "Descargar actualizaciones automáticamente",
+      "autoDownloadHelp": "Si está desactivado, eliges cuándo descargar una nueva versión.",
+      "notifyOnly": "Solo notificar (no descargar)",
+      "notifyOnlyHelp": "Mostrar una notificación cuando exista una actualización sin descargarla ni instalarla.",
+      "keepBackups": "Copias a conservar",
+      "keepBackupsHelp": "Las copias antiguas se eliminan. Siempre se conserva al menos 1.",
+      "checkNow": "Buscar ahora",
+      "checking": "Buscando…",
+      "createBackup": "Crear copia ahora",
+      "backingUp": "Creando copia…",
+      "refreshList": "Actualizar lista",
+      "backupsList": "Copias locales",
+      "noBackups": "No hay copias.",
+      "restoreBackup": "Restaurar",
+      "confirmRestore": "Restaurar esta copia? Tus datos actuales serán reemplazados. Se tomará primero una instantánea de seguridad.",
+      "col": {
+        "timestamp": "Cuándo",
+        "version": "Versión",
+        "size": "Tamaño",
+        "valid": "Válida",
+        "actions": "Acciones"
+      },
+      "feedback": {
+        "available": "Hay una nueva versión disponible.",
+        "upToDate": "Estás al día.",
+        "disabledDev": "La actualización automática está deshabilitada en builds de desarrollo.",
+        "missingDep": "Falta el soporte de actualización automática en esta build.",
+        "backupCreated": "Copia creada.",
+        "backupFailed": "Copia fallida.",
+        "restored": "Copia restaurada. Reinicia la app para aplicar."
+      }
     }
   },
   "assetAllocation": {
@@ -2413,6 +2451,34 @@
         }
       ],
       "lastUpdatedDate": "31 de diciembre de 2025"
+    }
+  },
+  "update": {
+    "available": {
+      "title": "Actualización disponible",
+      "message": "La versión {{version}} está lista para descargar."
+    },
+    "downloading": {
+      "title": "Descargando actualización",
+      "message": "Fire Tools {{version}} se está descargando."
+    },
+    "downloaded": {
+      "title": "Actualización lista",
+      "message": "Reinicia para instalar la versión {{version}}. Primero se hará una copia de seguridad."
+    },
+    "backupFailed": {
+      "title": "Copia fallida",
+      "message": "La copia previa a la instalación no se completó. La instalación se canceló por seguridad."
+    },
+    "error": {
+      "title": "Error de actualización",
+      "message": "Algo salió mal: {{error}}"
+    },
+    "actions": {
+      "download": "Descargar",
+      "install": "Reiniciar e instalar",
+      "later": "Más tarde",
+      "dismiss": "Descartar"
     }
   }
 }

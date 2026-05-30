@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const ALLOWED_MAIN_TO_RENDERER = new Set([
   'fire-tools:navigate',
   'fire-tools:menu-action',
+  'fire-tools:updater-event',
 ]);
 
 function subscribe(channel, callback) {
@@ -35,4 +36,18 @@ contextBridge.exposeInMainWorld('fireTools', {
     ipcRenderer.invoke('fire-tools:show-native-notification', opts),
   onNavigate: (callback) => subscribe('fire-tools:navigate', callback),
   onMenuAction: (callback) => subscribe('fire-tools:menu-action', callback),
+  onUpdaterEvent: (callback) => subscribe('fire-tools:updater-event', callback),
+  updater: {
+    check: () => ipcRenderer.invoke('fire-tools:updater-check'),
+    download: () => ipcRenderer.invoke('fire-tools:updater-download'),
+    install: () => ipcRenderer.invoke('fire-tools:updater-install'),
+    getState: () => ipcRenderer.invoke('fire-tools:updater-state'),
+    getPrefs: () => ipcRenderer.invoke('fire-tools:updater-get-prefs'),
+    setPrefs: (prefs) => ipcRenderer.invoke('fire-tools:updater-set-prefs', prefs),
+  },
+  backups: {
+    list: () => ipcRenderer.invoke('fire-tools:backups-list'),
+    create: (opts) => ipcRenderer.invoke('fire-tools:backups-create', opts),
+    restore: (opts) => ipcRenderer.invoke('fire-tools:backups-restore', opts),
+  },
 });

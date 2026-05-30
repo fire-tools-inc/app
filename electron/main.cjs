@@ -6,6 +6,8 @@ const fs = require('node:fs');
 
 const windowState = require('./windowState.cjs');
 const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
+const backup = require('./backup.cjs');
+const updater = require('./updater.cjs');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 const isMac = process.platform === 'darwin';
@@ -160,7 +162,7 @@ const liveNotifications = new Set();
 
 // Show a native OS notification (macOS NotificationCenter / Windows Action
 // Center / Linux libnotify). Title is required; everything else is opt-in.
-ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
+function showNativeNotification(opts) {
   try {
     if (!Notification.isSupported()) {
       console.warn('[fire-tools] native notifications not supported on this platform');
@@ -200,6 +202,97 @@ ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
     console.error('[fire-tools] failed to show native notification:', err);
     return false;
   }
+}
+
+ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
+  return showNativeNotification(opts);
+});
+
+// --- Auto-updater IPC ---------------------------------------------------
+ipcMain.handle('fire-tools:updater-check', async () => {
+  try {
+    return await updater.check();
+  } catch (err) {
+    console.error('[fire-tools] updater check failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-download', async () => {
+  try {
+    return await updater.download();
+  } catch (err) {
+    console.error('[fire-tools] updater download failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-install', async () => {
+  try {
+    return await updater.quitAndInstall();
+  } catch (err) {
+    console.error('[fire-tools] updater install failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-state', () => updater.getState());
+
+ipcMain.handle('fire-tools:updater-get-prefs', () => updater.getPrefs());
+
+ipcMain.handle('fire-tools:updater-set-prefs', (_event, prefs) => {
+  try {
+    return updater.setPrefs(prefs || {});
+  } catch (err) {
+    console.error('[fire-tools] updater set-prefs failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+// --- Backup IPC ---------------------------------------------------------
+ipcMain.handle('fire-tools:backups-list', async () => {
+  try {
+    const backups = await backup.listBackups({ userDataDir: app.getPath('userData') });
+    return { ok: true, backups };
+  } catch (err) {
+    console.error('[fire-tools] backups list failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:backups-create', async () => {
+  try {
+    const result = await backup.createBackup({
+      userDataDir: app.getPath('userData'),
+      version: app.getVersion(),
+    });
+    const prefs = await updater.getPrefs();
+    await backup.rotateBackups({
+      userDataDir: app.getPath('userData'),
+      keep: prefs && typeof prefs.keepBackups === 'number' ? prefs.keepBackups : 3,
+    });
+    return { ok: true, backup: result };
+  } catch (err) {
+    console.error('[fire-tools] backups create failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:backups-restore', async (_event, opts) => {
+  try {
+    if (!opts || typeof opts.backupId !== 'string') {
+      return { ok: false, error: 'backupId required' };
+    }
+    const result = await backup.restoreBackup({
+      userDataDir: app.getPath('userData'),
+      backupId: opts.backupId,
+      currentVersion: app.getVersion(),
+    });
+    return { ok: true, ...result };
+  } catch (err) {
+    console.error('[fire-tools] backups restore failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
 });
 
 app.on('second-instance', () => {
@@ -230,6 +323,16 @@ app.whenReady().then(async () => {
   await startEmbedded();
   installMenu();
   createWindow();
+
+  // Wire auto-updater after the window exists so it can broadcast events.
+  updater
+    .setupUpdater({
+      getWindow: () => mainWindow,
+      notify: (opts) => showNativeNotification(opts),
+    })
+    .catch((err) => {
+      console.error('[fire-tools] failed to initialize auto-updater:', err);
+    });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

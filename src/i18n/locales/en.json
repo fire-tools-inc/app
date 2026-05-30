@@ -148,7 +148,8 @@
       "language": "Language",
       "disclaimer": "Disclaimer",
       "backend": "Backend",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "updater": "Updater & Backups"
     },
     "accountName": "Account Name",
     "accountNameHelp": "This name will be displayed throughout the app",
@@ -406,6 +407,43 @@
       "noBackend": "No backend is configured. Set one in the Backend section above.",
       "pathMustStartWithSlash": "Path must start with /",
       "invalidJson": "Request body is not valid JSON"
+    },
+    "updater": {
+      "description": "Configure auto-updates and manage local backups.",
+      "desktopOnly": "Auto-update is only available in the desktop app.",
+      "autoCheck": "Check for updates automatically",
+      "autoCheckHelp": "On launch and periodically while the app is open.",
+      "autoDownload": "Download updates automatically",
+      "autoDownloadHelp": "When off, you choose when to download a new version.",
+      "notifyOnly": "Notify only (do not download)",
+      "notifyOnlyHelp": "Show a notification when an update exists but never download or install.",
+      "keepBackups": "Backups to keep",
+      "keepBackupsHelp": "Older backups are pruned. At least 1 is always kept.",
+      "checkNow": "Check now",
+      "checking": "Checking…",
+      "createBackup": "Create backup now",
+      "backingUp": "Creating backup…",
+      "refreshList": "Refresh list",
+      "backupsList": "Local backups",
+      "noBackups": "No backups yet.",
+      "restoreBackup": "Restore",
+      "confirmRestore": "Restore this backup? Your current data will be replaced. A safety snapshot will be taken first.",
+      "col": {
+        "timestamp": "When",
+        "version": "Version",
+        "size": "Size",
+        "valid": "Valid",
+        "actions": "Actions"
+      },
+      "feedback": {
+        "available": "A new version is available.",
+        "upToDate": "You are up to date.",
+        "disabledDev": "Auto-update is disabled in development builds.",
+        "missingDep": "Auto-update support is missing in this build.",
+        "backupCreated": "Backup created.",
+        "backupFailed": "Backup failed.",
+        "restored": "Backup restored. Restart the app to apply."
+      }
     }
   },
   "assetAllocation": {
@@ -2413,6 +2451,34 @@
         }
       ],
       "lastUpdatedDate": "December 31, 2025"
+    }
+  },
+  "update": {
+    "available": {
+      "title": "Update available",
+      "message": "Version {{version}} is ready to download."
+    },
+    "downloading": {
+      "title": "Downloading update",
+      "message": "Fire Tools {{version}} is being downloaded."
+    },
+    "downloaded": {
+      "title": "Update ready",
+      "message": "Restart to install version {{version}}. A backup will be taken first."
+    },
+    "backupFailed": {
+      "title": "Backup failed",
+      "message": "The pre-install backup did not complete. Install was cancelled for safety."
+    },
+    "error": {
+      "title": "Update error",
+      "message": "Something went wrong: {{error}}"
+    },
+    "actions": {
+      "download": "Download",
+      "install": "Restart & install",
+      "later": "Later",
+      "dismiss": "Dismiss"
     }
   }
 }

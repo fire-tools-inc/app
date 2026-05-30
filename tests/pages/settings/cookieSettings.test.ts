@@ -4,7 +4,11 @@ import {
   loadSettings,
   clearSettings,
   validateSettings,
+  mergeUpdaterSettings,
   DEFAULT_SETTINGS,
+  DEFAULT_UPDATER_SETTINGS,
+  MIN_KEEP_BACKUPS,
+  MAX_KEEP_BACKUPS,
   type UserSettings,
 } from '../../../src/utils/cookieSettings';
 
@@ -374,6 +378,70 @@ describe('Cookie Settings utilities', () => {
       const loaded = loadSettings();
       expect(loaded.experimentalFeatures).toBeDefined();
       expect(loaded.experimentalFeatures.portfolioBreakdown).toBe(false);
+    });
+  });
+
+  describe('mergeUpdaterSettings', () => {
+    it('returns full defaults for null/undefined/non-object input', () => {
+      expect(mergeUpdaterSettings(null)).toEqual(DEFAULT_UPDATER_SETTINGS);
+      expect(mergeUpdaterSettings(undefined)).toEqual(DEFAULT_UPDATER_SETTINGS);
+      expect(mergeUpdaterSettings(42)).toEqual(DEFAULT_UPDATER_SETTINGS);
+      expect(mergeUpdaterSettings('nope')).toEqual(DEFAULT_UPDATER_SETTINGS);
+    });
+
+    it('clamps keepBackups below MIN to MIN', () => {
+      const out = mergeUpdaterSettings({ keepBackups: 0 });
+      expect(out.keepBackups).toBe(MIN_KEEP_BACKUPS);
+    });
+
+    it('clamps keepBackups above MAX to MAX', () => {
+      const out = mergeUpdaterSettings({ keepBackups: 9999 });
+      expect(out.keepBackups).toBe(MAX_KEEP_BACKUPS);
+    });
+
+    it('floors fractional keepBackups within range', () => {
+      const out = mergeUpdaterSettings({ keepBackups: 5.7 });
+      expect(out.keepBackups).toBe(5);
+    });
+
+    it('falls back to default keepBackups when value is non-numeric', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const out = mergeUpdaterSettings({ keepBackups: 'abc' as any });
+      expect(out.keepBackups).toBe(DEFAULT_UPDATER_SETTINGS.keepBackups);
+    });
+
+    it('preserves explicit boolean fields and ignores invalid types', () => {
+      const out = mergeUpdaterSettings({
+        autoCheck: false,
+        autoDownload: true,
+        notifyOnly: true,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        keepBackups: 'bad' as any,
+      });
+      expect(out.autoCheck).toBe(false);
+      expect(out.autoDownload).toBe(true);
+      expect(out.notifyOnly).toBe(true);
+      expect(out.keepBackups).toBe(DEFAULT_UPDATER_SETTINGS.keepBackups);
+    });
+
+    it('round-trips through save/load with clamping applied', () => {
+      const settings: UserSettings = {
+        ...DEFAULT_SETTINGS,
+        updater: { autoCheck: true, autoDownload: true, notifyOnly: false, keepBackups: 200 },
+      };
+      saveSettings(settings);
+      const loaded = loadSettings();
+      expect(loaded.updater.keepBackups).toBe(MAX_KEEP_BACKUPS);
+      expect(loaded.updater.autoDownload).toBe(true);
+    });
+
+    it('back-fills updater when missing in saved cookie', () => {
+      const legacy = { ...DEFAULT_SETTINGS } as Partial<UserSettings>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (legacy as any).updater;
+      saveSettings(legacy as UserSettings);
+      const loaded = loadSettings();
+      expect(loaded.updater).toEqual(DEFAULT_UPDATER_SETTINGS);
     });
   });
 });

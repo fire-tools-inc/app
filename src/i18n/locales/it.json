@@ -148,7 +148,8 @@
       "language": "Lingua",
       "disclaimer": "Disclaimer",
       "backend": "Backend",
-      "advanced": "Avanzate"
+      "advanced": "Avanzate",
+      "updater": "Aggiornamenti e Backup"
     },
     "accountName": "Nome account",
     "accountNameHelp": "Questo nome verrà visualizzato in tutta l'applicazione",
@@ -406,6 +407,43 @@
       "noBackend": "Nessun backend configurato. Configurane uno nella sezione Backend sopra.",
       "pathMustStartWithSlash": "Il percorso deve iniziare con /",
       "invalidJson": "Il corpo della richiesta non è un JSON valido"
+    },
+    "updater": {
+      "description": "Configura gli aggiornamenti automatici e gestisci i backup locali.",
+      "desktopOnly": "L'aggiornamento automatico è disponibile solo nell'app desktop.",
+      "autoCheck": "Controlla aggiornamenti automaticamente",
+      "autoCheckHelp": "All'avvio e periodicamente mentre l'app è aperta.",
+      "autoDownload": "Scarica aggiornamenti automaticamente",
+      "autoDownloadHelp": "Se disattivato, scegli tu quando scaricare una nuova versione.",
+      "notifyOnly": "Solo notifica (non scaricare)",
+      "notifyOnlyHelp": "Mostra una notifica quando esiste un aggiornamento ma non scaricarlo né installarlo.",
+      "keepBackups": "Backup da conservare",
+      "keepBackupsHelp": "I backup più vecchi vengono eliminati. Ne viene sempre conservato almeno 1.",
+      "checkNow": "Controlla ora",
+      "checking": "Controllo in corso…",
+      "createBackup": "Crea backup ora",
+      "backingUp": "Creazione backup…",
+      "refreshList": "Aggiorna elenco",
+      "backupsList": "Backup locali",
+      "noBackups": "Nessun backup disponibile.",
+      "restoreBackup": "Ripristina",
+      "confirmRestore": "Ripristinare questo backup? I dati attuali saranno sostituiti. Verrà creato prima uno snapshot di sicurezza.",
+      "col": {
+        "timestamp": "Data",
+        "version": "Versione",
+        "size": "Dimensione",
+        "valid": "Valido",
+        "actions": "Azioni"
+      },
+      "feedback": {
+        "available": "È disponibile una nuova versione.",
+        "upToDate": "Sei aggiornato.",
+        "disabledDev": "L'aggiornamento automatico è disabilitato nelle build di sviluppo.",
+        "missingDep": "Il supporto per l'aggiornamento automatico manca in questa build.",
+        "backupCreated": "Backup creato.",
+        "backupFailed": "Backup non riuscito.",
+        "restored": "Backup ripristinato. Riavvia l'app per applicare."
+      }
     }
   },
   "assetAllocation": {
@@ -2413,6 +2451,34 @@
         }
       ],
       "lastUpdatedDate": "31 dicembre 2025"
+    }
+  },
+  "update": {
+    "available": {
+      "title": "Aggiornamento disponibile",
+      "message": "La versione {{version}} è pronta per il download."
+    },
+    "downloading": {
+      "title": "Download in corso",
+      "message": "Fire Tools {{version}} è in download."
+    },
+    "downloaded": {
+      "title": "Aggiornamento pronto",
+      "message": "Riavvia per installare la versione {{version}}. Verrà prima creato un backup."
+    },
+    "backupFailed": {
+      "title": "Backup non riuscito",
+      "message": "Il backup pre-installazione non è stato completato. L'installazione è stata annullata per sicurezza."
+    },
+    "error": {
+      "title": "Errore di aggiornamento",
+      "message": "Qualcosa è andato storto: {{error}}"
+    },
+    "actions": {
+      "download": "Scarica",
+      "install": "Riavvia e installa",
+      "later": "Più tardi",
+      "dismiss": "Ignora"
     }
   }
 }

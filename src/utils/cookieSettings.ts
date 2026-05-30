@@ -57,6 +57,28 @@ export const DEFAULT_BACKEND_SETTINGS: BackendSettings = {
   mode: 'embedded',
 };
 
+/** Auto-updater settings (Electron desktop only). Web builds ignore these. */
+export interface UpdaterSettings {
+  /** Periodically check for updates on app start. */
+  autoCheck: boolean;
+  /** Automatically download an available update in the background. */
+  autoDownload: boolean;
+  /** Number of pre-install backups to keep. Minimum 1. */
+  keepBackups: number;
+  /** Notify only — never download or install automatically. */
+  notifyOnly: boolean;
+}
+
+export const MIN_KEEP_BACKUPS = 1;
+export const MAX_KEEP_BACKUPS = 100;
+
+export const DEFAULT_UPDATER_SETTINGS: UpdaterSettings = {
+  autoCheck: true,
+  autoDownload: false,
+  keepBackups: 3,
+  notifyOnly: false,
+};
+
 export interface UserSettings {
   accountName: string;
   decimalSeparator: '.' | ',';
@@ -76,6 +98,8 @@ export interface UserSettings {
   llmCategorization?: LlmCategorizationConfig;
   /** Where the app finds its backend API (embedded vs. custom URL). */
   backend: BackendSettings;
+  /** Auto-updater preferences (Electron desktop only). */
+  updater: UpdaterSettings;
 }
 
 export const DEFAULT_FIRE_ASSET_CLASS_INCLUSION: Record<AssetClass, boolean> = {
@@ -104,6 +128,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   experimentalFeatures: DEFAULT_EXPERIMENTAL_FEATURES,
   language: 'en',
   backend: DEFAULT_BACKEND_SETTINGS,
+  updater: DEFAULT_UPDATER_SETTINGS,
 };
 
 const SETTINGS_KEY = 'fire-calculator-settings';
@@ -130,6 +155,27 @@ export function saveSettings(settings: UserSettings): void {
     console.error('Failed to save settings:', error);
     throw new Error('Failed to save settings.');
   }
+}
+
+/**
+ * Merge a partial / unknown updater payload with defaults and clamp the
+ * backup retention count to the supported range.
+ */
+export function mergeUpdaterSettings(input: unknown): UpdaterSettings {
+  const partial = (input && typeof input === 'object' ? input : {}) as Partial<UpdaterSettings>;
+  // Only accept finite numeric input; NaN / Infinity / wrong types fall back
+  // to the default so we never produce a non-finite or NaN keepBackups.
+  const rawNum =
+    typeof partial.keepBackups === 'number' && Number.isFinite(partial.keepBackups)
+      ? Math.floor(partial.keepBackups)
+      : DEFAULT_UPDATER_SETTINGS.keepBackups;
+  const keepBackups = Math.max(MIN_KEEP_BACKUPS, Math.min(MAX_KEEP_BACKUPS, rawNum));
+  return {
+    autoCheck: typeof partial.autoCheck === 'boolean' ? partial.autoCheck : DEFAULT_UPDATER_SETTINGS.autoCheck,
+    autoDownload: typeof partial.autoDownload === 'boolean' ? partial.autoDownload : DEFAULT_UPDATER_SETTINGS.autoDownload,
+    notifyOnly: typeof partial.notifyOnly === 'boolean' ? partial.notifyOnly : DEFAULT_UPDATER_SETTINGS.notifyOnly,
+    keepBackups,
+  };
 }
 
 /**
@@ -167,6 +213,7 @@ export function loadSettings(): UserSettings {
             ...DEFAULT_BACKEND_SETTINGS,
             ...(parsed.backend || {}),
           },
+          updater: mergeUpdaterSettings(parsed.updater),
         };
       }
     }
@@ -278,6 +325,28 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
           new URL(url);
         } catch {
           errors.push('Custom backend URL must be a valid absolute URL');
+        }
+      }
+    }
+  }
+
+  if (settings.updater !== undefined) {
+    if (typeof settings.updater !== 'object' || settings.updater === null) {
+      errors.push('Updater settings must be an object');
+    } else {
+      if (settings.updater.autoCheck !== undefined && typeof settings.updater.autoCheck !== 'boolean') {
+        errors.push('Updater autoCheck must be a boolean');
+      }
+      if (settings.updater.autoDownload !== undefined && typeof settings.updater.autoDownload !== 'boolean') {
+        errors.push('Updater autoDownload must be a boolean');
+      }
+      if (settings.updater.notifyOnly !== undefined && typeof settings.updater.notifyOnly !== 'boolean') {
+        errors.push('Updater notifyOnly must be a boolean');
+      }
+      if (settings.updater.keepBackups !== undefined) {
+        const keep = settings.updater.keepBackups;
+        if (typeof keep !== 'number' || !Number.isInteger(keep) || keep < MIN_KEEP_BACKUPS || keep > MAX_KEEP_BACKUPS) {
+          errors.push(`Updater keepBackups must be an integer between ${MIN_KEEP_BACKUPS} and ${MAX_KEEP_BACKUPS}`);
         }
       }
     }

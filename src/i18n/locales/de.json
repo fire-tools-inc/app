@@ -148,7 +148,8 @@
       "language": "Sprache",
       "disclaimer": "Haftungsausschluss",
       "backend": "Backend",
-      "advanced": "Erweitert"
+      "advanced": "Erweitert",
+      "updater": "Updates & Sicherungen"
     },
     "accountName": "Kontoname",
     "accountNameHelp": "Dieser Name wird in der gesamten App angezeigt",
@@ -406,6 +407,43 @@
       "noBackend": "Kein Backend konfiguriert. Konfigurieren Sie eines im Abschnitt Backend oben.",
       "pathMustStartWithSlash": "Pfad muss mit / beginnen",
       "invalidJson": "Anfragetext ist kein gültiges JSON"
+    },
+    "updater": {
+      "description": "Automatische Updates konfigurieren und lokale Sicherungen verwalten.",
+      "desktopOnly": "Automatische Updates sind nur in der Desktop-App verfügbar.",
+      "autoCheck": "Automatisch nach Updates suchen",
+      "autoCheckHelp": "Beim Start und regelmäßig, während die App geöffnet ist.",
+      "autoDownload": "Updates automatisch herunterladen",
+      "autoDownloadHelp": "Wenn deaktiviert, wählen Sie selbst, wann eine neue Version geladen wird.",
+      "notifyOnly": "Nur benachrichtigen (nicht herunterladen)",
+      "notifyOnlyHelp": "Benachrichtigen, wenn ein Update vorhanden ist, aber nichts herunterladen oder installieren.",
+      "keepBackups": "Aufzubewahrende Sicherungen",
+      "keepBackupsHelp": "Ältere Sicherungen werden gelöscht. Mindestens 1 wird immer behalten.",
+      "checkNow": "Jetzt prüfen",
+      "checking": "Wird geprüft…",
+      "createBackup": "Sicherung jetzt erstellen",
+      "backingUp": "Sicherung wird erstellt…",
+      "refreshList": "Liste aktualisieren",
+      "backupsList": "Lokale Sicherungen",
+      "noBackups": "Noch keine Sicherungen.",
+      "restoreBackup": "Wiederherstellen",
+      "confirmRestore": "Diese Sicherung wiederherstellen? Ihre aktuellen Daten werden ersetzt. Vorher wird ein Sicherheits-Snapshot erstellt.",
+      "col": {
+        "timestamp": "Wann",
+        "version": "Version",
+        "size": "Größe",
+        "valid": "Gültig",
+        "actions": "Aktionen"
+      },
+      "feedback": {
+        "available": "Eine neue Version ist verfügbar.",
+        "upToDate": "Sie sind auf dem neuesten Stand.",
+        "disabledDev": "Auto-Update ist in Entwicklungs-Builds deaktiviert.",
+        "missingDep": "Die Unterstützung für Auto-Update fehlt in diesem Build.",
+        "backupCreated": "Sicherung erstellt.",
+        "backupFailed": "Sicherung fehlgeschlagen.",
+        "restored": "Sicherung wiederhergestellt. App neu starten, um die Änderungen zu übernehmen."
+      }
     }
   },
   "assetAllocation": {
@@ -2413,6 +2451,34 @@
         }
       ],
       "lastUpdatedDate": "31. Dezember 2025"
+    }
+  },
+  "update": {
+    "available": {
+      "title": "Update verfügbar",
+      "message": "Version {{version}} kann heruntergeladen werden."
+    },
+    "downloading": {
+      "title": "Update wird heruntergeladen",
+      "message": "Fire Tools {{version}} wird heruntergeladen."
+    },
+    "downloaded": {
+      "title": "Update bereit",
+      "message": "Neu starten, um Version {{version}} zu installieren. Vorher wird eine Sicherung erstellt."
+    },
+    "backupFailed": {
+      "title": "Sicherung fehlgeschlagen",
+      "message": "Die Sicherung vor der Installation wurde nicht abgeschlossen. Die Installation wurde aus Sicherheitsgründen abgebrochen."
+    },
+    "error": {
+      "title": "Update-Fehler",
+      "message": "Etwas ist schiefgelaufen: {{error}}"
+    },
+    "actions": {
+      "download": "Herunterladen",
+      "install": "Neustart & installieren",
+      "later": "Später",
+      "dismiss": "Verwerfen"
     }
   }
 }
