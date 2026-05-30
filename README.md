@@ -284,12 +284,16 @@ src/i18n/
 All five locale files MUST contain the exact same set of keys. A test in
 `tests/shared/i18n.test.ts` enforces this — missing or extra keys fail CI.
 
-**Coverage caveat** — the navigation, header/footer, homepage, settings
-section headers, and the language selector itself are fully translated.
-Many in-app strings inside the calculators and trackers are still
-English-only and will be migrated incrementally; until they are, any
-untranslated string automatically falls back to English thanks to the
-`fallbackLng: 'en'` configuration, so the UI is never broken.
+**Coverage** — every user-facing screen (homepage, FIRE Calculator, Monte
+Carlo simulator, Asset Allocation Manager, Portfolio Breakdown, Net Worth
+Tracker, Expense Tracker, Questionnaire, Settings, all dialogs, charts,
+tables, tooltips, notifications, and validation messages) is fully
+translated across all five locales. The only intentional exception is the
+**legal copy** inside the Privacy Policy, Cookie Policy, and consent
+modal bodies, which is kept English-only on purpose — those documents are
+binding text and any locale-specific version must be authored, not
+machine-translated. Any other untranslated string falls back to English
+via the `fallbackLng: 'en'` configuration.
 
 **Adding a new language**
 
