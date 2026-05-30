@@ -29,16 +29,28 @@ curl http://localhost:8787/api/v1/health
 
 ## Migrations
 
-Forward-only SQL migrations live in [`migrations/`](./migrations). They are
-applied automatically on boot, but you can also run them manually:
+SQL migrations live in [`migrations/`](./migrations). Each migration ships
+as a pair of files: `NNNN_name.up.sql` (apply) and `NNNN_name.down.sql`
+(rollback). For every `CREATE TABLE` in the up file there is a matching
+`DROP TABLE IF EXISTS` in the down file (same for `CREATE INDEX`,
+`ALTER TABLE ADD COLUMN`, etc.) so that any change can be safely reverted.
+
+The up migrations run automatically on boot. You can also drive them by
+hand:
 
 ```sh
 npm run migrate           # apply all pending migrations
 npm run migrate:status    # show applied/pending state
+npm run migrate:down      # roll back the most recent migration
+npm run migrate:down -- 2 # roll back the last 2 migrations
+npm run migrate:down -- all  # roll back every applied migration
 ```
 
-A `schema_migrations` table tracks which files ran. To start fresh, delete the
-file referenced by `DATABASE_URL` and boot again.
+Each up/down runs inside a SQLite transaction; a failure leaves earlier
+migrations untouched. A `schema_migrations` table tracks which files ran.
+To start completely fresh, delete the file referenced by `DATABASE_URL`
+and boot again, or run `npm run migrate:down -- all` followed by
+`npm run migrate`.
 
 ## Tests
 
