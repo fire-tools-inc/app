@@ -1,10 +1,11 @@
 /**
  * Demo mode detection + data seeding.
  *
- * When the SPA is served from GitHub Pages (or explicitly opted in via
- * ?demo=1), it boots as a sandbox: every page is pre-populated with mock
- * data, and persistence is disabled so refreshes always restore the demo.
- * Electron, self-hosted deployments, dev, and the unit tests are untouched.
+ * The SPA is the public demo: every web build (dev server, GitHub Pages,
+ * any HTTP(S) host) boots as a sandbox with mock data and disabled
+ * persistence. Only Electron (file://) and the unit tests opt out.
+ * Self-hosted users get the full app via Electron or by pointing the
+ * Electron shell at their own backend.
  */
 
 import type { Asset, AssetClass, AllocationMode } from '../types/assetAllocation';
@@ -26,16 +27,25 @@ function detectDemoMode(): boolean {
   if (window.location.protocol === 'file:') {
     return false;
   }
+  // Disable in test environments (Vitest sets MODE='test').
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test') {
+      return false;
+    }
+  } catch {
+    // ignore
+  }
+  // Explicit opt-out for local debugging / dev tests that need real persistence.
   try {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('demo') === '1') {
-      return true;
+    if (params.get('demo') === '0') {
+      return false;
     }
   } catch {
     // ignore malformed URLs
   }
-  const host = window.location.hostname || '';
-  return host === 'mbianchidev.github.io' || host.endsWith('.github.io');
+  // Every other web context (dev server, GitHub Pages, self-hosted) = demo.
+  return true;
 }
 
 export const IS_DEMO_MODE: boolean = detectDemoMode();

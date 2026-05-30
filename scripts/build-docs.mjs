@@ -77,7 +77,7 @@ function pageHtml({ section, slug, html, pages, siblingSection }) {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${title} — Fire Tools ${section.title}</title>
     <meta name="description" content="${title} — Fire Tools ${section.title}" />
-    <link rel="icon" href="data:," />
+    <link rel="icon" type="image/svg+xml" href="../fire-icon.svg" />
     <link rel="stylesheet" href="../styles.css" />
     <link rel="stylesheet" href="../docs.css" />
   </head>
@@ -173,6 +173,11 @@ export async function buildDocs() {
   // Shared stylesheets live one level above each section, so /docs/styles.css.
   await copyFile(resolve(websiteDir, 'styles.css'), resolve(distDocs, 'styles.css'));
   await copyFile(resolve(websiteDir, 'docs.css'), resolve(distDocs, 'docs.css'));
+  // Favicon shared across SPA, landing, docs and API viewer.
+  const faviconSrc = resolve(repoRoot, 'public', 'fire-icon.svg');
+  if (await exists(faviconSrc)) {
+    await copyFile(faviconSrc, resolve(distDocs, 'fire-icon.svg'));
+  }
 
   for (const section of sections) {
     await buildSection(section, sections);
@@ -185,6 +190,7 @@ export async function buildDocs() {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Documentation — Fire Tools</title>
+    <link rel="icon" type="image/svg+xml" href="./fire-icon.svg" />
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./docs.css" />
   </head>
