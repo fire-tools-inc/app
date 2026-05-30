@@ -126,7 +126,8 @@
         "h3": "FIRE Path Guidance",
         "cta": "Take the Quiz →"
       }
-    }
+    },
+    "disclaimerAriaLabel": "Important disclaimer"
   },
   "settings": {
     "language": "Language",
@@ -1031,7 +1032,7 @@
     "closePolicyModal": "Close policy modal",
     "switchToCookiePolicy": "Cookie Policy",
     "switchToPrivacyPolicy": "Privacy Policy",
-    "contentEnglishOnly": "The legal text below is provided in English only."
+    "contentEnglishOnly": "An English version of this policy is also available as the legally-binding reference."
   },
   "notifications": {
     "title": "Notifications",
@@ -1755,5 +1756,623 @@
     "message": "Read-only demo with sample data — imports and resets are disabled. Download the app to save your own data.",
     "cta": "Download desktop app",
     "disabledAction": "Disabled in demo. Download the app to import your data."
+  },
+  "policyContent": {
+    "privacy": {
+      "lastUpdated": "December 31, 2025",
+      "sections": [
+        {
+          "title": "1. Introduction",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Welcome to <strong>Fire Tools</strong> (the \"Application\"). This Privacy Policy explains how we handle your personal data when you use our financial planning tools. Your privacy is fundamental to us, and this policy outlines our commitment to protecting your personal information."
+            },
+            {
+              "type": "p",
+              "html": "Fire Tools is a financial planning application designed with privacy as a core principle. <strong>All your data is stored locally on your device</strong> and is never transmitted to external servers without your explicit consent."
+            }
+          ]
+        },
+        {
+          "title": "2. Data Controller",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "The data controller responsible for processing your personal data is:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Application Name:</strong> Fire Tools",
+                "<strong>Repository:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>",
+                "<strong>Contact:</strong> security@mb-consulting.dev"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3. What Data We Collect",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools collects only the data you voluntarily provide when using the calculator and asset allocation features. This includes:"
+            },
+            {
+              "type": "h3",
+              "text": "Financial Planning Data"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Initial savings amount",
+                "Annual income and expenses",
+                "Investment expectations and risk tolerance",
+                "Retirement age and FIRE goals",
+                "Asset allocation preferences",
+                "Portfolio holdings and performance data"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "Application Preferences"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Currency settings",
+                "Display preferences",
+                "Privacy and cookie consent choices"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "What We Do NOT Collect"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Personal identification information (name, email, address)",
+                "Authentication credentials",
+                "Browsing history outside the application",
+                "Device fingerprints or tracking identifiers",
+                "Location data",
+                "Contact information"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4. Legal Basis for Processing (GDPR)",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Under the General Data Protection Regulation (GDPR), our legal basis for processing your data is:"
+            },
+            {
+              "type": "table",
+              "headers": [
+                "Processing Activity",
+                "Legal Basis"
+              ],
+              "rows": [
+                [
+                  "Storing your calculator inputs",
+                  "Consent (Article 6(1)(a))"
+                ],
+                [
+                  "Saving asset allocation data",
+                  "Consent (Article 6(1)(a))"
+                ],
+                [
+                  "Maintaining application preferences",
+                  "Legitimate Interest (Article 6(1)(f))"
+                ],
+                [
+                  "Essential cookies for functionality",
+                  "Legitimate Interest (Article 6(1)(f))"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "5. How We Use Your Data",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "All data you input is used solely for:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Financial Calculations:</strong> Running FIRE projections, Monte Carlo simulations, and asset allocation analysis",
+                "<strong>Local Storage:</strong> Maintaining your data between sessions on your device",
+                "<strong>Application Functionality:</strong> Providing the features and tools you've requested"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "<strong>We do not:</strong>"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Share your data with third parties",
+                "Sell your data to anyone",
+                "Use your data for advertising or marketing",
+                "Profile you for any purpose",
+                "Transfer your data internationally"
+              ]
+            },
+            {
+              "type": "link",
+              "prefix": "For details about our use of cookies, please see our ",
+              "target": "cookie",
+              "suffix": "."
+            }
+          ]
+        },
+        {
+          "title": "6. Data Sharing and Third Parties",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "<strong>We do NOT share your data with anyone.</strong> Since your data never leaves your device, there is no data to share. We do not:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Sell your personal data",
+                "Share data with service providers (we have none)",
+                "Send data to analytics companies",
+                "Transmit data to advertising networks",
+                "Share data with business partners",
+                "Disclose data to legal authorities (we don't have access to it)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "7. International Data Transfers",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "<strong>Not applicable.</strong> Your data remains on your device and is never transferred anywhere, domestically or internationally."
+            }
+          ]
+        },
+        {
+          "title": "8. Data Retention",
+          "blocks": [
+            {
+              "type": "table",
+              "headers": [
+                "Data Type",
+                "Retention Period"
+              ],
+              "rows": [
+                [
+                  "Calculator inputs and settings",
+                  "Stored in cookies for 365 days, or until you clear your browser data"
+                ],
+                [
+                  "Asset allocation data",
+                  "Stored in cookies for 365 days, or until you clear your browser data"
+                ],
+                [
+                  "User preferences",
+                  "Stored in cookies for 365 days, or until you clear your browser data"
+                ]
+              ]
+            },
+            {
+              "type": "p",
+              "html": "You have complete control over your data. You can delete all stored data at any time using the \"Reset All Data\" option in the Settings page or by clearing your browser cookies."
+            }
+          ]
+        },
+        {
+          "title": "9. Your Rights (GDPR & Privacy Laws)",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Under GDPR and other privacy laws, you have the following rights:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Right to Access:</strong> All your data is accessible through the Fire Tools interface",
+                "<strong>Right to Rectification:</strong> You can edit your data at any time through the calculator inputs",
+                "<strong>Right to Erasure:</strong> Use the \"Reset All Data\" button or clear your browser cookies",
+                "<strong>Right to Restrict Processing:</strong> Stop using the application or delete your data",
+                "<strong>Right to Data Portability:</strong> Export your data as CSV files at any time",
+                "<strong>Right to Object:</strong> You can stop using the application at any time",
+                "<strong>Right to Withdraw Consent:</strong> Delete your data or stop using the application"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Since all data is stored locally on your device, you have direct control over your data without needing to contact us."
+            }
+          ]
+        },
+        {
+          "title": "10. Security",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "We implement robust security measures to protect your data:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>AES-256 Encryption:</strong> All sensitive financial data is encrypted before storage",
+                "<strong>HTTPS/TLS:</strong> The application is served over secure HTTPS connections",
+                "<strong>Secure Cookies:</strong> Cookies use <code>SameSite=Strict</code> and <code>Secure</code> flags",
+                "<strong>No Server Storage:</strong> Your data never reaches our servers (we don't have any)",
+                "<strong>No Network Transmission:</strong> Data is never sent over the network",
+                "<strong>Open Source:</strong> Full transparency - audit our code on GitHub"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "<strong>Your Responsibility:</strong> Keep your device secure. Anyone with access to your device and browser can view your Fire Tools data."
+            }
+          ]
+        },
+        {
+          "title": "11. Children's Privacy",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools is intended for adults planning their financial future. We do not knowingly collect data from children under 16. Since we don't collect any data, this is inherently protected."
+            }
+          ]
+        },
+        {
+          "title": "12. Changes to This Policy",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. When we make changes, we will update the \"Last Updated\" date at the top of this policy."
+            },
+            {
+              "type": "p",
+              "html": "Material changes will be announced through our GitHub repository. Continued use of Fire Tools after changes constitutes acceptance of the updated policy."
+            }
+          ]
+        },
+        {
+          "title": "13. Contact Us",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "For questions, concerns, or requests related to this Privacy Policy:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Email:</strong> security@mb-consulting.dev",
+                "<strong>GitHub:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "14. Jurisdiction and Governing Law",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "This Privacy Policy is governed by applicable data protection laws including GDPR (EU), CCPA (California), and other relevant privacy regulations. Since we don't collect or store data, compliance is inherently maintained."
+            }
+          ]
+        }
+      ],
+      "lastUpdatedDate": "December 31, 2025"
+    },
+    "cookie": {
+      "lastUpdated": "December 31, 2025",
+      "sections": [
+        {
+          "title": "1. Introduction",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "This Cookie Policy explains how <strong>Fire Tools</strong> uses cookies and similar tracking technologies. We are committed to transparency about our data practices and your privacy."
+            },
+            {
+              "type": "p",
+              "html": "<strong>Our approach is simple:</strong> We only use cookies that are essential for the application to function. We do not use any tracking, analytics, advertising, or third-party cookies."
+            }
+          ]
+        },
+        {
+          "title": "2. What Are Cookies?",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Cookies are small text files stored on your device by your web browser when you visit a website. They allow the website to remember your preferences and provide a better user experience."
+            },
+            {
+              "type": "p",
+              "html": "Cookies can be classified by:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Duration:</strong> Session cookies (deleted when you close the browser) or persistent cookies (remain for a set period)",
+                "<strong>Source:</strong> First-party cookies (set by the website you visit) or third-party cookies (set by external services)",
+                "<strong>Purpose:</strong> Essential, functional, analytics, or advertising cookies"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3. Cookies We Use",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools uses ONLY first-party, essential cookies. These cookies are necessary for the application to function and cannot be disabled without affecting core functionality."
+            },
+            {
+              "type": "table",
+              "headers": [
+                "Cookie Name",
+                "Purpose",
+                "Duration",
+                "Type"
+              ],
+              "rows": [
+                [
+                  "<code>fire-calculator-inputs</code>",
+                  "Stores your calculator inputs (savings, expenses, returns, etc.) for persistence between sessions",
+                  "365 days",
+                  "Essential"
+                ],
+                [
+                  "<code>fire-calculator-asset-allocation</code>",
+                  "Stores your asset allocation data for portfolio tracking",
+                  "365 days",
+                  "Essential"
+                ],
+                [
+                  "<code>fire-calculator-asset-class-targets</code>",
+                  "Stores your target asset allocation percentages for rebalancing",
+                  "365 days",
+                  "Essential"
+                ],
+                [
+                  "<code>fire-calculator-settings</code>",
+                  "Stores your application preferences (currency, display settings, etc.)",
+                  "365 days",
+                  "Essential"
+                ],
+                [
+                  "<code>fire-tools-cookie-consent</code>",
+                  "Remembers your cookie consent choice",
+                  "365 days",
+                  "Essential"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4. Cookies We Do NOT Use",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools does not use any of the following types of cookies:"
+            },
+            {
+              "type": "infoBox",
+              "title": "✅ No Tracking, No Analytics, No Advertising",
+              "html": "Your privacy is paramount. We have made a conscious decision to not implement any non-essential cookies."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Analytics Cookies:</strong> No Google Analytics, Mixpanel, or any other analytics service",
+                "<strong>Advertising Cookies:</strong> No advertising networks or tracking pixels",
+                "<strong>Social Media Cookies:</strong> No Facebook, Twitter, or other social media tracking",
+                "<strong>Third-Party Cookies:</strong> No cookies from external services or partners",
+                "<strong>Performance Cookies:</strong> No performance monitoring or heatmaps",
+                "<strong>Marketing Cookies:</strong> No remarketing or behavioral targeting"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "5. Security Measures",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "All cookies used by Fire Tools are protected by industry-standard security measures:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>AES-256 Encryption:</strong> Sensitive financial data is encrypted before being stored in cookies",
+                "<strong>SameSite=Strict:</strong> Cookies are restricted to first-party context only, preventing CSRF attacks",
+                "<strong>Secure Flag:</strong> Cookies are only transmitted over HTTPS connections in production",
+                "<strong>HttpOnly:</strong> Not applicable as we need JavaScript access for the calculator functionality"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "6. Your Cookie Choices",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "You have several options to manage cookies:"
+            },
+            {
+              "type": "h3",
+              "text": "Browser Settings"
+            },
+            {
+              "type": "p",
+              "html": "You can control cookies through your browser settings. Most browsers allow you to:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "View what cookies are stored",
+                "Delete existing cookies",
+                "Block all cookies or specific types",
+                "Be notified before cookies are set"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "For more information on managing cookies in your browser:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<a href=\"https://support.google.com/chrome/answer/95647\" target=\"_blank\" rel=\"noopener noreferrer\">Google Chrome</a>",
+                "<a href=\"https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer\" target=\"_blank\" rel=\"noopener noreferrer\">Mozilla Firefox</a>",
+                "<a href=\"https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac\" target=\"_blank\" rel=\"noopener noreferrer\">Apple Safari</a>",
+                "<a href=\"https://support.microsoft.com/en-us/windows/manage-cookies-in-microsoft-edge\" target=\"_blank\" rel=\"noopener noreferrer\">Microsoft Edge</a>"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "Application Settings"
+            },
+            {
+              "type": "p",
+              "html": "Within Fire Tools, you can:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Reset All Data:</strong> Use the \"Reset All Data\" button in Settings to clear all stored data",
+                "<strong>Privacy Mode:</strong> Toggle privacy mode to hide sensitive financial information",
+                "<strong>Export Data:</strong> Download your data as CSV files before clearing cookies"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "7. Impact of Disabling Cookies",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Since all our cookies are essential, disabling them will affect the application:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Your calculator inputs will not be saved between sessions",
+                "Your asset allocation data will be lost when you close the browser",
+                "Your preferences will need to be set each time",
+                "Some features may not work correctly"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "If you prefer not to use cookies, you can still use Fire Tools but will need to re-enter your data each session."
+            }
+          ]
+        },
+        {
+          "title": "8. Local Storage",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "In addition to cookies, Fire Tools may use the browser's localStorage API for certain functionality. localStorage is similar to cookies but offers more storage space and is not sent with HTTP requests."
+            },
+            {
+              "type": "p",
+              "html": "Like our cookies, localStorage is used only for essential functionality:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Storing larger datasets locally",
+                "Caching application state",
+                "Maintaining user preferences"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "You can clear localStorage through your browser's developer tools or by using the application's reset functionality."
+            }
+          ]
+        },
+        {
+          "title": "9. International Compliance",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Our cookie usage complies with major privacy regulations:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>GDPR (EU):</strong> Compliant - essential cookies only, no consent required for strictly necessary cookies",
+                "<strong>CCPA (California):</strong> Compliant - no sale of personal information",
+                "<strong>ePrivacy Directive (EU):</strong> Compliant - essential cookies are exempt from consent requirements",
+                "<strong>LGPD (Brazil):</strong> Compliant - minimal data processing",
+                "<strong>PIPEDA (Canada):</strong> Compliant - consent obtained for cookie usage"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "10. Changes to This Cookie Policy",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "We may update this Cookie Policy from time to time to reflect changes in our cookie practices or legal requirements. When we make changes, we will:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Update the \"Last Updated\" date at the top of this policy",
+                "Notify users through the application's cookie consent banner",
+                "Document significant changes in our GitHub repository"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "We encourage you to review this Cookie Policy periodically."
+            }
+          ]
+        },
+        {
+          "title": "11. Contact Us",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "If you have questions about our use of cookies or this Cookie Policy:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Email:</strong> security@mb-consulting.dev",
+                "<strong>GitHub:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>",
+                "<strong>Issues:</strong> Report any concerns on our GitHub issue tracker"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "12. Related Policies",
+          "blocks": [
+            {
+              "type": "link",
+              "prefix": "For more information about how we handle your data, please see our ",
+              "target": "privacy",
+              "suffix": ". Together, these policies provide a complete picture of our privacy practices."
+            }
+          ]
+        }
+      ],
+      "lastUpdatedDate": "December 31, 2025"
+    }
   }
 }

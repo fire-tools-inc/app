@@ -126,7 +126,8 @@
         "h3": "FIRE-Weg-Anleitung",
         "cta": "Quiz starten →"
       }
-    }
+    },
+    "disclaimerAriaLabel": "Wichtiger Hinweis"
   },
   "settings": {
     "language": "Sprache",
@@ -1031,7 +1032,7 @@
     "closePolicyModal": "Richtlinienfenster schließen",
     "switchToCookiePolicy": "Cookie-Richtlinie",
     "switchToPrivacyPolicy": "Datenschutzerklärung",
-    "contentEnglishOnly": "Der folgende Rechtstext wird nur auf Englisch bereitgestellt."
+    "contentEnglishOnly": "Eine englische Version dieser Richtlinie ist ebenfalls als rechtsverbindliche Referenz verfügbar."
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -1755,5 +1756,623 @@
     "message": "Schreibgeschützte Demo mit Beispieldaten — Imports und Zurücksetzen sind deaktiviert. Lade die App herunter, um eigene Daten zu speichern.",
     "cta": "Desktop-App herunterladen",
     "disabledAction": "In der Demo deaktiviert. Lade die App herunter, um deine Daten zu importieren."
+  },
+  "policyContent": {
+    "privacy": {
+      "lastUpdated": "31. Dezember 2025",
+      "sections": [
+        {
+          "title": "1. Einführung",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Willkommen bei <strong>Fire Tools</strong> (die \"Anwendung\"). Diese Datenschutzerklärung erläutert, wie wir Ihre personenbezogenen Daten verarbeiten, wenn Sie unsere Finanzplanungstools nutzen. Ihre Privatsphäre ist für uns von grundlegender Bedeutung, und diese Richtlinie beschreibt unser Engagement für den Schutz Ihrer personenbezogenen Daten."
+            },
+            {
+              "type": "p",
+              "html": "Fire Tools ist eine Finanzplanungsanwendung, die mit Datenschutz als Kernprinzip entwickelt wurde. <strong>Alle Ihre Daten werden lokal auf Ihrem Gerät gespeichert</strong> und niemals ohne Ihre ausdrückliche Zustimmung an externe Server übertragen."
+            }
+          ]
+        },
+        {
+          "title": "2. Verantwortlicher",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Der für Ihre personenbezogenen Daten verantwortliche Datenverantwortliche ist:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Anwendungsname:</strong> Fire Tools",
+                "<strong>Repository:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>",
+                "<strong>Kontakt:</strong> security@mb-consulting.dev"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3. Welche Daten wir erfassen",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools erfasst nur die Daten, die Sie freiwillig durch die Nutzung der Rechner- und Vermögensallokationsfunktionen bereitstellen. Dazu gehören:"
+            },
+            {
+              "type": "h3",
+              "text": "Finanzplanungsdaten"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Anfänglicher Sparbetrag",
+                "Jahreseinkommen und Ausgaben",
+                "Anlageerwartungen und Risikotoleranz",
+                "Renteneintrittsalter und FIRE-Ziele",
+                "Vermögensallokationspräferenzen",
+                "Portfoliopositionen und Performancedaten"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "Anwendungspräferenzen"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Währungseinstellungen",
+                "Anzeigepräferenzen",
+                "Datenschutz- und Cookie-Einwilligungsentscheidungen"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "Was wir NICHT erfassen"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Personenbezogene Identifikationsinformationen (Name, E-Mail, Adresse)",
+                "Authentifizierungsdaten",
+                "Browserverlauf außerhalb der Anwendung",
+                "Geräte-Fingerprints oder Tracking-Identifikatoren",
+                "Standortdaten",
+                "Kontaktinformationen"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4. Rechtsgrundlage für die Verarbeitung (DSGVO)",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Gemäß der Datenschutz-Grundverordnung (DSGVO) ist unsere Rechtsgrundlage für die Verarbeitung Ihrer Daten:"
+            },
+            {
+              "type": "table",
+              "headers": [
+                "Verarbeitungstätigkeit",
+                "Rechtsgrundlage"
+              ],
+              "rows": [
+                [
+                  "Speicherung von Rechnereingaben",
+                  "Einwilligung (Artikel 6 Absatz 1 Buchstabe a)"
+                ],
+                [
+                  "Speicherung von Vermögensallokationsdaten",
+                  "Einwilligung (Artikel 6 Absatz 1 Buchstabe a)"
+                ],
+                [
+                  "Aufrechterhaltung der Anwendungspräferenzen",
+                  "Berechtigtes Interesse (Artikel 6 Absatz 1 Buchstabe f)"
+                ],
+                [
+                  "Wesentliche Funktionscookies",
+                  "Berechtigtes Interesse (Artikel 6 Absatz 1 Buchstabe f)"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "5. Wie wir Ihre Daten verwenden",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Alle Daten, die Sie eingeben, werden ausschließlich verwendet für:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Finanzberechnungen:</strong> Durchführung von FIRE-Projektionen, Monte-Carlo-Simulationen und Vermögensallokationsanalysen",
+                "<strong>Lokale Speicherung:</strong> Aufbewahrung Ihrer Daten zwischen Sitzungen auf Ihrem Gerät",
+                "<strong>Anwendungsfunktionalität:</strong> Bereitstellung der von Ihnen angeforderten Funktionen und Werkzeuge"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "<strong>Wir:</strong>"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Geben Ihre Daten nicht an Dritte weiter",
+                "Verkaufen Ihre Daten an niemanden",
+                "Nutzen Ihre Daten nicht für Werbung oder Marketing",
+                "Erstellen aus keinem Grund Profile von Ihnen",
+                "Übertragen Ihre Daten nicht international"
+              ]
+            },
+            {
+              "type": "link",
+              "prefix": "Weitere Informationen zur Verwendung von Cookies finden Sie in unserer ",
+              "target": "cookie",
+              "suffix": "."
+            }
+          ]
+        },
+        {
+          "title": "6. Datenweitergabe und Dritte",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "<strong>Wir teilen Ihre Daten mit niemandem.</strong> Da Ihre Daten Ihr Gerät nie verlassen, gibt es keine Daten zum Teilen. Wir:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Verkaufen Ihre personenbezogenen Daten nicht",
+                "Geben keine Daten an Dienstleister weiter (wir haben keine)",
+                "Senden keine Daten an Analyseunternehmen",
+                "Übertragen keine Daten an Werbenetzwerke",
+                "Teilen keine Daten mit Geschäftspartnern",
+                "Offenbaren keine Daten an Strafverfolgungsbehörden (wir haben keinen Zugriff)"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "7. Internationale Datenübertragungen",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "<strong>Nicht zutreffend.</strong> Ihre Daten verbleiben auf Ihrem Gerät und werden nie weitergeleitet, weder national noch international."
+            }
+          ]
+        },
+        {
+          "title": "8. Datenspeicherung",
+          "blocks": [
+            {
+              "type": "table",
+              "headers": [
+                "Datentyp",
+                "Speicherdauer"
+              ],
+              "rows": [
+                [
+                  "Rechnereingaben und Einstellungen",
+                  "365 Tage in Cookies gespeichert, oder bis Sie Browserdaten löschen"
+                ],
+                [
+                  "Vermögensallokationsdaten",
+                  "365 Tage in Cookies gespeichert, oder bis Sie Browserdaten löschen"
+                ],
+                [
+                  "Benutzereinstellungen",
+                  "365 Tage in Cookies gespeichert, oder bis Sie Browserdaten löschen"
+                ]
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Sie haben die vollständige Kontrolle über Ihre Daten. Sie können alle gespeicherten Daten jederzeit über die Option \"Alle Daten zurücksetzen\" auf der Einstellungsseite löschen oder Ihre Browser-Cookies löschen."
+            }
+          ]
+        },
+        {
+          "title": "9. Ihre Rechte (DSGVO und Datenschutzgesetze)",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Gemäß der DSGVO und anderen Datenschutzgesetzen haben Sie die folgenden Rechte:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Auskunftsrecht:</strong> Alle Ihre Daten sind über die Fire Tools-Oberfläche zugänglich",
+                "<strong>Recht auf Berichtigung:</strong> Sie können Ihre Daten jederzeit über die Rechnereingaben ändern",
+                "<strong>Recht auf Löschung:</strong> Verwenden Sie die Schaltfläche \"Alle Daten zurücksetzen\" oder löschen Sie die Browser-Cookies",
+                "<strong>Recht auf Einschränkung der Verarbeitung:</strong> Beenden Sie die Nutzung der Anwendung oder löschen Sie Ihre Daten",
+                "<strong>Recht auf Datenübertragbarkeit:</strong> Exportieren Sie Ihre Daten jederzeit in CSV-Dateien",
+                "<strong>Widerspruchsrecht:</strong> Sie können die Nutzung der Anwendung jederzeit beenden",
+                "<strong>Recht auf Widerruf der Einwilligung:</strong> Löschen Sie Ihre Daten oder beenden Sie die Nutzung der Anwendung"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Da alle Daten lokal auf Ihrem Gerät gespeichert werden, haben Sie die direkte Kontrolle über Ihre Daten, ohne uns kontaktieren zu müssen."
+            }
+          ]
+        },
+        {
+          "title": "10. Sicherheit",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Wir setzen robuste Sicherheitsmaßnahmen zum Schutz Ihrer Daten ein:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>AES-256-Verschlüsselung:</strong> Alle sensiblen Finanzdaten werden vor der Speicherung verschlüsselt",
+                "<strong>HTTPS/TLS:</strong> Die Anwendung wird über sichere HTTPS-Verbindungen bereitgestellt",
+                "<strong>Sichere Cookies:</strong> Cookies verwenden die Flags <code>SameSite=Strict</code> und <code>Secure</code>",
+                "<strong>Keine serverseitige Speicherung:</strong> Ihre Daten erreichen unsere Server nie (wir haben keine)",
+                "<strong>Keine Netzwerkübertragung:</strong> Daten werden nie über das Netzwerk gesendet",
+                "<strong>Open Source:</strong> Vollständige Transparenz - überprüfen Sie unseren Code auf GitHub"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "<strong>Ihre Verantwortung:</strong> Halten Sie Ihr Gerät sicher. Jeder mit Zugriff auf Ihr Gerät und Ihren Browser kann Ihre Fire Tools-Daten einsehen."
+            }
+          ]
+        },
+        {
+          "title": "11. Datenschutz von Kindern",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools richtet sich an Erwachsene, die ihre finanzielle Zukunft planen. Wir erfassen wissentlich keine Daten von Kindern unter 16 Jahren. Da wir keine Daten erfassen, ist dies inhärent geschützt."
+            }
+          ]
+        },
+        {
+          "title": "12. Änderungen dieser Richtlinie",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren, um Änderungen unserer Praktiken oder rechtlicher Anforderungen widerzuspiegeln. Wenn wir Änderungen vornehmen, aktualisieren wir das Datum \"Zuletzt aktualisiert\" oben in dieser Richtlinie."
+            },
+            {
+              "type": "p",
+              "html": "Wesentliche Änderungen werden über unser GitHub-Repository angekündigt. Die fortgesetzte Nutzung von Fire Tools nach Änderungen stellt die Annahme der aktualisierten Richtlinie dar."
+            }
+          ]
+        },
+        {
+          "title": "13. Kontaktieren Sie uns",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Bei Fragen, Bedenken oder Anfragen zu dieser Datenschutzerklärung:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>E-Mail:</strong> security@mb-consulting.dev",
+                "<strong>GitHub:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "14. Gerichtsstand und anwendbares Recht",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Diese Datenschutzerklärung unterliegt den geltenden Datenschutzgesetzen, einschließlich DSGVO (EU), CCPA (Kalifornien) und anderen relevanten Datenschutzvorschriften. Da wir keine Daten erfassen oder speichern, wird die Einhaltung inhärent gewahrt."
+            }
+          ]
+        }
+      ],
+      "lastUpdatedDate": "31. Dezember 2025"
+    },
+    "cookie": {
+      "lastUpdated": "31. Dezember 2025",
+      "sections": [
+        {
+          "title": "1. Einführung",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Diese Cookie-Richtlinie erläutert, wie <strong>Fire Tools</strong> Cookies und ähnliche Tracking-Technologien verwendet. Wir setzen uns für Transparenz in Bezug auf unsere Datenpraktiken und Ihre Privatsphäre ein."
+            },
+            {
+              "type": "p",
+              "html": "<strong>Unser Ansatz ist einfach:</strong> Wir verwenden nur unbedingt erforderliche Cookies für die Funktion der Anwendung. Wir verwenden keine Tracking-, Analyse-, Werbe- oder Drittanbieter-Cookies."
+            }
+          ]
+        },
+        {
+          "title": "2. Was sind Cookies?",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Cookies sind kleine Textdateien, die von Ihrem Browser auf Ihrem Gerät gespeichert werden, wenn Sie eine Website besuchen. Sie ermöglichen es der Website, Ihre Einstellungen zu merken und ein besseres Benutzererlebnis zu bieten."
+            },
+            {
+              "type": "p",
+              "html": "Cookies können klassifiziert werden nach:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Dauer:</strong> Session-Cookies (beim Schließen des Browsers gelöscht) oder persistente Cookies (bleiben für einen festgelegten Zeitraum)",
+                "<strong>Herkunft:</strong> Erstanbieter-Cookies (von der besuchten Website gesetzt) oder Drittanbieter-Cookies (von externen Diensten gesetzt)",
+                "<strong>Zweck:</strong> Wesentlich, funktional, analytisch oder werblich"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "3. Cookies, die wir verwenden",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools verwendet NUR unbedingt erforderliche Erstanbieter-Cookies. Diese Cookies sind für die Funktion der Anwendung erforderlich und können ohne Beeinträchtigung der Kernfunktionalität nicht deaktiviert werden."
+            },
+            {
+              "type": "table",
+              "headers": [
+                "Cookie-Name",
+                "Zweck",
+                "Dauer",
+                "Typ"
+              ],
+              "rows": [
+                [
+                  "<code>fire-calculator-inputs</code>",
+                  "Speichert Rechnereingaben (Ersparnisse, Ausgaben, Renditen usw.) für die Persistenz zwischen Sitzungen",
+                  "365 Tage",
+                  "Wesentlich"
+                ],
+                [
+                  "<code>fire-calculator-asset-allocation</code>",
+                  "Speichert Vermögensallokationsdaten für das Portfolio-Tracking",
+                  "365 Tage",
+                  "Wesentlich"
+                ],
+                [
+                  "<code>fire-calculator-asset-class-targets</code>",
+                  "Speichert Ziel-Allokationsprozentsätze für die Neugewichtung",
+                  "365 Tage",
+                  "Wesentlich"
+                ],
+                [
+                  "<code>fire-calculator-settings</code>",
+                  "Speichert Anwendungspräferenzen (Währung, Anzeigeeinstellungen usw.)",
+                  "365 Tage",
+                  "Wesentlich"
+                ],
+                [
+                  "<code>fire-tools-cookie-consent</code>",
+                  "Speichert Ihre Wahl der Cookie-Einwilligung",
+                  "365 Tage",
+                  "Wesentlich"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "title": "4. Cookies, die wir NICHT verwenden",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Fire Tools verwendet keine der folgenden Cookie-Typen:"
+            },
+            {
+              "type": "infoBox",
+              "title": "✅ Kein Tracking, keine Analyse, keine Werbung",
+              "html": "Ihre Privatsphäre ist von grundlegender Bedeutung. Wir haben bewusst entschieden, keine nicht-essenziellen Cookies zu implementieren."
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Analyse-Cookies:</strong> Kein Google Analytics, Mixpanel oder andere Analysedienste",
+                "<strong>Werbe-Cookies:</strong> Keine Werbenetzwerke oder Tracking-Pixel",
+                "<strong>Social-Media-Cookies:</strong> Kein Facebook-, Twitter- oder anderes Social-Media-Tracking",
+                "<strong>Drittanbieter-Cookies:</strong> Keine Cookies von externen Diensten oder Partnern",
+                "<strong>Performance-Cookies:</strong> Keine Leistungsüberwachung oder Heatmaps",
+                "<strong>Marketing-Cookies:</strong> Kein Retargeting oder verhaltensorientiertes Targeting"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "5. Sicherheitsmaßnahmen",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Alle von Fire Tools verwendeten Cookies sind durch branchenübliche Sicherheitsmaßnahmen geschützt:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>AES-256-Verschlüsselung:</strong> Sensible Finanzdaten werden vor der Speicherung in Cookies verschlüsselt",
+                "<strong>SameSite=Strict:</strong> Cookies sind auf den Erstanbieter-Kontext beschränkt und verhindern CSRF-Angriffe",
+                "<strong>Secure-Flag:</strong> Cookies werden in der Produktion nur über HTTPS-Verbindungen übertragen",
+                "<strong>HttpOnly:</strong> Nicht zutreffend, da JavaScript-Zugriff für die Rechnerfunktionalität erforderlich ist"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "6. Ihre Cookie-Entscheidungen",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Sie haben mehrere Optionen zur Verwaltung von Cookies:"
+            },
+            {
+              "type": "h3",
+              "text": "Browser-Einstellungen"
+            },
+            {
+              "type": "p",
+              "html": "Sie können Cookies über Ihre Browser-Einstellungen steuern. Die meisten Browser ermöglichen Ihnen:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Anzeigen, welche Cookies gespeichert sind",
+                "Vorhandene Cookies löschen",
+                "Alle Cookies oder bestimmte Typen blockieren",
+                "Benachrichtigt werden, bevor Cookies gesetzt werden"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Weitere Informationen zur Cookie-Verwaltung in Ihrem Browser:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<a href=\"https://support.google.com/chrome/answer/95647\" target=\"_blank\" rel=\"noopener noreferrer\">Google Chrome</a>",
+                "<a href=\"https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer\" target=\"_blank\" rel=\"noopener noreferrer\">Mozilla Firefox</a>",
+                "<a href=\"https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac\" target=\"_blank\" rel=\"noopener noreferrer\">Apple Safari</a>",
+                "<a href=\"https://support.microsoft.com/en-us/windows/manage-cookies-in-microsoft-edge\" target=\"_blank\" rel=\"noopener noreferrer\">Microsoft Edge</a>"
+              ]
+            },
+            {
+              "type": "h3",
+              "text": "Anwendungseinstellungen"
+            },
+            {
+              "type": "p",
+              "html": "Innerhalb von Fire Tools können Sie:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>Alle Daten zurücksetzen:</strong> Verwenden Sie die Schaltfläche \"Alle Daten zurücksetzen\" in den Einstellungen, um alle gespeicherten Daten zu löschen",
+                "<strong>Datenschutzmodus:</strong> Aktivieren Sie den Datenschutzmodus, um sensible Finanzinformationen auszublenden",
+                "<strong>Daten exportieren:</strong> Laden Sie Ihre Daten als CSV-Dateien herunter, bevor Sie Cookies löschen"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "7. Auswirkungen der Deaktivierung von Cookies",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Da alle unsere Cookies wesentlich sind, wirkt sich deren Deaktivierung auf die Anwendung aus:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Rechnereingaben werden nicht zwischen Sitzungen gespeichert",
+                "Vermögensallokationsdaten gehen beim Schließen des Browsers verloren",
+                "Einstellungen müssen bei jedem Besuch festgelegt werden",
+                "Einige Funktionen funktionieren möglicherweise nicht ordnungsgemäß"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Wenn Sie es vorziehen, keine Cookies zu verwenden, können Sie Fire Tools dennoch nutzen, müssen jedoch in jeder Sitzung Ihre Daten erneut eingeben."
+            }
+          ]
+        },
+        {
+          "title": "8. Lokale Speicherung",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Zusätzlich zu Cookies kann Fire Tools für bestimmte Funktionen die localStorage-API des Browsers verwenden. localStorage ähnelt Cookies, bietet jedoch mehr Speicherplatz und wird nicht mit HTTP-Anfragen gesendet."
+            },
+            {
+              "type": "p",
+              "html": "Wie unsere Cookies wird localStorage nur für wesentliche Funktionen verwendet:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Lokale Speicherung größerer Datensätze",
+                "Caching des Anwendungszustands",
+                "Aufrechterhaltung der Benutzereinstellungen"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Sie können localStorage über die Entwicklertools Ihres Browsers oder mit der Reset-Funktion der Anwendung löschen."
+            }
+          ]
+        },
+        {
+          "title": "9. Internationale Konformität",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Unsere Cookie-Verwendung entspricht den wichtigsten Datenschutzbestimmungen:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>DSGVO (EU):</strong> Konform - nur wesentliche Cookies, keine Einwilligung für unbedingt erforderliche Cookies erforderlich",
+                "<strong>CCPA (Kalifornien):</strong> Konform - kein Verkauf personenbezogener Daten",
+                "<strong>ePrivacy-Richtlinie (EU):</strong> Konform - wesentliche Cookies sind von den Einwilligungsanforderungen befreit",
+                "<strong>LGPD (Brasilien):</strong> Konform - minimale Datenverarbeitung",
+                "<strong>PIPEDA (Kanada):</strong> Konform - Einwilligung für Cookie-Verwendung eingeholt"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "10. Änderungen dieser Cookie-Richtlinie",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Wir können diese Cookie-Richtlinie von Zeit zu Zeit aktualisieren, um Änderungen unserer Praktiken oder rechtlicher Anforderungen widerzuspiegeln. Wenn wir Änderungen vornehmen:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "Aktualisieren wir das Datum \"Zuletzt aktualisiert\" oben in dieser Richtlinie",
+                "Benachrichtigen wir Benutzer über das Cookie-Einwilligungsbanner der Anwendung",
+                "Dokumentieren wir wesentliche Änderungen in unserem GitHub-Repository"
+              ]
+            },
+            {
+              "type": "p",
+              "html": "Wir empfehlen Ihnen, diese Cookie-Richtlinie regelmäßig zu überprüfen."
+            }
+          ]
+        },
+        {
+          "title": "11. Kontaktieren Sie uns",
+          "blocks": [
+            {
+              "type": "p",
+              "html": "Wenn Sie Fragen zu unserer Cookie-Verwendung oder dieser Cookie-Richtlinie haben:"
+            },
+            {
+              "type": "ul",
+              "items": [
+                "<strong>E-Mail:</strong> security@mb-consulting.dev",
+                "<strong>GitHub:</strong> <a href=\"https://github.com/mbianchidev/fire-tools\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/mbianchidev/fire-tools</a>",
+                "<strong>Issues:</strong> Melden Sie alle Probleme in unserem GitHub-Issue-Tracker"
+              ]
+            }
+          ]
+        },
+        {
+          "title": "12. Verwandte Richtlinien",
+          "blocks": [
+            {
+              "type": "link",
+              "prefix": "Weitere Informationen darüber, wie wir Ihre Daten behandeln, finden Sie in unserer ",
+              "target": "privacy",
+              "suffix": ". Zusammen bieten diese Richtlinien einen umfassenden Überblick über unsere Datenschutzpraktiken."
+            }
+          ]
+        }
+      ],
+      "lastUpdatedDate": "31. Dezember 2025"
+    }
   }
 }

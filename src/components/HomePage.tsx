@@ -72,7 +72,7 @@ export function HomePage() {
         <p>
           {t('home.aboutBody')}
         </p>
-        <div className="disclaimer" role="note" aria-label="Important disclaimer">
+        <div className="disclaimer" role="note" aria-label={t('home.disclaimerAriaLabel')}>
           <strong><MaterialIcon name="warning" /> {t('home.disclaimer')}</strong> {t('home.disclaimerBody')}
         </div>
       </section>
