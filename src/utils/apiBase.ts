@@ -18,7 +18,12 @@ interface EmbeddedBackendInfo {
 }
 
 interface FireToolsBridge {
+  platform?: string;
+  versions?: { electron?: string; chrome?: string; node?: string };
   getEmbeddedBackend?: () => Promise<EmbeddedBackendInfo>;
+  openExternal?: (url: string) => Promise<boolean>;
+  onNavigate?: (callback: (path: string) => void) => () => void;
+  onMenuAction?: (callback: (action: string) => void) => () => void;
 }
 
 declare global {

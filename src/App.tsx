@@ -443,6 +443,25 @@ function FIRECalculatorPage() {
   );
 }
 
+// Bridges Electron menu IPC events into React Router navigation.
+// Lives inside <Router> so it can use useNavigate().
+function NavigateBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const bridge = typeof window !== 'undefined' ? window.fireTools : undefined;
+    if (!bridge?.onNavigate) return;
+    const unsubscribe = bridge.onNavigate((path: string) => {
+      if (typeof path === 'string' && path.startsWith('/')) {
+        navigate(path);
+      }
+    });
+    return () => {
+      try { unsubscribe?.(); } catch { /* ignore */ }
+    };
+  }, [navigate]);
+  return null;
+}
+
 function App() {
   // SPA lives under /demo on the web so the landing page can sit at the root.
   // Production = GitHub Pages under /fire-tools.
@@ -471,7 +490,8 @@ function App() {
   return (
     <Router basename={basename}>
       <PolicyModalContext.Provider value={{ openPolicy, closePolicy }}>
-        <div className="app">
+        <div className={isElectron ? 'app app--electron' : 'app'}>
+          <NavigateBridge />
           <DemoBanner />
           <a href="#main-content" className="skip-link">{t('app.skipToContent')}</a>
           

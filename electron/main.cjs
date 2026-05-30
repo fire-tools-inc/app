@@ -1,11 +1,24 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, nativeTheme } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const isDev = !app.isPackaged && process.env.ELECTRON_RENDERER_URL;
+const windowState = require('./windowState.cjs');
+const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
 
+const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
+const isMac = process.platform === 'darwin';
+
+// Enforce single instance: prevents two processes racing on the SQLite DB
+// and gives users a clean "focus existing window" UX when they re-launch.
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+  return;
+}
+
+let mainWindow = null;
 let embeddedServer = null;
 let embeddedServerError = null;
 
@@ -38,15 +51,43 @@ async function startEmbedded() {
   }
 }
 
+function loadInitialRoute(win) {
+  // Open directly to the FIRE Calculator so the primary tool is visible
+  // without the user having to click through the homepage tiles.
+  const initialRoute = '/fire-calculator';
+  if (isDev) {
+    // Vite dev server uses basename '/demo' (see vite.config.ts); production
+    // electron build uses HashRouter under file://, so no basename prefix.
+    win.loadURL(`${process.env.ELECTRON_RENDERER_URL}/demo${initialRoute}`);
+    win.webContents.openDevTools({ mode: 'detach' });
+  } else {
+    win.loadFile(path.join(__dirname, '..', 'dist-electron', 'index.html'), {
+      hash: initialRoute,
+    });
+  }
+}
+
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1400,
-    height: 900,
+  const state = windowState.loadState();
+
+  mainWindow = new BrowserWindow({
+    width: state.width,
+    height: state.height,
+    x: state.x,
+    y: state.y,
     minWidth: 960,
     minHeight: 600,
     backgroundColor: '#0A0B0E',
-    autoHideMenuBar: true,
     title: 'Fire Tools',
+    show: false, // show after ready-to-show to avoid white flash
+    // Native macOS look: hide the title bar but keep traffic-light controls
+    // inset into the window. Other platforms keep the standard frame.
+    ...(isMac
+      ? {
+          titleBarStyle: 'hiddenInset',
+          trafficLightPosition: { x: 14, y: 14 },
+        }
+      : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -56,8 +97,15 @@ function createWindow() {
     },
   });
 
+  windowState.attach(mainWindow);
+
+  mainWindow.once('ready-to-show', () => {
+    if (state.isMaximized) mainWindow.maximize();
+    mainWindow.show();
+  });
+
   // Open external links in the default browser, not in the Electron window.
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       shell.openExternal(url);
       return { action: 'deny' };
@@ -65,12 +113,21 @@ function createWindow() {
     return { action: 'allow' };
   });
 
-  if (isDev) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
-    win.webContents.openDevTools({ mode: 'detach' });
-  } else {
-    win.loadFile(path.join(__dirname, '..', 'dist-electron', 'index.html'));
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
+  loadInitialRoute(mainWindow);
+}
+
+function focusMainWindow() {
+  if (!mainWindow) {
+    createWindow();
+    return;
   }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
 }
 
 ipcMain.handle('fire-tools:embedded-backend-info', () => ({
@@ -79,16 +136,44 @@ ipcMain.handle('fire-tools:embedded-backend-info', () => ({
   error: embeddedServerError,
 }));
 
+ipcMain.handle('fire-tools:open-external', (_event, url) => {
+  if (typeof url !== 'string') return false;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+  shell.openExternal(url);
+  return true;
+});
+
+app.on('second-instance', () => {
+  focusMainWindow();
+});
+
 app.whenReady().then(async () => {
+  // Populate the macOS "About <app>" panel with real metadata.
+  if (isMac) {
+    app.setAboutPanelOptions({
+      applicationName: 'Fire Tools',
+      applicationVersion: app.getVersion(),
+      version: `${process.versions.electron} (Electron)`,
+      copyright: 'Privacy-first FIRE planning, all on your device.',
+      website: DOCS_URL,
+    });
+  }
+
+  // Honor system dark/light preference for native chrome.
+  nativeTheme.themeSource = 'dark';
+
   await startEmbedded();
+  installMenu();
   createWindow();
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    else focusMainWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (!isMac) app.quit();
 });
 
 app.on('before-quit', async (event) => {
@@ -117,3 +202,5 @@ app.on('web-contents-created', (_event, contents) => {
   });
 });
 
+// Suppress unused-binding warnings (REPO_URL re-exported via menu.cjs for renderer).
+void REPO_URL;

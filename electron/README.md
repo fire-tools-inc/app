@@ -63,3 +63,47 @@ once macOS notarization credentials are wired into CI.
   read-only surface (`window.fireTools`).
 - External links open in the OS browser via `shell.openExternal`.
 - `will-navigate` is blocked except for the dev server and `file://`.
+- **Single-instance lock**: launching a second copy focuses the existing
+  window instead of starting a competing process (protects the SQLite DB
+  from concurrent writers).
+
+## Native desktop UX
+
+The Electron build is not just a thin web wrapper:
+
+- **Boots straight into the FIRE Calculator** (`/fire-calculator`) instead
+  of the marketing homepage.
+- **Decorative web header is hidden**; the nav bar becomes the OS
+  drag-region.
+- **macOS** uses `titleBarStyle: 'hiddenInset'` for a flush, native look
+  (traffic-light controls only). About panel data comes from
+  `package.json`.
+- **Native menu bar** with platform-aware accelerators (Cmd⇄Ctrl):
+  - File → Import CSV (`⌘O`), Export CSV (`⌘S`)
+  - Edit → standard undo/redo/cut/copy/paste/select-all roles
+  - Navigate → Home (`⌘0`), FIRE Calculator (`⌘1`), Asset Allocation
+    (`⌘2`), DCA Helper (`⌘3`), Budget (`⌘4`), Net Worth (`⌘5`),
+    Tax Calculator (`⌘6`), Settings (`⌘,`)
+  - View → reload, force-reload, toggle DevTools, zoom in/out/reset,
+    toggle full-screen
+  - Help → Docs, GitHub repo, Report an issue, About
+- **Window state persistence**: size, position and maximized state are
+  stored in `window-state.json` under the OS userData dir
+  (`~/Library/Application Support/fire-tools/window-state.json` on macOS).
+  Bounds are validated against the current display layout on reopen, so
+  windows can't end up off-screen after a monitor change.
+
+### Preload bridge (`window.fireTools`)
+
+| Member                 | Type                                | Purpose                                        |
+|------------------------|-------------------------------------|------------------------------------------------|
+| `platform`             | string                              | `process.platform` value                       |
+| `versions`             | `NodeJS.ProcessVersions`            | Node/Chrome/Electron versions                  |
+| `getEmbeddedBackend()` | `() => Promise<{url, dbPath, ...}>` | Embedded backend metadata (or `error`)         |
+| `openExternal(url)`    | `(string) => Promise<void>`         | Open in OS browser via `shell.openExternal`    |
+| `onNavigate(cb)`       | `(path => void) => () => void`      | Subscribe to menu → router navigation          |
+| `onMenuAction(cb)`     | `(action => void) => () => void`    | Subscribe to non-nav menu actions (e.g. CSV)   |
+
+Both `onNavigate` / `onMenuAction` return an unsubscribe function — use
+in a `useEffect` cleanup.
+

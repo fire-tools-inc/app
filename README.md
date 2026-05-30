@@ -161,8 +161,14 @@ npm install
 npm run electron:dist   # produces installers under release/
 ```
 
-Code-signing + notarization are env-driven; see
-[`electron/README.md`](electron/README.md).
+The desktop build feels native rather than browser-like: it boots directly
+into the FIRE Calculator, hides the decorative web header, ships a
+platform-aware native menu (File / Edit / Navigate / View / Window / Help)
+with `⌘1..6` tool shortcuts, persists window size/position across launches,
+and uses macOS' `hiddenInset` title bar. A single-instance lock protects
+the embedded SQLite DB. See [`electron/README.md`](electron/README.md) for
+the full menu map, preload bridge API, and signing/notarization details.
+
 
 ### Landing page
 

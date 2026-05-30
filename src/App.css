@@ -2307,3 +2307,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+   ELECTRON-ONLY OVERRIDES
+   The .app--electron class is applied when running inside Electron (file://).
+   The native menu bar replaces the decorative header, freeing the first
+   screen for actual content instead of branding chrome.
+   ============================================================================ */
+.app--electron .app-header {
+  display: none;
+}
+
+.app--electron .app-nav {
+  /* Keep clear of the macOS hidden-inset traffic lights. Padding is harmless
+     on Windows/Linux because the title bar still renders above the nav. */
+  padding-top: 1.25rem;
+  -webkit-app-region: drag;
+}
+
+.app--electron .app-nav a,
+.app--electron .app-nav button,
+.app--electron .app-nav select,
+.app--electron .app-nav input {
+  /* Clicks must reach interactive elements even though the bar is draggable. */
+  -webkit-app-region: no-drag;
+}
