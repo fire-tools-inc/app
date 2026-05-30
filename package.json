@@ -29,7 +29,7 @@
     "financial-independence",
     "monte-carlo"
   ],
-  "author": "",
+  "author": "Fire Tools Contributors",
   "license": "ISC",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
