@@ -1,10 +1,8 @@
 import Database, { type Database as DB } from 'better-sqlite3';
-import { mkdirSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { ServerEnv } from './env.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { runMigrations, type RunMigrationsResult } from './migrate.js';
 
 const resolveSqlitePath = (databaseUrl: string): string => {
   if (!databaseUrl.startsWith('file:')) {
@@ -18,7 +16,7 @@ const resolveSqlitePath = (databaseUrl: string): string => {
 
 export interface InitDbResult {
   db: DB;
-  schemaApplied: boolean;
+  migrationsResult: RunMigrationsResult;
   dbPath: string;
 }
 
@@ -33,21 +31,10 @@ export const initDb = (env: ServerEnv): InitDbResult => {
   const dbPath = resolve(resolveSqlitePath(env.databaseUrl));
   mkdirSync(dirname(dbPath), { recursive: true });
 
-  const freshDb = !existsSync(dbPath);
   const db = new Database(dbPath);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 
-  let schemaApplied = false;
-  const schemaPath = resolve(__dirname, '..', env.schemaPath);
-  if (freshDb) {
-    if (!existsSync(schemaPath)) {
-      throw new Error(`Schema file not found at ${schemaPath}. Set SCHEMA_PATH env to override.`);
-    }
-    const ddl = readFileSync(schemaPath, 'utf8');
-    db.exec(ddl);
-    schemaApplied = true;
-  }
-
-  return { db, schemaApplied, dbPath };
+  const migrationsResult = runMigrations(db, env.migrationsPath);
+  return { db, migrationsResult, dbPath };
 };

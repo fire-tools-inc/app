@@ -16,18 +16,18 @@ ENV NODE_ENV=production \
     PORT=8787 \
     HOST=0.0.0.0 \
     DATABASE_URL=file:/data/firetools.db \
-    SCHEMA_PATH=/app/schema/schema.sql
+    MIGRATIONS_PATH=/app/migrations
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates dumb-init \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --uid 10001 --gid 0 --shell /usr/sbin/nologin firetools \
-    && mkdir -p /data /app/schema \
+    && mkdir -p /data /app/migrations \
     && chown -R firetools:0 /data /app
 COPY --from=build --chown=firetools:0 /app/node_modules ./node_modules
 COPY --from=build --chown=firetools:0 /app/dist ./dist
 COPY --from=build --chown=firetools:0 /app/package.json ./package.json
-COPY --chown=firetools:0 docs/database/schema.sql ./schema/schema.sql
+COPY --chown=firetools:0 server/migrations ./migrations
 USER firetools
 EXPOSE 8787
 VOLUME ["/data"]
