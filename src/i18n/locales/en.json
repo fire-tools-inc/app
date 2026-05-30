@@ -148,7 +148,8 @@
       "language": "Language",
       "disclaimer": "Disclaimer",
       "backend": "Backend",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "about": "About"
     },
     "accountName": "Account Name",
     "accountNameHelp": "This name will be displayed throughout the app",
@@ -2414,5 +2415,19 @@
       ],
       "lastUpdatedDate": "December 31, 2025"
     }
+  },
+  "about": {
+    "appInfo": "App information",
+    "appVersion": "Version",
+    "commit": "Commit",
+    "buildTime": "Built at",
+    "backendInfo": "Backend",
+    "backendVersion": "Backend version",
+    "dependencies": "Major dependencies",
+    "dependencyName": "Package",
+    "dependencyVersion": "Version",
+    "backendUnreachable": "Backend is not reachable. The app runs in client-only mode.",
+    "backendDepTag": "backend",
+    "refresh": "Refresh"
   }
 }

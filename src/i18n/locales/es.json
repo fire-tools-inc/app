@@ -148,7 +148,8 @@
       "language": "Idioma",
       "disclaimer": "Aviso legal",
       "backend": "Backend",
-      "advanced": "Avanzado"
+      "advanced": "Avanzado",
+      "about": "Acerca de"
     },
     "accountName": "Nombre de cuenta",
     "accountNameHelp": "Este nombre se mostrará en toda la aplicación",
@@ -2414,5 +2415,19 @@
       ],
       "lastUpdatedDate": "31 de diciembre de 2025"
     }
+  },
+  "about": {
+    "appInfo": "Información de la app",
+    "appVersion": "Versión",
+    "commit": "Commit",
+    "buildTime": "Compilado el",
+    "backendInfo": "Backend",
+    "backendVersion": "Versión del backend",
+    "dependencies": "Dependencias principales",
+    "dependencyName": "Paquete",
+    "dependencyVersion": "Versión",
+    "backendUnreachable": "Backend no accesible. La app funciona en modo solo cliente.",
+    "backendDepTag": "backend",
+    "refresh": "Actualizar"
   }
 }

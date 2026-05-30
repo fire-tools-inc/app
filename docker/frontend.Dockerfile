@@ -2,6 +2,10 @@
 # Build context MUST be the repo root (see docker-compose.yml).
 
 FROM node:22-bookworm-slim AS build
+ARG GIT_COMMIT_HASH=unknown
+ARG BUILD_TIME
+ENV GIT_COMMIT_HASH=${GIT_COMMIT_HASH} \
+    BUILD_TIME=${BUILD_TIME}
 WORKDIR /app
 
 # Install deps first to leverage Docker layer cache. Skip lifecycle scripts —

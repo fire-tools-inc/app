@@ -76,6 +76,9 @@ Back up your data anytime with CSV export. Import previously saved data to resto
 **🌍 Multi-language UI**  
 The interface ships in English (default), Italian, French, German, and Spanish. Change the language from **Settings → Language**; the choice is stored alongside your other (encrypted) preferences and is independent of the display currency. See [Internationalization (i18n)](#-internationalization-i18n) for coverage details.
 
+**ℹ️ About / Build Info**
+A built-in **Settings → About** section shows the running app version, the git commit hash the build was produced from (with a link to GitHub), the build timestamp, and the versions of major dependencies (React, Vite, Recharts, etc.). When the local backend is reachable, it also surfaces the backend's version and its own dependency set (Express, better-sqlite3, …) — useful for filing bug reports and confirming the frontend and backend are running the same release.
+
 ---
 
 ## 🚀 Quick Start

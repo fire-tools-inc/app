@@ -34,6 +34,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
 import { API_ENDPOINTS, type ApiEndpoint } from '../utils/apiCatalog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { AboutSection } from './AboutSection';
 import './SettingsPage.css';
 
 interface SettingsPageProps {
@@ -41,7 +42,7 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'backend', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support'] as const;
+const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'backend', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support', 'about'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
@@ -2202,6 +2203,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   </a>
                 </div>
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* About */}
+        <section className="settings-section collapsible-section">
+          <button
+            className="collapsible-header"
+            onClick={() => toggleSection('about')}
+            aria-expanded={!collapsedSections.has('about')}
+            aria-controls="about-content"
+          >
+            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('about') ? '▶' : '▼'}</span></h2>
+          </button>
+          {!collapsedSections.has('about') && (
+            <div id="about-content" className="collapsible-content">
+              <AboutSection />
             </div>
           )}
         </section>
