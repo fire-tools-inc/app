@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { 
   LineChart, 
   Line, 
@@ -142,6 +143,7 @@ function CustomTooltip({ active, payload, label, currency, customCategories }: C
 }
 
 export function SpendingTrendChart({ data, currency, customCategories }: SpendingTrendChartProps) {
+  const { t } = useTranslation();
   if (data.length === 0) {
     return (
       <div style={{ 
@@ -151,7 +153,7 @@ export function SpendingTrendChart({ data, currency, customCategories }: Spendin
         background: '#f8f9fa',
         borderRadius: '8px',
       }}>
-        <p>No trend data to display. Add transactions across multiple months to see trends.</p>
+        <p>{t('charts.noTrendData')}</p>
       </div>
     );
   }
@@ -167,7 +169,7 @@ export function SpendingTrendChart({ data, currency, customCategories }: Spendin
         background: '#f8f9fa',
         borderRadius: '8px',
       }}>
-        <p>No category data to display.</p>
+        <p>{t('charts.noCategoryData')}</p>
       </div>
     );
   }

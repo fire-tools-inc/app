@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   CustomCategory,
   ExpenseType,
@@ -36,6 +37,7 @@ export function CategoryManagerDialog({
   onClose,
   getExpenseCountForCategory,
 }: CategoryManagerDialogProps) {
+  const { t } = useTranslation();
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'edit-builtin'>('list');
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
   const [editingBuiltInCategory, setEditingBuiltInCategory] = useState<CategoryInfo | null>(null);
@@ -169,18 +171,18 @@ export function CategoryManagerDialog({
     
     const trimmedName = name.trim();
     if (!trimmedName) {
-      newErrors.name = 'Please enter a category name';
+      newErrors.name = t('dialogs.categories.errors.categoryNameRequired');
     }
     
     if (!selectedIcon) {
-      newErrors.icon = 'Please select an icon';
+      newErrors.icon = t('dialogs.categories.errors.iconRequired');
     }
     
     const finalColor = customColor || selectedColor;
     if (!finalColor) {
-      newErrors.color = 'Please select or enter a color';
+      newErrors.color = t('dialogs.categories.errors.colorRequired');
     } else if (customColor && !/^#[0-9A-Fa-f]{6}$/.test(customColor)) {
-      newErrors.color = 'Please enter a valid hex color code (e.g., #FF5733)';
+      newErrors.color = t('dialogs.categories.errors.invalidHexColor');
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -216,16 +218,16 @@ export function CategoryManagerDialog({
     
     const trimmedName = name.trim();
     if (!trimmedName) {
-      newErrors.name = 'Please enter a category name';
+      newErrors.name = t('dialogs.categories.errors.categoryNameRequired');
     }
     
     if (!selectedIcon) {
-      newErrors.icon = 'Please select an icon';
+      newErrors.icon = t('dialogs.categories.errors.iconRequired');
     }
     
     const finalColor = customColor || selectedColor;
     if (customColor && !/^#[0-9A-Fa-f]{6}$/.test(customColor)) {
-      newErrors.color = 'Please enter a valid hex color code (e.g., #FF5733)';
+      newErrors.color = t('dialogs.categories.errors.invalidHexColor');
     }
     
     if (Object.keys(newErrors).length > 0) {
@@ -303,20 +305,20 @@ export function CategoryManagerDialog({
       <div className="dialog category-manager-dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dialog-header">
           <h2>
-            {view === 'list' && 'Manage Categories'}
-            {view === 'add' && 'Add Custom Category'}
-            {view === 'edit' && 'Edit Category'}
-            {view === 'edit-builtin' && 'Edit Category'}
+            {view === 'list' && t('dialogs.categories.manageCategories')}
+            {view === 'add' && t('dialogs.categories.addCustomCategory')}
+            {view === 'edit' && t('dialogs.categories.editCategory')}
+            {view === 'edit-builtin' && t('dialogs.categories.editCategory')}
           </h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <button className="dialog-close" onClick={onClose} aria-label={t('dialogs.categories.closeDialog')}>×</button>
         </div>
         
         {view === 'list' && (
           <div className="category-manager-content">
             {/* Built-in categories section */}
             <div className="category-section">
-              <h3>Default Categories</h3>
-              <p className="section-info">Customize name, icon, and color. These cannot be deleted.</p>
+              <h3>{t('dialogs.categories.defaultCategories')}</h3>
+              <p className="section-info">{t('dialogs.categories.defaultCategoriesInfo')}</p>
               <div className="category-list builtin-categories">
                 {EXPENSE_CATEGORIES.map((baseCat) => {
                   const cat = getCategoryWithOverride(baseCat);
@@ -333,7 +335,7 @@ export function CategoryManagerDialog({
                         <MaterialIcon name={cat.icon} size="medium" />
                         <span className="category-name">{cat.name}</span>
                         <span className={`expense-type-badge ${cat.defaultExpenseType.toLowerCase()}`}>
-                          {cat.defaultExpenseType === 'NEED' ? 'Need' : 'Want'}
+                          {cat.defaultExpenseType === 'NEED' ? t('expenseTracker.need') : t('expenseTracker.want')}
                         </span>
                       </div>
                       {!isProtected && onUpdateBuiltInCategory && (
@@ -341,7 +343,7 @@ export function CategoryManagerDialog({
                           <button 
                             className="btn-icon" 
                             onClick={() => handleStartEditBuiltIn(baseCat)}
-                            aria-label={`Edit ${cat.name}`}
+                            aria-label={t('dialogs.categories.editCategoryAria', { name: cat.name })}
                           >
                             <MaterialIcon name="edit" size="small" />
                           </button>
@@ -356,16 +358,16 @@ export function CategoryManagerDialog({
             {/* Custom categories section */}
             <div className="category-section">
               <div className="section-header">
-                <h3>Custom Categories</h3>
+                <h3>{t('dialogs.categories.customCategories')}</h3>
                 <button className="btn-add-category" onClick={handleStartAdd}>
                   <MaterialIcon name="add" size="small" />
-                  Add Category
+                  {t('dialogs.categories.addCategory')}
                 </button>
               </div>
               
               {customCategories.length === 0 ? (
                 <p className="no-categories">
-                  No custom categories yet. Click "Add Category" to create one.
+                  {t('dialogs.categories.noCustomCategories')}
                 </p>
               ) : (
                 <div className="category-list custom-categories">
@@ -379,21 +381,21 @@ export function CategoryManagerDialog({
                         <MaterialIcon name={cat.icon} size="medium" />
                         <span className="category-name">{cat.name}</span>
                         <span className={`expense-type-badge ${cat.defaultExpenseType.toLowerCase()}`}>
-                          {cat.defaultExpenseType === 'NEED' ? 'Need' : 'Want'}
+                          {cat.defaultExpenseType === 'NEED' ? t('expenseTracker.need') : t('expenseTracker.want')}
                         </span>
                       </div>
                       <div className="category-item-actions">
                         <button 
                           className="btn-icon" 
                           onClick={() => handleStartEdit(cat)}
-                          aria-label={`Edit ${cat.name}`}
+                          aria-label={t('dialogs.categories.editCategoryAria', { name: cat.name })}
                         >
                           <MaterialIcon name="edit" size="small" />
                         </button>
                         <button 
                           className="btn-icon btn-delete" 
                           onClick={() => handleDeleteClick(cat)}
-                          aria-label={`Delete ${cat.name}`}
+                          aria-label={t('dialogs.categories.deleteCategoryAria', { name: cat.name })}
                         >
                           <MaterialIcon name="delete" size="small" />
                         </button>
@@ -410,13 +412,13 @@ export function CategoryManagerDialog({
           <form className="category-form" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             {/* Category Name */}
             <div className={`form-group ${errors.name ? 'has-error' : ''}`}>
-              <label htmlFor="category-name">Category Name</label>
+              <label htmlFor="category-name">{t('dialogs.categories.categoryName')}</label>
               <input
                 id="category-name"
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(prev => ({ ...prev, name: undefined })); }}
-                placeholder="Enter category name..."
+                placeholder={t('dialogs.categories.categoryNamePlaceholder')}
                 maxLength={30}
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? 'name-error' : undefined}
@@ -426,7 +428,7 @@ export function CategoryManagerDialog({
             
             {/* Icon Picker */}
             <div className={`form-group ${errors.icon ? 'has-error' : ''}`}>
-              <label>Icon</label>
+              <label>{t('dialogs.categories.icon')}</label>
               <div className="icon-picker-container" ref={iconPickerRef}>
                 <button
                   type="button"
@@ -441,7 +443,7 @@ export function CategoryManagerDialog({
                       <span>{formatIconLabel(selectedIcon)}</span>
                     </>
                   ) : (
-                    <span>Select an icon...</span>
+                    <span>{t('dialogs.categories.selectIcon')}</span>
                   )}
                   <MaterialIcon name={isIconPickerOpen ? 'expand_less' : 'expand_more'} size="small" />
                 </button>
@@ -449,7 +451,7 @@ export function CategoryManagerDialog({
                 {isIconPickerOpen && (
                   <div className="icon-picker-dropdown">
                     {availableIcons.length === 0 ? (
-                      <p className="no-icons-message">No icons available. All icons are in use.</p>
+                      <p className="no-icons-message">{t('dialogs.categories.noIconsAvailable')}</p>
                     ) : (
                       <div className="icon-grid">
                         {availableIcons.map((icon) => (
@@ -477,7 +479,7 @@ export function CategoryManagerDialog({
             
             {/* Color Picker */}
             <div className={`form-group ${errors.color ? 'has-error' : ''}`}>
-              <label>Color</label>
+              <label>{t('dialogs.categories.color')}</label>
               <div className="color-picker">
                 <div className="color-grid">
                   {CATEGORY_COLORS.map((color) => (
@@ -487,12 +489,12 @@ export function CategoryManagerDialog({
                       className={`color-option ${selectedColor === color ? 'selected' : ''}`}
                       style={{ backgroundColor: color }}
                       onClick={() => { handleColorSelect(color); if (errors.color) setErrors(prev => ({ ...prev, color: undefined })); }}
-                      aria-label={`Select color ${color}`}
+                      aria-label={t('dialogs.categories.selectColorAria', { color })}
                     />
                   ))}
                 </div>
                 <div className="custom-color-input">
-                  <label htmlFor="custom-color">Custom Color (Hex):</label>
+                  <label htmlFor="custom-color">{t('dialogs.categories.customColorHex')}:</label>
                   <div className="custom-color-field">
                     <input
                       id="custom-color"
@@ -518,14 +520,14 @@ export function CategoryManagerDialog({
             
             {/* Default Expense Type */}
             <div className="form-group">
-              <label htmlFor="expense-type">Default Expense Type</label>
+              <label htmlFor="expense-type">{t('dialogs.categories.defaultExpenseType')}</label>
               <select
                 id="expense-type"
                 value={defaultExpenseType}
                 onChange={(e) => setDefaultExpenseType(e.target.value as ExpenseType)}
               >
-                <option value="NEED">Need (Essential)</option>
-                <option value="WANT">Want (Non-essential)</option>
+                <option value="NEED">{t('expenseTracker.needEssential')}</option>
+                <option value="WANT">{t('expenseTracker.wantNonEssential')}</option>
               </select>
             </div>
             
@@ -536,10 +538,10 @@ export function CategoryManagerDialog({
                 className="btn-cancel" 
                 onClick={() => { resetForm(); setView('list'); }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="submit" className="btn-submit">
-                {view === 'add' ? 'Add Category' : 'Save Changes'}
+                {view === 'add' ? t('dialogs.categories.addCategory') : t('dialogs.categories.saveChanges')}
               </button>
             </div>
           </form>
@@ -550,13 +552,13 @@ export function CategoryManagerDialog({
           <form className="category-form" onSubmit={(e) => { e.preventDefault(); handleSaveBuiltIn(); }}>
             {/* Category Name */}
             <div className={`form-group ${errors.name ? 'has-error' : ''}`}>
-              <label htmlFor="category-name">Category Name</label>
+              <label htmlFor="category-name">{t('dialogs.categories.categoryName')}</label>
               <input
                 id="category-name"
                 type="text"
                 value={name}
                 onChange={(e) => { setName(e.target.value); if (errors.name) setErrors(prev => ({ ...prev, name: undefined })); }}
-                placeholder="Enter category name..."
+                placeholder={t('dialogs.categories.categoryNamePlaceholder')}
                 maxLength={30}
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? 'name-error' : undefined}
@@ -566,7 +568,7 @@ export function CategoryManagerDialog({
             
             {/* Icon Picker */}
             <div className={`form-group ${errors.icon ? 'has-error' : ''}`}>
-              <label>Icon</label>
+              <label>{t('dialogs.categories.icon')}</label>
               <div className="icon-picker-container" ref={iconPickerRef}>
                 <button
                   type="button"
@@ -581,7 +583,7 @@ export function CategoryManagerDialog({
                       <span>{formatIconLabel(selectedIcon)}</span>
                     </>
                   ) : (
-                    <span>Select an icon...</span>
+                    <span>{t('dialogs.categories.selectIcon')}</span>
                   )}
                   <MaterialIcon name={isIconPickerOpen ? 'expand_less' : 'expand_more'} size="small" />
                 </button>
@@ -589,7 +591,7 @@ export function CategoryManagerDialog({
                 {isIconPickerOpen && (
                   <div className="icon-picker-dropdown">
                     {availableIcons.length === 0 ? (
-                      <p className="no-icons-message">No icons available. All icons are in use.</p>
+                      <p className="no-icons-message">{t('dialogs.categories.noIconsAvailable')}</p>
                     ) : (
                       <div className="icon-grid">
                         {availableIcons.map((icon) => (
@@ -617,7 +619,7 @@ export function CategoryManagerDialog({
             
             {/* Color Picker */}
             <div className={`form-group ${errors.color ? 'has-error' : ''}`}>
-              <label>Color (Optional)</label>
+              <label>{t('dialogs.categories.colorOptional')}</label>
               <div className="color-picker">
                 <div className="color-grid">
                   {CATEGORY_COLORS.map((color) => (
@@ -627,12 +629,12 @@ export function CategoryManagerDialog({
                       className={`color-option ${selectedColor === color ? 'selected' : ''}`}
                       style={{ backgroundColor: color }}
                       onClick={() => { handleColorSelect(color); if (errors.color) setErrors(prev => ({ ...prev, color: undefined })); }}
-                      aria-label={`Select color ${color}`}
+                      aria-label={t('dialogs.categories.selectColorAria', { color })}
                     />
                   ))}
                 </div>
                 <div className="custom-color-input">
-                  <label htmlFor="custom-color-builtin">Custom Color (Hex):</label>
+                  <label htmlFor="custom-color-builtin">{t('dialogs.categories.customColorHex')}:</label>
                   <div className="custom-color-field">
                     <input
                       id="custom-color-builtin"
@@ -663,10 +665,10 @@ export function CategoryManagerDialog({
                 className="btn-cancel" 
                 onClick={() => { resetForm(); setView('list'); }}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button type="submit" className="btn-submit">
-                Save Changes
+                {t('dialogs.categories.saveChanges')}
               </button>
             </div>
           </form>
@@ -676,27 +678,26 @@ export function CategoryManagerDialog({
         {categoryToDelete && (
           <div className="confirm-overlay">
             <div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
-              <h3 id="confirm-title">Delete Category</h3>
+              <h3 id="confirm-title">{t('dialogs.categories.deleteCategory')}</h3>
               {expenseCount > 0 ? (
                 <div id="confirm-description" className="warning-text" role="alert">
                   <MaterialIcon name="warning" size="small" />
                   <span>
-                    <strong>Warning:</strong> There {expenseCount === 1 ? 'is' : 'are'} <strong>{expenseCount}</strong> expense{expenseCount !== 1 ? 's' : ''} 
-                    {' '}tied to this category. If you proceed with deletion, all expenses will be assigned to &ldquo;No Category&rdquo;.
+                    <strong>{t('dialogs.categories.warning')}:</strong> {t('dialogs.categories.deleteWarning', { count: expenseCount })}
                   </span>
-                  <p>Are you sure you want to delete &ldquo;{categoryToDelete.name}&rdquo;?</p>
+                  <p>{t('dialogs.categories.deleteNamedQuestion', { name: categoryToDelete.name })}</p>
                 </div>
               ) : (
                 <p id="confirm-description">
-                  Are you sure you want to delete the category &ldquo;{categoryToDelete.name}&rdquo;?
+                  {t('dialogs.categories.deleteCategoryQuestion', { name: categoryToDelete.name })}
                 </p>
               )}
               <div className="confirm-actions">
                 <button className="btn-cancel" onClick={handleCancelDelete}>
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button className="btn-delete" onClick={handleConfirmDelete}>
-                  {expenseCount > 0 ? 'Yes, Delete' : 'Delete'}
+                  {expenseCount > 0 ? t('dialogs.categories.yesDelete') : t('common.delete')}
                 </button>
               </div>
             </div>

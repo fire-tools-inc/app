@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import './ProfileMenu.css';
 
@@ -8,6 +9,7 @@ interface ProfileMenuProps {
 }
 
 export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +61,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName }) => {
       <button
         className="profile-icon-button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Profile menu"
+        aria-label={t('profileMenu.ariaLabel')}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -81,7 +83,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName }) => {
             role="menuitem"
           >
             <span className="dropdown-icon"><MaterialIcon name="settings" size="small" /></span>
-            Settings
+            {t('profileMenu.settings')}
           </Link>
         </div>
       )}

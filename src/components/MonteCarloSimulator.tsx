@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { CalculatorInputs, MonteCarloInputs, MonteCarloResultWithLogs, SimulationLogEntry, MonteCarloFixedParameters } from '../types/calculator';
 import { runMonteCarloSimulationWithLogs } from '../utils/monteCarlo';
 import { loadSettings, saveSettings } from '../utils/cookieSettings';
@@ -27,6 +28,7 @@ const formatCurrency = (value: number, currency: string): string => {
 };
 
 export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs }) => {
+  const { t } = useTranslation();
   // Load default currency from settings once at component level
   const defaultCurrency = useMemo(() => {
     const settings = loadSettings();
@@ -74,33 +76,33 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
     
     // Number of simulations: must be between 1000 and 100000
     if (mcInputs.numSimulations < 1000) {
-      errors.numSimulations = 'Minimum 1,000 simulations required for statistical significance';
+      errors.numSimulations = t('monteCarlo.validation.numSimulationsMin');
     } else if (mcInputs.numSimulations > 100000) {
-      errors.numSimulations = 'Maximum 100,000 simulations allowed for performance';
+      errors.numSimulations = t('monteCarlo.validation.numSimulationsMax');
     }
     
     // Stock volatility: must be positive (> 0)
     if (mcInputs.stockVolatility <= 0) {
-      errors.stockVolatility = 'Stock volatility must be greater than 0%';
+      errors.stockVolatility = t('monteCarlo.validation.stockVolatilityMin');
     }
     
     // Bond volatility: must be positive and less than stock volatility
     if (mcInputs.bondVolatility <= 0) {
-      errors.bondVolatility = 'Bond volatility must be greater than 0%';
+      errors.bondVolatility = t('monteCarlo.validation.bondVolatilityMin');
     } else if (mcInputs.bondVolatility >= mcInputs.stockVolatility) {
-      errors.bondVolatility = `Bond volatility must be less than stock volatility (${mcInputs.stockVolatility}%)`;
+      errors.bondVolatility = t('monteCarlo.validation.bondVolatilityMax', { value: mcInputs.stockVolatility });
     }
     
     // Black swan probability: must be at least 0.1%
     if (mcInputs.blackSwanProbability < 0.1) {
-      errors.blackSwanProbability = 'Minimum probability is 0.1% per year';
+      errors.blackSwanProbability = t('monteCarlo.validation.blackSwanProbMin');
     }
     
     // Black swan impact: must be between -50% and 0% (0% means no impact, -50% is maximum loss allowed)
     if (mcInputs.blackSwanImpact > 0) {
-      errors.blackSwanImpact = 'Impact must be negative or zero (represents loss)';
+      errors.blackSwanImpact = t('monteCarlo.validation.blackSwanImpactPositive');
     } else if (mcInputs.blackSwanImpact < -50) {
-      errors.blackSwanImpact = 'Impact cannot be less than -50% (represents maximum 50% loss)';
+      errors.blackSwanImpact = t('monteCarlo.validation.blackSwanImpactMin');
     }
     
     return errors;
@@ -131,11 +133,11 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
     <section className="monte-carlo-section" aria-labelledby="monte-carlo-heading">
       <div data-tour="monte-carlo-overview">
         <h2 id="monte-carlo-heading">
-          <MaterialIcon name="casino" className="page-header-icon" /> Monte Carlo Simulations
+          <MaterialIcon name="casino" className="page-header-icon" /> {t('monteCarlo.pageTitle')}
           <button 
             className="privacy-eye-btn"
             onClick={togglePrivacyMode}
-            title={isPrivacyMode ? 'Show values' : 'Hide values'}
+            title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
             aria-pressed={isPrivacyMode}
             style={{ marginLeft: '0.5rem' }}
           >
@@ -143,7 +145,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           </button>
         </h2>
         <p className="section-description">
-          Run multiple simulations with random market returns to assess the probability of reaching FIRE.
+          {t('monteCarlo.sectionDescription')}
         </p>
       </div>
 
@@ -157,10 +159,10 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           aria-controls="mc-base-data-content"
         >
           <span className="mc-base-data-title">
-            <MaterialIcon name="bar_chart" /> Simulation Base Data
+            <MaterialIcon name="bar_chart" /> {t('monteCarlo.baseData.title')}
           </span>
           <span className="mc-base-data-subtitle">
-            Data from FIRE Calculator used in simulations
+            {t('monteCarlo.baseData.subtitle')}
           </span>
           <span className="collapse-icon" aria-hidden="true">{isBaseDataExpanded ? '▼' : '▶'}</span>
         </button>
@@ -170,86 +172,89 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
             <div className="mc-base-data-grid">
               {/* Financial Position */}
               <div className="mc-data-group">
-                <h4 className="mc-data-group-title">Financial Position</h4>
+                <h4 className="mc-data-group-title">{t('monteCarlo.baseData.financialPosition')}</h4>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Initial Portfolio</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.initialPortfolio')}</span>
                   <span className="mc-data-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(inputs.initialSavings, defaultCurrency)}</PrivacyBlur></span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">FIRE Target</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.fireTarget')}</span>
                   <span className="mc-data-value highlight"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(fireTarget, defaultCurrency)}</PrivacyBlur></span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Annual Income</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.annualIncome')}</span>
                   <span className="mc-data-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(inputs.annualLaborIncome, defaultCurrency)}</PrivacyBlur></span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Savings Rate</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.savingsRate')}</span>
                   <span className="mc-data-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayPercent(inputs.savingsRate)}</PrivacyBlur></span>
                 </div>
               </div>
 
               {/* Asset Allocation */}
               <div className="mc-data-group">
-                <h4 className="mc-data-group-title">Asset Allocation</h4>
+                <h4 className="mc-data-group-title">{t('monteCarlo.baseData.assetAllocation')}</h4>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Stocks</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.stocks')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.stocksPercent)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Bonds</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.bonds')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.bondsPercent)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Cash</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.cash')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.cashPercent)}</span>
                 </div>
               </div>
 
               {/* Expected Returns */}
               <div className="mc-data-group">
-                <h4 className="mc-data-group-title">Expected Returns</h4>
+                <h4 className="mc-data-group-title">{t('monteCarlo.baseData.expectedReturns')}</h4>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Stock Return</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.stockReturn')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.expectedStockReturn)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Bond Return</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.bondReturn')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.expectedBondReturn)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Cash Return</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.cashReturn')}</span>
                   <span className="mc-data-value">{formatDisplayPercent(inputs.expectedCashReturn)}</span>
                 </div>
               </div>
 
               {/* Personal & Expenses */}
               <div className="mc-data-group">
-                <h4 className="mc-data-group-title">Personal & Expenses</h4>
+                <h4 className="mc-data-group-title">{t('monteCarlo.baseData.personalExpenses')}</h4>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Current Age</span>
-                  <span className="mc-data-value">~{currentAge} years</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.currentAge')}</span>
+                  <span className="mc-data-value">{t('monteCarlo.baseData.currentAgeValue', { age: currentAge })}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Current Expenses</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.currentExpenses')}</span>
                   <span className="mc-data-value">{formatCurrency(inputs.currentAnnualExpenses, defaultCurrency)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">FIRE Expenses</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.fireExpenses')}</span>
                   <span className="mc-data-value">{formatCurrency(inputs.fireAnnualExpenses, defaultCurrency)}</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Withdrawal Rate</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.withdrawalRate')}</span>
                   <span className="mc-data-value">{inputs.desiredWithdrawalRate}%</span>
                 </div>
                 <div className="mc-data-item">
-                  <span className="mc-data-label">Stop Working at FIRE</span>
-                  <span className="mc-data-value">{inputs.stopWorkingAtFIRE ? 'Yes' : 'No'}</span>
+                  <span className="mc-data-label">{t('monteCarlo.baseData.stopWorkingAtFIRE')}</span>
+                  <span className="mc-data-value">{inputs.stopWorkingAtFIRE ? t('common.yes') : t('common.no')}</span>
                 </div>
               </div>
             </div>
             <p className="mc-base-data-note">
-              <MaterialIcon name="lightbulb" /> These values are loaded from the FIRE Calculator. To modify them, go to the <a href="/fire-calculator">FIRE Calculator</a> page.
+              <MaterialIcon name="lightbulb" />
+              <Trans i18nKey="monteCarlo.baseData.note">
+                These values are loaded from the FIRE Calculator. To modify them, go to the <a href="/fire-calculator">FIRE Calculator</a> page.
+              </Trans>
             </p>
           </div>
         )}
@@ -257,7 +262,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
 
       <div className="mc-inputs" data-tour="monte-carlo-params">
         <div className="form-group">
-          <label htmlFor="num-simulations">Number of Simulations</label>
+          <label htmlFor="num-simulations">{t('monteCarlo.params.numSimulations')}</label>
           <NumberInput
             id="num-simulations"
             value={mcInputs.numSimulations}
@@ -270,7 +275,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         </div>
 
         <div className="form-group">
-          <label htmlFor="stock-volatility">Stock Volatility (% std dev)</label>
+          <label htmlFor="stock-volatility">{t('monteCarlo.params.stockVolatility')}</label>
           <NumberInput
             id="stock-volatility"
             value={mcInputs.stockVolatility}
@@ -282,7 +287,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         </div>
 
         <div className="form-group">
-          <label htmlFor="bond-volatility">Bond Volatility (% std dev)</label>
+          <label htmlFor="bond-volatility">{t('monteCarlo.params.bondVolatility')}</label>
           <NumberInput
             id="bond-volatility"
             value={mcInputs.bondVolatility}
@@ -294,7 +299,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         </div>
 
         <div className="form-group">
-          <label htmlFor="black-swan-prob">Black Swan Probability (% per year)</label>
+          <label htmlFor="black-swan-prob">{t('monteCarlo.params.blackSwanProb')}</label>
           <NumberInput
             id="black-swan-prob"
             value={mcInputs.blackSwanProbability}
@@ -306,7 +311,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         </div>
 
         <div className="form-group">
-          <label htmlFor="black-swan-impact">Black Swan Impact (%)</label>
+          <label htmlFor="black-swan-impact">{t('monteCarlo.params.blackSwanImpact')}</label>
           <NumberInput
             id="black-swan-impact"
             value={mcInputs.blackSwanImpact}
@@ -320,7 +325,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
 
       {hasErrors && (
         <div className="validation-error-banner mc-validation-errors" role="alert" aria-live="polite">
-          <strong><MaterialIcon name="warning" /> Please fix validation errors before running simulations</strong>
+          <strong><MaterialIcon name="warning" /> {t('monteCarlo.validation.fixErrors')}</strong>
         </div>
       )}
 
@@ -329,43 +334,43 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           className="run-simulation-btn" 
           onClick={runSimulation}
           disabled={isRunning || hasErrors}
-          aria-label={isRunning ? 'Running simulations, please wait' : hasErrors ? 'Fix validation errors to run simulations' : 'Run Monte Carlo simulations'}
+          aria-label={isRunning ? t('monteCarlo.runningSimulationAria') : hasErrors ? t('monteCarlo.fixErrorsAria') : t('monteCarlo.runSimulationAria')}
         >
-          {isRunning ? <MaterialIcon name="hourglass_empty" /> : <MaterialIcon name="play_arrow" />} {isRunning ? 'Running Simulations...' : 'Run Simulations'}
+          {isRunning ? <MaterialIcon name="hourglass_empty" /> : <MaterialIcon name="play_arrow" />} {isRunning ? t('monteCarlo.runningSimulation') : t('monteCarlo.runSimulation')}
         </button>
       </div>
 
       {result && (
         <div className="mc-results" role="region" aria-labelledby="simulation-results-heading" aria-live="polite" data-tour="monte-carlo-results">
-          <h3 id="simulation-results-heading">Simulation Results</h3>
+          <h3 id="simulation-results-heading">{t('monteCarlo.results.heading')}</h3>
           <div className="results-grid" role="list">
             <div className="result-card success" role="listitem">
-              <div className="result-label">Success Rate</div>
+              <div className="result-label">{t('monteCarlo.results.successRate')}</div>
               <div className="result-value">{formatDisplayPercent(result.successRate)}</div>
               <div className="result-subtitle">
-                {result.successCount} / {result.successCount + result.failureCount} simulations
+                {t('monteCarlo.results.successfulSimulations')}: {result.successCount} / {result.successCount + result.failureCount}
               </div>
             </div>
 
             <div className="result-card" role="listitem">
-              <div className="result-label">Successful Simulations</div>
+              <div className="result-label">{t('monteCarlo.results.successfulSimulations')}</div>
               <div className="result-value">{result.successCount}</div>
             </div>
 
             <div className="result-card failure" role="listitem">
-              <div className="result-label">Failed Simulations</div>
+              <div className="result-label">{t('monteCarlo.results.failedSimulations')}</div>
               <div className="result-value">{result.failureCount}</div>
             </div>
 
             <div className="result-card" role="listitem">
-              <div className="result-label">Median Years to FIRE</div>
+              <div className="result-label">{t('monteCarlo.results.medianYears')}</div>
               <div className="result-value">
-                {result.medianYearsToFIRE > 0 ? `${result.medianYearsToFIRE} years` : 'N/A'}
+                {result.medianYearsToFIRE > 0 ? t('monteCarlo.results.medianYearsValue', { value: result.medianYearsToFIRE }) : t('common.notAvailable')}
               </div>
             </div>
           </div>
 
-          <div className="success-bar" role="progressbar" aria-valuenow={result.successRate} aria-valuemin={0} aria-valuemax={100} aria-label={`Success rate: ${formatDisplayPercent(result.successRate)}`}>
+          <div className="success-bar" role="progressbar" aria-valuenow={result.successRate} aria-valuemin={0} aria-valuemax={100} aria-label={t('monteCarlo.results.successRateAria', { value: formatDisplayPercent(result.successRate) })}>
             <div className="success-bar-fill" style={{ width: `${result.successRate}%` }}>
               {result.successRate > 10 && formatDisplayPercent(result.successRate)}
             </div>

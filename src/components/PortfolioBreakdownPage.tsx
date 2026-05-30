@@ -13,6 +13,7 @@
 
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Asset } from '../types/assetAllocation';
 import { BreakdownDimension } from '../types/portfolioBreakdown';
 import { loadAssetAllocation } from '../utils/cookieStorage';
@@ -28,8 +29,8 @@ import './PortfolioBreakdownPage.css';
 
 interface DimensionConfig {
   dimension: BreakdownDimension;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   /** Whether this dimension needs Yahoo metadata to be meaningful. */
   needsMetadata: boolean;
 }
@@ -37,51 +38,50 @@ interface DimensionConfig {
 const DIMENSIONS: DimensionConfig[] = [
   {
     dimension: 'currency',
-    title: 'By Currency',
-    description: 'Distribution of holdings by the currency they were originally entered in.',
+    titleKey: 'portfolioBreakdown.dimensions.currency.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.currency.description',
     needsMetadata: false,
   },
   {
     dimension: 'holding',
-    title: 'By Holding',
-    description: 'Each individual asset as a share of the portfolio.',
+    titleKey: 'portfolioBreakdown.dimensions.holding.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.holding.description',
     needsMetadata: false,
   },
   {
     dimension: 'sector',
-    title: 'By Sector',
-    description:
-      'Individual stocks use their listed sector from Yahoo Finance. ETFs use a sector label inferred from their fund name (e.g. "Technology", "Government Bonds"), as Yahoo no longer exposes per-ETF holdings without authentication.',
+    titleKey: 'portfolioBreakdown.dimensions.sector.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.sector.description',
     needsMetadata: true,
   },
   {
     dimension: 'continent',
-    title: 'By Continent',
-    description: 'For stocks, derived from the ISIN country prefix. For ETFs, derived from the fund name (e.g. an "MSCI World" ETF maps to Global).',
+    titleKey: 'portfolioBreakdown.dimensions.continent.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.continent.description',
     needsMetadata: true,
   },
   {
     dimension: 'region',
-    title: 'By Region',
-    description: 'Finer-grained region (e.g., Western Europe, East Asia, Emerging Markets) derived from ISIN country (stocks) or fund name (ETFs).',
+    titleKey: 'portfolioBreakdown.dimensions.region.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.region.description',
     needsMetadata: true,
   },
   {
     dimension: 'market',
-    title: 'By Market',
-    description: 'The listing exchange for each holding (e.g., NASDAQ, LSE, Xetra).',
+    titleKey: 'portfolioBreakdown.dimensions.market.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.market.description',
     needsMetadata: true,
   },
   {
     dimension: 'etfProvider',
-    title: 'By ETF Provider',
-    description:
-      'The fund family / issuer inferred from the fund name (e.g., Vanguard, iShares). Direct stock holdings are grouped under "Direct holding".',
+    titleKey: 'portfolioBreakdown.dimensions.etfProvider.title',
+    descriptionKey: 'portfolioBreakdown.dimensions.etfProvider.description',
     needsMetadata: true,
   },
 ];
 
 export const PortfolioBreakdownPage: React.FC = () => {
+  const { t } = useTranslation();
   // Load assets synchronously so the metadata hook sees them on first mount.
   // Loading them later (via useEffect) would mean the metadata fetch fires
   // with an empty array and never retries when the real assets arrive.
@@ -121,17 +121,15 @@ export const PortfolioBreakdownPage: React.FC = () => {
       <header className="page-header">
         <div className="page-header-top">
           <h1>
-            <MaterialIcon name="donut_large" className="page-header-icon" /> Portfolio Breakdown
+            <MaterialIcon name="donut_large" className="page-header-icon" /> {t('portfolioBreakdown.title')}
           </h1>
         </div>
         <p>
-          Slice your current portfolio across multiple dimensions to understand concentration risk,
-          diversification, and exposure. Data is read from your saved Asset Allocation; for ETFs and
-          individual stocks, additional metadata is fetched from Yahoo Finance.
+          {t('portfolioBreakdown.subtitle')}
         </p>
         <p className="page-header-link">
           <Link to="/asset-allocation" className="inline-link">
-            <MaterialIcon name="pie_chart" size="small" /> Back to Asset Allocation
+            <MaterialIcon name="pie_chart" size="small" /> {t('portfolioBreakdown.backToAssetAllocation')}
           </Link>
         </p>
       </header>
@@ -139,7 +137,7 @@ export const PortfolioBreakdownPage: React.FC = () => {
       <main className="portfolio-breakdown-content" id="main-content">
         <section className="portfolio-value-section" aria-labelledby="portfolio-value-heading">
           <div className="portfolio-value-label">
-            <strong id="portfolio-value-heading">Portfolio Value:</strong>
+            <strong id="portfolio-value-heading">{t('portfolioBreakdown.portfolioValue')}</strong>
             <span className="portfolio-value">
               <PrivacyBlur isPrivacyMode={isPrivacyMode}>
                 {formatCurrency(totalValue, currency)}
@@ -148,7 +146,7 @@ export const PortfolioBreakdownPage: React.FC = () => {
             <button
               className="privacy-eye-btn"
               onClick={togglePrivacyMode}
-              title={isPrivacyMode ? 'Show values' : 'Hide values'}
+              title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
               aria-pressed={isPrivacyMode}
             >
               <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
@@ -160,18 +158,17 @@ export const PortfolioBreakdownPage: React.FC = () => {
               className="action-btn"
               onClick={() => void refresh()}
               disabled={isLoading || hasNoTickers}
-              aria-label="Refresh asset metadata from Yahoo Finance"
-              title="Re-fetch sector, country, and fund family from Yahoo Finance"
+              aria-label={t('portfolioBreakdown.refreshMetadataAria')}
+              title={t('portfolioBreakdown.refreshMetadataTitle')}
             >
               <MaterialIcon name={isLoading ? 'hourglass_empty' : 'refresh'} />
-              {isLoading ? ' Refreshing…' : ' Refresh Metadata'}
+              {isLoading ? t('portfolioBreakdown.refreshingMetadata') : t('portfolioBreakdown.refreshMetadata')}
             </button>
             {lastRefresh && lastRefresh.fetchedCount > 0 && (
               <span className="price-refresh-status" role="status">
-                Metadata for {lastRefresh.fetchedCount} ticker
-                {lastRefresh.fetchedCount !== 1 ? 's' : ''}
+                {t('portfolioBreakdown.metadataFetched', { count: lastRefresh.fetchedCount })}
                 {lastRefresh.failedTickers.length > 0 && (
-                  <> · Failed: {lastRefresh.failedTickers.join(', ')}</>
+                  <> {t('portfolioBreakdown.failedTickers', { tickers: lastRefresh.failedTickers.join(', ') })}</>
                 )}
               </span>
             )}
@@ -185,31 +182,29 @@ export const PortfolioBreakdownPage: React.FC = () => {
 
         {hasNoData && (
           <div className="empty-portfolio-banner" role="status">
-            <MaterialIcon name="info" /> Your portfolio is empty. Add assets in the{' '}
+            <MaterialIcon name="info" /> {t('portfolioBreakdown.emptyPrefix')}{' '}
             <Link to="/asset-allocation" className="inline-link">
-              Asset Allocation Manager
+              {t('home.cards.assetAllocation.title')}
             </Link>{' '}
-            to see breakdowns here.
+            {t('portfolioBreakdown.emptySuffix')}
           </div>
         )}
 
         {!hasNoData && hasNoTickers && (
           <div className="breakdown-info-banner" role="status">
-            <MaterialIcon name="info" /> None of your assets have a ticker symbol, so only the
-            Currency and Holding breakdowns are available. Add tickers in the Asset Allocation
-            Manager to unlock sector, region, market, and provider breakdowns.
+            <MaterialIcon name="info" /> {t('portfolioBreakdown.noTickers')}
           </div>
         )}
 
-        <section className="breakdowns-grid" aria-label="Portfolio breakdowns">
+        <section className="breakdowns-grid" aria-label={t('portfolioBreakdown.breakdownsAria')}>
           {DIMENSIONS.map(d => {
             if (hasNoData) return null;
             if (d.needsMetadata && hasNoTickers) return null;
             return (
               <BreakdownChart
                 key={d.dimension}
-                title={d.title}
-                description={d.description}
+                title={t(d.titleKey)}
+                description={t(d.descriptionKey)}
                 result={breakdowns[d.dimension]}
                 currency={currency}
                 isPrivacyMode={isPrivacyMode}

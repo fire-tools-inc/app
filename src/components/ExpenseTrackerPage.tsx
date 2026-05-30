@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SearchableSelect, SelectOption } from './SearchableSelect';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -100,6 +101,7 @@ function deepCloneData(data: ExpenseTrackerData): ExpenseTrackerData {
 }
 
 export function ExpenseTrackerPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State
@@ -566,7 +568,7 @@ export function ExpenseTrackerPage() {
 
   // Delete transaction
   const handleDeleteTransaction = useCallback((id: string, type: 'income' | 'expense') => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
+    if (!confirm(t('expenseTracker.confirm.deleteTransaction'))) return;
     
     setData(prev => {
       const newData = deepCloneData(prev);
@@ -724,7 +726,7 @@ export function ExpenseTrackerPage() {
         setSelectedYear(imported.currentYear);
         setSelectedMonth(imported.currentMonth);
       } catch (error) {
-        alert(`Error importing CSV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(t('expenseTracker.messages.importCsvError', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -733,7 +735,7 @@ export function ExpenseTrackerPage() {
 
   // Reset data
   const handleResetData = () => {
-    if (confirm('Are you sure you want to reset all expense tracker data? This cannot be undone.')) {
+    if (confirm(t('expenseTracker.confirm.reset'))) {
       const defaultData = getDefaultData();
       setData(defaultData);
       setSelectedYear(defaultData.currentYear);
@@ -743,7 +745,7 @@ export function ExpenseTrackerPage() {
 
   // Load demo data
   const handleLoadDemo = () => {
-    if (confirm(`Load demo expense data for ${selectedYear}? This will replace existing data for ${selectedYear}.`)) {
+    if (confirm(t('expenseTracker.confirm.loadDemo', { year: selectedYear }))) {
       const demoData = generateDemoExpenseData(selectedYear);
       
       // Merge demo data with existing data
@@ -786,14 +788,23 @@ export function ExpenseTrackerPage() {
     return Array.from({ length: 12 }, (_, i) => i + 1);
   }, []);
 
+  const getMonthName = (month: number) => t(`common.months.${MONTH_NAMES[month - 1].toLowerCase()}`);
+  const periodLabel = analyticsView === 'monthly'
+    ? t('expenseTracker.period.monthYear', { month: getMonthName(selectedMonth), year: selectedYear })
+    : analyticsView === 'quarterly'
+      ? t('expenseTracker.period.quarterYear', { quarter: selectedQuarter, year: selectedYear })
+      : analyticsView === 'yearly'
+        ? t('expenseTracker.period.fullYear', { year: selectedYear })
+        : t('expenseTracker.period.ytdAverage', { year: selectedYear });
+
   return (
     <div className="expense-tracker-page">
       <header className="page-header">
         <div className="page-header-top">
-          <h1><MaterialIcon name="account_balance_wallet" className="page-header-icon" /> Cashflow Tracker</h1>
+          <h1><MaterialIcon name="account_balance_wallet" className="page-header-icon" /> {t('expenseTracker.title')}</h1>
         </div>
         <p>
-          Track your income and expenses, set budgets, and gain insights into your spending patterns.
+          {t('expenseTracker.subtitle')}
         </p>
       </header>
 
@@ -806,16 +817,16 @@ export function ExpenseTrackerPage() {
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> How this page works <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('expenseTracker.howItWorks.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
-              <li><strong>Add Transactions:</strong> Click "Add Income" or "Add Expense" to record new transactions</li>
-              <li><strong>Edit/Delete:</strong> Click on any transaction row to edit or delete it</li>
-              <li><strong>Set Budgets:</strong> Go to the Budgets tab to set monthly spending limits per category</li>
-              <li><strong>Needs vs Wants:</strong> Categorize expenses to track your 50/30/20 budget rule compliance</li>
-              <li><strong>View Analytics:</strong> Check the Analytics tab for charts and spending trends</li>
-              <li><strong>Navigate Months:</strong> Use the month/year selectors to view different periods</li>
+              <li><strong>{t('expenseTracker.howItWorks.addTransactionsLabel')}</strong> {t('expenseTracker.howItWorks.addTransactionsText')}</li>
+              <li><strong>{t('expenseTracker.howItWorks.editDeleteLabel')}</strong> {t('expenseTracker.howItWorks.editDeleteText')}</li>
+              <li><strong>{t('expenseTracker.howItWorks.setBudgetsLabel')}</strong> {t('expenseTracker.howItWorks.setBudgetsText')}</li>
+              <li><strong>{t('expenseTracker.howItWorks.needsWantsLabel')}</strong> {t('expenseTracker.howItWorks.needsWantsText')}</li>
+              <li><strong>{t('expenseTracker.howItWorks.viewAnalyticsLabel')}</strong> {t('expenseTracker.howItWorks.viewAnalyticsText')}</li>
+              <li><strong>{t('expenseTracker.howItWorks.navigateMonthsLabel')}</strong> {t('expenseTracker.howItWorks.navigateMonthsText')}</li>
             </ul>
           )}
         </section>
@@ -831,10 +842,10 @@ export function ExpenseTrackerPage() {
 
         {/* Month/Year Selector */}
         <section className="period-selector" aria-labelledby="period-selector-heading">
-          <h3 id="period-selector-heading" className="visually-hidden">Select Period</h3>
+          <h3 id="period-selector-heading" className="visually-hidden">{t('expenseTracker.selectPeriod')}</h3>
           <div className="selector-row">
             <div className="selector-group">
-              <label htmlFor="year-select">Year:</label>
+              <label htmlFor="year-select">{t('expenseTracker.year')}</label>
               <select
                 id="year-select"
                 value={selectedYear}
@@ -846,14 +857,14 @@ export function ExpenseTrackerPage() {
               </select>
             </div>
             <div className="selector-group">
-              <label htmlFor="month-select">Month:</label>
+              <label htmlFor="month-select">{t('expenseTracker.month')}</label>
               <select
                 id="month-select"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
               >
                 {availableMonths.map(month => (
-                  <option key={month} value={month}>{MONTH_NAMES[month - 1]}</option>
+                  <option key={month} value={month}>{getMonthName(month)}</option>
                 ))}
               </select>
             </div>
@@ -862,7 +873,7 @@ export function ExpenseTrackerPage() {
                 className="btn-current-period"
                 onClick={goToCurrentPeriod}
               >
-                <span aria-hidden="true">📅</span> Back to Current Period
+                <span aria-hidden="true">📅</span> {t('expenseTracker.backToCurrentPeriod')}
               </button>
             )}
           </div>
@@ -870,20 +881,20 @@ export function ExpenseTrackerPage() {
 
         {/* Summary Cards */}
         <section className="summary-section" aria-labelledby="summary-heading">
-          <h3 id="summary-heading">Summary for {MONTH_NAMES[selectedMonth - 1]} {selectedYear}</h3>
+          <h3 id="summary-heading">{t('expenseTracker.summaryFor', { month: getMonthName(selectedMonth), year: selectedYear })}</h3>
           <div className="summary-cards">
             <div className="summary-card income">
               <button 
                 className="privacy-eye-btn card-privacy-btn"
                 onClick={togglePrivacyMode}
-                title={isPrivacyMode ? 'Show values' : 'Hide values'}
+                title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
                 aria-pressed={isPrivacyMode}
               >
                 <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
               </button>
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="trending_up" /></span>
               <div className="card-content">
-                <span className="card-label">Total Income</span>
+                <span className="card-label">{t('expenseTracker.totalIncome')}</span>
                 <span className="card-value">
                   <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(summary.totalIncome, data.currency)}</PrivacyBlur>
                 </span>
@@ -892,28 +903,28 @@ export function ExpenseTrackerPage() {
             <div className="summary-card expenses">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="trending_down" /></span>
               <div className="card-content">
-                <span className="card-label">Total Expenses</span>
+                <span className="card-label">{t('expenseTracker.totalExpenses')}</span>
                 <span className="card-value">{formatCurrency(summary.totalExpenses, data.currency)}</span>
               </div>
             </div>
             <div className={`summary-card balance ${summary.netBalance >= 0 ? 'positive' : 'negative'}`}>
               <span className="card-icon" aria-hidden="true">{summary.netBalance >= 0 ? <MaterialIcon name="account_balance_wallet" /> : <MaterialIcon name="warning" />}</span>
               <div className="card-content">
-                <span className="card-label">Net Balance</span>
+                <span className="card-label">{t('expenseTracker.netBalance')}</span>
                 <span className="card-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(summary.netBalance, data.currency)}</PrivacyBlur></span>
               </div>
             </div>
             <div className="summary-card savings">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="savings" /></span>
               <div className="card-content">
-                <span className="card-label">Savings Rate</span>
+                <span className="card-label">{t('expenseTracker.savingsRate')}</span>
                 <span className="card-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayPercent(summary.savingsRate)}</PrivacyBlur></span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 50/30/20 Budget Rule */}
+        {/* {t('expenseTracker.budgetRule.title')} */}
         {budgetRuleBreakdown && (
           <section className="budget-rule-section" data-tour="budget-analysis">
             <button 
@@ -922,19 +933,19 @@ export function ExpenseTrackerPage() {
               aria-expanded={isBudgetRuleInfoOpen}
               aria-controls="budget-rule-content"
             >
-              <h3><MaterialIcon name="bar_chart" /> 50/30/20 Budget Rule <span className="collapse-icon-small" aria-hidden="true">{isBudgetRuleInfoOpen ? '▼' : '▶'}</span></h3>
+              <h3><MaterialIcon name="bar_chart" /> {t('expenseTracker.budgetRule.title')} <span className="collapse-icon-small" aria-hidden="true">{isBudgetRuleInfoOpen ? '▼' : '▶'}</span></h3>
             </button>
             {isBudgetRuleInfoOpen && (
               <div id="budget-rule-content" className="budget-rule-content">
                 <div className="budget-rule-info">
                   <p>
-                    <strong>The 50/30/20 Rule:</strong> Allocate 50% of income to needs, 30% to wants, and 20% to savings.
+                    <strong>{t('expenseTracker.budgetRule.ruleLabel')}</strong> {t('expenseTracker.budgetRule.ruleText')}
                   </p>
                 </div>
                 <div className="budget-rule-bars">
                   <div className="rule-bar">
                     <div className="rule-bar-label">
-                      <span>Needs (50%)</span>
+                      <span>{t('expenseTracker.budgetRule.needs')}</span>
                       <span><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayPercent(budgetRuleBreakdown.needs.percentage)}</PrivacyBlur></span>
                     </div>
                     <div className="rule-bar-track">
@@ -948,7 +959,7 @@ export function ExpenseTrackerPage() {
                   </div>
                   <div className="rule-bar">
                     <div className="rule-bar-label">
-                      <span>Wants (30%)</span>
+                      <span>{t('expenseTracker.budgetRule.wants')}</span>
                       <span><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayPercent(budgetRuleBreakdown.wants.percentage)}</PrivacyBlur></span>
                     </div>
                     <div className="rule-bar-track">
@@ -962,7 +973,7 @@ export function ExpenseTrackerPage() {
                   </div>
                   <div className="rule-bar">
                     <div className="rule-bar-label">
-                      <span>Savings (20%)</span>
+                      <span>{t('expenseTracker.budgetRule.savings')}</span>
                       <span><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayPercent(budgetRuleBreakdown.savings.percentage)}</PrivacyBlur></span>
                     </div>
                     <div className="rule-bar-track">
@@ -981,14 +992,14 @@ export function ExpenseTrackerPage() {
         )}
 
         {/* Tabs */}
-        <div className="tabs" role="tablist" aria-label="Expense tracker sections" data-tour="expense-tabs">
+        <div className="tabs" role="tablist" aria-label={t('expenseTracker.tabsAria')} data-tour="expense-tabs">
           <button
             role="tab"
             aria-selected={activeTab === 'transactions'}
             onClick={() => setActiveTab('transactions')}
             className={`tab ${activeTab === 'transactions' ? 'active' : ''}`}
           >
-            <MaterialIcon name="receipt_long" /> Transactions
+            <MaterialIcon name="receipt_long" /> {t('expenseTracker.transactions')}
           </button>
           <button
             role="tab"
@@ -997,7 +1008,7 @@ export function ExpenseTrackerPage() {
             className={`tab ${activeTab === 'budgets' ? 'active' : ''}`}
             data-tour="budgets-tab"
           >
-            <MaterialIcon name="savings" /> Budgets
+            <MaterialIcon name="savings" /> {t('expenseTracker.budgets')}
           </button>
           <button
             role="tab"
@@ -1006,7 +1017,7 @@ export function ExpenseTrackerPage() {
             className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
             data-tour="analytics-tab"
           >
-            <MaterialIcon name="analytics" /> Analytics
+            <MaterialIcon name="analytics" /> {t('expenseTracker.analytics')}
           </button>
         </div>
 
@@ -1014,21 +1025,21 @@ export function ExpenseTrackerPage() {
         {activeTab === 'transactions' && (
           <section className="transactions-section" role="tabpanel" aria-labelledby="transactions-tab">
             <div className="section-header">
-              <h3>Transactions</h3>
+              <h3>{t('expenseTracker.transactions')}</h3>
               <div className="transaction-actions" data-tour="transaction-actions">
                 <button className="btn-add income" onClick={() => setShowIncomeForm(true)}>
-                  <MaterialIcon name="add" /> Add Income
+                  <MaterialIcon name="add" /> {t('expenseTracker.addIncome')}
                 </button>
                 <button className="btn-add expense" onClick={() => setShowExpenseForm(true)}>
-                  <MaterialIcon name="add" /> Add Expense
+                  <MaterialIcon name="add" /> {t('expenseTracker.addExpense')}
                 </button>
                 {pdfImportEnabled && (
                   <button
                     className="btn-add"
                     onClick={() => setShowPdfImport(true)}
-                    aria-label="Import transactions from PDF"
+                    aria-label={t('expenseTracker.importPdfAria')}
                   >
-                    <MaterialIcon name="picture_as_pdf" /> Import PDF
+                    <MaterialIcon name="picture_as_pdf" /> {t('expenseTracker.importPdf')}
                   </button>
                 )}
               </div>
@@ -1037,26 +1048,26 @@ export function ExpenseTrackerPage() {
             {/* Filter/Sort Controls */}
             <div className="filter-controls">
               <div className="filter-group">
-                <label htmlFor="sort-field">Sort by:</label>
+                <label htmlFor="sort-field">{t('expenseTracker.sortBy')}</label>
                 <select
                   id="sort-field"
                   value={sort.field}
                   onChange={(e) => setSort({ ...sort, field: e.target.value as TransactionSort['field'] })}
                 >
-                  <option value="date">Date</option>
-                  <option value="amount">Amount</option>
-                  <option value="category">Category</option>
+                  <option value="date">{t('expenseTracker.date')}</option>
+                  <option value="amount">{t('expenseTracker.amount')}</option>
+                  <option value="category">{t('expenseTracker.category')}</option>
                 </select>
                 <button
                   className="sort-direction-btn"
                   onClick={() => setSort({ ...sort, direction: sort.direction === 'asc' ? 'desc' : 'asc' })}
-                  aria-label={`Sort ${sort.direction === 'asc' ? 'descending' : 'ascending'}`}
+                  aria-label={sort.direction === 'asc' ? t('expenseTracker.sortDescending') : t('expenseTracker.sortAscending')}
                 >
                   {sort.direction === 'asc' ? '↑' : '↓'}
                 </button>
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-transaction-type">Show:</label>
+                <label htmlFor="filter-transaction-type">{t('expenseTracker.show')}</label>
                 <select
                   id="filter-transaction-type"
                   value={filter.transactionType || ''}
@@ -1069,16 +1080,16 @@ export function ExpenseTrackerPage() {
                     expenseType: e.target.value === 'income' ? undefined : filter.expenseType
                   })}
                 >
-                  <option value="">All Transactions</option>
-                  <option value="expense">Only Expenses</option>
-                  <option value="income">Only Income</option>
+                  <option value="">{t('expenseTracker.allTransactions')}</option>
+                  <option value="expense">{t('expenseTracker.onlyExpenses')}</option>
+                  <option value="income">{t('expenseTracker.onlyIncome')}</option>
                 </select>
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-category">Category:</label>
+                <label htmlFor="filter-category">{t('expenseTracker.category')}</label>
                 <SearchableSelect
                   options={[
-                    { id: '', label: 'All Categories' },
+                    { id: '', label: t('expenseTracker.allCategories') },
                     ...EXPENSE_CATEGORIES.map(c => ({ id: c.id, label: c.name, icon: c.icon }))
                   ]}
                   value={filter.category || ''}
@@ -1089,7 +1100,7 @@ export function ExpenseTrackerPage() {
                   })}
                   disabled={filter.transactionType === 'income'}
                   searchThreshold={searchThreshold}
-                  ariaLabel="Filter by category"
+                  ariaLabel={t('expenseTracker.filterByCategory')}
                   renderOption={(option) => (
                     <>
                       {option.icon && <MaterialIcon name={option.icon} size="small" />}
@@ -1099,7 +1110,7 @@ export function ExpenseTrackerPage() {
                 />
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-date">Date:</label>
+                <label htmlFor="filter-date">{t('expenseTracker.date')}</label>
                 <input
                   id="filter-date"
                   type="date"
@@ -1109,7 +1120,7 @@ export function ExpenseTrackerPage() {
                 />
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-type">Type:</label>
+                <label htmlFor="filter-type">{t('expenseTracker.type')}</label>
                 <select
                   id="filter-type"
                   value={filter.expenseType || ''}
@@ -1121,40 +1132,40 @@ export function ExpenseTrackerPage() {
                   })}
                   disabled={filter.transactionType === 'income'}
                 >
-                  <option value="">All</option>
-                  <option value="NEED">Needs</option>
-                  <option value="WANT">Wants</option>
+                  <option value="">{t('expenseTracker.all')}</option>
+                  <option value="NEED">{t('expenseTracker.needs')}</option>
+                  <option value="WANT">{t('expenseTracker.wants')}</option>
                 </select>
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-recurring">Recurring:</label>
+                <label htmlFor="filter-recurring">{t('expenseTracker.recurring')}</label>
                 <select
                   id="filter-recurring"
                   value={filter.isRecurring === undefined ? '' : filter.isRecurring.toString()}
                   onChange={(e) => setFilter({ ...filter, isRecurring: e.target.value === '' ? undefined : e.target.value === 'true' })}
                 >
-                  <option value="">All</option>
-                  <option value="true">Recurring only</option>
-                  <option value="false">One-time only</option>
+                  <option value="">{t('expenseTracker.all')}</option>
+                  <option value="true">{t('expenseTracker.recurringOnly')}</option>
+                  <option value="false">{t('expenseTracker.oneTimeOnly')}</option>
                 </select>
               </div>
               <div className="filter-group">
-                <label htmlFor="filter-search">Search:</label>
+                <label htmlFor="filter-search">{t('expenseTracker.search')}</label>
                 <input
                   id="filter-search"
                   type="text"
-                  placeholder="Search description or amount..."
+                  placeholder={t('expenseTracker.searchPlaceholder')}
                   value={filter.searchTerm || ''}
                   onChange={(e) => setFilter({ ...filter, searchTerm: e.target.value || undefined })}
                 />
               </div>
               <div className="filter-group filter-group-amount-range">
-                <label>Amount Range:</label>
+                <label>{t('expenseTracker.amountRange')}</label>
                 <div className="amount-range-inputs">
                   <input
                     id="filter-min-amount"
                     type="number"
-                    placeholder="Min"
+                    placeholder={t('expenseTracker.min')}
                     min="0"
                     step="0.01"
                     value={filter.minAmount ?? ''}
@@ -1164,7 +1175,7 @@ export function ExpenseTrackerPage() {
                   <input
                     id="filter-max-amount"
                     type="number"
-                    placeholder="Max"
+                    placeholder={t('expenseTracker.max')}
                     min="0"
                     step="0.01"
                     value={filter.maxAmount ?? ''}
@@ -1178,24 +1189,24 @@ export function ExpenseTrackerPage() {
             <div className="transactions-list">
               {filteredTransactions.length === 0 ? (
                 <div className="empty-state">
-                  <p>No transactions for this period. Add your first transaction!</p>
+                  <p>{t('expenseTracker.emptyTransactions')}</p>
                 </div>
               ) : (
                 <table className="transactions-table">
                   <thead>
                     <tr>
                       <th className="sortable" onClick={() => handleTableSort('date')}>
-                        Date <span className="sort-indicator">{getTransactionSortIndicator('date')}</span>
+                        {t('expenseTracker.date')} <span className="sort-indicator">{getTransactionSortIndicator('date')}</span>
                       </th>
-                      <th>Description</th>
+                      <th>{t('expenseTracker.description')}</th>
                       <th className="sortable" onClick={() => handleTableSort('category')}>
-                        Category/Source <span className="sort-indicator">{getTransactionSortIndicator('category')}</span>
+                        {t('expenseTracker.categorySource')} <span className="sort-indicator">{getTransactionSortIndicator('category')}</span>
                       </th>
-                      <th>Type</th>
+                      <th>{t('expenseTracker.type')}</th>
                       <th className="sortable amount-col" onClick={() => handleTableSort('amount')}>
-                        Amount <span className="sort-indicator">{getTransactionSortIndicator('amount')}</span>
+                        {t('expenseTracker.amount')} <span className="sort-indicator">{getTransactionSortIndicator('amount')}</span>
                       </th>
-                      <th>Actions</th>
+                      <th>{t('expenseTracker.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1208,7 +1219,7 @@ export function ExpenseTrackerPage() {
                         <td>
                           {transaction.description}
                           {transaction.isRecurring && (
-                            <span className="recurring-badge" title="Recurring transaction">
+                            <span className="recurring-badge" title={t('expenseTracker.recurringTransaction')}>
                               <MaterialIcon name="autorenew" size="small" />
                             </span>
                           )}
@@ -1221,10 +1232,10 @@ export function ExpenseTrackerPage() {
                         </td>
                         <td>
                           {transaction.type === 'income' ? (
-                            <span className="type-badge income">Income</span>
+                            <span className="type-badge income">{t('expenseTracker.income')}</span>
                           ) : (
                             <span className={`type-badge ${(transaction as ExpenseEntry).expenseType.toLowerCase()}`}>
-                              {(transaction as ExpenseEntry).expenseType === 'NEED' ? 'Need' : 'Want'}
+                              {(transaction as ExpenseEntry).expenseType === 'NEED' ? t('expenseTracker.need') : t('expenseTracker.want')}
                             </span>
                           )}
                         </td>
@@ -1239,14 +1250,14 @@ export function ExpenseTrackerPage() {
                           <button
                             className="btn-icon"
                             onClick={() => setEditingTransaction(transaction)}
-                            aria-label="Edit transaction"
+                            aria-label={t('expenseTracker.editTransaction')}
                           >
                             <MaterialIcon name="edit" size="small" />
                           </button>
                           <button
                             className="btn-icon delete"
                             onClick={() => handleDeleteTransaction(transaction.id, transaction.type)}
-                            aria-label="Delete transaction"
+                            aria-label={t('expenseTracker.deleteTransaction')}
                           >
                             <MaterialIcon name="delete" size="small" />
                           </button>
@@ -1259,7 +1270,7 @@ export function ExpenseTrackerPage() {
                     <tfoot>
                       <tr className="sum-row">
                         <td colSpan={4} className="sum-label">
-                          <strong>Sum of filtered transactions:</strong>
+                          <strong>{t('expenseTracker.sumOfFilteredTransactions')}</strong>
                         </td>
                         <td className="amount-col">
                           <strong>
@@ -1294,9 +1305,9 @@ export function ExpenseTrackerPage() {
           <section className="budgets-section" role="tabpanel" aria-labelledby="budgets-tab" data-tour="budgets-content">
             <div className="budgets-header">
               <div>
-                <h3>Monthly Budgets</h3>
+                <h3>{t('expenseTracker.monthlyBudgets')}</h3>
                 <p className="section-description">
-                  Set monthly spending limits for each category. These budgets apply to all months and help you track your spending across your entire budget.
+                  {t('expenseTracker.monthlyBudgetsDescription')}
                 </p>
               </div>
               <button 
@@ -1304,7 +1315,7 @@ export function ExpenseTrackerPage() {
                 onClick={() => setShowCategoryManager(true)}
               >
                 <MaterialIcon name="category" size="small" />
-                Manage Categories
+                {t('expenseTracker.manageCategories')}
               </button>
             </div>
             <div className="budgets-grid">
@@ -1325,12 +1336,12 @@ export function ExpenseTrackerPage() {
                       <span className="category-icon" aria-hidden="true"><MaterialIcon name={category.icon} size="small" /></span>
                       <span className="category-name">{category.name}</span>
                       <span className={`expense-type-badge ${category.defaultExpenseType.toLowerCase()}`}>
-                        {category.defaultExpenseType === 'NEED' ? 'Need' : 'Want'}
+                        {category.defaultExpenseType === 'NEED' ? t('expenseTracker.need') : t('expenseTracker.want')}
                       </span>
                     </div>
                     <div className="budget-details">
                       <div className="budget-input-row">
-                        <label htmlFor={`budget-${category.id}`}>Budget:</label>
+                        <label htmlFor={`budget-${category.id}`}>{t('expenseTracker.budget')}</label>
                         <ValidatedNumberInput
                           value={budgeted}
                           onChange={(value) => handleUpdateBudget(category.id, value)}
@@ -1339,10 +1350,10 @@ export function ExpenseTrackerPage() {
                         />
                       </div>
                       <div className="budget-stats">
-                        <span>Spent (This Month): {formatCurrency(spent, data.currency)}</span>
+                        <span>{t('expenseTracker.spentThisMonth')} {formatCurrency(spent, data.currency)}</span>
                         {budgeted > 0 && (
                           <span className={remaining >= 0 ? 'positive' : 'negative'}>
-                            Remaining: {formatCurrency(remaining, data.currency)}
+                            {t('expenseTracker.remaining')} {formatCurrency(remaining, data.currency)}
                           </span>
                         )}
                       </div>
@@ -1365,35 +1376,35 @@ export function ExpenseTrackerPage() {
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <section className="analytics-section" role="tabpanel" aria-labelledby="analytics-tab" data-tour="analytics-content">
-            <h3>Spending Analytics for {selectedYear}</h3>
+            <h3>{t('expenseTracker.spendingAnalyticsFor', { year: selectedYear })}</h3>
             
             {/* Analytics View Selector */}
             <div className="analytics-view-selector">
               <div className="selector-group">
-                <label htmlFor="analytics-view">View:</label>
+                <label htmlFor="analytics-view">{t('expenseTracker.view')}</label>
                 <select
                   id="analytics-view"
                   value={analyticsView}
                   onChange={(e) => setAnalyticsView(e.target.value as 'monthly' | 'quarterly' | 'yearly' | 'ytd')}
                 >
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="yearly">Yearly Total</option>
-                  <option value="ytd">Year-to-Date Average</option>
+                  <option value="monthly">{t('expenseTracker.monthly')}</option>
+                  <option value="quarterly">{t('expenseTracker.quarterly')}</option>
+                  <option value="yearly">{t('expenseTracker.yearlyTotal')}</option>
+                  <option value="ytd">{t('expenseTracker.yearToDateAverage')}</option>
                 </select>
               </div>
               {analyticsView === 'quarterly' && (
                 <div className="selector-group">
-                  <label htmlFor="quarter-select">Quarter:</label>
+                  <label htmlFor="quarter-select">{t('expenseTracker.quarter')}</label>
                   <select
                     id="quarter-select"
                     value={selectedQuarter}
                     onChange={(e) => setSelectedQuarter(Number(e.target.value))}
                   >
-                    <option value={1}>Q1 (Jan-Mar)</option>
-                    <option value={2}>Q2 (Apr-Jun)</option>
-                    <option value={3}>Q3 (Jul-Sep)</option>
-                    <option value={4}>Q4 (Oct-Dec)</option>
+                    <option value={1}>{t('expenseTracker.quarters.q1')}</option>
+                    <option value={2}>{t('expenseTracker.quarters.q2')}</option>
+                    <option value={3}>{t('expenseTracker.quarters.q3')}</option>
+                    <option value={4}>{t('expenseTracker.quarters.q4')}</option>
                   </select>
                 </div>
               )}
@@ -1402,12 +1413,7 @@ export function ExpenseTrackerPage() {
             {/* Expense Breakdown Pie Chart */}
             <div className="chart-container">
               <h4>
-                Expense Breakdown - {
-                  analyticsView === 'monthly' ? `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}` :
-                  analyticsView === 'quarterly' ? `Q${selectedQuarter} ${selectedYear}` :
-                  analyticsView === 'yearly' ? `Full Year ${selectedYear}` :
-                  `YTD Average ${selectedYear}`
-                }
+                {t('expenseTracker.expenseBreakdown', { period: periodLabel })}
               </h4>
               <ExpenseBreakdownChart 
                 data={categoryBreakdown}
@@ -1418,7 +1424,7 @@ export function ExpenseTrackerPage() {
 
             {/* Monthly Comparison Chart */}
             <div className="chart-container">
-              <h4>Monthly Spending Comparison</h4>
+              <h4>{t('expenseTracker.monthlySpendingComparison')}</h4>
               <PrivacyBlur isPrivacyMode={isPrivacyMode}>
                 <MonthlyComparisonChart 
                   data={monthlyComparisonData}
@@ -1429,7 +1435,7 @@ export function ExpenseTrackerPage() {
 
             {/* Category Trends Chart */}
             <div className="chart-container">
-              <h4>Category Spending Trends</h4>
+              <h4>{t('expenseTracker.categorySpendingTrends')}</h4>
               <SpendingTrendChart 
                 data={categoryTrendsData}
                 currency={data.currency}
@@ -1439,63 +1445,58 @@ export function ExpenseTrackerPage() {
 
             {/* Category Breakdown Table */}
             <div className="breakdown-table-container">
-              <h4>Category Breakdown - {
-                analyticsView === 'monthly' ? `${MONTH_NAMES[selectedMonth - 1]} ${selectedYear}` :
-                analyticsView === 'quarterly' ? `Q${selectedQuarter} ${selectedYear}` :
-                analyticsView === 'yearly' ? `Full Year ${selectedYear}` :
-                `YTD Average ${selectedYear}`
-              }</h4>
+              <h4>{t('expenseTracker.categoryBreakdown', { period: periodLabel })}</h4>
               <table className="breakdown-table">
                 <thead>
                   <tr>
                     <th 
                       onClick={() => requestCategorySort('category')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      Category {getCategorySortIndicator('category')}
+                      {t('expenseTracker.category')} {getCategorySortIndicator('category')}
                     </th>
                     <th 
                       onClick={() => requestCategorySort('totalAmount')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      {analyticsView === 'ytd' ? 'Monthly Average' : 'Total'} {getCategorySortIndicator('totalAmount')}
+                      {analyticsView === 'ytd' ? t('expenseTracker.monthlyAverage') : t('expenseTracker.total')} {getCategorySortIndicator('totalAmount')}
                     </th>
                     <th 
                       onClick={() => requestCategorySort('percentage')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      % of Total {getCategorySortIndicator('percentage')}
+                      {t('expenseTracker.percentOfTotal')} {getCategorySortIndicator('percentage')}
                     </th>
                     <th 
                       onClick={() => requestCategorySort('budgeted')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      Budget {getCategorySortIndicator('budgeted')}
+                      {t('expenseTracker.budget')} {getCategorySortIndicator('budgeted')}
                     </th>
                     <th 
                       onClick={() => requestCategorySort('remaining')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      Remaining {getCategorySortIndicator('remaining')}
+                      {t('expenseTracker.remaining')} {getCategorySortIndicator('remaining')}
                     </th>
                     <th 
                       onClick={() => requestCategorySort('transactionCount')}
                       style={{ cursor: 'pointer', userSelect: 'none' }}
-                      title="Click to sort"
+                      title={t('expenseTracker.clickToSort')}
                     >
-                      Transactions {getCategorySortIndicator('transactionCount')}
+                      {t('expenseTracker.transactions')} {getCategorySortIndicator('transactionCount')}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedCategoryBreakdown.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="empty-state">No expenses recorded for this period</td>
+                      <td colSpan={6} className="empty-state">{t('expenseTracker.noExpensesForPeriod')}</td>
                     </tr>
                   ) : (
                     sortedCategoryBreakdown.map(item => {
@@ -1627,6 +1628,7 @@ function TransactionFormDialog({
   customCategories,
   searchThreshold,
 }: TransactionFormDialogProps) {
+  const { t } = useTranslation();
   const isEditing = !!initialData;
   const today = new Date().toISOString().split('T')[0];
   
@@ -1673,7 +1675,7 @@ function TransactionFormDialog({
     
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Please enter a valid amount greater than 0');
+      alert(t('expenseTracker.validation.amountGreaterThanZero'));
       return;
     }
 
@@ -1710,13 +1712,13 @@ function TransactionFormDialog({
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dialog-header">
-          <h2>{isEditing ? 'Edit' : 'Add'} {type === 'income' ? 'Income' : 'Expense'}</h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <h2>{isEditing ? t('common.edit') : t('common.add')} {type === 'income' ? t('expenseTracker.income') : t('expenseTracker.expense')}</h2>
+          <button className="dialog-close" onClick={onClose} aria-label={t('common.close')}>×</button>
         </div>
         
         <form onSubmit={handleSubmit} className="dialog-form">
           <div className="form-group">
-            <label htmlFor="transaction-date">Date</label>
+            <label htmlFor="transaction-date">{t('expenseTracker.date')}</label>
             <input
               id="transaction-date"
               type="date"
@@ -1727,7 +1729,7 @@ function TransactionFormDialog({
           </div>
           
           <div className="form-group">
-            <label htmlFor="transaction-amount">Amount ({currency})</label>
+            <label htmlFor="transaction-amount">{t('expenseTracker.amountWithCurrency', { currency })}</label>
             <input
               id="transaction-amount"
               type="number"
@@ -1741,26 +1743,26 @@ function TransactionFormDialog({
           </div>
           
           <div className="form-group">
-            <label htmlFor="transaction-description">Description</label>
+            <label htmlFor="transaction-description">{t('expenseTracker.description')}</label>
             <input
               id="transaction-description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter description..."
+              placeholder={t('expenseTracker.descriptionPlaceholder')}
               required
             />
           </div>
           
           {type === 'income' ? (
             <div className="form-group">
-              <label htmlFor="income-source">Source</label>
+              <label htmlFor="income-source">{t('expenseTracker.source')}</label>
               <SearchableSelect
                 options={INCOME_SOURCES.map(s => ({ id: s.id, label: s.name, icon: s.icon }))}
                 value={source}
                 onChange={(val) => setSource(val as IncomeSource)}
                 searchThreshold={searchThreshold}
-                ariaLabel="Income source"
+                ariaLabel={t('expenseTracker.incomeSource')}
                 renderOption={(option) => (
                   <>
                     {option.icon && <MaterialIcon name={option.icon} size="small" />}
@@ -1772,25 +1774,25 @@ function TransactionFormDialog({
                     {option.icon && <MaterialIcon name={option.icon} size="small" />}
                     <span>{option.label}</span>
                   </>
-                ) : 'Select source'}
+                ) : t('expenseTracker.selectSource')}
               />
             </div>
           ) : (
             <>
               <div className="form-group">
-                <label htmlFor="expense-category">Category</label>
+                <label htmlFor="expense-category">{t('expenseTracker.category')}</label>
                 <SearchableSelect
                   options={categoryOptions}
                   value={category}
                   onChange={(id) => handleCategoryChange(id)}
                   searchThreshold={searchThreshold}
-                  ariaLabel="Expense category"
+                  ariaLabel={t('expenseTracker.expenseCategory')}
                   renderValue={(option) => option ? (
                     <>
                       <MaterialIcon name={option.icon || 'category'} size="small" />
                       <span>{option.label}</span>
                     </>
-                  ) : 'Select category'}
+                  ) : t('expenseTracker.selectCategory')}
                   renderOption={(option) => (
                     <>
                       {option.isCustom && option.color && (
@@ -1804,25 +1806,25 @@ function TransactionFormDialog({
               </div>
               
               <div className="form-group">
-                <label htmlFor="expense-subcategory">Sub-category (optional)</label>
+                <label htmlFor="expense-subcategory">{t('expenseTracker.subcategoryOptional')}</label>
                 <input
                   id="expense-subcategory"
                   type="text"
                   value={subCategory}
                   onChange={(e) => setSubCategory(e.target.value)}
-                  placeholder="e.g., Electricity, Gas..."
+                  placeholder={t('expenseTracker.subcategoryPlaceholder')}
                 />
               </div>
               
               <div className="form-group">
-                <label htmlFor="expense-type">Type</label>
+                <label htmlFor="expense-type">{t('expenseTracker.type')}</label>
                 <select
                   id="expense-type"
                   value={expenseType}
                   onChange={(e) => setExpenseType(e.target.value as ExpenseType)}
                 >
-                  <option value="NEED">Need (Essential)</option>
-                  <option value="WANT">Want (Non-essential)</option>
+                  <option value="NEED">{t('expenseTracker.needEssential')}</option>
+                  <option value="WANT">{t('expenseTracker.wantNonEssential')}</option>
                 </select>
               </div>
             </>
@@ -1838,19 +1840,19 @@ function TransactionFormDialog({
               />
               <span className="toggle-switch"></span>
               <MaterialIcon name="autorenew" size="small" />
-              <span>Recurring transaction</span>
+              <span>{t('expenseTracker.recurringTransaction')}</span>
             </label>
             <span className="checkbox-hint">
-              Recurring transactions will be automatically copied to new months
+              {t('expenseTracker.recurringHint')}
             </span>
           </div>
           
           <div className="dialog-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn-submit">
-              {isEditing ? 'Update' : 'Add'} {type === 'income' ? 'Income' : 'Expense'}
+              {isEditing ? t('common.update') : t('common.add')} {type === 'income' ? t('expenseTracker.income') : t('expenseTracker.expense')}
             </button>
           </div>
         </form>

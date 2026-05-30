@@ -6,6 +6,7 @@
  * `BreakdownResult` shape from the Portfolio Breakdown page.
  */
 
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { BreakdownResult } from '../types/portfolioBreakdown';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
@@ -63,12 +64,13 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
   isPrivacyMode,
   maxEntries = DEFAULT_MAX_ENTRIES,
 }) => {
+  const { t } = useTranslation();
   if (!result.entries || result.entries.length === 0) {
     return (
       <div className="chart-container breakdown-chart">
         <h3>{title}</h3>
         {description && <p className="breakdown-chart-description">{description}</p>}
-        <div className="empty-chart">No data to display</div>
+        <div className="empty-chart">{t('charts.noDataToDisplay')}</div>
       </div>
     );
   }
@@ -135,9 +137,9 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
       <table className="breakdown-table" aria-label={`${title} breakdown table`}>
         <thead>
           <tr>
-            <th scope="col">Bucket</th>
+            <th scope="col">{t('tables.bucket')}</th>
             <th scope="col" className="numeric">
-              Value
+              {t('tables.value')}
             </th>
             <th scope="col" className="numeric">
               %

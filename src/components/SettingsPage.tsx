@@ -135,7 +135,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     };
     setExpenseData(newData);
     saveExpenseTrackerData(newData);
-    showMessage('success', `Category "${category.name}" added!`);
+    showMessage('success', t('settings.messages.categoryAdded', { name: category.name }));
   }, [expenseData]);
   
   // Update custom category
@@ -150,7 +150,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     };
     setExpenseData(newData);
     saveExpenseTrackerData(newData);
-    showMessage('success', `Category "${category.name}" updated!`);
+    showMessage('success', t('settings.messages.categoryUpdatedWithName', { name: category.name }));
   }, [expenseData]);
   
   // Delete custom category
@@ -174,7 +174,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     };
     setExpenseData(newData);
     saveExpenseTrackerData(newData);
-    showMessage('success', `Category "${category?.name || 'Unknown'}" deleted!`);
+    showMessage('success', t('settings.messages.categoryDeleted', { name: category?.name || t('common.unknown') }));
   }, [expenseData]);
   
   // Update built-in category override
@@ -199,7 +199,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     };
     setExpenseData(newData);
     saveExpenseTrackerData(newData);
-    showMessage('success', 'Category updated!');
+    showMessage('success', t('settings.messages.categoryUpdated'));
   }, [expenseData]);
   
   // Get expense count for category
@@ -257,13 +257,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setSettings(newSettings);
     saveSettings(newSettings);
     onSettingsChange?.(newSettings);
-    showMessage('success', 'Settings saved!');
+    showMessage('success', t('settings.messages.settingsSaved'));
   };
 
   // Handle fallback rate change
   const handleFallbackRateChange = (currency: SupportedCurrency, rate: number) => {
     if (rate <= 0) {
-      showMessage('error', 'Rate must be a positive number');
+      showMessage('error', t('settings.messages.ratePositive'));
       return;
     }
     
@@ -280,7 +280,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setSettings(newSettings);
     saveSettings(newSettings);
     onSettingsChange?.(newSettings);
-    showMessage('success', `${currency} rate updated!`);
+    showMessage('success', t('settings.messages.rateUpdated', { currency }));
   };
 
   // Handle rate text input change (while typing)
@@ -308,7 +308,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         ...prev, 
         [currency]: formatWithSeparator(currentRate, settings.decimalSeparator) 
       }));
-      showMessage('error', result.errorMessage || 'Rate must be a positive number');
+      showMessage('error', result.errorMessage || t('settings.messages.ratePositive'));
       return;
     }
     
@@ -327,7 +327,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setSettings(newSettings);
     saveSettings(newSettings);
     onSettingsChange?.(newSettings);
-    showMessage('success', 'Fallback rates reset to defaults!');
+    showMessage('success', t('settings.messages.fallbackRatesReset'));
   };
 
   // Export all data as a single JSON file
@@ -350,9 +350,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       const jsonString = serializeAllDataExport(exportData);
       downloadFile(jsonString, `fire-tools-all-data-${getDateString()}.json`, 'application/json');
       
-      showMessage('success', 'All data exported as JSON successfully!');
+      showMessage('success', t('settings.messages.allDataExportedJson'));
     } catch (error) {
-      showMessage('error', `Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showMessage('error', t('settings.messages.exportFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
     }
   };
 
@@ -385,9 +385,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         downloadFile(netWorthJSON, `net-worth-tracker-data-${getDateString()}.json`, 'application/json');
       }
 
-      showMessage('success', 'Data exported as separate files successfully!');
+      showMessage('success', t('settings.messages.dataExportedSeparate'));
     } catch (error) {
-      showMessage('error', `Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showMessage('error', t('settings.messages.exportFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
     }
   };
 
@@ -420,9 +420,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           saveNetWorthTrackerData(imported.netWorthTracker);
         }
         
-        showMessage('success', 'All data imported successfully! Refresh pages to see changes.');
+        showMessage('success', t('settings.messages.allDataImported'));
       } catch (error) {
-        showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -456,9 +456,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         const csv = e.target?.result as string;
         const imported = importFireCalculatorFromCSV(csv);
         saveFireCalculatorInputs(imported);
-        showMessage('success', 'FIRE Calculator data imported successfully!');
+        showMessage('success', t('settings.messages.fireImported'));
       } catch (error) {
-        showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -476,9 +476,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         const csv = e.target?.result as string;
         const imported = importAssetAllocationFromCSV(csv);
         saveAssetAllocation(imported.assets, imported.assetClassTargets);
-        showMessage('success', 'Asset Allocation data imported successfully!');
+        showMessage('success', t('settings.messages.assetAllocationImported'));
       } catch (error) {
-        showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -496,9 +496,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         const csv = e.target?.result as string;
         const imported = importExpenseTrackerFromCSV(csv);
         saveExpenseTrackerData(imported);
-        showMessage('success', 'Cashflow Tracker data imported successfully!');
+        showMessage('success', t('settings.messages.cashflowImported'));
       } catch (error) {
-        showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -516,9 +516,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         const json = e.target?.result as string;
         const imported = importNetWorthTrackerFromJSON(json);
         saveNetWorthTrackerData(imported);
-        showMessage('success', 'Net Worth Tracker data imported successfully!');
+        showMessage('success', t('settings.messages.netWorthImported'));
       } catch (error) {
-        showMessage('error', `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -527,15 +527,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
   // Reset all data
   const handleResetAll = () => {
-    if (confirm('Are you sure you want to reset ALL data? This will clear all saved data from cookies and cannot be undone.')) {
+    if (confirm(t('settings.confirm.resetAll'))) {
       clearAllData();
-      showMessage('success', 'All data has been reset!');
+      showMessage('success', t('settings.messages.allDataReset'));
     }
   };
 
   // Load demo data
   const handleLoadDemoData = () => {
-    if (confirm('This will overwrite your current data with demo data. Are you sure you want to continue?')) {
+    if (confirm(t('settings.confirm.loadDemo'))) {
       try {
         // First, reset default currency to EUR and fallback rates BEFORE loading demo data
         // This ensures all demo data is loaded with EUR as the default currency
@@ -566,9 +566,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         const netWorthData = getDemoNetWorthData();
         saveNetWorthTrackerData(netWorthData);
         
-        showMessage('success', 'Demo data loaded successfully! Refresh the page to see the changes.');
+        showMessage('success', t('settings.messages.demoLoaded'));
       } catch (error) {
-        showMessage('error', `Failed to load demo data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        showMessage('error', t('settings.messages.demoLoadFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     }
   };
@@ -581,14 +581,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     const newPrefs = { ...notificationPrefs, [key]: value };
     setNotificationPrefs(newPrefs);
     updateNotificationPreferences({ [key]: value });
-    showMessage('success', 'Notification preferences saved!');
+    showMessage('success', t('settings.messages.notificationPreferencesSaved'));
   };
 
   // Clear all notifications
   const handleClearNotifications = () => {
-    if (confirm('Are you sure you want to clear all notifications? This cannot be undone.')) {
+    if (confirm(t('settings.confirm.clearNotifications'))) {
       clearNotifications();
-      showMessage('success', 'All notifications cleared!');
+      showMessage('success', t('settings.messages.notificationsCleared'));
     }
   };
 
@@ -598,11 +598,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     testNotifications.forEach(notification => {
       addNotification(notification);
     });
-    showMessage('success', `${testNotifications.length} test notifications created! Check the notification bell.`);
+    showMessage('success', t('settings.messages.testNotificationsCreated', { count: testNotifications.length }));
   };
 
   if (isLoading) {
-    return <div className="settings-page loading">Loading settings...</div>;
+    return <div className="settings-page loading">{t('settings.loadingSettings')}</div>;
   }
 
   return (
@@ -610,9 +610,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       <div className="settings-container">
         <div className="settings-header">
           <button className="back-button" onClick={() => navigate(-1)}>
-            ← Back
+            {t('settings.back')}
           </button>
-          <h1><MaterialIcon name="settings" /> Settings</h1>
+          <h1><MaterialIcon name="settings" /> {t('settings.title')}</h1>
         </div>
 
         {message && (
@@ -652,9 +652,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="account-content" className="collapsible-content">
               <div className="setting-item account-name-setting">
                 <div className="label-with-tooltip">
-                  <label htmlFor="accountName">Account Name</label>
-                  <Tooltip content="Choose a name for your portfolio that will appear in the app header and throughout the interface. This helps you identify your account, especially if you manage multiple portfolios.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="accountName">{t('settings.accountName')}</label>
+                  <Tooltip content={t('settings.tooltips.accountName')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <input
@@ -663,10 +663,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   value={settings.accountName}
                   onChange={(e) => handleSettingChange('accountName', e.target.value)}
                   maxLength={100}
-                  placeholder="My Portfolio"
+                  placeholder={t('settings.placeholders.myPortfolio')}
                   className="account-name-input"
                 />
-                <span className="setting-help">This name will be displayed throughout the app</span>
+                <span className="setting-help">{t('settings.accountNameHelp')}</span>
               </div>
             </div>
           )}
@@ -686,12 +686,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="fire-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label>Asset Classes Included in FIRE</label>
-                  <Tooltip content="Select which asset classes count toward your FIRE target. Only included asset classes contribute to portfolio value in FIRE calculations.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label>{t('settings.fireAssetClassesIncluded')}</label>
+                  <Tooltip content={t('settings.tooltips.fireAssetClasses')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <span className="setting-help">Toggle which asset classes are counted in your FIRE portfolio value</span>
+                <span className="setting-help">{t('settings.fireAssetClassesHelp')}</span>
                 <div className="fire-asset-class-grid">
                   {(Object.keys(settings.fireAssetClassInclusion) as AssetClass[]).map(ac => (
                     <label key={ac} className="checkbox-label fire-asset-checkbox">
@@ -715,7 +715,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   onClick={() => handleSettingChange('fireAssetClassInclusion', DEFAULT_FIRE_ASSET_CLASS_INCLUSION)}
                   style={{ marginTop: '0.5rem' }}
                 >
-                  Reset to Defaults
+                  {t('common.resetToDefaults')}
                 </button>
               </div>
               <div className="setting-item">
@@ -726,13 +726,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                       checked={settings.includePrimaryResidenceInFIRE ?? true}
                       onChange={(e) => handleSettingChange('includePrimaryResidenceInFIRE', e.target.checked)}
                     />
-                    Include Primary Residence in FIRE Calculation
+                    {t('settings.includePrimaryResidence')}
                   </label>
-                  <Tooltip content="When enabled, real estate properties marked as primary residence will be included in your FIRE portfolio value. When disabled, they are excluded (useful if you don't consider your home as liquid assets for retirement).">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <Tooltip content={t('settings.tooltips.primaryResidence')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <span className="setting-help">Controls whether your primary residence counts toward your FIRE target</span>
+                <span className="setting-help">{t('settings.primaryResidenceHelp')}</span>
               </div>
             </div>
           )}
@@ -752,9 +752,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="display-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="defaultCurrency">Default Currency</label>
-                  <Tooltip content="Select your preferred currency for all financial data. When you change currencies, all existing values (assets, expenses, net worth, and FIRE calculator inputs) will be automatically converted using current exchange rates.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="defaultCurrency">{t('settings.defaultCurrency')}</label>
+                  <Tooltip content={t('settings.tooltips.defaultCurrency')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <SearchableSelect
@@ -821,17 +821,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     setSettings(newSettings);
                     saveSettings(newSettings);
                     onSettingsChange?.(newSettings);
-                    showMessage('success', `Default currency changed to ${newCurrency}! All values converted.`);
+                    showMessage('success', t('settings.messages.defaultCurrencyChanged', { currency: newCurrency }));
                   }}
-                  ariaLabel="Default currency"
+                  ariaLabel={t('settings.defaultCurrency')}
                 />
-                <span className="setting-help">This currency will be used as default across all pages</span>
+                <span className="setting-help">{t('settings.defaultCurrencyHelp')}</span>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label>Decimal Separator</label>
-                  <Tooltip content="Choose how decimal numbers are formatted. Point format (1,000.00) is common in the US and UK. Comma format (1.000,00) is used in many European countries. This affects how you input and view numbers throughout the app.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label>{t('settings.decimalSeparator')}</label>
+                  <Tooltip content={t('settings.tooltips.decimalSeparator')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -839,21 +839,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     className={`toggle-btn ${settings.decimalSeparator === '.' ? 'active' : ''}`}
                     onClick={() => handleSettingChange('decimalSeparator', '.')}
                   >
-                    Point (1,000.00)
+                    {t('settings.pointFormat')}
                   </button>
                   <button
                     className={`toggle-btn ${settings.decimalSeparator === ',' ? 'active' : ''}`}
                     onClick={() => handleSettingChange('decimalSeparator', ',')}
                   >
-                    Comma (1.000,00)
+                    {t('settings.commaFormat')}
                   </button>
                 </div>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="decimalPlaces">Decimal Places</label>
-                  <Tooltip content="Control the precision of small numbers. This setting only affects values below 1,000 to keep small amounts precise while keeping large amounts readable. For example, with 2 decimal places: 123.45 displays as '123.45' but 1,234.56 displays as '1,235'.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="decimalPlaces">{t('settings.decimalPlaces')}</label>
+                  <Tooltip content={t('settings.tooltips.decimalPlaces')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <select
@@ -861,19 +861,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   value={settings.decimalPlaces ?? 2}
                   onChange={(e) => handleSettingChange('decimalPlaces', parseInt(e.target.value, 10))}
                 >
-                  <option value={0}>0 (e.g., 123)</option>
-                  <option value={1}>1 (e.g., 123.4)</option>
-                  <option value={2}>2 (e.g., 123.45)</option>
-                  <option value={3}>3 (e.g., 123.456)</option>
-                  <option value={4}>4 (e.g., 123.4567)</option>
+                  <option value={0}>{t('settings.decimalPlaceOptions.zero')}</option>
+                  <option value={1}>{t('settings.decimalPlaceOptions.one')}</option>
+                  <option value={2}>{t('settings.decimalPlaceOptions.two')}</option>
+                  <option value={3}>{t('settings.decimalPlaceOptions.three')}</option>
+                  <option value={4}>{t('settings.decimalPlaceOptions.four')}</option>
                 </select>
-                <span className="setting-help">Number of decimal places shown for values below 1,000. Values at or above 1,000 show no decimals.</span>
+                <span className="setting-help">{t('settings.decimalPlacesHelp')}</span>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="dateFormat">Date Format</label>
-                  <Tooltip content="Choose how dates are displayed throughout the app. DD/MM/YYYY is common in Europe, MM/DD/YYYY is common in the US, and YYYY-MM-DD is the ISO standard format.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="dateFormat">{t('settings.dateFormat')}</label>
+                  <Tooltip content={t('settings.tooltips.dateFormat')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <select
@@ -881,17 +881,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   value={settings.dateFormat ?? 'DD/MM/YYYY'}
                   onChange={(e) => handleSettingChange('dateFormat', e.target.value as 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD')}
                 >
-                  <option value="DD/MM/YYYY">DD/MM/YYYY (e.g., 31/12/2024)</option>
-                  <option value="MM/DD/YYYY">MM/DD/YYYY (e.g., 12/31/2024)</option>
-                  <option value="YYYY-MM-DD">YYYY-MM-DD (e.g., 2024-12-31)</option>
+                  <option value="DD/MM/YYYY">{t('settings.dateFormatOptions.dmy')}</option>
+                  <option value="MM/DD/YYYY">{t('settings.dateFormatOptions.mdy')}</option>
+                  <option value="YYYY-MM-DD">{t('settings.dateFormatOptions.iso')}</option>
                 </select>
-                <span className="setting-help">How dates are displayed throughout the app</span>
+                <span className="setting-help">{t('settings.dateFormatHelp')}</span>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="searchThreshold">Dropdown Search Threshold</label>
-                  <Tooltip content="Set the minimum number of items a dropdown must have before a search field appears. For example, with a threshold of 8, dropdowns with 8 or more items will include a search box to help you find options quickly.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="searchThreshold">{t('settings.searchThreshold')}</label>
+                  <Tooltip content={t('settings.tooltips.searchThreshold')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <select
@@ -899,15 +899,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   value={settings.searchThreshold ?? 8}
                   onChange={(e) => handleSettingChange('searchThreshold', parseInt(e.target.value, 10))}
                 >
-                  <option value={0}>Always (show search on all dropdowns)</option>
-                  <option value={4}>4 items</option>
-                  <option value={6}>6 items</option>
-                  <option value={8}>8 items (default)</option>
-                  <option value={10}>10 items</option>
-                  <option value={15}>15 items</option>
-                  <option value={999}>Never (disable dropdown search)</option>
+                  <option value={0}>{t('settings.searchThresholdOptions.always')}</option>
+                  <option value={4}>{t('settings.searchThresholdOptions.four')}</option>
+                  <option value={6}>{t('settings.searchThresholdOptions.six')}</option>
+                  <option value={8}>{t('settings.searchThresholdOptions.eight')}</option>
+                  <option value={10}>{t('settings.searchThresholdOptions.ten')}</option>
+                  <option value={15}>{t('settings.searchThresholdOptions.fifteen')}</option>
+                  <option value={999}>{t('settings.searchThresholdOptions.never')}</option>
                 </select>
-                <span className="setting-help">Dropdowns with this many items or more will show a search box</span>
+                <span className="setting-help">{t('settings.searchThresholdHelp')}</span>
               </div>
             </div>
           )}
@@ -927,9 +927,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="privacy-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="privacyMode">Privacy Mode</label>
-                  <Tooltip content="When enabled, sensitive financial data like net worth, income, and asset values will be blurred on screen. This is useful when sharing your screen or working in public. Expenses are not blurred.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="privacyMode">{t('settings.privacyMode')}</label>
+                  <Tooltip content={t('settings.tooltips.privacyMode')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -937,27 +937,27 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     className={`toggle-btn ${!settings.privacyMode ? 'active' : ''}`}
                     onClick={() => handleSettingChange('privacyMode', false)}
                   >
-                    <MaterialIcon name="visibility" size="small" /> Show Values
+                    <MaterialIcon name="visibility" size="small" /> {t('common.showValues')}
                   </button>
                   <button
                     className={`toggle-btn ${settings.privacyMode ? 'active' : ''}`}
                     onClick={() => handleSettingChange('privacyMode', true)}
                   >
-                    <MaterialIcon name="visibility_off" size="small" /> Hide Values
+                    <MaterialIcon name="visibility_off" size="small" /> {t('common.hideValues')}
                   </button>
                 </div>
-                <span className="setting-help">Blur sensitive financial data on screen for privacy</span>
+                <span className="setting-help">{t('settings.privacyModeHelp')}</span>
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="country">Country</label>
-                  <Tooltip content="Select your country of residence. EU countries will receive UCITS compliance warnings when adding non-EU domiciled ETFs, as these may not be available to EU investors.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="country">{t('settings.country')}</label>
+                  <Tooltip content={t('settings.tooltips.country')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <SearchableSelect
                   options={[
-                    { id: '', label: 'Select country (optional)' },
+                    { id: '', label: t('settings.selectCountryOptional') },
                     ...ALL_COUNTRIES.map(c => ({
                       id: c.code,
                       label: `${c.flag} ${c.name}`,
@@ -966,19 +966,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   value={settings.country || ''}
                   onChange={(val) => handleSettingChange('country', val || undefined)}
                   searchThreshold={settings.searchThreshold ?? 8}
-                  ariaLabel="Country"
+                  ariaLabel={t('settings.country')}
                 />
                 {(() => {
                   const isEU = settings.country && isEUCountry(settings.country);
                   if (isEU) {
                     return (
                       <span className="setting-help eu-notice">
-                        <MaterialIcon name="info" size="small" /> EU resident: You'll receive UCITS compliance warnings for non-EU ETFs
+                        <MaterialIcon name="info" size="small" /> {t('settings.euResidentNotice')}
                       </span>
                     );
                   } else if (settings.country) {
                     return (
-                      <span className="setting-help">Country set to {ALL_COUNTRIES.find(c => c.code === settings.country)?.name}</span>
+                      <span className="setting-help">{t('settings.countrySetTo', { country: ALL_COUNTRIES.find(c => c.code === settings.country)?.name })}</span>
                     );
                   }
                   return null;
@@ -1001,13 +1001,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           {!collapsedSections.has('experimental') && (
             <div id="experimental-content" className="collapsible-content">
               <p className="setting-help" style={{ marginBottom: '1rem' }}>
-                <MaterialIcon name="warning" size="small" /> These features are still in preview. They may be incomplete, change without notice, or rely on third-party data that may be inaccurate or unavailable.
+                <MaterialIcon name="warning" size="small" /> {t('settings.experimentalPreviewWarning')}
               </p>
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="experimentalPortfolioBreakdown">Portfolio Breakdown page</label>
-                  <Tooltip content="Adds a new Portfolio Breakdown page that slices your current portfolio by currency, holding, sector, continent, region, market, and ETF provider. ETF metadata is inferred from fund names (Yahoo Finance does not expose holdings data without authentication), so results are heuristic.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="experimentalPortfolioBreakdown">{t('settings.portfolioBreakdownPage')}</label>
+                  <Tooltip content={t('settings.tooltips.portfolioBreakdown')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -1015,23 +1015,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     className={`toggle-btn ${!settings.experimentalFeatures?.portfolioBreakdown ? 'active' : ''}`}
                     onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, portfolioBreakdown: false })}
                   >
-                    Disabled
+                    {t('settings.disabled')}
                   </button>
                   <button
                     className={`toggle-btn ${settings.experimentalFeatures?.portfolioBreakdown ? 'active' : ''}`}
                     onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, portfolioBreakdown: true })}
                   >
-                    Enabled
+                    {t('settings.enabled')}
                   </button>
                 </div>
-                <span className="setting-help">Enable the Portfolio Breakdown page in navigation</span>
+                <span className="setting-help">{t('settings.portfolioBreakdownHelp')}</span>
               </div>
 
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label htmlFor="experimentalPdfImport">PDF expense/income import</label>
-                  <Tooltip content="Adds an 'Import PDF' button in the Expense Tracker. PDFs (receipts, invoices, bank/credit-card statements, payslips) are parsed fully in your browser. An optional AI categorization step uses an OpenAI-compatible endpoint that you configure below — only enable that if you trust the endpoint with your transaction descriptions.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label htmlFor="experimentalPdfImport">{t('settings.pdfImport')}</label>
+                  <Tooltip content={t('settings.tooltips.pdfImport')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -1039,35 +1039,35 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     className={`toggle-btn ${!settings.experimentalFeatures?.pdfImport ? 'active' : ''}`}
                     onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, pdfImport: false })}
                   >
-                    Disabled
+                    {t('settings.disabled')}
                   </button>
                   <button
                     className={`toggle-btn ${settings.experimentalFeatures?.pdfImport ? 'active' : ''}`}
                     onClick={() => handleSettingChange('experimentalFeatures', { ...settings.experimentalFeatures, pdfImport: true })}
                   >
-                    Enabled
+                    {t('settings.enabled')}
                   </button>
                 </div>
-                <span className="setting-help">Parse receipts, invoices, bank statements, and payslips locally. No network calls unless you opt into AI categorization — which itself can be pointed at a self-hosted open-source model so nothing leaves your machine.</span>
+                <span className="setting-help">{t('settings.pdfImportHelp')}</span>
               </div>
 
               {settings.experimentalFeatures?.pdfImport && (
                 <div className="setting-item">
                   <div className="label-with-tooltip">
-                    <label>AI categorization (optional)</label>
-                    <Tooltip content="Optional OpenAI-compatible endpoint used only when you tick 'Use AI categorization' inside the PDF import dialog. Works with OpenAI and Azure OpenAI, with hosted aggregators like OpenRouter or Together, and — importantly — with self-hosted open-source models you run yourself via Ollama, LM Studio, llama.cpp, vLLM, or any other server that exposes an OpenAI-compatible /chat/completions endpoint. Leave blank to keep everything heuristic.">
-                      <span className="info-icon" aria-label="More information">i</span>
+                    <label>{t('settings.aiCategorizationOptional')}</label>
+                    <Tooltip content={t('settings.tooltips.aiCategorization')}>
+                      <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                     </Tooltip>
                   </div>
                   <p className="setting-help" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-                    Plug in any OpenAI-compatible endpoint — cloud (OpenAI, Azure OpenAI, OpenRouter, Together…) or a <strong>self-hosted open-source model</strong> via Ollama, LM Studio, llama.cpp, vLLM, etc. For fully local categorization, point Base URL at e.g. <code>http://localhost:11434/v1</code>, leave the API key as any non-empty string, and use a model you've already pulled (<code>llama3.1:8b</code>, <code>qwen2.5</code>, …).
+                    {t('settings.aiCategorizationHelp')}
                   </p>
                   <div className="form-group">
-                    <label htmlFor="llmBaseUrl">Base URL</label>
+                    <label htmlFor="llmBaseUrl">{t('settings.baseUrl')}</label>
                     <input
                       id="llmBaseUrl"
                       type="text"
-                      placeholder="https://api.openai.com/v1 or http://localhost:11434/v1"
+                      placeholder={t('settings.placeholders.llmBaseUrl')}
                       value={settings.llmCategorization?.baseUrl ?? ''}
                       onChange={(e) => handleSettingChange('llmCategorization', {
                         baseUrl: e.target.value,
@@ -1077,11 +1077,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="llmApiKey">API key</label>
+                    <label htmlFor="llmApiKey">{t('settings.apiKey')}</label>
                     <input
                       id="llmApiKey"
                       type="password"
-                      placeholder="sk-… (any non-empty value for local servers)"
+                      placeholder={t('settings.placeholders.apiKey')}
                       value={settings.llmCategorization?.apiKey ?? ''}
                       onChange={(e) => handleSettingChange('llmCategorization', {
                         baseUrl: settings.llmCategorization?.baseUrl ?? '',
@@ -1091,11 +1091,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="llmModel">Model</label>
+                    <label htmlFor="llmModel">{t('settings.model')}</label>
                     <input
                       id="llmModel"
                       type="text"
-                      placeholder="gpt-4o-mini, llama3.1:8b, qwen2.5, …"
+                      placeholder={t('settings.placeholders.llmModel')}
                       value={settings.llmCategorization?.model ?? ''}
                       onChange={(e) => handleSettingChange('llmCategorization', {
                         baseUrl: settings.llmCategorization?.baseUrl ?? '',
@@ -1105,7 +1105,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     />
                   </div>
                   <span className="setting-help">
-                    Stored encrypted with your other settings. Only used when you tick "Use AI categorization" in the PDF import dialog.
+                    {t('settings.aiCategorizationStoredHelp')}
                   </span>
                 </div>
               )}
@@ -1127,9 +1127,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="notifications-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label>Enable In-App Notifications</label>
-                  <Tooltip content="Control whether you receive in-app notifications for reminders like new months, tax deadlines, and financial milestones.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label>{t('settings.enableInAppNotifications')}</label>
+                  <Tooltip content={t('settings.tooltips.inAppNotifications')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -1137,13 +1137,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     className={`toggle-btn ${notificationPrefs.enableInAppNotifications ? 'active' : ''}`}
                     onClick={() => handleNotificationPrefChange('enableInAppNotifications', true)}
                   >
-                    Enabled
+                    {t('settings.enabled')}
                   </button>
                   <button
                     className={`toggle-btn ${!notificationPrefs.enableInAppNotifications ? 'active' : ''}`}
                     onClick={() => handleNotificationPrefChange('enableInAppNotifications', false)}
                   >
-                    Disabled
+                    {t('settings.disabled')}
                   </button>
                 </div>
               </div>
@@ -1158,9 +1158,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         onChange={(e) => handleNotificationPrefChange('newMonthReminders', e.target.checked)}
                       />
                       <span className="toggle-switch"></span>
-                      <span>New Month Reminders</span>
+                      <span>{t('settings.newMonthReminders')}</span>
                     </label>
-                    <span className="setting-help">Remind to update financial data at the start of each month</span>
+                    <span className="setting-help">{t('settings.newMonthRemindersHelp')}</span>
                   </div>
 
                   <div className="setting-item">
@@ -1171,9 +1171,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         onChange={(e) => handleNotificationPrefChange('newQuarterReminders', e.target.checked)}
                       />
                       <span className="toggle-switch"></span>
-                      <span>New Quarter Reminders</span>
+                      <span>{t('settings.newQuarterReminders')}</span>
                     </label>
-                    <span className="setting-help">Remind to review quarterly performance</span>
+                    <span className="setting-help">{t('settings.newQuarterRemindersHelp')}</span>
                   </div>
 
                   <div className="setting-item">
@@ -1184,9 +1184,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         onChange={(e) => handleNotificationPrefChange('taxReminders', e.target.checked)}
                       />
                       <span className="toggle-switch"></span>
-                      <span>Tax Payment Reminders</span>
+                      <span>{t('settings.taxPaymentReminders')}</span>
                     </label>
-                    <span className="setting-help">Remind about upcoming tax deadlines</span>
+                    <span className="setting-help">{t('settings.taxPaymentRemindersHelp')}</span>
                   </div>
 
                   <div className="setting-item">
@@ -1197,9 +1197,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         onChange={(e) => handleNotificationPrefChange('dcaReminders', e.target.checked)}
                       />
                       <span className="toggle-switch"></span>
-                      <span>DCA Investment Reminders</span>
+                      <span>{t('settings.dcaInvestmentReminders')}</span>
                     </label>
-                    <span className="setting-help">Remind about regular investment contributions</span>
+                    <span className="setting-help">{t('settings.dcaInvestmentRemindersHelp')}</span>
                   </div>
 
                   <div className="setting-item">
@@ -1210,29 +1210,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         onChange={(e) => handleNotificationPrefChange('fireMilestones', e.target.checked)}
                       />
                       <span className="toggle-switch"></span>
-                      <span>FIRE Milestone Alerts</span>
+                      <span>{t('settings.fireMilestoneAlerts')}</span>
                     </label>
-                    <span className="setting-help">Get notified when you reach FIRE milestones (25%, 50%, 75%, 100%)</span>
+                    <span className="setting-help">{t('settings.fireMilestoneAlertsHelp')}</span>
                   </div>
                 </>
               )}
 
               <div className="setting-item">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="science" /> Test Mode</h3>
-                  <Tooltip content="Trigger sample notifications to test the notification system. This will add demo notifications to your notification bell so you can see how they look and work.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="science" /> {t('settings.testMode')}</h3>
+                  <Tooltip content={t('settings.tooltips.testMode')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Create sample notifications to test the notification UI</p>
+                <p className="setting-help">{t('settings.testModeHelp')}</p>
                 <button className="secondary-btn" onClick={handleTriggerTestNotifications}>
-                  <MaterialIcon name="notifications_active" /> Trigger Test Notifications
+                  <MaterialIcon name="notifications_active" /> {t('settings.triggerTestNotifications')}
                 </button>
               </div>
 
               <div className="setting-item">
                 <button className="secondary-btn" onClick={handleClearNotifications}>
-                  <MaterialIcon name="delete" /> Clear All Notifications
+                  <MaterialIcon name="delete" /> {t('settings.clearAllNotifications')}
                 </button>
               </div>
             </div>
@@ -1253,9 +1253,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="email-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
-                  <label>Email Notifications</label>
-                  <Tooltip content="Email notifications require a server to send emails. Since Fire Tools is a client-side only application, email functionality is currently a placeholder for future development.">
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <label>{t('settings.emailNotifications')}</label>
+                  <Tooltip content={t('settings.tooltips.emailNotifications')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
                 <div className="toggle-group">
@@ -1264,44 +1264,44 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     onClick={() => handleNotificationPrefChange('enableEmailNotifications', true)}
                     disabled
                   >
-                    Enabled
+                    {t('settings.enabled')}
                   </button>
                   <button
                     className={`toggle-btn ${!notificationPrefs.enableEmailNotifications ? 'active' : ''}`}
                     onClick={() => handleNotificationPrefChange('enableEmailNotifications', false)}
                   >
-                    Disabled
+                    {t('settings.disabled')}
                   </button>
                 </div>
-                <span className="setting-help">🚧 Email notifications are not yet available (requires server integration)</span>
+                <span className="setting-help">{t('settings.emailNotificationsUnavailable')}</span>
               </div>
 
               {notificationPrefs.enableEmailNotifications && (
                 <>
                   <div className="setting-item">
-                    <label htmlFor="emailAddress">Email Address</label>
+                    <label htmlFor="emailAddress">{t('settings.emailAddress')}</label>
                     <input
                       id="emailAddress"
                       type="email"
                       value={notificationPrefs.emailAddress}
                       onChange={(e) => handleNotificationPrefChange('emailAddress', e.target.value)}
-                      placeholder="your@email.com"
+                      placeholder={t('settings.placeholders.email')}
                       disabled
                     />
                   </div>
 
                   <div className="setting-item">
-                    <label htmlFor="emailFrequency">Email Frequency</label>
+                    <label htmlFor="emailFrequency">{t('settings.emailFrequency')}</label>
                     <select
                       id="emailFrequency"
                       value={notificationPrefs.emailFrequency}
                       onChange={(e) => handleNotificationPrefChange('emailFrequency', e.target.value as NotificationPreferences['emailFrequency'])}
                       disabled
                     >
-                      <option value="NEVER">Never</option>
-                      <option value="DAILY">Daily</option>
-                      <option value="WEEKLY">Weekly</option>
-                      <option value="MONTHLY">Monthly</option>
+                      <option value="NEVER">{t('settings.frequency.never')}</option>
+                      <option value="DAILY">{t('settings.frequency.daily')}</option>
+                      <option value="WEEKLY">{t('settings.frequency.weekly')}</option>
+                      <option value="MONTHLY">{t('settings.frequency.monthly')}</option>
                     </select>
                   </div>
                 </>
@@ -1328,22 +1328,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               <div className="exchange-rate-warning">
                 <MaterialIcon name="warning" />
                 <p>
-                  Exchange rates are fetched from publicly available Yahoo Finance APIs via a community
-                  open-source package. These rates may not reflect real-time values, may be delayed,
-                  and the APIs could stop working at any time. Fallback rates are used when the API is unavailable.
-                  For accurate financial decisions, please verify rates with your financial institution.
+                  {t('settings.exchangeRateWarning')}
                 </p>
               </div>
               
               <div className="subsection-header-with-tooltip">
-                <h3>Fallback Rates</h3>
-                <Tooltip content="These are backup exchange rates used when the live API is unavailable or slow. The app attempts to fetch real-time rates first. You can customize these rates based on your preferences or recent market rates." position="right" maxWidth={350}>
-                  <span className="info-icon" aria-label="More information">i</span>
+                <h3>{t('settings.fallbackRates')}</h3>
+                <Tooltip content={t('settings.tooltips.fallbackRates')} position="right" maxWidth={350}>
+                  <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                 </Tooltip>
               </div>
               <p className="section-description">
-                These rates are used when the live exchange rate API is unavailable.
-                All values convert to {settings.currencySettings.defaultCurrency} (the default currency).
+                {t('settings.fallbackRatesDescription', { currency: settings.currencySettings.defaultCurrency })}
               </p>
               <div className="fallback-rates-grid">
                 {SUPPORTED_CURRENCIES.filter(c => c.code !== settings.currencySettings.defaultCurrency).map((currency) => (
@@ -1352,7 +1348,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                       {currency.code} ({currency.name})
                     </label>
                     <div className="rate-input-wrapper">
-                      <span className="rate-prefix">1 {currency.code} =</span>
+                      <span className="rate-prefix">{t('settings.oneCurrencyEquals', { currency: currency.code })}</span>
                       <input
                         id={`rate-${currency.code}`}
                         type="text"
@@ -1369,7 +1365,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 ))}
               </div>
               <button className="secondary-btn" onClick={handleResetFallbackRates}>
-                Reset to Default Rates
+                {t('settings.resetToDefaultRates')}
               </button>
             </div>
           )}
@@ -1393,14 +1389,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               <div className="market-data-disclaimer" role="note">
                 <MaterialIcon name="info" />
                 <div>
-                  <strong>Disclaimer</strong>
+                  <strong>{t('settings.disclaimer')}</strong>
                   <p>
-                    Market data is fetched from publicly available Yahoo Finance APIs through a community
-                    open-source package. This data is provided as an <strong>indication only</strong> and
-                    may be delayed, incomplete, or inaccurate. We take <strong>no responsibility</strong> for
-                    wrong or delayed market data. These APIs are not officially endorsed by Yahoo Finance
-                    and may stop working at any time without notice. Always verify prices with your broker
-                    or a professional financial data provider before making investment decisions.
+                    {t('settings.marketDataDisclaimer')}
                   </p>
                 </div>
               </div>
@@ -1412,11 +1403,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   disabled={isMarketDataLoading}
                 >
                   <MaterialIcon name={isMarketDataLoading ? 'hourglass_empty' : 'download'} size="small" />
-                  {isMarketDataLoading ? 'Fetching…' : 'Fetch Current Market Data'}
+                  {isMarketDataLoading ? t('settings.fetching') : t('settings.fetchCurrentMarketData')}
                 </button>
                 {marketDataFetchedAt && (
                   <span className="setting-help">
-                    Last fetched: {new Date(marketDataFetchedAt).toLocaleString()}
+                    {t('settings.lastFetched')} {new Date(marketDataFetchedAt).toLocaleString()}
                   </span>
                 )}
               </div>
@@ -1424,7 +1415,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               {/* Exchange Rates */}
               {marketDataRates && (
                 <div className="setting-item">
-                  <h3>Exchange Rates</h3>
+                  <h3>{t('settings.exchangeRates')}</h3>
                   {marketDataRates.error && (
                     <div className="exchange-rate-warning">
                       <MaterialIcon name="warning" />
@@ -1433,15 +1424,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   )}
                   <p className="section-description">
                     {marketDataRates.isUsingFallback
-                      ? 'Using fallback rates (API unavailable)'
-                      : `Live rates fetched at ${new Date(marketDataRates.lastUpdate).toLocaleString()}`}
+                      ? t('settings.usingFallbackRates')
+                      : t('settings.liveRatesFetchedAt', { date: new Date(marketDataRates.lastUpdate).toLocaleString() })}
                   </p>
                   <table className="market-data-table">
                     <thead>
                       <tr>
-                        <th>Currency</th>
-                        <th>Rate to {settings.currencySettings.defaultCurrency}</th>
-                        <th>Source</th>
+                        <th>{t('settings.currency')}</th>
+                        <th>{t('settings.rateTo', { currency: settings.currencySettings.defaultCurrency })}</th>
+                        <th>{t('settings.source')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1454,7 +1445,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                             <td><strong>{currency.code}</strong> ({currency.name})</td>
                             <td>{liveRate !== undefined ? liveRate.toFixed(6) : 'N/A'}</td>
                             <td className={isLive ? 'market-data-live' : 'market-data-fallback'}>
-                              {isLive ? '● Live' : '○ Fallback'}
+                              {isLive ? t('settings.live') : t('settings.fallback')}
                             </td>
                           </tr>
                         );
@@ -1467,16 +1458,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               {/* Asset Prices */}
               {Object.keys(marketDataPrices).length > 0 && (
                 <div className="setting-item">
-                  <h3>Asset Prices</h3>
+                  <h3>{t('settings.assetPrices')}</h3>
                   <p className="section-description">
-                    Current market prices for your portfolio assets. Prices may be delayed.
+                    {t('settings.assetPricesDescription')}
                   </p>
                   <table className="market-data-table">
                     <thead>
                       <tr>
-                        <th>Ticker</th>
-                        <th>Price</th>
-                        <th>Status</th>
+                        <th>{t('settings.ticker')}</th>
+                        <th>{t('settings.price')}</th>
+                        <th>{t('settings.status')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1485,7 +1476,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                           <td><strong>{ticker}</strong></td>
                           <td>{price !== null ? price.toFixed(2) : 'N/A'}</td>
                           <td className={price !== null ? 'market-data-live' : 'market-data-fallback'}>
-                            {price !== null ? '● Available' : '✕ Unavailable'}
+                            {price !== null ? t('settings.available') : t('settings.unavailable')}
                           </td>
                         </tr>
                       ))}
@@ -1496,7 +1487,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
               {!marketDataRates && Object.keys(marketDataPrices).length === 0 && !isMarketDataLoading && (
                 <p className="section-description">
-                  Click "Fetch Current Market Data" to load live prices and exchange rates from Yahoo Finance.
+                  {t('settings.fetchMarketDataPrompt')}
                 </p>
               )}
             </div>
@@ -1516,12 +1507,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           {!collapsedSections.has('categories') && (
             <div id="categories-content" className="collapsible-content">
               <p className="setting-help">
-                Manage your expense categories. Create custom categories or customize the built-in ones.
+                {t('settings.categoriesDescription')}
               </p>
               <div className="setting-group">
                 <button className="primary-btn" onClick={handleOpenCategoryManager}>
                   <MaterialIcon name="category" size="small" />
-                  Manage Categories
+                  {t('settings.manageCategories')}
                 </button>
               </div>
             </div>
@@ -1542,59 +1533,59 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="data-content" className="collapsible-content">
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3>Export All Data</h3>
-                  <Tooltip content="Back up all your financial data. JSON format exports everything in one file that's easy to re-import. Separate files give you CSV/JSON files for each tool, useful for spreadsheet analysis." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3>{t('settings.exportAllData')}</h3>
+                  <Tooltip content={t('settings.tooltips.exportAllData')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Export all your data in a single file or as separate files</p>
+                <p className="setting-help">{t('settings.exportAllDataHelp')}</p>
                 <div className="export-buttons">
                   <button className="primary-btn" onClick={handleExportAllJSON}>
-                    <MaterialIcon name="download" /> Export as JSON (Single File)
+                    <MaterialIcon name="download" /> {t('settings.exportJsonSingleFile')}
                   </button>
                   <button className="secondary-btn" onClick={handleExportAll}>
-                    <MaterialIcon name="download" /> Export as Separate Files
+                    <MaterialIcon name="download" /> {t('settings.exportSeparateFiles')}
                   </button>
                 </div>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3>Import All Data</h3>
-                  <Tooltip content="Restore your data from a previously exported JSON file. All imported values will be automatically converted to your current default currency. This overwrites existing data." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3>{t('settings.importAllData')}</h3>
+                  <Tooltip content={t('settings.tooltips.importAllData')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Import all data from a single JSON file. Data will be converted to your current currency.</p>
+                <p className="setting-help">{t('settings.importAllDataHelp')}</p>
                 <label className="primary-btn import-label">
-                  <MaterialIcon name="upload" /> Import All Data (JSON)
+                  <MaterialIcon name="upload" /> {t('settings.importAllDataJson')}
                   <input type="file" accept=".json" onChange={handleImportAllJSON} hidden />
                 </label>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3>Import Individual Files</h3>
-                  <Tooltip content="Import data for specific tools from CSV or JSON files. Useful if you want to update only one tool's data or migrate from other applications." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3>{t('settings.importIndividualFiles')}</h3>
+                  <Tooltip content={t('settings.tooltips.importIndividualFiles')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Import data from individual CSV/JSON files for each tool.</p>
+                <p className="setting-help">{t('settings.importIndividualFilesHelp')}</p>
                 <div className="import-buttons">
                   <label className="secondary-btn import-label">
-                    <MaterialIcon name="upload" /> Import FIRE Calculator
+                    <MaterialIcon name="upload" /> {t('settings.importFireCalculator')}
                     <input type="file" accept=".csv" onChange={handleImportFire} hidden />
                   </label>
                   <label className="secondary-btn import-label">
-                    <MaterialIcon name="upload" /> Import Asset Allocation
+                    <MaterialIcon name="upload" /> {t('settings.importAssetAllocation')}
                     <input type="file" accept=".csv" onChange={handleImportAssets} hidden />
                   </label>
                   <label className="secondary-btn import-label">
-                    <MaterialIcon name="upload" /> Import Cashflow Tracker
+                    <MaterialIcon name="upload" /> {t('settings.importCashflowTracker')}
                     <input type="file" accept=".csv" onChange={handleImportCashflow} hidden />
                   </label>
                   <label className="secondary-btn import-label">
-                    <MaterialIcon name="upload" /> Import Net Worth Tracker
+                    <MaterialIcon name="upload" /> {t('settings.importNetWorthTracker')}
                     <input type="file" accept=".json" onChange={handleImportNetWorth} hidden />
                   </label>
                 </div>
@@ -1602,59 +1593,59 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="school" /> Guided Tour</h3>
-                  <Tooltip content="Take a step-by-step walkthrough of all Fire Tools features. The tour will show you how to use each tool and how they work together to help you achieve financial independence." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="school" /> {t('settings.guidedTour')}</h3>
+                  <Tooltip content={t('settings.tooltips.guidedTour')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Restart the guided tour to learn about Fire Tools features</p>
+                <p className="setting-help">{t('settings.guidedTourHelp')}</p>
                 <button className="secondary-btn" onClick={() => {
                   clearTourPreference();
                   clearQuestionnairePromptPreference();
                   window.location.href = '/';
                 }}>
-                  <MaterialIcon name="refresh" /> Restart Tour
+                  <MaterialIcon name="refresh" /> {t('settings.restartTour')}
                 </button>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="quiz" /> FIRE Questionnaire</h3>
-                  <Tooltip content="Retake the FIRE persona questionnaire to get updated recommendations based on your current situation and goals. Your previous results will be replaced." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="quiz" /> {t('settings.fireQuestionnaire')}</h3>
+                  <Tooltip content={t('settings.tooltips.fireQuestionnaire')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Retake the questionnaire to update your FIRE persona and recommendations</p>
+                <p className="setting-help">{t('settings.fireQuestionnaireHelp')}</p>
                 <button className="secondary-btn" onClick={() => navigate('/questionnaire')}>
-                  <MaterialIcon name="edit" /> Retake Questionnaire
+                  <MaterialIcon name="edit" /> {t('settings.retakeQuestionnaire')}
                 </button>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="inventory_2" /> Demo Data</h3>
-                  <Tooltip content="Load realistic sample data to explore all features of Fire Tools. Great for testing the app or learning how to use it. This will overwrite your current data, so export first if needed!" position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="inventory_2" /> {t('settings.demoData')}</h3>
+                  <Tooltip content={t('settings.tooltips.demoData')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Load sample data to explore the application</p>
+                <p className="setting-help">{t('settings.demoDataHelp')}</p>
                 <button className="secondary-btn" onClick={handleLoadDemoData}>
-                  <MaterialIcon name="sports_esports" /> Load Demo Data
+                  <MaterialIcon name="sports_esports" /> {t('settings.loadDemoData')}
                 </button>
               </div>
 
               <div className="data-management-group danger-zone">
-                <h3><MaterialIcon name="warning" /> Danger Zone</h3>
-                <p className="setting-help">This action cannot be undone</p>
+                <h3><MaterialIcon name="warning" /> {t('settings.dangerZone')}</h3>
+                <p className="setting-help">{t('settings.actionCannotBeUndone')}</p>
                 <button className="danger-btn" onClick={handleResetAll}>
-                  <MaterialIcon name="delete" /> Reset All Data
+                  <MaterialIcon name="delete" /> {t('settings.resetAllData')}
                 </button>
               </div>
             </div>
           )}
         </section>
 
-        {/* Support & Feedback */}
+        {/* {t('settings.support')} & Feedback */}
         <section className="settings-section collapsible-section">
           <button 
             className="collapsible-header" 
@@ -1668,84 +1659,84 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             <div id="support-content" className="collapsible-content">
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="bug_report" /> Report a Bug</h3>
-                  <Tooltip content="Found something not working correctly? Report a bug to help us improve Fire Tools. You'll be taken to GitHub to submit the report." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="bug_report" /> {t('settings.reportBug')}</h3>
+                  <Tooltip content={t('settings.tooltips.reportBug')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Report bugs, UI issues, or calculation errors</p>
+                <p className="setting-help">{t('settings.reportBugHelp')}</p>
                 <a 
                   href="https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
                 >
-                  <MaterialIcon name="open_in_new" /> Report a Bug
+                  <MaterialIcon name="open_in_new" /> {t('settings.reportBug')}
                 </a>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="lightbulb" /> Request a Feature</h3>
-                  <Tooltip content="Have an idea for a new feature or improvement? We'd love to hear it! You'll be taken to GitHub to submit your suggestion." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="lightbulb" /> {t('settings.requestFeature')}</h3>
+                  <Tooltip content={t('settings.tooltips.requestFeature')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Suggest new features or improvements</p>
+                <p className="setting-help">{t('settings.requestFeatureHelp')}</p>
                 <a 
                   href="https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
                 >
-                  <MaterialIcon name="open_in_new" /> Request a Feature
+                  <MaterialIcon name="open_in_new" /> {t('settings.requestFeature')}
                 </a>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="palette" /> UX/UI Suggestion</h3>
-                  <Tooltip content="Have ideas to improve the look and feel of Fire Tools? Share your UX/UI suggestions with us on GitHub." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="palette" /> {t('settings.uxUiSuggestion')}</h3>
+                  <Tooltip content={t('settings.tooltips.uxUiSuggestion')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Suggest improvements to the user interface or experience</p>
+                <p className="setting-help">{t('settings.uxUiSuggestionHelp')}</p>
                 <a 
                   href="https://github.com/mbianchidev/fire-tools/issues/new?template=ux_ui_suggestion.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
                 >
-                  <MaterialIcon name="open_in_new" /> Suggest UX/UI Improvement
+                  <MaterialIcon name="open_in_new" /> {t('settings.suggestUxUiImprovement')}
                 </a>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="security" /> Report Security Issue</h3>
-                  <Tooltip content="Found a security vulnerability? Please report it privately through GitHub's security advisory feature. Do not create a public issue for security concerns." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="security" /> {t('settings.reportSecurityIssue')}</h3>
+                  <Tooltip content={t('settings.tooltips.reportSecurityIssue')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">Report security vulnerabilities privately</p>
+                <p className="setting-help">{t('settings.reportSecurityIssueHelp')}</p>
                 <a 
                   href="https://github.com/mbianchidev/fire-tools/security/advisories/new" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
                 >
-                  <MaterialIcon name="open_in_new" /> Report Security Issue
+                  <MaterialIcon name="open_in_new" /> {t('settings.reportSecurityIssue')}
                 </a>
               </div>
 
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
-                  <h3><MaterialIcon name="menu_book" /> Documentation</h3>
-                  <Tooltip content="View the project documentation, including how to contribute, our security policy, and support options." position="right" maxWidth={350}>
-                    <span className="info-icon" aria-label="More information">i</span>
+                  <h3><MaterialIcon name="menu_book" /> {t('settings.documentation')}</h3>
+                  <Tooltip content={t('settings.tooltips.documentation')} position="right" maxWidth={350}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
                   </Tooltip>
                 </div>
-                <p className="setting-help">View documentation and support resources</p>
+                <p className="setting-help">{t('settings.documentationHelp')}</p>
                 <div className="export-buttons">
                   <a 
                     href="https://github.com/mbianchidev/fire-tools/blob/main/README.md" 
@@ -1761,7 +1752,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     rel="noopener noreferrer"
                     className="secondary-btn external-link-btn"
                   >
-                    <MaterialIcon name="open_in_new" /> Contributing Guide
+                    <MaterialIcon name="open_in_new" /> {t('settings.contributingGuide')}
                   </a>
                   <a 
                     href="https://github.com/mbianchidev/fire-tools/blob/main/SUPPORT.md" 
@@ -1769,7 +1760,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     rel="noopener noreferrer"
                     className="secondary-btn external-link-btn"
                   >
-                    <MaterialIcon name="open_in_new" /> Support
+                    <MaterialIcon name="open_in_new" /> {t('settings.support')}
                   </a>
                 </div>
               </div>

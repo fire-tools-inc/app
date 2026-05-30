@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
   NetWorthTrackerData,
@@ -101,6 +102,7 @@ function deepCloneData(data: NetWorthTrackerData): NetWorthTrackerData {
 }
 
 export function NetWorthTrackerPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State
@@ -684,7 +686,7 @@ export function NetWorthTrackerPage() {
 
   // Delete item handlers
   const handleDeleteAsset = useCallback((id: string) => {
-    if (!confirm('Are you sure you want to delete this asset?')) return;
+    if (!confirm(t('netWorth.confirm.deleteAsset'))) return;
     
     setData(prev => {
       const newData = deepCloneData(prev);
@@ -702,7 +704,7 @@ export function NetWorthTrackerPage() {
   }, []);
 
   const handleDeleteCash = useCallback((id: string) => {
-    if (!confirm('Are you sure you want to delete this cash entry?')) return;
+    if (!confirm(t('netWorth.confirm.deleteCash'))) return;
     
     setData(prev => {
       const newData = deepCloneData(prev);
@@ -720,7 +722,7 @@ export function NetWorthTrackerPage() {
   }, []);
 
   const handleDeletePension = useCallback((id: string) => {
-    if (!confirm('Are you sure you want to delete this pension entry?')) return;
+    if (!confirm(t('netWorth.confirm.deletePension'))) return;
     
     setData(prev => {
       const newData = deepCloneData(prev);
@@ -738,7 +740,7 @@ export function NetWorthTrackerPage() {
   }, []);
 
   const handleDeleteOperation = useCallback((id: string) => {
-    if (!confirm('Are you sure you want to delete this operation?')) return;
+    if (!confirm(t('netWorth.confirm.deleteOperation'))) return;
     
     setData(prev => {
       const newData = deepCloneData(prev);
@@ -782,7 +784,7 @@ export function NetWorthTrackerPage() {
         if (imported.currentYear) setSelectedYear(imported.currentYear);
         if (imported.currentMonth) setSelectedMonth(imported.currentMonth);
       } catch (error) {
-        alert(`Error importing data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(t('netWorth.messages.importDataError', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -791,7 +793,7 @@ export function NetWorthTrackerPage() {
 
   // Reset data
   const handleResetData = () => {
-    if (confirm('Are you sure you want to reset all net worth tracker data? This cannot be undone.')) {
+    if (confirm(t('netWorth.confirm.reset'))) {
       const defaultData = getDefaultData();
       setData(defaultData);
       setSelectedYear(defaultData.currentYear);
@@ -820,7 +822,7 @@ export function NetWorthTrackerPage() {
 
   // Load demo data for the currently selected year
   const handleLoadDemo = useCallback(() => {
-    if (confirm(`This will add demo data for ${selectedYear} to your net worth tracker. Any existing data for ${selectedYear} will be replaced. Continue?`)) {
+    if (confirm(t('netWorth.confirm.loadDemo', { year: selectedYear }))) {
       setData(prev => {
         const newData = deepCloneData(prev);
         
@@ -867,14 +869,16 @@ export function NetWorthTrackerPage() {
     return Array.from({ length: 12 }, (_, i) => i + 1);
   }, []);
 
+  const getMonthName = (month: number) => t(`common.months.${MONTH_NAMES[month - 1].toLowerCase()}`);
+
   return (
     <div className="net-worth-tracker-page">
       <header className="page-header">
         <div className="page-header-top">
-          <h1><MaterialIcon name="trending_up" className="page-header-icon" /> Net Worth Tracker</h1>
+          <h1><MaterialIcon name="trending_up" className="page-header-icon" /> {t('netWorth.title')}</h1>
         </div>
         <p>
-          Track your financial operations and net worth on a monthly basis. Monitor assets, cash, pensions, and progress toward FIRE.
+          {t('netWorth.subtitle')}
         </p>
       </header>
 
@@ -887,18 +891,18 @@ export function NetWorthTrackerPage() {
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> How this page works <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('netWorth.howItWorks.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
-              <li><strong>Log Assets:</strong> Track stocks, ETFs, bonds with share count and price</li>
-              <li><strong>Log Cash:</strong> Record bank accounts, brokerage cash, credit cards</li>
-              <li><strong>Log Pensions:</strong> Track state, private, and employer pensions</li>
-              <li><strong>Log Operations:</strong> Record dividends, purchases, sales, taxes, etc.</li>
-              <li><strong>Monthly Snapshot:</strong> Update values at month end for historical tracking</li>
-              <li><strong>View History:</strong> Navigate between months to see historical data</li>
-              <li><strong>Forecast Confidence:</strong> LOW (1-5 months), MEDIUM (6-23 months), HIGH (24+ months of data with stable growth)</li>
-              <li><strong>Asset Allocation Sync:</strong> Enable sync to automatically keep current month data in sync with Asset Allocation Manager</li>
+              <li><strong>{t('netWorth.howItWorks.logAssetsLabel')}</strong> {t('netWorth.howItWorks.logAssetsText')}</li>
+              <li><strong>{t('netWorth.howItWorks.logCashLabel')}</strong> {t('netWorth.howItWorks.logCashText')}</li>
+              <li><strong>{t('netWorth.howItWorks.logPensionsLabel')}</strong> {t('netWorth.howItWorks.logPensionsText')}</li>
+              <li><strong>{t('netWorth.howItWorks.logOperationsLabel')}</strong> {t('netWorth.howItWorks.logOperationsText')}</li>
+              <li><strong>{t('netWorth.howItWorks.monthlySnapshotLabel')}</strong> {t('netWorth.howItWorks.monthlySnapshotText')}</li>
+              <li><strong>{t('netWorth.howItWorks.viewHistoryLabel')}</strong> {t('netWorth.howItWorks.viewHistoryText')}</li>
+              <li><strong>{t('netWorth.howItWorks.forecastConfidenceLabel')}</strong> {t('netWorth.howItWorks.forecastConfidenceText')}</li>
+              <li><strong>{t('netWorth.howItWorks.assetAllocationSyncLabel')}</strong> {t('netWorth.howItWorks.assetAllocationSyncText')}</li>
             </ul>
           )}
         </section>
@@ -906,23 +910,23 @@ export function NetWorthTrackerPage() {
         {/* Sync Configuration */}
         {isViewingCurrentPeriod && (
           <section className="sync-config-section" aria-labelledby="sync-config-heading" data-tour="sync-options">
-            <h3 id="sync-config-heading" className="visually-hidden">Asset Allocation Sync</h3>
+            <h3 id="sync-config-heading" className="visually-hidden">{t('netWorth.assetAllocationSync')}</h3>
             <div className="sync-config-content">
               <label className="sync-toggle-label">
                 <input
                   type="checkbox"
                   checked={data.settings.syncWithAssetAllocation || false}
                   onChange={(e) => handleToggleSync(e.target.checked)}
-                  aria-label="Sync with Asset Allocation Manager"
+                  aria-label={t('netWorth.syncWithAssetAllocationAria')}
                 />
                 <span className="toggle-switch"></span>
                 <span className="sync-label-text">
-                  <MaterialIcon name="sync" /> Sync current month with Asset Allocation Manager
+                  <MaterialIcon name="sync" /> {t('netWorth.syncCurrentMonth')}
                 </span>
               </label>
               {data.settings.syncWithAssetAllocation && (
                 <p className="sync-info">
-                  <span aria-hidden="true">ℹ️</span> When enabled, changes to assets and cash in this month will automatically sync to Asset Allocation Manager, and vice versa.
+                  <span aria-hidden="true">ℹ️</span> {t('netWorth.syncInfo')}
                 </p>
               )}
             </div>
@@ -941,10 +945,10 @@ export function NetWorthTrackerPage() {
 
         {/* Month/Year Selector */}
         <section className="period-selector" aria-labelledby="period-selector-heading">
-          <h3 id="period-selector-heading" className="visually-hidden">Select Period</h3>
+          <h3 id="period-selector-heading" className="visually-hidden">{t('netWorth.selectPeriod')}</h3>
           <div className="selector-row">
             <div className="selector-group">
-              <label htmlFor="year-select">Year:</label>
+              <label htmlFor="year-select">{t('netWorth.year')}</label>
               <select
                 id="year-select"
                 value={selectedYear}
@@ -959,14 +963,14 @@ export function NetWorthTrackerPage() {
               </select>
             </div>
             <div className="selector-group">
-              <label htmlFor="month-select">Month:</label>
+              <label htmlFor="month-select">{t('netWorth.month')}</label>
               <select
                 id="month-select"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
               >
                 {availableMonths.map(month => (
-                  <option key={month} value={month}>{MONTH_NAMES[month - 1]}</option>
+                  <option key={month} value={month}>{getMonthName(month)}</option>
                 ))}
               </select>
             </div>
@@ -974,14 +978,14 @@ export function NetWorthTrackerPage() {
               className="btn-add-month"
               onClick={handleAddMonth}
             >
-              <MaterialIcon name="add" /> Start Month Log
+              <MaterialIcon name="add" /> {t('netWorth.startMonthLog')}
             </button>
             {isViewingPastPeriod && (
               <button
                 className="btn-current-period"
                 onClick={goToCurrentPeriod}
               >
-                <MaterialIcon name="event" /> Back to Current Period
+                <MaterialIcon name="event" /> {t('netWorth.backToCurrentPeriod')}
               </button>
             )}
           </div>
@@ -989,18 +993,18 @@ export function NetWorthTrackerPage() {
 
         {/* Net Worth Summary Cards */}
         <section className="net-worth-summary" aria-labelledby="summary-heading">
-          <h3 id="summary-heading">Net Worth Summary for {MONTH_NAMES[selectedMonth - 1]} {selectedYear}</h3>
+          <h3 id="summary-heading">{t('netWorth.summaryFor', { month: getMonthName(selectedMonth), year: selectedYear })}</h3>
           <div className="net-worth-cards">
             <div className="net-worth-card assets">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="bar_chart" /></span>
               <div className="card-content">
-                <span className="card-label">Total Assets</span>
+                <span className="card-label">{t('netWorth.totalAssets')}</span>
                 <span className="card-value">
                   <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(netWorthResult.totalAssetValue, data.defaultCurrency)}</PrivacyBlur>
                   <button 
                     className="privacy-eye-btn"
                     onClick={togglePrivacyMode}
-                    title={isPrivacyMode ? 'Show values' : 'Hide values'}
+                    title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
                     aria-pressed={isPrivacyMode}
                   >
                     <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
@@ -1016,7 +1020,7 @@ export function NetWorthTrackerPage() {
             <div className="net-worth-card cash">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="payments" /></span>
               <div className="card-content">
-                <span className="card-label">Total Cash</span>
+                <span className="card-label">{t('netWorth.totalCash')}</span>
                 <span className="card-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(netWorthResult.totalCash, data.defaultCurrency)}</PrivacyBlur></span>
                 {currentMonthVariation && currentMonthVariation.cashChange !== 0 && (
                   <span className={`card-change ${currentMonthVariation.cashChange >= 0 ? 'positive' : 'negative'}`}>
@@ -1028,7 +1032,7 @@ export function NetWorthTrackerPage() {
             <div className="net-worth-card pension">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="elderly" /></span>
               <div className="card-content">
-                <span className="card-label">Total Pension</span>
+                <span className="card-label">{t('netWorth.totalPension')}</span>
                 <span className="card-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(netWorthResult.totalPension, data.defaultCurrency)}</PrivacyBlur></span>
                 {currentMonthVariation && currentMonthVariation.pensionChange !== 0 && (
                   <span className={`card-change ${currentMonthVariation.pensionChange >= 0 ? 'positive' : 'negative'}`}>
@@ -1040,7 +1044,7 @@ export function NetWorthTrackerPage() {
             <div className="net-worth-card total">
               <span className="card-icon" aria-hidden="true"><MaterialIcon name="account_balance_wallet" /></span>
               <div className="card-content">
-                <span className="card-label">Net Worth</span>
+                <span className="card-label">{t('netWorth.netWorth')}</span>
                 <span className="card-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(netWorthResult.netWorth, data.defaultCurrency)}</PrivacyBlur></span>
                 {currentMonthVariation && currentMonthVariation.changeFromPrevMonth !== 0 && (
                   <span className={`card-change ${currentMonthVariation.changeFromPrevMonth >= 0 ? 'positive' : 'negative'}`}>
@@ -1055,19 +1059,19 @@ export function NetWorthTrackerPage() {
         {/* Data Entry Section */}
         <section className="data-entry-section" data-tour="assets-section">
           <div className="section-header">
-            <h3>Monthly Data Entry</h3>
+            <h3>{t('netWorth.monthlyDataEntry')}</h3>
             <div className="entry-actions">
               <button className="btn-entry asset" onClick={() => setShowAssetDialog(true)}>
-                <MaterialIcon name="bar_chart" /> Log Asset
+                <MaterialIcon name="bar_chart" /> {t('netWorth.logAsset')}
               </button>
               <button className="btn-entry cash" onClick={() => setShowCashDialog(true)}>
-                <MaterialIcon name="payments" /> Log Cash
+                <MaterialIcon name="payments" /> {t('netWorth.logCash')}
               </button>
               <button className="btn-entry pension" onClick={() => setShowPensionDialog(true)}>
-                <MaterialIcon name="elderly" /> Log Pension
+                <MaterialIcon name="elderly" /> {t('netWorth.logPension')}
               </button>
               <button className="btn-entry operation" onClick={() => setShowOperationDialog(true)}>
-                <MaterialIcon name="edit_note" /> Log Operation
+                <MaterialIcon name="edit_note" /> {t('netWorth.logOperation')}
               </button>
             </div>
           </div>
@@ -1076,19 +1080,19 @@ export function NetWorthTrackerPage() {
           <div className="data-tables">
             {/* Assets Table */}
             <div className="data-table-section">
-              <h4><MaterialIcon name="bar_chart" /> Assets</h4>
+              <h4><MaterialIcon name="bar_chart" /> {t('netWorth.assets')}</h4>
               {currentMonthData && currentMonthData.assets.length > 0 ? (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Ticker</th>
-                      <th>Class</th>
-                      <th>Shares</th>
-                      <th className="amount-col">Mkt Price</th>
-                      <th className="amount-col">Acq. Price</th>
-                      <th className="amount-col">Value</th>
-                      <th className="actions-col">Actions</th>
+                      <th>{t('netWorth.name')}</th>
+                      <th>{t('netWorth.ticker')}</th>
+                      <th>{t('netWorth.class')}</th>
+                      <th>{t('netWorth.shares')}</th>
+                      <th className="amount-col">{t('netWorth.marketPrice')}</th>
+                      <th className="amount-col">{t('netWorth.acquisitionPrice')}</th>
+                      <th className="amount-col">{t('netWorth.value')}</th>
+                      <th className="actions-col">{t('netWorth.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1109,14 +1113,14 @@ export function NetWorthTrackerPage() {
                             <button
                               className="btn-icon"
                               onClick={() => { setEditingItem(asset); setEditingItemType('asset'); setShowAssetDialog(true); }}
-                              aria-label="Edit asset"
+                              aria-label={t('netWorth.editAsset')}
                             >
                               <MaterialIcon name="edit" size="small" />
                             </button>
                             <button
                               className="btn-icon delete"
                               onClick={() => handleDeleteAsset(asset.id)}
-                              aria-label="Delete asset"
+                              aria-label={t('netWorth.deleteAsset')}
                             >
                               <MaterialIcon name="delete" size="small" />
                             </button>
@@ -1128,22 +1132,22 @@ export function NetWorthTrackerPage() {
                 </table>
               ) : (
                 <div className="empty-state">
-                  <p>No assets recorded for this month. Click "Log Asset" to start tracking.</p>
+                  <p>{t('netWorth.emptyAssets')}</p>
                 </div>
               )}
             </div>
 
             {/* Cash Table */}
             <div className="data-table-section">
-              <h4><MaterialIcon name="payments" /> Cash & Liquidity</h4>
+              <h4><MaterialIcon name="payments" /> {t('netWorth.cashAndLiquidity')}</h4>
               {currentMonthData && currentMonthData.cashEntries.length > 0 ? (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Account</th>
-                      <th>Type</th>
-                      <th className="amount-col">Balance</th>
-                      <th className="actions-col">Actions</th>
+                      <th>{t('netWorth.account')}</th>
+                      <th>{t('netWorth.type')}</th>
+                      <th className="amount-col">{t('netWorth.balance')}</th>
+                      <th className="actions-col">{t('netWorth.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1163,14 +1167,14 @@ export function NetWorthTrackerPage() {
                           <button
                             className="btn-icon"
                             onClick={() => { setEditingItem(cash); setEditingItemType('cash'); setShowCashDialog(true); }}
-                            aria-label="Edit cash entry"
+                            aria-label={t('netWorth.editCashEntry')}
                           >
                             <MaterialIcon name="edit" size="small" />
                           </button>
                           <button
                             className="btn-icon delete"
                             onClick={() => handleDeleteCash(cash.id)}
-                            aria-label="Delete cash entry"
+                            aria-label={t('netWorth.deleteCashEntry')}
                           >
                             <MaterialIcon name="delete" size="small" />
                           </button>
@@ -1181,22 +1185,22 @@ export function NetWorthTrackerPage() {
                 </table>
               ) : (
                 <div className="empty-state">
-                  <p>No cash entries recorded for this month. Click "Log Cash" to start tracking.</p>
+                  <p>{t('netWorth.emptyCash')}</p>
                 </div>
               )}
             </div>
 
             {/* Pensions Table */}
             <div className="data-table-section">
-              <h4><MaterialIcon name="elderly" /> Pensions</h4>
+              <h4><MaterialIcon name="elderly" /> {t('netWorth.pensions')}</h4>
               {currentMonthData && currentMonthData.pensions.length > 0 ? (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th className="amount-col">Value</th>
-                      <th className="actions-col">Actions</th>
+                      <th>{t('netWorth.name')}</th>
+                      <th>{t('netWorth.type')}</th>
+                      <th className="amount-col">{t('netWorth.value')}</th>
+                      <th className="actions-col">{t('netWorth.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1209,14 +1213,14 @@ export function NetWorthTrackerPage() {
                           <button
                             className="btn-icon"
                             onClick={() => { setEditingItem(pension); setEditingItemType('pension'); setShowPensionDialog(true); }}
-                            aria-label="Edit pension"
+                            aria-label={t('netWorth.editPension')}
                           >
                             <MaterialIcon name="edit" size="small" />
                           </button>
                           <button
                             className="btn-icon delete"
                             onClick={() => handleDeletePension(pension.id)}
-                            aria-label="Delete pension"
+                            aria-label={t('netWorth.deletePension')}
                           >
                             <MaterialIcon name="delete" size="small" />
                           </button>
@@ -1227,23 +1231,23 @@ export function NetWorthTrackerPage() {
                 </table>
               ) : (
                 <div className="empty-state">
-                  <p>No pensions recorded for this month. Click "Log Pension" to start tracking.</p>
+                  <p>{t('netWorth.emptyPensions')}</p>
                 </div>
               )}
             </div>
 
             {/* Operations Table */}
             <div className="data-table-section">
-              <h4><MaterialIcon name="edit_note" /> Financial Operations</h4>
+              <h4><MaterialIcon name="edit_note" /> {t('netWorth.financialOperations')}</h4>
               {currentMonthData && currentMonthData.operations.length > 0 ? (
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Type</th>
-                      <th>Description</th>
-                      <th className="amount-col">Amount</th>
-                      <th className="actions-col">Actions</th>
+                      <th>{t('netWorth.date')}</th>
+                      <th>{t('netWorth.type')}</th>
+                      <th>{t('netWorth.description')}</th>
+                      <th className="amount-col">{t('netWorth.amount')}</th>
+                      <th className="actions-col">{t('netWorth.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1261,7 +1265,7 @@ export function NetWorthTrackerPage() {
                             <button
                               className="btn-icon delete"
                               onClick={() => handleDeleteOperation(op.id)}
-                              aria-label="Delete operation"
+                              aria-label={t('netWorth.deleteOperation')}
                             >
                               <MaterialIcon name="delete" size="small" />
                             </button>
@@ -1273,7 +1277,7 @@ export function NetWorthTrackerPage() {
                 </table>
               ) : (
                 <div className="empty-state">
-                  <p>No operations recorded for this month. Click "Log Operation" to start tracking.</p>
+                  <p>{t('netWorth.emptyOperations')}</p>
                 </div>
               )}
             </div>
@@ -1282,7 +1286,7 @@ export function NetWorthTrackerPage() {
 
         {/* Historical Net Worth Chart */}
         <section className="chart-section" data-tour="historical-chart">
-          <h3><MaterialIcon name="trending_up" /> Historical Net Worth</h3>
+          <h3><MaterialIcon name="trending_up" /> {t('netWorth.historicalNetWorth')}</h3>
           <HistoricalNetWorthChart
             variations={monthlyVariations}
             forecast={forecast}
@@ -1297,24 +1301,24 @@ export function NetWorthTrackerPage() {
         {/* YTD Summary - only show in YTD mode */}
         {chartViewMode === 'ytd' && ytdSummary.averageMonthlyNetWorth > 0 && (
           <section className="fire-progress-section">
-            <h3><MaterialIcon name="gps_fixed" /> Year-to-Date Progress</h3>
+            <h3><MaterialIcon name="gps_fixed" /> {t('netWorth.yearToDateProgress')}</h3>
             <div className="fire-progress-content">
               <div className="fire-percentage">
                 <div className="percentage">{formatPercent(ytdSummary.netWorthChangePercent)}</div>
-                <div className="label">YTD Change</div>
+                <div className="label">{t('netWorth.ytdChange')}</div>
               </div>
               <div className="fire-details">
                 <div className="fire-detail-item">
                   <div className="value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(ytdSummary.netWorthChange, data.defaultCurrency)}</PrivacyBlur></div>
-                  <div className="label">Net Worth Change</div>
+                  <div className="label">{t('netWorth.netWorthChange')}</div>
                 </div>
                 <div className="fire-detail-item">
                   <div className="value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(ytdSummary.averageMonthlyNetWorth, data.defaultCurrency)}</PrivacyBlur></div>
-                  <div className="label">Avg Monthly Net Worth</div>
+                  <div className="label">{t('netWorth.avgMonthlyNetWorth')}</div>
                 </div>
                 <div className="fire-detail-item">
                   <div className="value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{previousYearEndValue ? formatCurrency(previousYearEndValue, data.defaultCurrency) : 'N/A'}</PrivacyBlur></div>
-                  <div className="label">Dec {selectedYear - 1}</div>
+                  <div className="label">{t('common.shortMonths.december')} {selectedYear - 1}</div>
                 </div>
               </div>
             </div>
@@ -1404,6 +1408,7 @@ interface CashDialogProps {
 }
 
 function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDuplicate, searchThreshold }: CashDialogProps) {
+  const { t } = useTranslation();
   const [accountName, setAccountName] = useState(initialData?.accountName || '');
   const [accountType, setAccountType] = useState<CashEntry['accountType']>(initialData?.accountType || 'SAVINGS');
   const [balance, setBalance] = useState(initialData?.balance?.toString() || '');
@@ -1422,7 +1427,7 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
   const handleNameChange = (newName: string) => {
     setAccountName(newName);
     if (isNameDuplicate && isNameDuplicate(newName)) {
-      setNameError('An account with this name already exists');
+      setNameError(t('netWorth.validation.accountExists'));
     } else {
       setNameError(null);
     }
@@ -1444,13 +1449,13 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
     e.preventDefault();
     
     if (isNameDuplicate && isNameDuplicate(accountName)) {
-      setNameError('An account with this name already exists');
+      setNameError(t('netWorth.validation.accountExists'));
       return;
     }
     
     const parsedBalance = parseFloat(balance);
     if (isNaN(parsedBalance)) {
-      alert('Please enter a valid balance');
+      alert(t('netWorth.validation.validBalance'));
       return;
     }
 
@@ -1472,27 +1477,27 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog net-worth-dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dialog-header">
-          <h2>{initialData ? 'Edit' : 'Log'} Cash Entry</h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <h2>{initialData ? t('common.edit') : t('netWorth.log')} {t('netWorth.cashEntry')}</h2>
+          <button className="dialog-close" onClick={onClose} aria-label={t('common.close')}>×</button>
         </div>
         
         <form onSubmit={handleSubmit} className="dialog-form">
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="cash-name">Account Name</label>
+              <label htmlFor="cash-name">{t('netWorth.accountName')}</label>
               <input
                 id="cash-name"
                 type="text"
                 value={accountName}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g., Main Savings"
+                placeholder={t('netWorth.placeholders.mainSavings')}
                 required
                 className={nameError ? 'input-error' : ''}
               />
               {nameError && <span className="error-message">{nameError}</span>}
             </div>
             <div className="form-group">
-              <label htmlFor="cash-type">Account Type</label>
+              <label htmlFor="cash-type">{t('netWorth.accountType')}</label>
               <select
                 id="cash-type"
                 value={accountType}
@@ -1510,35 +1515,35 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="cash-institution">
-                  Bank/Institution{!settings.country && ' (Set country in Settings)'}
+                  {t('netWorth.bankInstitution')}{!settings.country && t('netWorth.setCountryInSettings')}
                 </label>
                 <SearchableSelect
                   options={[
-                    { id: '', label: 'Select Bank/Broker...' },
+                    { id: '', label: t('netWorth.selectBankBroker') },
                     ...countryBanks.map(bank => ({
                       id: bank.code,
                       label: `${bank.name}${bank.supportsOpenBanking ? ' 🔗' : ''}`,
                     })),
-                    { id: 'OTHER', label: 'Other (specify below)' },
+                    { id: 'OTHER', label: t('netWorth.otherSpecifyBelow') },
                   ]}
                   value={institutionCode}
                   onChange={(val) => handleInstitutionChange(val)}
                   searchThreshold={searchThreshold}
                   className="dialog-select"
-                  ariaLabel="Bank or institution"
+                  ariaLabel={t('netWorth.bankOrInstitution')}
                 />
               </div>
               
               {/* Custom institution name for "Other" */}
               {institutionCode === 'OTHER' && (
                 <div className="form-group">
-                  <label htmlFor="cash-institution-name">Institution Name</label>
+                  <label htmlFor="cash-institution-name">{t('netWorth.institutionName')}</label>
                   <input
                     id="cash-institution-name"
                     type="text"
                     value={institutionName}
                     onChange={(e) => setInstitutionName(e.target.value)}
-                    placeholder="e.g., Local Credit Union"
+                    placeholder={t('netWorth.placeholders.localCreditUnion')}
                     className="dialog-input"
                   />
                 </div>
@@ -1548,7 +1553,7 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="cash-balance">Balance</label>
+              <label htmlFor="cash-balance">{t('netWorth.balance')}</label>
               <input
                 id="cash-balance"
                 type="number"
@@ -1560,7 +1565,7 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
               />
             </div>
             <div className="form-group">
-              <label htmlFor="cash-currency">Currency</label>
+              <label htmlFor="cash-currency">{t('netWorth.currency')}</label>
               <SearchableSelect
                 options={SUPPORTED_CURRENCIES.map(c => ({
                   id: c.code,
@@ -1569,25 +1574,25 @@ function CashDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDup
                 value={currency}
                 onChange={(val) => setCurrency(val as SupportedCurrency)}
                 searchThreshold={searchThreshold}
-                ariaLabel="Currency"
+                ariaLabel={t('netWorth.currency')}
               />
             </div>
           </div>
           
           <div className="form-group full-width">
-            <label htmlFor="cash-note">Note (optional)</label>
+            <label htmlFor="cash-note">{t('netWorth.noteOptional')}</label>
             <input
               id="cash-note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note..."
+              placeholder={t('netWorth.placeholders.addNote')}
             />
           </div>
           
           <div className="dialog-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-submit">{initialData ? 'Update' : 'Log'} Cash Entry</button>
+            <button type="button" className="btn-cancel" onClick={onClose}>{t('common.cancel')}</button>
+            <button type="submit" className="btn-submit">{initialData ? t('common.update') : t('netWorth.log')} {t('netWorth.cashEntry')}</button>
           </div>
         </form>
       </div>
@@ -1606,6 +1611,7 @@ interface PensionDialogProps {
 }
 
 function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isNameDuplicate, searchThreshold }: PensionDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialData?.name || '');
   const [pensionType, setPensionType] = useState<PensionEntry['pensionType']>(initialData?.pensionType || 'STATE');
   const [currentValue, setCurrentValue] = useState(initialData?.currentValue?.toString() || '');
@@ -1616,7 +1622,7 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
   const handleNameChange = (newName: string) => {
     setName(newName);
     if (isNameDuplicate && isNameDuplicate(newName)) {
-      setNameError('A pension with this name already exists');
+      setNameError(t('netWorth.validation.pensionExists'));
     } else {
       setNameError(null);
     }
@@ -1626,13 +1632,13 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
     e.preventDefault();
     
     if (isNameDuplicate && isNameDuplicate(name)) {
-      setNameError('A pension with this name already exists');
+      setNameError(t('netWorth.validation.pensionExists'));
       return;
     }
     
     const parsedValue = parseFloat(currentValue);
     if (isNaN(parsedValue) || parsedValue < 0) {
-      alert('Please enter a valid pension value');
+      alert(t('netWorth.validation.validPensionValue'));
       return;
     }
 
@@ -1649,27 +1655,27 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog net-worth-dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dialog-header">
-          <h2>{initialData ? 'Edit' : 'Log'} Pension</h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <h2>{initialData ? t('common.edit') : t('netWorth.log')} {t('netWorth.pension')}</h2>
+          <button className="dialog-close" onClick={onClose} aria-label={t('common.close')}>×</button>
         </div>
         
         <form onSubmit={handleSubmit} className="dialog-form">
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="pension-name">Pension Name</label>
+              <label htmlFor="pension-name">{t('netWorth.pensionName')}</label>
               <input
                 id="pension-name"
                 type="text"
                 value={name}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g., State Pension"
+                placeholder={t('netWorth.placeholders.statePension')}
                 required
                 className={nameError ? 'input-error' : ''}
               />
               {nameError && <span className="error-message">{nameError}</span>}
             </div>
             <div className="form-group">
-              <label htmlFor="pension-type">Pension Type</label>
+              <label htmlFor="pension-type">{t('netWorth.pensionType')}</label>
               <select
                 id="pension-type"
                 value={pensionType}
@@ -1684,7 +1690,7 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="pension-value">Current Value</label>
+              <label htmlFor="pension-value">{t('netWorth.currentValue')}</label>
               <input
                 id="pension-value"
                 type="number"
@@ -1697,7 +1703,7 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
               />
             </div>
             <div className="form-group">
-              <label htmlFor="pension-currency">Currency</label>
+              <label htmlFor="pension-currency">{t('netWorth.currency')}</label>
               <SearchableSelect
                 options={SUPPORTED_CURRENCIES.map(c => ({
                   id: c.code,
@@ -1706,25 +1712,25 @@ function PensionDialog({ initialData, onSubmit, onClose, defaultCurrency, isName
                 value={currency}
                 onChange={(val) => setCurrency(val as SupportedCurrency)}
                 searchThreshold={searchThreshold}
-                ariaLabel="Currency"
+                ariaLabel={t('netWorth.currency')}
               />
             </div>
           </div>
           
           <div className="form-group full-width">
-            <label htmlFor="pension-note">Note (optional)</label>
+            <label htmlFor="pension-note">{t('netWorth.noteOptional')}</label>
             <input
               id="pension-note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note..."
+              placeholder={t('netWorth.placeholders.addNote')}
             />
           </div>
           
           <div className="dialog-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-submit">{initialData ? 'Update' : 'Log'} Pension</button>
+            <button type="button" className="btn-cancel" onClick={onClose}>{t('common.cancel')}</button>
+            <button type="submit" className="btn-submit">{initialData ? t('common.update') : t('netWorth.log')} {t('netWorth.pension')}</button>
           </div>
         </form>
       </div>
@@ -1742,6 +1748,7 @@ interface OperationDialogProps {
 }
 
 function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, searchThreshold }: OperationDialogProps) {
+  const { t } = useTranslation();
   const today = new Date().toISOString().split('T')[0];
   const [date, setDate] = useState(defaultDate || today);
   const [type, setType] = useState<OperationType>('DIVIDEND');
@@ -1755,7 +1762,7 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
     
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      alert('Please enter a valid amount greater than 0');
+      alert(t('netWorth.validation.amountGreaterThanZero'));
       return;
     }
 
@@ -1773,14 +1780,14 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog net-worth-dialog" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <div className="dialog-header">
-          <h2>Log Financial Operation</h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <h2>{t('netWorth.logFinancialOperation')}</h2>
+          <button className="dialog-close" onClick={onClose} aria-label={t('common.close')}>×</button>
         </div>
         
         <form onSubmit={handleSubmit} className="dialog-form">
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="op-date">Date</label>
+              <label htmlFor="op-date">{t('netWorth.date')}</label>
               <input
                 id="op-date"
                 type="date"
@@ -1790,7 +1797,7 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
               />
             </div>
             <div className="form-group">
-              <label htmlFor="op-type">Operation Type</label>
+              <label htmlFor="op-type">{t('netWorth.operationType')}</label>
               <SearchableSelect
                 options={OPERATION_TYPES.map(t => ({
                   id: t.id,
@@ -1800,7 +1807,7 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
                 value={type}
                 onChange={(val) => setType(val as OperationType)}
                 searchThreshold={searchThreshold}
-                ariaLabel="Operation type"
+                ariaLabel={t('netWorth.operationType')}
                 renderOption={(option) => (
                   <>
                     {option.icon && <MaterialIcon name={option.icon} size="small" />}
@@ -1812,26 +1819,26 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
                     {option.icon && <MaterialIcon name={option.icon} size="small" />}
                     <span>{option.label}</span>
                   </>
-                ) : 'Select type'}
+                ) : t('netWorth.selectType')}
               />
             </div>
           </div>
           
           <div className="form-group full-width">
-            <label htmlFor="op-description">Description</label>
+            <label htmlFor="op-description">{t('netWorth.description')}</label>
             <input
               id="op-description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Q4 Dividend from VWCE"
+              placeholder={t('netWorth.placeholders.dividend')}
               required
             />
           </div>
           
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="op-amount">Amount</label>
+              <label htmlFor="op-amount">{t('netWorth.amount')}</label>
               <input
                 id="op-amount"
                 type="number"
@@ -1844,7 +1851,7 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
               />
             </div>
             <div className="form-group">
-              <label htmlFor="op-currency">Currency</label>
+              <label htmlFor="op-currency">{t('netWorth.currency')}</label>
               <SearchableSelect
                 options={SUPPORTED_CURRENCIES.map(c => ({
                   id: c.code,
@@ -1853,25 +1860,25 @@ function OperationDialog({ onSubmit, onClose, defaultCurrency, defaultDate, sear
                 value={currency}
                 onChange={(val) => setCurrency(val as SupportedCurrency)}
                 searchThreshold={searchThreshold}
-                ariaLabel="Currency"
+                ariaLabel={t('netWorth.currency')}
               />
             </div>
           </div>
           
           <div className="form-group full-width">
-            <label htmlFor="op-note">Note (optional)</label>
+            <label htmlFor="op-note">{t('netWorth.noteOptional')}</label>
             <input
               id="op-note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Add a note..."
+              placeholder={t('netWorth.placeholders.addNote')}
             />
           </div>
           
           <div className="dialog-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-submit">Log Operation</button>
+            <button type="button" className="btn-cancel" onClick={onClose}>{t('common.cancel')}</button>
+            <button type="submit" className="btn-submit">{t('netWorth.logOperation')}</button>
           </div>
         </form>
       </div>

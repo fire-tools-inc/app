@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { 
   BarChart, 
   Bar, 
@@ -35,6 +36,7 @@ interface CustomTooltipProps {
 }
 
 function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps) {
+  const { t } = useTranslation();
   if (!active || !payload || !payload.length) return null;
 
   return (
@@ -69,7 +71,7 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
           paddingTop: '0.5rem',
           fontSize: '0.85rem',
         }}>
-          Avg Expenses: {formatCurrency(payload[0].payload.average, currency)}
+          {t('charts.avgExpenses')} {formatCurrency(payload[0].payload.average, currency)}
         </p>
       )}
     </div>
@@ -77,6 +79,7 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
 }
 
 export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChartProps) {
+  const { t } = useTranslation();
   if (data.length === 0) {
     return (
       <div style={{ 
@@ -86,7 +89,7 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
         background: '#f8f9fa',
         borderRadius: '8px',
       }}>
-        <p>No monthly data to display. Add transactions to see the comparison.</p>
+        <p>{t('charts.noMonthlyData')}</p>
       </div>
     );
   }
@@ -121,7 +124,7 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
             stroke="#ff9800" 
             strokeDasharray="5 5" 
             label={{ 
-              value: 'Avg', 
+              value: t('charts.avg'), 
               position: 'right', 
               fill: '#ff9800',
               fontSize: 12,
@@ -129,13 +132,13 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
           />
           <Bar 
             dataKey="income" 
-            name="Income" 
+            name={t('charts.income')} 
             fill="#4CAF50" 
             radius={[4, 4, 0, 0]}
           />
           <Bar 
             dataKey="expenses" 
-            name="Expenses" 
+            name={t('charts.expenses')} 
             fill="#f44336" 
             radius={[4, 4, 0, 0]}
           />

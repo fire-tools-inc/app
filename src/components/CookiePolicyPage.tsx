@@ -1,13 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import './PolicyPages.css';
 
 export function CookiePolicyPage() {
+  const { t } = useTranslation();
   return (
     <div className="policy-page">
       <div className="policy-container">
-        <h1>Cookie Policy</h1>
+        <h1>{t('legal.cookiePolicy')}</h1>
         <p className="last-updated">
-          <strong>Last Updated:</strong> December 31, 2025
+          <strong>{t('legal.lastUpdated')}</strong> December 31, 2025
         </p>
+        <p className="policy-language-note">{t('legal.contentEnglishOnly')}</p>
+
+        {/* TODO(i18n): translate legal text content in a future revision */}
 
         <section className="policy-section">
           <h2>What Are Cookies?</h2>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { AssetClassSummary } from '../types/assetAllocation';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
 import { useTableSort } from '../utils/useTableSort';
@@ -13,6 +14,7 @@ export const AssetClassTable: React.FC<AssetClassTableProps> = ({
   totalValue,
   currency,
 }) => {
+  const { t } = useTranslation();
   const { sortedData, requestSort, getSortIndicator } = useTableSort(assetClasses);
 
   const getActionColor = (action: string): string => {
@@ -38,26 +40,26 @@ export const AssetClassTable: React.FC<AssetClassTableProps> = ({
         <thead>
           <tr>
             <th className="sortable" onClick={() => requestSort('assetClass')}>
-              Asset Class <span className="sort-indicator">{getSortIndicator('assetClass')}</span>
+              {t('tables.assetClass')} <span className="sort-indicator">{getSortIndicator('assetClass')}</span>
             </th>
-            <th>Target Mode</th>
+            <th>{t('tables.targetMode')}</th>
             <th className="sortable" onClick={() => requestSort('targetPercent')}>
-              % Target <span className="sort-indicator">{getSortIndicator('targetPercent')}</span>
+              {t('tables.percentTarget')} <span className="sort-indicator">{getSortIndicator('targetPercent')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('currentPercent')}>
-              % Current <span className="sort-indicator">{getSortIndicator('currentPercent')}</span>
+              {t('tables.percentCurrent')} <span className="sort-indicator">{getSortIndicator('currentPercent')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('currentTotal')}>
-              Absolute Current <span className="sort-indicator">{getSortIndicator('currentTotal')}</span>
+              {t('tables.absoluteCurrent')} <span className="sort-indicator">{getSortIndicator('currentTotal')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('targetTotal')}>
-              Absolute Target <span className="sort-indicator">{getSortIndicator('targetTotal')}</span>
+              {t('tables.absoluteTarget')} <span className="sort-indicator">{getSortIndicator('targetTotal')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta')}>
-              Delta <span className="sort-indicator">{getSortIndicator('delta')}</span>
+              {t('tables.delta')} <span className="sort-indicator">{getSortIndicator('delta')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('action')}>
-              Action <span className="sort-indicator">{getSortIndicator('action')}</span>
+              {t('tables.action')} <span className="sort-indicator">{getSortIndicator('action')}</span>
             </th>
           </tr>
         </thead>
@@ -104,7 +106,7 @@ export const AssetClassTable: React.FC<AssetClassTableProps> = ({
             </tr>
           ))}
           <tr className="total-row">
-            <td><strong>Total Portfolio</strong></td>
+            <td><strong>{t('tables.totalPortfolio')}</strong></td>
             <td colSpan={2}></td>
             <td><strong>100%</strong></td>
             <td className="currency-value"><strong>{formatCurrency(totalValue, currency)}</strong></td>

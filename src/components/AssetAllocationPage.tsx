@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
 import { DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
-import { 
-  saveAssetAllocation, 
-  loadAssetAllocation, 
-  clearAssetAllocation, 
-  loadNetWorthTrackerData, 
-  saveNetWorthTrackerData 
+import {
+  saveAssetAllocation,
+  loadAssetAllocation,
+  clearAssetAllocation,
+  loadNetWorthTrackerData,
+  saveNetWorthTrackerData
 } from '../utils/cookieStorage';
 import { exportAssetAllocationToCSV, importAssetAllocationFromCSV } from '../utils/csvExport';
 import { loadSettings, saveSettings } from '../utils/cookieSettings';
@@ -39,22 +40,23 @@ function calculateCashDelta(
   if (cashTarget?.targetMode !== 'SET') {
     return 0;
   }
-  
+
   // Calculate cash current total
   const cashCurrentTotal = assets
     .filter(a => a.assetClass === 'CASH' && a.targetMode !== 'OFF')
     .reduce((sum, a) => sum + a.currentValue, 0);
-  
+
   // Calculate cash target total (sum of SET target values for cash assets)
   const cashTargetTotal = assets
     .filter(a => a.assetClass === 'CASH' && a.targetMode === 'SET')
     .reduce((sum, a) => sum + (a.targetValue || 0), 0);
-  
+
   // Delta = target - current (negative = INVEST, positive = SAVE)
   return cashTargetTotal - cashCurrentTotal;
 }
 
 export const AssetAllocationPage: React.FC = () => {
+  const { t } = useTranslation();
   const defaultTargets = {
     STOCKS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 60 },
     BONDS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 40 },
@@ -82,12 +84,12 @@ export const AssetAllocationPage: React.FC = () => {
     const saved = loadAssetAllocation();
     return saved.assetClassTargets || defaultTargets;
   });
-  
+
   // Calculate portfolio value as sum of all non-cash assets
   const portfolioValue = assets
     .filter(a => a.assetClass !== 'CASH' && a.targetMode !== 'OFF')
     .reduce((sum, a) => sum + a.currentValue, 0);
-  
+
   const [allocation, setAllocation] = useState<PortfolioAllocation>(() => {
     const saved = loadAssetAllocation();
     const initialAssets = saved.assets || DEFAULT_ASSETS;
@@ -115,7 +117,7 @@ export const AssetAllocationPage: React.FC = () => {
   const [showPortfolioBreakdown] = useState<boolean>(
     () => loadSettings().experimentalFeatures?.portfolioBreakdown ?? false,
   );
-  
+
   // Track if we're currently syncing to prevent infinite loops
   const isSyncingRef = useRef(false);
   // Track whether initial price fetch has been done
@@ -145,7 +147,7 @@ export const AssetAllocationPage: React.FC = () => {
     // Also refresh exchange rates
     await refreshRates();
   };
-  
+
   // Toggle privacy mode and save to settings
   const togglePrivacyMode = () => {
     const newMode = !isPrivacyMode;
@@ -160,16 +162,16 @@ export const AssetAllocationPage: React.FC = () => {
     if (isSyncingRef.current) {
       return;
     }
-    
+
     saveAssetAllocation(assets, assetClassTargets);
-    
+
     // If Net Worth Tracker has sync enabled, sync Asset Allocation → Net Worth
     const netWorthData = loadNetWorthTrackerData();
     if (netWorthData?.settings.syncWithAssetAllocation) {
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth() + 1;
-      
+
       // Only sync if Net Worth Tracker is viewing the current month
       if (netWorthData.currentYear === currentYear && netWorthData.currentMonth === currentMonth) {
         isSyncingRef.current = true;
@@ -215,24 +217,24 @@ export const AssetAllocationPage: React.FC = () => {
     if (!deletedAsset) {
       return;
     }
-    
+
     // Get other percentage-based assets in the same class
-    const sameClassAssets = assets.filter(asset => 
-      asset.id !== assetId && 
-      asset.assetClass === deletedAsset.assetClass && 
+    const sameClassAssets = assets.filter(asset =>
+      asset.id !== assetId &&
+      asset.assetClass === deletedAsset.assetClass &&
       asset.targetMode === 'PERCENTAGE'
     );
-    
+
     // If the deleted asset was percentage-based and there are other percentage-based assets in the same class
     if (deletedAsset.targetMode === 'PERCENTAGE' && sameClassAssets.length > 0 && deletedAsset.targetPercent) {
       const deletedPercent = deletedAsset.targetPercent;
-      
+
       // Get total of remaining assets' percentages
       const remainingTotal = sameClassAssets.reduce((sum, asset) => sum + (asset.targetPercent || 0), 0);
-      
+
       // Redistribute the deleted percentage proportionally
       let newAssets = assets.filter(asset => asset.id !== assetId);
-      
+
       if (remainingTotal === 0) {
         // Distribute equally if all others are 0
         const equalShare = deletedPercent / sameClassAssets.length;
@@ -253,7 +255,7 @@ export const AssetAllocationPage: React.FC = () => {
           return asset;
         });
       }
-      
+
       updateAllocation(newAssets);
     } else {
       // Just remove the asset without redistribution
@@ -271,28 +273,28 @@ export const AssetAllocationPage: React.FC = () => {
         targetPercent: updates.targetPercent,
       }
     };
-    
+
     // Check if we're changing TO or FROM SET mode - requires redistribution
     const oldMode = assetClassTargets[assetClass]?.targetMode;
     const newMode = updatedTargets[assetClass].targetMode;
     const modeChanged = oldMode !== newMode;
-    
+
     // If changing an asset class to SET mode, redistribute its percentage to other PERCENTAGE classes
     if (modeChanged && newMode === 'SET' && oldMode === 'PERCENTAGE') {
       const oldPercent = assetClassTargets[assetClass]?.targetPercent || 0;
-      
+
       // Get all other percentage-based asset classes
       const otherPercentageClasses = Object.keys(updatedTargets).filter(
         (key) => key !== assetClass && updatedTargets[key as AssetClass].targetMode === 'PERCENTAGE'
       ) as AssetClass[];
-      
+
       if (otherPercentageClasses.length > 0 && oldPercent > 0) {
         // Get total of other classes' current percentages
         const otherClassesTotal = otherPercentageClasses.reduce(
           (sum, cls) => sum + (updatedTargets[cls].targetPercent || 0),
           0
         );
-        
+
         if (otherClassesTotal === 0) {
           // Distribute the freed percentage equally
           const equalPercent = oldPercent / otherPercentageClasses.length;
@@ -314,11 +316,11 @@ export const AssetAllocationPage: React.FC = () => {
           });
         }
       }
-      
+
       // Clear the targetPercent for the SET class
       updatedTargets[assetClass].targetPercent = undefined;
     }
-    
+
     // If updating a percentage-based asset class percentage value, redistribute other percentage-based classes
     if (updates.targetMode === 'PERCENTAGE' || (!updates.targetMode && assetClassTargets[assetClass]?.targetMode === 'PERCENTAGE')) {
       if (updates.targetPercent !== undefined) {
@@ -326,16 +328,16 @@ export const AssetAllocationPage: React.FC = () => {
         const otherPercentageClasses = Object.keys(updatedTargets).filter(
           (key) => key !== assetClass && updatedTargets[key as AssetClass].targetMode === 'PERCENTAGE'
         ) as AssetClass[];
-        
+
         if (otherPercentageClasses.length > 0) {
           const remainingPercent = 100 - updates.targetPercent;
-          
+
           // Get total of other classes' current percentages
           const otherClassesTotal = otherPercentageClasses.reduce(
             (sum, cls) => sum + (updatedTargets[cls].targetPercent || 0),
             0
           );
-          
+
           if (otherClassesTotal === 0) {
             // Distribute equally
             const equalPercent = remainingPercent / otherPercentageClasses.length;
@@ -359,9 +361,9 @@ export const AssetAllocationPage: React.FC = () => {
         }
       }
     }
-    
+
     setAssetClassTargets(updatedTargets);
-    
+
     // Recalculate allocation with updated targets
     const pValue = assets
       .filter(a => a.assetClass !== 'CASH' && a.targetMode !== 'OFF')
@@ -369,7 +371,7 @@ export const AssetAllocationPage: React.FC = () => {
     const cashDelta = calculateCashDelta(assets, updatedTargets);
     const newAllocation = calculatePortfolioAllocation(assets, updatedTargets, pValue, cashDelta);
     setAllocation(newAllocation);
-    
+
     // Only update targetMode for assets in this class, not targetPercent
     if (updates.targetMode) {
       const newAssets = assets.map(asset => {
@@ -418,30 +420,30 @@ export const AssetAllocationPage: React.FC = () => {
     // If the new asset is percentage-based, redistribute existing assets in the same class
     if (newAsset.targetMode === 'PERCENTAGE' && newAsset.targetPercent) {
       const newAssetPercent = newAsset.targetPercent;
-      
+
       // Validate: new asset percentage must be between 0 and 100
       if (newAssetPercent <= 0 || newAssetPercent > 100) {
         updateAllocation([...assets, newAsset]);
         return;
       }
-      
+
       // Get existing percentage-based assets in the same class
-      const sameClassAssets = assets.filter(a => 
-        a.assetClass === newAsset.assetClass && 
+      const sameClassAssets = assets.filter(a =>
+        a.assetClass === newAsset.assetClass &&
         a.targetMode === 'PERCENTAGE'
       );
-      
+
       if (sameClassAssets.length > 0) {
         // Calculate total percentage of existing assets in this class
         const existingTotal = sameClassAssets.reduce((sum, a) => sum + (a.targetPercent || 0), 0);
-        
+
         if (existingTotal > 0) {
           // Calculate how much we need to reduce (to make room for the new asset)
           // The new total should be 100%, so we reduce existing proportionally
           // reductionFactor = (100 - newAssetPercent) / existingTotal
           // This works correctly even if existingTotal != 100
           const reductionFactor = (100 - newAssetPercent) / existingTotal;
-          
+
           // Redistribute: reduce each existing asset proportionally
           const updatedAssets = assets.map(asset => {
             if (asset.assetClass === newAsset.assetClass && asset.targetMode === 'PERCENTAGE') {
@@ -450,13 +452,13 @@ export const AssetAllocationPage: React.FC = () => {
             }
             return asset;
           });
-          
+
           updateAllocation([...updatedAssets, newAsset]);
           return;
         }
       }
     }
-    
+
     // Default: just add the asset without redistribution
     updateAllocation([...assets, newAsset]);
   };
@@ -487,7 +489,7 @@ export const AssetAllocationPage: React.FC = () => {
         setAssetClassTargets(imported.assetClassTargets);
         updateAllocation(imported.assets, imported.assetClassTargets);
       } catch (error) {
-        alert(`Error importing CSV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(t('assetAllocation.messages.importCsvError', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
@@ -499,31 +501,31 @@ export const AssetAllocationPage: React.FC = () => {
     // Check if sync is enabled and warn accordingly
     const netWorthData = loadNetWorthTrackerData();
     const syncEnabled = netWorthData?.settings.syncWithAssetAllocation || false;
-    
+
     const warningMessage = syncEnabled
-      ? 'Are you sure you want to reset all Asset Allocation data?\n\nWARNING: With sync enabled, this will also clear the Net Worth Tracker data for the current month (assets and cash).\n\nHistorical Net Worth data will NOT be affected.'
-      : 'Are you sure you want to reset all Asset Allocation data? This will clear all saved assets.';
-    
+      ? t('assetAllocation.confirm.resetWithSync')
+      : t('assetAllocation.confirm.reset');
+
     if (confirm(warningMessage)) {
       clearAssetAllocation();
-      
+
       // If sync is enabled, also clear current month in Net Worth
       if (syncEnabled && netWorthData) {
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth(); // 0-indexed
-        
+
         // Find current year data
         const yearData = netWorthData.years.find(y => y.year === currentYear);
         if (yearData && yearData.months[currentMonth]) {
           // Clear assets and cash for current month only
           yearData.months[currentMonth].assets = [];
           yearData.months[currentMonth].cashEntries = [];
-          
+
           // Save updated Net Worth data
           saveNetWorthTrackerData(netWorthData);
         }
       }
-      
+
       setAssets([]);
       setAssetClassTargets(defaultTargets);
       updateAllocation([], defaultTargets);
@@ -531,7 +533,7 @@ export const AssetAllocationPage: React.FC = () => {
   };
 
   const handleLoadDemoData = () => {
-    if (confirm('This will overwrite your current asset allocation data with demo data. Are you sure you want to continue?')) {
+    if (confirm(t('assetAllocation.confirm.loadDemo'))) {
       const { assets: demoAssets, assetClassTargets: demoTargets } = getDemoAssetAllocationData();
       setAssets(demoAssets);
       setAssetClassTargets(demoTargets);
@@ -546,7 +548,7 @@ export const AssetAllocationPage: React.FC = () => {
   const cashDeltaAmount = (() => {
     const cashClass = allocation.assetClasses.find(ac => ac.assetClass === 'CASH');
     if (!cashClass) return 0;
-    
+
     // Calculate cash delta based on assetClassTargets
     const cashTarget = assetClassTargets.CASH;
     if (cashTarget.targetMode === 'SET') {
@@ -599,7 +601,7 @@ export const AssetAllocationPage: React.FC = () => {
   };
 
   const assetClassChartData = prepareAssetClassChartData(allocation.assetClasses);
-  const selectedAssetClass = selectedClass 
+  const selectedAssetClass = selectedClass
     ? allocation.assetClasses.find(ac => ac.assetClass === selectedClass)
     : null;
   const assetChartData = selectedAssetClass
@@ -614,11 +616,10 @@ export const AssetAllocationPage: React.FC = () => {
     <div className="asset-allocation-page">
       <header className="page-header">
         <div className="page-header-top">
-          <h1><MaterialIcon name="pie_chart" className="page-header-icon" /> Asset Allocation Manager</h1>
+          <h1><MaterialIcon name="pie_chart" className="page-header-icon" /> {t('assetAllocation.title')}</h1>
         </div>
         <p>
-          Manage and visualize your portfolio asset allocation. Set target allocations,
-          track current positions, and see recommended actions to rebalance your portfolio.
+          {t('assetAllocation.description')}
         </p>
       </header>
 
@@ -626,43 +627,43 @@ export const AssetAllocationPage: React.FC = () => {
         {/* Sync status banner */}
         {isSyncEnabled && (
           <div className="sync-status-banner" role="status" aria-live="polite">
-            <MaterialIcon name="sync" /> Syncing with Net Worth Tracker (current month)
+            <MaterialIcon name="sync" /> {t('assetAllocation.syncingWithNetWorth')}
           </div>
         )}
 
         {/* Portfolio Value - calculated from non-cash assets */}
         <section className="portfolio-value-section" aria-labelledby="portfolio-value-heading">
           <div className="portfolio-value-label">
-            <strong id="portfolio-value-heading">Portfolio Value (excl. Cash):</strong>
+            <strong id="portfolio-value-heading">{t('assetAllocation.portfolioValueExcludingCash')}</strong>
             <span className="portfolio-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(portfolioValue, currency)}</PrivacyBlur></span>
-            <button 
+            <button
               className="privacy-eye-btn"
               onClick={togglePrivacyMode}
-              title={isPrivacyMode ? 'Show values' : 'Hide values'}
+              title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
               aria-pressed={isPrivacyMode}
             >
               <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
             </button>
           </div>
           <div className="portfolio-value-info">
-            Total holdings (incl. cash): <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(allocation.totalHoldings, currency)}</PrivacyBlur>
+            {t('assetAllocation.totalHoldingsIncludingCash')} <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(allocation.totalHoldings, currency)}</PrivacyBlur>
           </div>
           <div className="price-refresh-row">
             <button
               className="action-btn"
               onClick={handleRefreshPrices}
               disabled={isPriceLoading || isRatesLoading}
-              aria-label="Refresh asset prices from Yahoo Finance"
-              title="Fetch live prices from Yahoo Finance"
+              aria-label={t('assetAllocation.refreshPricesAria')}
+              title={t('assetAllocation.refreshPricesTitle')}
             >
               <MaterialIcon name={isPriceLoading || isRatesLoading ? 'hourglass_empty' : 'refresh'} />
-              {isPriceLoading || isRatesLoading ? ' Refreshing…' : ' Refresh Prices'}
+              {isPriceLoading || isRatesLoading ? t('assetAllocation.refreshingPrices') : t('assetAllocation.refreshPrices')}
             </button>
             {lastPriceRefresh && lastPriceRefresh.updatedCount > 0 && (
               <span className="price-refresh-status" role="status">
-                Updated {lastPriceRefresh.updatedCount} asset{lastPriceRefresh.updatedCount !== 1 ? 's' : ''}
+                {t('assetAllocation.updatedAssets', { count: lastPriceRefresh.updatedCount })}
                 {lastPriceRefresh.failedTickers.length > 0 && (
-                  <> · Failed: {lastPriceRefresh.failedTickers.join(', ')}</>
+                  <> {t('assetAllocation.failedTickers', { tickers: lastPriceRefresh.failedTickers.join(', ') })}</>
                 )}
               </span>
             )}
@@ -672,42 +673,42 @@ export const AssetAllocationPage: React.FC = () => {
               </span>
             )}
             {ratesLastUpdate && !isRatesLoading && (
-              <span className="price-refresh-rates" title="Exchange rates last updated">
-                <MaterialIcon name="currency_exchange" size="small" /> Rates: {new Date(ratesLastUpdate).toLocaleDateString()}
+              <span className="price-refresh-rates" title={t('assetAllocation.exchangeRatesLastUpdated')}>
+                <MaterialIcon name="currency_exchange" size="small" /> {t('assetAllocation.rates', { date: new Date(ratesLastUpdate).toLocaleDateString() })}
               </span>
             )}
           </div>
         </section>
 
-        {/* How to Use - Collapsible at top */}
+        {/* {t('assetAllocation.howToUse.title')} - Collapsible at top */}
         <section className="allocation-info collapsible-section">
-          <button 
-            className="collapsible-header" 
+          <button
+            className="collapsible-header"
             onClick={() => setIsHowToUseOpen(!isHowToUseOpen)}
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> How to Use <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('assetAllocation.howToUse.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
-              <li><strong>Add Asset:</strong> Click the "Add Asset" button to add a new asset with type selection</li>
-              <li><strong>Edit Asset:</strong> Click the edit (pencil) button in any row to edit the current value and target %</li>
-              <li><strong>Delete Asset:</strong> When editing an asset, click the trash icon to delete it</li>
-              <li><strong>Collapsible Tables:</strong> Click on an asset class header to expand/collapse and see individual assets</li>
-              <li><strong>Target Mode:</strong> Choose "%" for percentage-based allocation, "SET" for fixed amounts (only for cash types), or "OFF" to exclude</li>
-              <li><strong>Percentage targets</strong> for active assets within a class should sum to 100%</li>
-              <li><strong>Actions:</strong> 
-                <span className="info-badge buy">BUY/SAVE</span> = Increase position | 
-                <span className="info-badge sell">SELL/INVEST</span> = Decrease position | 
-                <span className="info-badge hold">HOLD</span> = Within target range |
-                <span className="info-badge excluded">EXCLUDED</span> = Not in allocation
+              <li><strong>{t('assetAllocation.howToUse.addAssetLabel')}</strong> {t('assetAllocation.howToUse.addAssetText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.editAssetLabel')}</strong> {t('assetAllocation.howToUse.editAssetText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.deleteAssetLabel')}</strong> {t('assetAllocation.howToUse.deleteAssetText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.collapsibleTablesLabel')}</strong> {t('assetAllocation.howToUse.collapsibleTablesText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.targetModeLabel')}</strong> {t('assetAllocation.howToUse.targetModePageText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.percentageTargetsLabel')}</strong> {t('assetAllocation.howToUse.percentageTargetsPageText')}</li>
+              <li><strong>{t('assetAllocation.howToUse.actionsLabel')}</strong>
+                <span className="info-badge buy">BUY/SAVE</span> = {t('assetAllocation.howToUse.increasePosition')} |
+                <span className="info-badge sell">SELL/INVEST</span> = {t('assetAllocation.howToUse.decreasePosition')} |
+                <span className="info-badge hold">HOLD</span> = {t('assetAllocation.howToUse.withinTargetRange')} |
+                <span className="info-badge excluded">EXCLUDED</span> = {t('assetAllocation.howToUse.notInAllocation')}
               </li>
             </ul>
           )}
         </section>
 
-        {/* Data Management Section - After "How to Use" */}
+        {/* Data Management Section - After "{t('assetAllocation.howToUse.title')}" */}
         <DataManagement
           onExport={handleExport}
           onImport={handleImport}
@@ -718,7 +719,7 @@ export const AssetAllocationPage: React.FC = () => {
 
         {!allocation.isValid && (
           <div className="validation-errors" role="alert" aria-live="polite">
-            <strong><MaterialIcon name="warning" /> Validation Errors:</strong>
+            <strong><MaterialIcon name="warning" /> {t('assetAllocation.validationErrors')}</strong>
             <ul>
               {allocation.validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -729,14 +730,14 @@ export const AssetAllocationPage: React.FC = () => {
 
         <section className="allocation-section" aria-labelledby="asset-classes-heading" data-tour="target-allocations">
           <div className="section-header-with-actions">
-            <h3 id="asset-classes-heading">Asset Classes</h3>
-            <button 
-              onClick={handleOpenMassEditAssetClass} 
-              className="btn-mass-edit" 
+            <h3 id="asset-classes-heading">{t('assetAllocation.assetClasses')}</h3>
+            <button
+              onClick={handleOpenMassEditAssetClass}
+              className="btn-mass-edit"
               style={{ marginLeft: '1rem' }}
-              aria-label="Edit all asset class allocations"
+              aria-label={t('assetAllocation.editAllAssetClassAllocations')}
             >
-              <MaterialIcon name="edit" /> Edit All
+              <MaterialIcon name="edit" /> {t('assetAllocation.editAll')}
             </button>
           </div>
           <EditableAssetClassTable
@@ -752,14 +753,14 @@ export const AssetAllocationPage: React.FC = () => {
         </section>
 
         <div className="class-selector">
-          <label htmlFor="asset-class-select">View Asset Class Details:</label>
-          <select 
+          <label htmlFor="asset-class-select">{t('assetAllocation.viewAssetClassDetails')}</label>
+          <select
             id="asset-class-select"
-            value={selectedClass || ''} 
+            value={selectedClass || ''}
             onChange={(e) => setSelectedClass(e.target.value || null)}
             className="class-select"
           >
-            <option value="">Select Asset Class</option>
+            <option value="">{t('assetAllocation.selectAssetClass')}</option>
             {allocation.assetClasses.map(ac => (
               <option key={ac.assetClass} value={ac.assetClass}>
                 {formatAssetName(ac.assetClass)}
@@ -769,27 +770,27 @@ export const AssetAllocationPage: React.FC = () => {
         </div>
 
         <section className="charts-section" aria-labelledby="charts-heading">
-          <button 
-            className="collapsible-header" 
+          <button
+            className="collapsible-header"
             onClick={() => setIsChartsCollapsed(!isChartsCollapsed)}
             aria-expanded={!isChartsCollapsed}
             aria-controls="charts-content"
           >
-            <h3 id="charts-heading">Graphs</h3>
+            <h3 id="charts-heading">{t('assetAllocation.graphs')}</h3>
             <span className="collapse-icon-small" aria-hidden="true">{isChartsCollapsed ? '▶' : '▼'}</span>
           </button>
           {!isChartsCollapsed && (
             <div id="charts-content" className="charts-row">
               <AllocationChart
                 data={assetClassChartData}
-                title="Portfolio allocation by asset class"
+                title={t('assetAllocation.charts.byAssetClassLower')}
                 currency={currency}
               />
-              
+
               {selectedAssetClass && (
                 <AllocationChart
                   data={assetChartData}
-                  title={`${formatAssetName(selectedAssetClass.assetClass)} Breakdown`}
+                  title={t('assetAllocation.charts.breakdown', { assetClass: formatAssetName(selectedAssetClass.assetClass) })}
                   currency={currency}
                 />
               )}
@@ -798,7 +799,7 @@ export const AssetAllocationPage: React.FC = () => {
           {showPortfolioBreakdown && (
             <div className="breakdown-link-row">
               <Link to="/portfolio-breakdown" className="action-btn breakdown-page-link">
-                <MaterialIcon name="donut_large" /> View Detailed Portfolio Breakdown
+                <MaterialIcon name="donut_large" /> {t('assetAllocation.viewDetailedPortfolioBreakdown')}
               </Link>
             </div>
           )}
@@ -806,25 +807,25 @@ export const AssetAllocationPage: React.FC = () => {
 
         <section className="allocation-section" aria-labelledby="portfolio-details-heading" data-tour="asset-list">
           <div className="section-header-with-actions">
-            <h3 id="portfolio-details-heading">Portfolio Details by Asset Class</h3>
+            <h3 id="portfolio-details-heading">{t('assetAllocation.portfolioDetailsByAssetClass')}</h3>
             <div className="table-actions">
               <div data-tour="dca-helper">
-                <button 
-                  onClick={() => setIsDCADialogOpen(true)} 
-                  className="action-btn" 
+                <button
+                  onClick={() => setIsDCADialogOpen(true)}
+                  className="action-btn"
                   style={{ background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)', color: 'white' }}
-                  aria-label="Open Dollar Cost Averaging helper"
+                  aria-label={t('assetAllocation.openDcaHelperAria')}
                 >
-                  <MaterialIcon name="savings" /> DCA Helper
+                  <MaterialIcon name="savings" /> {t('assetAllocation.dcaHelper')}
                 </button>
               </div>
               <div data-tour="add-asset-button">
-                <button 
-                  onClick={() => setIsDialogOpen(true)} 
+                <button
+                  onClick={() => setIsDialogOpen(true)}
                   className="action-btn primary-btn"
-                  aria-label="Add new asset to portfolio"
+                  aria-label={t('assetAllocation.addNewAssetAria')}
                 >
-                  <MaterialIcon name="add" /> Add Asset
+                  <MaterialIcon name="add" /> {t('assetAllocation.addAsset')}
                 </button>
               </div>
             </div>
@@ -860,7 +861,7 @@ export const AssetAllocationPage: React.FC = () => {
         onSave={handleMassEditSave}
         assets={assets}
         assetClass={massEditAssetClass}
-        title={massEditMode === 'assetClass' ? 'Mass Edit Asset Classes' : `Mass Edit ${massEditAssetClass ? formatAssetName(massEditAssetClass) : ''} Assets`}
+        title={massEditMode === 'assetClass' ? t('assetAllocation.massEditAssetClasses') : t('assetAllocation.massEditAssets', { assetClass: massEditAssetClass ? formatAssetName(massEditAssetClass) : '' })}
         mode={massEditMode}
         assetClassTargets={assetClassTargets}
       />

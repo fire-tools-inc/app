@@ -3,6 +3,7 @@
  * Wraps content that should be blurred when privacy mode is enabled
  */
 
+import { useTranslation } from 'react-i18next';
 import './PrivacyBlur.css';
 
 interface PrivacyBlurProps {
@@ -29,6 +30,7 @@ export const PrivacyBlur: React.FC<PrivacyBlurProps> = ({
   className = '',
   isPrivacyMode = false
 }) => {
+  const { t } = useTranslation();
   const isBlurred = shouldBlur && isPrivacyMode;
 
   if (!isBlurred) {
@@ -38,8 +40,8 @@ export const PrivacyBlur: React.FC<PrivacyBlurProps> = ({
   return (
     <span 
       className={`privacy-blur ${className}`} 
-      aria-label="Value hidden for privacy"
-      title="Privacy mode enabled - value hidden"
+      aria-label={t('privacyBlur.ariaLabel')}
+      title={t('privacyBlur.title')}
     >
       {children}
     </span>

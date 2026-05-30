@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Asset, AllocationDelta, AllocationMode } from '../types/assetAllocation';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
 import { useTableSort } from '../utils/useTableSort';
@@ -21,6 +22,7 @@ export const AllocationTable: React.FC<AllocationTableProps> = ({
   currency,
   onUpdateAsset,
 }) => {
+  const { t } = useTranslation();
   // Create combined data for sorting
   const tableData: TableRow[] = assets.map(asset => ({
     asset,
@@ -72,33 +74,33 @@ export const AllocationTable: React.FC<AllocationTableProps> = ({
         <thead>
           <tr>
             <th className="sortable" onClick={() => requestSort('asset.name')}>
-              Asset / Index <span className="sort-indicator">{getSortIndicator('asset.name')}</span>
+              {t('tables.assetIndex')} <span className="sort-indicator">{getSortIndicator('asset.name')}</span>
             </th>
-            <th>Ticker</th>
+            <th>{t('tables.ticker')}</th>
             <th className="sortable" onClick={() => requestSort('asset.assetClass')}>
-              Asset Class <span className="sort-indicator">{getSortIndicator('asset.assetClass')}</span>
+              {t('tables.assetClass')} <span className="sort-indicator">{getSortIndicator('asset.assetClass')}</span>
             </th>
-            <th>Target Mode</th>
+            <th>{t('tables.targetMode')}</th>
             <th className="sortable" onClick={() => requestSort('asset.targetPercent')}>
-              % Target <span className="sort-indicator">{getSortIndicator('asset.targetPercent')}</span>
+              {t('tables.percentTarget')} <span className="sort-indicator">{getSortIndicator('asset.targetPercent')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.currentPercent')}>
-              % Current (Total) <span className="sort-indicator">{getSortIndicator('delta.currentPercent')}</span>
+              {t('tables.percentCurrentTotal')} <span className="sort-indicator">{getSortIndicator('delta.currentPercent')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.currentPercentInClass')}>
-              % Current (Class) <span className="sort-indicator">{getSortIndicator('delta.currentPercentInClass')}</span>
+              {t('tables.percentCurrentClass')} <span className="sort-indicator">{getSortIndicator('delta.currentPercentInClass')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.currentValue')}>
-              Absolute Current <span className="sort-indicator">{getSortIndicator('delta.currentValue')}</span>
+              {t('tables.absoluteCurrent')} <span className="sort-indicator">{getSortIndicator('delta.currentValue')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.targetValue')}>
-              Absolute Target <span className="sort-indicator">{getSortIndicator('delta.targetValue')}</span>
+              {t('tables.absoluteTarget')} <span className="sort-indicator">{getSortIndicator('delta.targetValue')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.delta')}>
-              Delta <span className="sort-indicator">{getSortIndicator('delta.delta')}</span>
+              {t('tables.delta')} <span className="sort-indicator">{getSortIndicator('delta.delta')}</span>
             </th>
             <th className="sortable" onClick={() => requestSort('delta.action')}>
-              Action <span className="sort-indicator">{getSortIndicator('delta.action')}</span>
+              {t('tables.action')} <span className="sort-indicator">{getSortIndicator('delta.action')}</span>
             </th>
           </tr>
         </thead>

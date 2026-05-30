@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { ChartData } from '../types/assetAllocation';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
@@ -16,11 +17,12 @@ interface TooltipProps {
 }
 
 export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, currency }) => {
+  const { t } = useTranslation();
   if (!data || data.length === 0) {
     return (
       <div className="chart-container">
         <h3>{title}</h3>
-        <div className="empty-chart">No data to display</div>
+        <div className="empty-chart">{t('charts.noDataToDisplay')}</div>
       </div>
     );
   }

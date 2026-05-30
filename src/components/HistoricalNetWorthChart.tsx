@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LineChart,
   Line,
@@ -75,6 +76,7 @@ export function HistoricalNetWorthChart({
   onViewModeChange,
   isPrivacyMode = false,
 }: HistoricalNetWorthChartProps) {
+  const { t } = useTranslation();
   const [showForecast, setShowForecast] = useState(true);
   const [additionalCurrencies, setAdditionalCurrencies] = useState<SupportedCurrency[]>([]);
 
@@ -318,8 +320,8 @@ export function HistoricalNetWorthChart({
       <div className="chart-container">
         <div className="empty-state">
           <div className="empty-state-icon"><MaterialIcon name="trending_up" size="large" /></div>
-          <h4>No Historical Data</h4>
-          <p>Start tracking your net worth to see the historical chart.</p>
+          <h4>{t('charts.noHistoricalData')}</h4>
+          <p>{t('charts.startTrackingNetWorth')}</p>
         </div>
       </div>
     );
@@ -371,15 +373,15 @@ export function HistoricalNetWorthChart({
     <div className="chart-container">
       <div className="chart-controls">
         <div className="chart-view-mode">
-          <label htmlFor="chart-view-mode">View:</label>
+          <label htmlFor="chart-view-mode">{t('charts.viewLabel')}</label>
           <select
             id="chart-view-mode"
             value={viewMode}
             onChange={(e) => onViewModeChange(e.target.value as ChartViewMode)}
             className="view-mode-select"
           >
-            <option value="ytd">Year-to-Date</option>
-            <option value="all">All Historical Data</option>
+            <option value="ytd">{t('charts.yearToDate')}</option>
+            <option value="all">{t('charts.allHistoricalData')}</option>
           </select>
         </div>
         <label className="chart-toggle">
@@ -389,13 +391,13 @@ export function HistoricalNetWorthChart({
             onChange={(e) => setShowForecast(e.target.checked)}
           />
           <span className="toggle-switch"></span>
-          Show Forecast
+          {t('charts.showForecast')}
         </label>
       </div>
 
       {/* Additional Currencies Selector */}
       <div className="chart-currency-selector">
-        <span className="currency-selector-label">Compare in:</span>
+        <span className="currency-selector-label">{t('charts.compareIn')}</span>
         <div className="currency-buttons">
           {availableCurrencies.map(curr => (
             <button
@@ -447,15 +449,15 @@ export function HistoricalNetWorthChart({
                 let displayName = 'Net Worth';
                 
                 if (nameStr === 'netWorth') {
-                  displayName = `Net Worth (${currency})`;
+                  displayName = t('charts.netWorthCurrency', { currency });
                 } else if (nameStr === 'forecast') {
-                  displayName = `Forecast (${currency})`;
+                  displayName = t('charts.forecastCurrency', { currency });
                 } else if (nameStr.startsWith('netWorth_')) {
                   const curr = nameStr.replace('netWorth_', '');
-                  displayName = `Net Worth (${curr})`;
+                  displayName = t('charts.netWorthCurrency', { currency: curr });
                 } else if (nameStr.startsWith('forecast_')) {
                   const curr = nameStr.replace('forecast_', '');
-                  displayName = `Forecast (${curr})`;
+                  displayName = t('charts.forecastCurrency', { currency: curr });
                 }
                 
                 return [PRIVACY_PLACEHOLDER, displayName];
@@ -464,20 +466,20 @@ export function HistoricalNetWorthChart({
               // Determine which currency this value belongs to
               const nameStr = String(name);
               let currencySymbol = symbol;
-              let displayName = 'Net Worth';
+              let displayName = t('charts.netWorth');
               
               if (nameStr === 'netWorth') {
-                displayName = `Net Worth (${currency})`;
+                displayName = t('charts.netWorthCurrency', { currency });
               } else if (nameStr === 'forecast') {
-                displayName = `Forecast (${currency})`;
+                displayName = t('charts.forecastCurrency', { currency });
               } else if (nameStr.startsWith('netWorth_')) {
                 const curr = nameStr.replace('netWorth_', '') as SupportedCurrency;
                 currencySymbol = getCurrencySymbol(curr);
-                displayName = `Net Worth (${curr})`;
+                displayName = t('charts.netWorthCurrency', { currency: curr });
               } else if (nameStr.startsWith('forecast_')) {
                 const curr = nameStr.replace('forecast_', '') as SupportedCurrency;
                 currencySymbol = getCurrencySymbol(curr);
-                displayName = `Forecast (${curr})`;
+                displayName = t('charts.forecastCurrency', { currency: curr });
               }
               
               return [
@@ -499,15 +501,15 @@ export function HistoricalNetWorthChart({
             wrapperStyle={{ paddingTop: '20px' }}
             formatter={(value) => {
               const valueStr = String(value);
-              if (valueStr === 'netWorth') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{`Net Worth (${currency})`}</span>;
-              if (valueStr === 'forecast') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{`Forecast (${currency})`}</span>;
+              if (valueStr === 'netWorth') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency })}</span>;
+              if (valueStr === 'forecast') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.forecastCurrency', { currency })}</span>;
               if (valueStr.startsWith('netWorth_')) {
                 const curr = valueStr.replace('netWorth_', '');
-                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{`Net Worth (${curr})`}</span>;
+                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency: curr })}</span>;
               }
               if (valueStr.startsWith('forecast_')) {
                 const curr = valueStr.replace('forecast_', '');
-                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{`Forecast (${curr})`}</span>;
+                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.forecastCurrency', { currency: curr })}</span>;
               }
               return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{value}</span>;
             }}
@@ -520,7 +522,7 @@ export function HistoricalNetWorthChart({
               stroke="#A855F7"
               strokeDasharray="5 5"
               label={{
-                value: `Prev Year: ${symbol}${formatChartCurrency(previousYearEnd)}`,
+                value: isPrivacyMode ? t('charts.prevYear', { value: PRIVACY_PLACEHOLDER }) : t('charts.prevYear', { value: `${symbol}${formatChartCurrency(previousYearEnd)}` }),
                 position: 'right',
                 fill: '#A855F7',
                 fontSize: 11,

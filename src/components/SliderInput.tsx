@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SliderInputProps {
   value: number;
@@ -31,6 +32,7 @@ export const SliderInput: React.FC<SliderInputProps> = ({
 }) => {
   const [textValue, setTextValue] = useState(value.toString());
   const [isFocused, setIsFocused] = useState(false);
+  const { t } = useTranslation();
 
   // Update text value when prop value changes (but not while focused)
   useEffect(() => {
@@ -112,7 +114,7 @@ export const SliderInput: React.FC<SliderInputProps> = ({
               onFocus={handleTextFocus}
               className="slider-text-input"
               disabled={disabled}
-              aria-label={`Value input for ${id || 'slider'}`}
+              aria-label={t('inputs.sliderAriaLabel', { id: id || 'slider' })}
             />
             <span className="slider-value-unit">{unit}</span>
           </div>

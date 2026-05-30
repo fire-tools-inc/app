@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Asset, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { 
   calculateDCAAllocation, 
@@ -37,6 +38,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
   currency,
   onConfirmInvestments,
 }) => {
+  const { t } = useTranslation();
   const [investmentAmount, setInvestmentAmount] = useState<string>('');
   const [calculation, setCalculation] = useState<DCACalculation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,16 +53,16 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
   // Validate and parse input value
   const validateInput = (value: string): { isValid: boolean; parsedValue?: number; error?: string } => {
     if (!value || value.trim() === '') {
-      return { isValid: false, error: 'Required' };
+      return { isValid: false, error: t('dialogs.dca.errors.required') };
     }
     
     const parsed = parseFloat(value);
     if (isNaN(parsed)) {
-      return { isValid: false, error: 'Invalid number' };
+      return { isValid: false, error: t('dialogs.dca.errors.invalidNumber') };
     }
     
     if (parsed < 0) {
-      return { isValid: false, error: 'Must be positive' };
+      return { isValid: false, error: t('dialogs.dca.errors.mustBePositive') };
     }
     
     return { isValid: true, parsedValue: parsed };
@@ -71,7 +73,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
     
     // Validate input
     if (isNaN(amount) || amount <= 0) {
-      setError('Please enter a valid investment amount greater than 0');
+      setError(t('dialogs.dca.errors.invalidInvestmentAmount'));
       return;
     }
     
@@ -106,11 +108,11 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
       
       // Show a warning if no prices could be fetched (only first time)
       if (successfulFetches === 0 && tickers.length > 0 && !hasShownPriceError) {
-        setError('Unable to fetch current prices from Yahoo Finance API. Price data may be unavailable due to network issues or API limitations. You can still see the investment amounts for each asset.');
+        setError(t('dialogs.dca.errors.priceFetchFailed'));
         setHasShownPriceError(true);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to calculate DCA allocation');
+      setError(err instanceof Error ? err.message : t('dialogs.dca.errors.calculateFailed'));
       console.error('DCA calculation error:', err);
     } finally {
       setIsLoading(false);
@@ -211,7 +213,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
       const actualShares = parseFloat(actualSharesStr);
       
       if (isNaN(actualShares) || actualShares < 0) {
-        setError(`Please enter a valid number of shares for ${allocation.assetName}`);
+        setError(t('dialogs.dca.errors.validSharesForAsset', { assetName: allocation.assetName }));
         return;
       }
       
@@ -226,7 +228,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
       const actualAmount = parseFloat(actualAmountStr);
       
       if (isNaN(actualAmount) || actualAmount < 0) {
-        setError(`Please enter a valid amount for ${allocation.assetName}`);
+        setError(t('dialogs.dca.errors.validAmountForAsset', { assetName: allocation.assetName }));
         return;
       }
       
@@ -256,7 +258,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
         
         if (!validation.isValid) {
           hasError = true;
-          newErrors[allocation.assetId] = validation.error || 'Invalid';
+          newErrors[allocation.assetId] = validation.error || t('dialogs.dca.errors.invalid');
           return;
         }
         
@@ -268,7 +270,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
         
         if (!validation.isValid) {
           hasError = true;
-          newErrors[allocation.assetId] = validation.error || 'Invalid';
+          newErrors[allocation.assetId] = validation.error || t('dialogs.dca.errors.invalid');
           return;
         }
         
@@ -278,7 +280,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
     
     if (hasError) {
       setInputErrors(newErrors);
-      setError('Please enter valid amounts for all assets before confirming');
+      setError(t('dialogs.dca.errors.validAmountsBeforeConfirming'));
       return;
     }
     
@@ -348,26 +350,25 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
     <div className="dialog-overlay" onClick={handleClose}>
       <div className="dialog-content dca-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
-          <h2><MaterialIcon name="savings" /> DCA Investment Calculator</h2>
-          <button className="dialog-close" onClick={handleClose}>×</button>
+          <h2><MaterialIcon name="savings" /> {t('dialogs.dca.title')}</h2>
+          <button className="dialog-close" onClick={handleClose} aria-label={t('common.close')}>×</button>
         </div>
 
         <div className="dialog-body">
           <p className="dialog-description">
-            Calculate how to invest a lump sum according to your asset allocation targets.
-            Enter an amount below to see the exact dollar and share breakdown for each asset.
+            {t('dialogs.dca.description')}
           </p>
 
           {!calculation && (
             <div className="dca-input-section">
-              <label htmlFor="investment-amount">Investment Amount ({currency}):</label>
+              <label htmlFor="investment-amount">{t('dialogs.dca.investmentAmount', { currency })}:</label>
               <div className="input-row">
                 <input
                   id="investment-amount"
                   type="text"
                   value={investmentAmount}
                   onChange={(e) => setInvestmentAmount(e.target.value)}
-                  placeholder="Enter amount to invest"
+                  placeholder={t('dialogs.dca.enterAmountPlaceholder')}
                   disabled={isLoading}
                 />
                 <button 
@@ -375,7 +376,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                   onClick={handleCalculate}
                   disabled={isLoading || !investmentAmount}
                 >
-                  {isLoading ? 'Calculating...' : 'Calculate'}
+                  {isLoading ? t('dialogs.dca.calculating') : t('dialogs.dca.calculate')}
                 </button>
               </div>
             </div>
@@ -383,26 +384,26 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
 
           {error && (
             <div className="error-message">
-              <strong><MaterialIcon name="error" /> Error:</strong> {error}
+              <strong><MaterialIcon name="error" /> {t('dialogs.dca.error')}:</strong> {error}
             </div>
           )}
 
           {calculation && (
             <div className="dca-results">
               <div className="dca-summary">
-                <h3>{allConfirmed ? 'Investment Summary' : isConfirmMode ? 'Confirm Your Investments' : 'Investment Breakdown'}</h3>
+                <h3>{allConfirmed ? t('dialogs.dca.investmentSummary') : isConfirmMode ? t('dialogs.dca.confirmYourInvestments') : t('dialogs.dca.investmentBreakdown')}</h3>
                 <p>
-                  <strong>Total Amount:</strong> {formatDCACurrency(calculation.totalAmount, currency)}
+                  <strong>{t('dialogs.dca.totalAmount')}:</strong> {formatDCACurrency(calculation.totalAmount, currency)}
                 </p>
                 {isConfirmMode && !allConfirmed ? (
                   <p className="dca-note">
-                    ✍️ Enter the actual shares you purchased to track how closely you followed the suggestion.
+                    ✍️ {t('dialogs.dca.enterActualSharesNote')}
                   </p>
                 ) : !isConfirmMode && (
                   <p className="dca-note">
-                    <MaterialIcon name="lightbulb" size="small" /> Prices fetched from Yahoo Finance API. 
+                    <MaterialIcon name="lightbulb" size="small" /> {t('dialogs.dca.pricesFetchedNote')}
                     {calculation.allocations.some(a => a.priceError) && (
-                      <span className="warning-text"> Some prices could not be fetched.</span>
+                      <span className="warning-text"> {t('dialogs.dca.somePricesFailed')}</span>
                     )}
                   </p>
                 )}
@@ -412,16 +413,16 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                 <table className="dca-table">
                   <thead>
                     <tr>
-                      <th>Asset</th>
-                      <th>Class</th>
-                      <th>Allocation</th>
-                      <th>Amount</th>
-                      <th>Price</th>
-                      <th>Suggested</th>
+                      <th>{t('dialogs.dca.asset')}</th>
+                      <th>{t('netWorth.class')}</th>
+                      <th>{t('dialogs.dca.allocation')}</th>
+                      <th>{t('expenseTracker.amount')}</th>
+                      <th>{t('settings.price')}</th>
+                      <th>{t('dialogs.dca.suggested')}</th>
                       {isConfirmMode && (
                         <>
-                          <th>Actual</th>
-                          <th>Deviation</th>
+                          <th>{t('dialogs.dca.actual')}</th>
+                          <th>{t('dialogs.dca.deviation')}</th>
                         </>
                       )}
                     </tr>
@@ -436,7 +437,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                             <br />
                             <span className="ticker-label">{allocation.ticker || 'N/A'}</span>
                           </td>
-                          <td>{formatAssetName(allocation.assetClass)}</td>
+                          <td>{t(`dialogs.shared.assetClassNames.${allocation.assetClass}`, { defaultValue: formatAssetName(allocation.assetClass) })}</td>
                           <td>{formatDisplayPercent(allocation.allocationPercent)}</td>
                           <td className="amount-cell">
                             {formatDCACurrency(allocation.investmentAmount, currency)}
@@ -449,7 +450,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                             ) : allocation.currentPrice ? (
                               formatDCACurrency(allocation.currentPrice, currency)
                             ) : (
-                              <span className="loading-text">Loading...</span>
+                              <span className="loading-text">{t('common.loading')}</span>
                             )}
                           </td>
                           <td className="shares-cell">
@@ -480,8 +481,8 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                                         className={`actual-shares-input ${inputErrors[allocation.assetId] ? 'input-error' : ''}`}
                                         value={actualSharesInputs[allocation.assetId] || ''}
                                         onChange={(e) => handleActualSharesChange(allocation.assetId, e.target.value)}
-                                        placeholder="Shares"
-                                        aria-label={`Actual shares for ${allocation.assetName}`}
+                                        placeholder={t('netWorth.shares')}
+                                        aria-label={t('dialogs.dca.actualSharesForAsset', { assetName: allocation.assetName })}
                                       />
                                       {inputErrors[allocation.assetId] && (
                                         <div className="input-error-tooltip" role="alert">
@@ -492,7 +493,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                                         className="confirm-single-btn"
                                         onClick={() => handleConfirmInvestment(allocation)}
                                         disabled={!actualSharesInputs[allocation.assetId]}
-                                        aria-label={`Confirm ${allocation.assetName}`}
+                                        aria-label={t('dialogs.dca.confirmAsset', { assetName: allocation.assetName })}
                                       >
                                         <MaterialIcon name="check" size="small" />
                                       </button>
@@ -505,7 +506,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                                         value={actualAmountInputs[allocation.assetId] || ''}
                                         onChange={(e) => handleActualAmountChange(allocation.assetId, e.target.value)}
                                         placeholder={currency}
-                                        aria-label={`Actual amount for ${allocation.assetName}`}
+                                        aria-label={t('dialogs.dca.actualAmountForAsset', { assetName: allocation.assetName })}
                                       />
                                       {inputErrors[allocation.assetId] && (
                                         <div className="input-error-tooltip" role="alert">
@@ -516,7 +517,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                                         className="confirm-single-btn"
                                         onClick={() => handleConfirmInvestment(allocation)}
                                         disabled={!actualAmountInputs[allocation.assetId]}
-                                        aria-label={`Confirm ${allocation.assetName}`}
+                                        aria-label={t('dialogs.dca.confirmAsset', { assetName: allocation.assetName })}
                                       >
                                         <MaterialIcon name="check" size="small" />
                                       </button>
@@ -548,7 +549,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                   </tbody>
                   <tfoot>
                     <tr className="total-row">
-                      <td colSpan={3}><strong>Total</strong></td>
+                      <td colSpan={3}><strong>{t('expenseTracker.total')}</strong></td>
                       <td className="amount-cell">
                         <strong>{formatDCACurrency(calculation.totalAllocated, currency)}</strong>
                       </td>
@@ -577,27 +578,27 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
               {/* Confirmation Summary */}
               {allConfirmed && totalDeviation && (
                 <div className={`confirmation-summary ${totalDeviation.deviationPercent === 0 ? 'exact' : Math.abs(totalDeviation.deviationPercent) <= DEVIATION_FAR_THRESHOLD / 2 ? 'close' : 'far'}`}>
-                  <h4><MaterialIcon name="bar_chart" /> Investment Summary</h4>
+                  <h4><MaterialIcon name="bar_chart" /> {t('dialogs.dca.investmentSummary')}</h4>
                   <p>
-                    <strong>Suggested Total:</strong> {formatDCACurrency(totalDeviation.totalSuggested, currency)}
+                    <strong>{t('dialogs.dca.suggestedTotal')}:</strong> {formatDCACurrency(totalDeviation.totalSuggested, currency)}
                   </p>
                   <p>
-                    <strong>Actual Total:</strong> {formatDCACurrency(totalDeviation.totalActual, currency)}
+                    <strong>{t('dialogs.dca.actualTotal')}:</strong> {formatDCACurrency(totalDeviation.totalActual, currency)}
                   </p>
                   <p>
-                    <strong>Overall Deviation:</strong>{' '}
+                    <strong>{t('dialogs.dca.overallDeviation')}:</strong>{' '}
                     <span className={getDeviationClass(totalDeviation.deviationPercent === 0 ? 'exact' : totalDeviation.deviationPercent > 0 ? 'over' : 'under')}>
                       {formatDeviation(totalDeviation.deviationPercent)}
                     </span>
                   </p>
                   {Math.abs(totalDeviation.deviationPercent) <= DEVIATION_CLOSE_THRESHOLD && (
-                    <p className="success-message">✅ Great job! Your investments closely match the suggested allocation.</p>
+                    <p className="success-message">✅ {t('dialogs.dca.feedback.greatJob')}</p>
                   )}
                   {Math.abs(totalDeviation.deviationPercent) > DEVIATION_CLOSE_THRESHOLD && Math.abs(totalDeviation.deviationPercent) <= DEVIATION_FAR_THRESHOLD && (
-                    <p className="info-message">ℹ️ Your investments are reasonably close to the suggested allocation.</p>
+                    <p className="info-message">ℹ️ {t('dialogs.dca.feedback.reasonablyClose')}</p>
                   )}
                   {Math.abs(totalDeviation.deviationPercent) > DEVIATION_FAR_THRESHOLD && (
-                    <p className="warning-message"><MaterialIcon name="warning" /> Your investments deviate significantly from the suggestion. Consider adjusting future investments.</p>
+                    <p className="warning-message"><MaterialIcon name="warning" /> {t('dialogs.dca.feedback.significantDeviation')}</p>
                   )}
                 </div>
               )}
@@ -606,19 +607,19 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                 {!isConfirmMode ? (
                   <>
                     <button className="action-btn reset-btn" onClick={handleReset}>
-                      <MaterialIcon name="refresh" /> Restart
+                      <MaterialIcon name="refresh" /> {t('dialogs.dca.restart')}
                     </button>
                     <button 
                       className="action-btn primary-btn"
                       onClick={() => setIsConfirmMode(true)}
                     >
-                      Confirm
+                      {t('common.confirm')}
                     </button>
                   </>
                 ) : allConfirmed ? (
                   <>
                     <button className="action-btn primary-btn" onClick={handleReset}>
-                      <MaterialIcon name="savings" /> Invest Again
+                      <MaterialIcon name="savings" /> {t('dialogs.dca.investAgain')}
                     </button>
                   </>
                 ) : (
@@ -628,16 +629,16 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                       setConfirmedAllocations({});
                       setInputErrors({});
                     }}>
-                      ← Back to Suggestions
+                      ← {t('dialogs.dca.backToSuggestions')}
                     </button>
                     <button 
                       className="action-btn primary-btn"
                       onClick={handleConfirmAll}
                     >
-                      <MaterialIcon name="check" /> Confirm All
+                      <MaterialIcon name="check" /> {t('dialogs.dca.confirmAll')}
                     </button>
                     <button className="action-btn reset-btn" onClick={handleReset}>
-                      <MaterialIcon name="refresh" /> Restart
+                      <MaterialIcon name="refresh" /> {t('dialogs.dca.restart')}
                     </button>
                   </>
                 )}
@@ -647,13 +648,13 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
 
           {!calculation && !error && (
             <div className="dca-info">
-              <h4><MaterialIcon name="bar_chart" /> How it works:</h4>
+              <h4><MaterialIcon name="bar_chart" /> {t('dialogs.dca.howItWorks.title')}:</h4>
               <ul>
-                <li>Enter the amount you want to invest</li>
-                <li>The calculator will distribute it according to your asset allocation targets</li>
-                <li>Current prices are fetched from Yahoo Finance API</li>
-                <li>You'll see the exact number of shares (fractional) to buy for each asset</li>
-                <li><strong>NEW:</strong> After investing, click "Confirm" to record actual shares purchased and track deviations</li>
+                <li>{t('dialogs.dca.howItWorks.enterAmount')}</li>
+                <li>{t('dialogs.dca.howItWorks.distribute')}</li>
+                <li>{t('dialogs.dca.howItWorks.fetchPrices')}</li>
+                <li>{t('dialogs.dca.howItWorks.exactShares')}</li>
+                <li><strong>{t('dialogs.dca.howItWorks.new')}:</strong> {t('dialogs.dca.howItWorks.confirmAfterInvesting')}</li>
               </ul>
             </div>
           )}

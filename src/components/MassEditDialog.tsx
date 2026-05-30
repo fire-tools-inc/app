@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Asset, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { formatDisplayPercent } from '../utils/numberFormatter';
 
@@ -24,6 +25,7 @@ export const MassEditDialog: React.FC<MassEditDialogProps> = ({
   mode,
   assetClassTargets,
 }) => {
+  const { t } = useTranslation();
   const [editValues, setEditValues] = useState<Record<string, number>>({});
   const [error, setError] = useState<string>('');
 
@@ -69,7 +71,7 @@ export const MassEditDialog: React.FC<MassEditDialogProps> = ({
 
   const handleSubmit = () => {
     if (!isValid) {
-      setError(`Total must equal 100%. Current total: ${formatDisplayPercent(total)}`);
+      setError(t('dialogs.massEdit.errors.totalMustEqual', { total: formatDisplayPercent(total) }));
       return;
     }
     onSave(editValues);
@@ -144,13 +146,13 @@ export const MassEditDialog: React.FC<MassEditDialogProps> = ({
 
         <div className="mass-edit-body">
           <p className="mass-edit-instructions">
-            Edit all percentages at once. Total must equal 100% to save.
+            {t('dialogs.massEdit.instructions')}
           </p>
 
           {mode === 'assetClass' ? renderAssetClassMode() : renderAssetMode()}
 
           <div className={`mass-edit-total ${isValid ? 'valid' : 'invalid'}`}>
-            <span>Total:</span>
+            <span>{t('dialogs.massEdit.total')}:</span>
             <span className="total-value">{formatDisplayPercent(total)}</span>
             {isValid ? (
               <span className="valid-icon">✓</span>
@@ -163,13 +165,13 @@ export const MassEditDialog: React.FC<MassEditDialogProps> = ({
         </div>
 
         <div className="dialog-actions">
-          <button className="btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel" onClick={onClose}>{t('common.cancel')}</button>
           <button 
             className="btn-submit" 
             onClick={handleSubmit}
             disabled={!isValid}
           >
-            Save All
+            {t('dialogs.massEdit.saveAll')}
           </button>
         </div>
       </div>

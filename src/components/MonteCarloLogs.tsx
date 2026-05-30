@@ -1,4 +1,5 @@
 import { useState, useMemo, Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SimulationLogEntry, MonteCarloFixedParameters, SimulationFailureReason } from '../types/calculator';
 import { MaterialIcon } from './MaterialIcon';
 import { exportMonteCarloLogsToCSV, exportMonteCarloLogsToJSON } from '../utils/csvExport';
@@ -14,16 +15,15 @@ interface MonteCarloLogsProps {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
-// Human-readable failure reason labels
-const FAILURE_REASON_LABELS: Record<SimulationFailureReason, string> = {
-  'portfolio_depleted': 'Portfolio Depleted',
-  'sequence_of_returns_risk': 'Sequence of Returns Risk',
-  'unsustainable_ending': 'Unsustainable Ending',
-  'fire_too_late': 'FIRE Too Late',
-  'withdrawal_rate_breach': 'Withdrawal Rate Breach',
-  'fire_lost': 'FIRE Lost',
-  'forced_return_to_work': 'Forced Return to Work',
-  'healthcare_expense_shock': 'Healthcare Expense Shock',
+const FAILURE_REASON_KEY: Record<SimulationFailureReason, string> = {
+  'portfolio_depleted': 'monteCarlo.logs.failureReasons.portfolioDepleted',
+  'sequence_of_returns_risk': 'monteCarlo.logs.failureReasons.sequenceOfReturnsRisk',
+  'unsustainable_ending': 'monteCarlo.logs.failureReasons.unsustainableEnding',
+  'fire_too_late': 'monteCarlo.logs.failureReasons.fireTooLate',
+  'withdrawal_rate_breach': 'monteCarlo.logs.failureReasons.withdrawalRateBreach',
+  'fire_lost': 'monteCarlo.logs.failureReasons.fireLost',
+  'forced_return_to_work': 'monteCarlo.logs.failureReasons.forcedReturnToWork',
+  'healthcare_expense_shock': 'monteCarlo.logs.failureReasons.healthcareExpenseShock',
 };
 
 // Format number with 2 decimal places
@@ -34,6 +34,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
   fixedParameters,
   isPrivacyMode = false 
 }) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedSimulations, setExpandedSimulations] = useState<Set<number>>(new Set());
   const [filterSuccess, setFilterSuccess] = useState<'all' | 'success' | 'failure'>('all');
@@ -127,10 +128,10 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
         aria-controls="mc-logs-content"
       >
         <span className="mc-logs-title">
-          <MaterialIcon name="list_alt" /> Simulation Logs
+          <MaterialIcon name="list_alt" /> {t('monteCarlo.logs.title')}
         </span>
         <span className="mc-logs-subtitle">
-          {logs.length} simulations recorded
+          {t('monteCarlo.logs.recordedCount', { count: logs.length })}
         </span>
         <span className="collapse-icon" aria-hidden="true">{isExpanded ? '▼' : '▶'}</span>
       </button>
@@ -139,8 +140,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
         <div id="mc-logs-content" className="mc-logs-content">
           <div className="mc-logs-header">
             <p className="mc-logs-description">
-              <MaterialIcon name="info" /> These logs are temporary and will be cleared when you leave this page or refresh.
-              Download them to keep a record of your simulations.
+              <MaterialIcon name="info" /> {t('monteCarlo.logs.description')}
             </p>
             
             <div className="mc-logs-actions">
@@ -148,7 +148,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                 type="button"
                 className="mc-logs-download-btn"
                 onClick={handleDownloadCSV}
-                aria-label="Download logs as CSV file"
+                aria-label={t('monteCarlo.logs.downloadCSVAria')}
               >
                 <MaterialIcon name="download" /> CSV
               </button>
@@ -156,7 +156,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                 type="button"
                 className="mc-logs-download-btn"
                 onClick={handleDownloadJSON}
-                aria-label="Download logs as JSON file"
+                aria-label={t('monteCarlo.logs.downloadJSONAria')}
               >
                 <MaterialIcon name="download" /> JSON
               </button>
@@ -165,27 +165,27 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
 
           <div className="mc-logs-controls">
             <div className="mc-logs-filter">
-              <label htmlFor="log-filter">Filter:</label>
+              <label htmlFor="log-filter">{t('monteCarlo.logs.filterLabel')}</label>
               <select
                 id="log-filter"
                 value={filterSuccess}
                 onChange={(e) => handleFilterChange(e.target.value as 'all' | 'success' | 'failure')}
               >
-                <option value="all">All Simulations ({logs.length})</option>
-                <option value="success">Successful ({logs.filter(l => l.success).length})</option>
-                <option value="failure">Failed ({logs.filter(l => !l.success).length})</option>
+                <option value="all">{t('monteCarlo.logs.filterAll', { count: logs.length })}</option>
+                <option value="success">{t('monteCarlo.logs.filterSuccess', { count: logs.filter(l => l.success).length })}</option>
+                <option value="failure">{t('monteCarlo.logs.filterFailed', { count: logs.filter(l => !l.success).length })}</option>
               </select>
             </div>
 
             <div className="mc-logs-page-size">
-              <label htmlFor="page-size">Show:</label>
+              <label htmlFor="page-size">{t('monteCarlo.logs.showLabel')}</label>
               <select
                 id="page-size"
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(Number(e.target.value))}
               >
                 {PAGE_SIZE_OPTIONS.map(size => (
-                  <option key={size} value={size}>{size} per page</option>
+                  <option key={size} value={size}>{t('monteCarlo.logs.perPage', { count: size })}</option>
                 ))}
               </select>
             </div>
@@ -195,11 +195,11 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
             <table className="mc-logs-table" role="grid">
               <thead>
                 <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Years to FIRE</th>
-                  <th scope="col">Final Portfolio</th>
-                  <th scope="col">Details</th>
+                  <th scope="col">{t('monteCarlo.logs.colId')}</th>
+                  <th scope="col">{t('monteCarlo.logs.colStatus')}</th>
+                  <th scope="col">{t('monteCarlo.logs.colYearsToFIRE')}</th>
+                  <th scope="col">{t('monteCarlo.logs.colFinalPortfolio')}</th>
+                  <th scope="col">{t('monteCarlo.logs.colDetails')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,19 +211,19 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                       <td>#{log.simulationId}</td>
                       <td>
                         <span className={`status-badge ${log.success ? 'success' : 'failure'}`}>
-                          {log.success ? 'Success' : 'Failed'}
+                          {log.success ? t('monteCarlo.logs.statusSuccess') : t('monteCarlo.logs.statusFailed')}
                         </span>
                         {log.failureReasons && log.failureReasons.length > 0 && (
                           <div className="failure-reasons">
                             {log.failureReasons.map(reason => (
-                              <span key={reason} className="failure-reason-badge" title={FAILURE_REASON_LABELS[reason]}>
-                                {FAILURE_REASON_LABELS[reason]}
+                              <span key={reason} className="failure-reason-badge" title={t(FAILURE_REASON_KEY[reason])}>
+                                {t(FAILURE_REASON_KEY[reason])}
                               </span>
                             ))}
                           </div>
                         )}
                       </td>
-                      <td>{log.yearsToFIRE !== null ? `${log.yearsToFIRE} years` : 'N/A'}</td>
+                      <td>{log.yearsToFIRE !== null ? t('monteCarlo.logs.yearsValue', { count: log.yearsToFIRE }) : t('common.notAvailable')}</td>
                       <td>
                         <PrivacyBlur isPrivacyMode={isPrivacyMode}>
                           {formatDisplayCurrency(log.finalPortfolio, defaultCurrency)}
@@ -234,7 +234,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                           type="button"
                           className="mc-logs-view-btn"
                           onClick={() => toggleSimulation(log.simulationId)}
-                          aria-label={`View details for simulation ${log.simulationId}`}
+                          aria-label={t('monteCarlo.logs.viewDetailsAria', { id: log.simulationId })}
                           aria-expanded={expandedSimulations.has(log.simulationId)}
                         >
                           <MaterialIcon name={expandedSimulations.has(log.simulationId) ? 'expand_less' : 'expand_more'} />
@@ -247,18 +247,18 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                           <div className="mc-logs-detail-inline">
                             {/* Initial parameters summary */}
                             <div className="mc-logs-initial-params">
-                              <h5>Initial Parameters</h5>
+                              <h5>{t('monteCarlo.logs.initialParams')}</h5>
                               <div className="mc-logs-params-grid">
-                                <span>Initial Savings: <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayCurrency(fixedParameters.initialSavings, defaultCurrency)}</PrivacyBlur></span>
-                                <span>Stocks: {formatDecimal(fixedParameters.stocksPercent)}%</span>
-                                <span>Bonds: {formatDecimal(fixedParameters.bondsPercent)}%</span>
-                                <span>Cash: {formatDecimal(fixedParameters.cashPercent)}%</span>
-                                <span>Expected Stock Return: {formatDecimal(fixedParameters.expectedStockReturn)}%</span>
-                                <span>Expected Bond Return: {formatDecimal(fixedParameters.expectedBondReturn)}%</span>
-                                <span>Base Inflation: {formatDecimal(Math.abs(fixedParameters.expectedCashReturn))}%</span>
-                                <span>Withdrawal Rate: {formatDecimal(fixedParameters.desiredWithdrawalRate)}%</span>
-                                <span>Stock Volatility: {formatDecimal(fixedParameters.stockVolatility)}%</span>
-                                <span>Bond Volatility: {formatDecimal(fixedParameters.bondVolatility)}%</span>
+                                <span>{t('monteCarlo.logs.paramInitialSavings')}: <PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatDisplayCurrency(fixedParameters.initialSavings, defaultCurrency)}</PrivacyBlur></span>
+                                <span>{t('monteCarlo.logs.paramStocks')}: {formatDecimal(fixedParameters.stocksPercent)}%</span>
+                                <span>{t('monteCarlo.logs.paramBonds')}: {formatDecimal(fixedParameters.bondsPercent)}%</span>
+                                <span>{t('monteCarlo.logs.paramCash')}: {formatDecimal(fixedParameters.cashPercent)}%</span>
+                                <span>{t('monteCarlo.logs.paramStockReturn')}: {formatDecimal(fixedParameters.expectedStockReturn)}%</span>
+                                <span>{t('monteCarlo.logs.paramBondReturn')}: {formatDecimal(fixedParameters.expectedBondReturn)}%</span>
+                                <span>{t('monteCarlo.logs.paramInflation')}: {formatDecimal(Math.abs(fixedParameters.expectedCashReturn))}%</span>
+                                <span>{t('monteCarlo.logs.paramWithdrawalRate')}: {formatDecimal(fixedParameters.desiredWithdrawalRate)}%</span>
+                                <span>{t('monteCarlo.logs.paramStockVolatility')}: {formatDecimal(fixedParameters.stockVolatility)}%</span>
+                                <span>{t('monteCarlo.logs.paramBondVolatility')}: {formatDecimal(fixedParameters.bondVolatility)}%</span>
                               </div>
                             </div>
                             {/* Yearly breakdown table */}
@@ -266,18 +266,18 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                               <table className="mc-logs-detail-table" role="grid">
                                 <thead>
                                   <tr>
-                                    <th scope="col">Year</th>
-                                    <th scope="col">Age</th>
-                                    <th scope="col">Stock Return</th>
-                                    <th scope="col">Bond Return</th>
-                                    <th scope="col">Inflation</th>
-                                    <th scope="col">Portfolio Return</th>
-                                    <th scope="col">Black Swan</th>
-                                    <th scope="col">Expenses</th>
-                                    <th scope="col">Labor Income</th>
-                                    <th scope="col">Portfolio Value</th>
-                                    <th scope="col">Withdrawal %</th>
-                                    <th scope="col">FIRE</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableYear')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableAge')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableStockReturn')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableBondReturn')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableInflation')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tablePortfolioReturn')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableBlackSwan')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableExpenses')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableLaborIncome')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tablePortfolioValue')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableWithdrawalPct')}</th>
+                                    <th scope="col">{t('monteCarlo.logs.tableFIRE')}</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -302,7 +302,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                                       </td>
                                       <td>
                                         {yearData.isBlackSwan && (
-                                          <span className="black-swan-indicator" title="Black Swan Event">
+                                         <span className="black-swan-indicator" title={t('monteCarlo.logs.blackSwanEvent')}>
                                             <MaterialIcon name="warning" />
                                           </span>
                                         )}
@@ -327,7 +327,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                                       </td>
                                       <td>
                                         {yearData.isFIREAchieved && (
-                                          <span className="fire-indicator" title="FIRE Achieved">
+                                         <span className="fire-indicator" title={t('monteCarlo.logs.fireAchieved')}>
                                             <MaterialIcon name="local_fire_department" />
                                           </span>
                                         )}
@@ -354,7 +354,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                 type="button"
                 onClick={() => setCurrentPage(1)}
                 disabled={currentPage === 1}
-                aria-label="Go to first page"
+                aria-label={t('monteCarlo.logs.paginationFirst')}
               >
                 <MaterialIcon name="first_page" />
               </button>
@@ -362,18 +362,18 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                 type="button"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                aria-label="Go to previous page"
+                aria-label={t('monteCarlo.logs.paginationPrev')}
               >
                 <MaterialIcon name="chevron_left" />
               </button>
               <span className="mc-logs-page-info">
-                Page {currentPage} of {totalPages} ({filteredLogs.length} simulations)
+                {t('monteCarlo.logs.paginationInfo', { current: currentPage, total: totalPages, count: filteredLogs.length })}
               </span>
               <button
                 type="button"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                aria-label="Go to next page"
+                aria-label={t('monteCarlo.logs.paginationNext')}
               >
                 <MaterialIcon name="chevron_right" />
               </button>
@@ -381,7 +381,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
                 type="button"
                 onClick={() => setCurrentPage(totalPages)}
                 disabled={currentPage === totalPages}
-                aria-label="Go to last page"
+                aria-label={t('monteCarlo.logs.paginationLast')}
               >
                 <MaterialIcon name="last_page" />
               </button>

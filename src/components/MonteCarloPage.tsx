@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { CalculationResult, CalculatorInputs } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
@@ -9,6 +10,7 @@ import { MaterialIcon } from './MaterialIcon';
 import { MonteCarloSimulator } from './MonteCarloSimulator';
 
 export const MonteCarloPage: React.FC = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   
   // Load inputs from location state, cookies, or defaults.
@@ -70,21 +72,20 @@ export const MonteCarloPage: React.FC = () => {
     <div className="app-container monte-carlo-container">
       <main className="main-content" id="main-content">
         <header className="page-header">
-          <h2><MaterialIcon name="casino" className="page-header-icon" /> Monte Carlo Simulations</h2>
+          <h2><MaterialIcon name="casino" className="page-header-icon" /> {t('monteCarlo.pageTitle')}</h2>
           <p className="page-description">
-            Run multiple simulations with random market returns to assess the probability of reaching FIRE.
-            This helps you understand the range of potential outcomes and the likelihood of success under different market conditions.
+            {t('monteCarlo.pageDescription')}
           </p>
         </header>
 
         {hasValidationErrors && (
           <div className="validation-error-banner" role="alert" aria-live="polite">
-            <strong><MaterialIcon name="warning" /> Validation Error</strong>
+            <strong><MaterialIcon name="warning" /> {t('monteCarlo.validationError')}</strong>
             {result.validationErrors?.map((error, index) => (
               <div key={index} className="validation-error-message">{error}</div>
             ))}
             <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
-              Please return to the FIRE Calculator to fix these issues.
+              {t('monteCarlo.fixValidationReturn')}
             </p>
           </div>
         )}

@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { loadTourCompleted } from '../utils/tourPreferences';
 import { hasCompletedQuestionnaire } from '../utils/questionnaireStorage';
 import { 
@@ -16,6 +17,7 @@ import './QuestionnairePrompt.css';
 
 export function QuestionnairePrompt() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export function QuestionnairePrompt() {
         <button 
           className="questionnaire-prompt-close"
           onClick={handleDismiss}
-          aria-label="Close and don't ask again"
+          aria-label={t('questionnairePrompt.closeDontAskAgain')}
         >
           <MaterialIcon name="close" />
         </button>
@@ -74,26 +76,25 @@ export function QuestionnairePrompt() {
         </div>
         
         <h2 id="questionnaire-prompt-title" className="questionnaire-prompt-title">
-          Discover Your FIRE Persona
+          {t('questionnairePrompt.title')}
         </h2>
         
         <p className="questionnaire-prompt-description">
-          Take our quick questionnaire to find out which FIRE strategy suits you best. 
-          Get personalized recommendations for asset allocation, savings rate, and investment approach.
+          {t('questionnairePrompt.description')}
         </p>
         
         <div className="questionnaire-prompt-features">
           <div className="questionnaire-prompt-feature">
             <MaterialIcon name="timer" size="small" />
-            <span>Takes only 2 minutes</span>
+            <span>{t('questionnairePrompt.features.twoMinutes')}</span>
           </div>
           <div className="questionnaire-prompt-feature">
             <MaterialIcon name="psychology" size="small" />
-            <span>Personalized insights</span>
+            <span>{t('questionnairePrompt.features.personalizedInsights')}</span>
           </div>
           <div className="questionnaire-prompt-feature">
             <MaterialIcon name="savings" size="small" />
-            <span>Tailored recommendations</span>
+            <span>{t('questionnairePrompt.features.tailoredRecommendations')}</span>
           </div>
         </div>
 
@@ -103,13 +104,13 @@ export function QuestionnairePrompt() {
             onClick={handleStartQuestionnaire}
           >
             <MaterialIcon name="play_arrow" size="small" />
-            Start Questionnaire
+            {t('questionnairePrompt.start')}
           </button>
           <button 
             className="questionnaire-prompt-btn questionnaire-prompt-btn-secondary"
             onClick={handleRemindLater}
           >
-            Remind Me Later
+            {t('questionnairePrompt.remindLater')}
           </button>
         </div>
         
@@ -117,7 +118,7 @@ export function QuestionnairePrompt() {
           className="questionnaire-prompt-dismiss-text"
           onClick={handleDismiss}
         >
-          Don't show this again
+          {t('questionnairePrompt.dontShowAgain')}
         </button>
       </div>
     </div>

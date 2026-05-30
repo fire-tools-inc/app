@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ExpenseCategory,
   ExpenseEntry,
@@ -46,12 +47,12 @@ interface PDFImportDialogProps {
   categorizer?: typeof categorizeWithLlm;
 }
 
-const DOC_TYPE_OPTIONS: { value: PdfDocType; label: string }[] = [
-  { value: 'auto', label: 'Auto-detect' },
-  { value: 'receipt', label: 'Receipt' },
-  { value: 'invoice', label: 'Invoice' },
-  { value: 'bank_statement', label: 'Bank / credit-card statement' },
-  { value: 'payslip', label: 'Payslip' },
+const DOC_TYPE_OPTIONS: { value: PdfDocType; labelKey: string }[] = [
+  { value: 'auto', labelKey: 'dialogs.pdfImport.documentTypes.auto' },
+  { value: 'receipt', labelKey: 'dialogs.pdfImport.documentTypes.receipt' },
+  { value: 'invoice', labelKey: 'dialogs.pdfImport.documentTypes.invoice' },
+  { value: 'bank_statement', labelKey: 'dialogs.pdfImport.documentTypes.bankStatement' },
+  { value: 'payslip', labelKey: 'dialogs.pdfImport.documentTypes.payslip' },
 ];
 
 function appendError(prev: string, msg: string): string {
@@ -69,6 +70,7 @@ export function PDFImportDialog({
   extractor = extractPdfText,
   categorizer = categorizeWithLlm,
 }: PDFImportDialogProps) {
+  const { t } = useTranslation();
   const [docType, setDocType] = useState<PdfDocType>('auto');
   const [useLlm, setUseLlm] = useState<boolean>(false);
   const [drafts, setDrafts] = useState<ParsedTransactionDraft[]>([]);
@@ -89,7 +91,7 @@ export function PDFImportDialog({
     if (!files || files.length === 0) return;
     setBusy(true);
     setError('');
-    setStatus(`Reading ${files.length} file${files.length === 1 ? '' : 's'}…`);
+    setStatus(t('dialogs.pdfImport.status.readingFiles', { count: files.length }));
 
     const collected: ParsedTransactionDraft[] = [];
     try {
@@ -99,43 +101,43 @@ export function PDFImportDialog({
           const { drafts: parsed } = parsePdf(extracted, docType, defaultCurrency);
           if (parsed.length === 0 && extracted.lines.length === 0) {
             setError(prev => appendError(prev,
-              `"${file.name}" has no extractable text (it may be a scanned image — run it through OCR first).`));
+              t('dialogs.pdfImport.errors.noExtractableText', { fileName: file.name })));
           } else if (parsed.length === 0) {
             setError(prev => appendError(prev,
-              `No transactions found in "${file.name}". Try a different document type.`));
+              t('dialogs.pdfImport.errors.noTransactionsInFile', { fileName: file.name })));
           }
           collected.push(...parsed);
         } catch (err) {
           console.error('Failed to parse PDF', file.name, err);
-          const reason = err instanceof Error ? err.message : 'unknown error';
-          setError(prev => appendError(prev, `Failed to read "${file.name}": ${reason}`));
+          const reason = err instanceof Error ? err.message : t('common.unknownError');
+          setError(prev => appendError(prev, t('dialogs.pdfImport.errors.failedToRead', { fileName: file.name, reason })));
         }
       }
 
       let final = collected;
       if (useLlm && llmConfigured && collected.length > 0) {
-        setStatus('Running LLM categorization…');
+        setStatus(t('dialogs.pdfImport.status.runningLlm'));
         try {
           final = await categorizer(collected, llmConfig!, categories);
         } catch (err) {
           console.error('LLM categorization failed', err);
-          setError('LLM categorization failed — using heuristic results.');
+          setError(t('dialogs.pdfImport.errors.llmFailed'));
         }
       }
 
       setDrafts(final);
       const allZero = final.length > 0 && final.every(d => !(d.amount > 0));
       if (final.length === 0) {
-        setStatus('No transactions detected. Try a different document type.');
+        setStatus(t('dialogs.pdfImport.status.noTransactionsDetected'));
       } else if (allZero) {
-        setStatus(`Detected ${final.length} row${final.length === 1 ? '' : 's'} but every amount is 0 — looks like a blank template. Fill the amounts in and re-upload, or edit each row below before importing.`);
+        setStatus(t('dialogs.pdfImport.status.blankRowsDetected', { count: final.length }));
       } else {
-        setStatus(`Detected ${final.length} transaction${final.length === 1 ? '' : 's'}. Review and confirm below.`);
+        setStatus(t('dialogs.pdfImport.status.transactionsDetected', { count: final.length }));
       }
     } finally {
       setBusy(false);
     }
-  }, [docType, defaultCurrency, useLlm, llmConfigured, llmConfig, categories, extractor, categorizer]);
+  }, [docType, defaultCurrency, useLlm, llmConfigured, llmConfig, categories, extractor, categorizer, t]);
 
   const updateDraft = (id: string, patch: Partial<ParsedTransactionDraft>) => {
     setDrafts(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
@@ -145,7 +147,7 @@ export function PDFImportDialog({
     const toCommit = drafts.filter(d => d.include);
     const invalid = toCommit.find(d => !d.date || !(d.amount > 0));
     if (invalid) {
-      setError('Each included row needs a date and an amount greater than zero.');
+      setError(t('dialogs.pdfImport.errors.invalidIncludedRows'));
       return;
     }
     let incomeCount = 0;
@@ -155,7 +157,7 @@ export function PDFImportDialog({
         onAddIncome({
           date: d.date,
           amount: d.amount,
-          description: d.description || 'PDF import',
+          description: d.description || t('dialogs.pdfImport.defaultDescription'),
           currency: d.currency,
           source: (d.suggestedIncomeSource ?? 'OTHER') as IncomeSource,
         });
@@ -164,7 +166,7 @@ export function PDFImportDialog({
         onAddExpense({
           date: d.date,
           amount: d.amount,
-          description: d.description || 'PDF import',
+          description: d.description || t('dialogs.pdfImport.defaultDescription'),
           currency: d.currency,
           category: (d.suggestedCategory ?? NO_CATEGORY_ID) as ExpenseCategory,
           expenseType: (d.suggestedExpenseType ?? 'WANT') as ExpenseType,
@@ -172,7 +174,7 @@ export function PDFImportDialog({
         expenseCount++;
       }
     }
-    setStatus(`Imported ${incomeCount} income + ${expenseCount} expense entries.`);
+    setStatus(t('dialogs.pdfImport.status.importedEntries', { incomeCount, expenseCount }));
     onClose();
   };
 
@@ -189,15 +191,15 @@ export function PDFImportDialog({
       >
         <div className="dialog-header">
           <h2 id="pdf-import-title">
-            <MaterialIcon name="picture_as_pdf" /> Import from PDF (experimental)
+            <MaterialIcon name="picture_as_pdf" /> {t('dialogs.pdfImport.title')}
           </h2>
-          <button className="dialog-close" onClick={onClose} aria-label="Close dialog">×</button>
+          <button className="dialog-close" onClick={onClose} aria-label={t('dialogs.pdfImport.closeDialog')}>×</button>
         </div>
 
         <div className="dialog-form">
           <div className="pdf-import-controls">
             <div className="form-group">
-              <label htmlFor="pdf-doc-type">Document type</label>
+              <label htmlFor="pdf-doc-type">{t('dialogs.pdfImport.documentType')}</label>
               <select
                 id="pdf-doc-type"
                 value={docType}
@@ -205,13 +207,13 @@ export function PDFImportDialog({
                 disabled={busy}
               >
                 {DOC_TYPE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label htmlFor="pdf-files">PDF files</label>
+              <label htmlFor="pdf-files">{t('dialogs.pdfImport.pdfFiles')}</label>
               <input
                 id="pdf-files"
                 type="file"
@@ -231,10 +233,10 @@ export function PDFImportDialog({
                 onChange={e => setUseLlm(e.target.checked)}
               />
               <label htmlFor="pdf-use-llm">
-                Use AI categorization
-                {!llmConfigured && <span className="disabled-tag">Disabled</span>}
+                {t('dialogs.pdfImport.useAiCategorization')}
+                {!llmConfigured && <span className="disabled-tag">{t('settings.disabled')}</span>}
                 {!llmConfigured && (
-                  <span className="pdf-row-meta">Configure an OpenAI-compatible endpoint in Settings → Experimental Features to enable.</span>
+                  <span className="pdf-row-meta">{t('dialogs.pdfImport.configureAiHint')}</span>
                 )}
               </label>
             </div>
@@ -248,20 +250,20 @@ export function PDFImportDialog({
           {drafts.length > 0 && (
             <>
               <div className="pdf-import-summary">
-                <span><strong>{totalIncluded}</strong> of {drafts.length} rows will be imported.</span>
+                <span>{t('dialogs.pdfImport.summaryRows', { included: totalIncluded, total: drafts.length })}</span>
               </div>
 
               <div className="pdf-import-table-wrapper">
-                <table className="pdf-import-table" aria-label="Detected transactions">
+                <table className="pdf-import-table" aria-label={t('dialogs.pdfImport.detectedTransactions')}>
                   <thead>
                     <tr>
-                      <th className="col-include" aria-label="Include row">✓</th>
-                      <th className="col-kind">Kind</th>
-                      <th className="col-date">Date</th>
-                      <th>Description</th>
-                      <th className="col-amount">Amount</th>
-                      <th className="col-category">Category / Source</th>
-                      <th className="col-extra">Type</th>
+                      <th className="col-include" aria-label={t('dialogs.pdfImport.includeRow')}>✓</th>
+                      <th className="col-kind">{t('dialogs.pdfImport.kind')}</th>
+                      <th className="col-date">{t('expenseTracker.date')}</th>
+                      <th>{t('expenseTracker.description')}</th>
+                      <th className="col-amount">{t('expenseTracker.amount')}</th>
+                      <th className="col-category">{t('dialogs.pdfImport.categorySource')}</th>
+                      <th className="col-extra">{t('expenseTracker.type')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -275,7 +277,7 @@ export function PDFImportDialog({
                             type="checkbox"
                             checked={d.include}
                             onChange={e => updateDraft(d.id, { include: e.target.checked })}
-                            aria-label={`Include ${d.description}`}
+                            aria-label={t('dialogs.pdfImport.includeDescription', { description: d.description })}
                           />
                         </td>
                         <td>
@@ -283,8 +285,8 @@ export function PDFImportDialog({
                             value={d.kind}
                             onChange={e => updateDraft(d.id, { kind: e.target.value as 'income' | 'expense' })}
                           >
-                            <option value="income">Income</option>
-                            <option value="expense">Expense</option>
+                            <option value="income">{t('expenseTracker.income')}</option>
+                            <option value="expense">{t('expenseTracker.expense')}</option>
                           </select>
                         </td>
                         <td>
@@ -302,7 +304,7 @@ export function PDFImportDialog({
                           />
                           <div className="pdf-row-meta">
                             {d.sourceFile} · {d.docType}
-                            {d.llmEnriched ? ' · AI' : ''}
+                            {d.llmEnriched ? t('dialogs.pdfImport.aiSuffix') : ''}
                           </div>
                         </td>
                         <td>
@@ -341,8 +343,8 @@ export function PDFImportDialog({
                               value={d.suggestedExpenseType ?? 'WANT'}
                               onChange={e => updateDraft(d.id, { suggestedExpenseType: e.target.value as ExpenseType })}
                             >
-                              <option value="NEED">Need</option>
-                              <option value="WANT">Want</option>
+                              <option value="NEED">{t('expenseTracker.need')}</option>
+                              <option value="WANT">{t('expenseTracker.want')}</option>
                             </select>
                           ) : (
                             <span className="pdf-row-meta">—</span>
@@ -358,18 +360,18 @@ export function PDFImportDialog({
 
           {!busy && drafts.length === 0 && !error && !status && (
             <div className="pdf-import-empty">
-              Choose one or more PDF files to start. Nothing is uploaded anywhere — parsing happens in your browser.
+              {t('dialogs.pdfImport.emptyState')}
             </div>
           )}
 
           <div className="pdf-import-actions">
-            <button className="action-btn" onClick={onClose} disabled={busy}>Cancel</button>
+            <button className="action-btn" onClick={onClose} disabled={busy}>{t('common.cancel')}</button>
             <button
               className="action-btn primary"
               onClick={handleConfirm}
               disabled={busy || totalIncluded === 0}
             >
-              <MaterialIcon name="check" /> Import {totalIncluded > 0 ? `(${totalIncluded})` : ''}
+              <MaterialIcon name="check" /> {t('common.import')} {totalIncluded > 0 ? `(${totalIncluded})` : ''}
             </button>
           </div>
         </div>

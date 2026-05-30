@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Asset, AllocationDelta, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { formatCurrency, formatPercent, formatAssetName } from '../utils/allocationCalculator';
 import { NumberInput } from './NumberInput';
@@ -45,6 +46,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
   const [copiedIsin, setCopiedIsin] = useState<string | null>(null);
   const [collapsedClasses, setCollapsedClasses] = useState<Set<AssetClass>>(allClasses);
   const [editingAsset, setEditingAsset] = useState<string | null>(null);
+  const { t } = useTranslation();
   const [editValues, setEditValues] = useState<{ 
     name: string; 
     currentValue: number; 
@@ -429,7 +431,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                 <span className={`asset-class-badge ${assetClass.toLowerCase()}`}>
                   {formatAssetName(assetClass)}
                 </span>
-                <span className="asset-count">({classAssets.length} assets)</span>
+                <span className="asset-count">{t('tables.assetCount', { count: classAssets.length })}</span>
                 {onMassEdit && (
                   <button
                     className="btn-mass-edit"
@@ -437,9 +439,9 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                       e.stopPropagation();
                       onMassEdit(assetClass as AssetClass);
                     }}
-                    title="Edit All Percentages"
+                    title={t('tables.editAllTitle')}
                   >
-                    <MaterialIcon name="edit" size="small" /> Edit All
+                    <MaterialIcon name="edit" size="small" /> {t('tables.editAll')}
                   </button>
                 )}
               </div>
@@ -456,44 +458,44 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                 <thead>
                   <tr>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.name')}>
-                      Asset Name <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.name')}</span>
+                      {t('tables.assetName')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.name')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.type')}>
-                      Type <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.type')}</span>
+                      {t('tables.type')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.type')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.ticker')}>
-                      Ticker <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.ticker')}</span>
+                      {t('tables.ticker')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.ticker')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.targetMode')}>
-                      Target Mode <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.targetMode')}</span>
+                      {t('tables.targetMode')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.targetMode')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.targetPercent')}>
-                      % Target <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.targetPercent')}</span>
+                      {t('tables.percentTarget')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.targetPercent')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.currentPercent')}>
-                      % Current (Total) <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentPercent')}</span>
+                      {t('tables.percentCurrentTotal')} <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentPercent')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.currentPercentInClass')}>
-                      % Current (Class) <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentPercentInClass')}</span>
+                      {t('tables.percentCurrentClass')} <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentPercentInClass')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.shares')}>
-                      Shares <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.shares')}</span>
+                      {t('tables.shares')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.shares')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'asset.pricePerShare')}>
-                      Price/Share <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.pricePerShare')}</span>
+                      {t('tables.pricePerShare')} <span className="sort-indicator">{getSortIndicator(assetClass, 'asset.pricePerShare')}</span>
                     </th>
-                    <th>Acq. Price</th>
+                    <th>{t('tables.acquisitionPrice')}</th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.currentValue')}>
-                      Current Value <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentValue')}</span>
+                      {t('tables.currentValue')} <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.currentValue')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.targetValue')}>
-                      Target Value <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.targetValue')}</span>
+                      {t('tables.targetValue')} <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.targetValue')}</span>
                     </th>
                     <th className="sortable" onClick={() => requestSort(assetClass, 'delta.delta')}>
-                      Delta <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.delta')}</span>
+                      {t('tables.delta')} <span className="sort-indicator">{getSortIndicator(assetClass, 'delta.delta')}</span>
                     </th>
-                    <th>Action</th>
-                    <th>Edit</th>
+                    <th>{t('tables.action')}</th>
+                    <th>{t('tables.editColumn')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -519,10 +521,10 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                               className="edit-input edit-name-input"
                             />
                           ) : (
-                            <span title={asset.institutionName ? `Bank/Broker: ${asset.institutionName}` : undefined}>
+                            <span title={asset.institutionName ? t('tables.bankBrokerTitle', { name: asset.institutionName }) : undefined}>
                               {asset.name}
                               {asset.institutionName && (
-                                <span className="institution-badge" title={`Bank/Broker: ${asset.institutionName}`}>
+                                <span className="institution-badge" title={t('tables.bankBrokerTitle', { name: asset.institutionName })}>
                                   🏦
                                 </span>
                               )}
@@ -542,11 +544,11 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                                 e.stopPropagation();
                                 copyIsinToClipboard(asset);
                               }}
-                              title={`Click to copy ISIN: ${asset.isin}`}
+                              title={t('tables.copyIsinTooltip', { isin: asset.isin })}
                             >
                               {asset.ticker}
                               <span className="copy-icon">📋</span>
-                              {copiedIsin === asset.id && <span className="copied-tooltip">Copied!</span>}
+                              {copiedIsin === asset.id && <span className="copied-tooltip">{t('tables.copied')}</span>}
                             </span>
                           ) : (
                             asset.ticker
@@ -640,9 +642,9 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                                   onChange={handleEditCurrentValueChange}
                                   className="edit-input"
                                   disabled={true}
-                                  title="Current value is calculated from shares × price per share"
+                                  title={t('tables.calculatedValueTitle')}
                                 />
-                                <span className="calculated-label">(Calculated)</span>
+                                <span className="calculated-label">{t('tables.calculatedLabel')}</span>
                               </div>
                             )
                           ) : (
@@ -674,17 +676,17 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                         <td>
                           {isEditing ? (
                             <div className="edit-actions">
-                              <button onClick={() => saveEditing(asset.id)} className="btn-save" title="Save"><MaterialIcon name="check" size="small" /></button>
-                              <button onClick={cancelEditing} className="btn-cancel-edit" title="Cancel"><MaterialIcon name="close" size="small" /></button>
+                              <button onClick={() => saveEditing(asset.id)} className="btn-save" title={t('common.save')}><MaterialIcon name="check" size="small" /></button>
+                              <button onClick={cancelEditing} className="btn-cancel-edit" title={t('common.cancel')}><MaterialIcon name="close" size="small" /></button>
                               <button onClick={() => {
-                                if (confirm(`Delete ${asset.name}?`)) {
+                                if (confirm(t('tables.deleteAssetConfirm', { name: asset.name }))) {
                                   onDeleteAsset(asset.id);
                                   setEditingAsset(null);
                                 }
-                              }} className="btn-delete" title="Delete"><MaterialIcon name="delete" size="small" /></button>
+                              }} className="btn-delete" title={t('common.delete')}><MaterialIcon name="delete" size="small" /></button>
                             </div>
                           ) : (
-                            <button onClick={() => startEditing(asset)} className="btn-edit" title="Edit"><MaterialIcon name="edit" size="small" /></button>
+                            <button onClick={() => startEditing(asset)} className="btn-edit" title={t('common.edit')}><MaterialIcon name="edit" size="small" /></button>
                           )}
                         </td>
                       </tr>

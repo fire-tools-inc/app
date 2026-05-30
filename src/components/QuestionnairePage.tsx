@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   QUESTIONNAIRE_QUESTIONS, 
   calculateFIREPersona,
@@ -22,6 +23,7 @@ import './QuestionnairePage.css';
 
 export const QuestionnairePage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [responses, setResponses] = useState<QuestionnaireResponse[]>([]);
   const [results, setResults] = useState<QuestionnaireResults | null>(null);
@@ -127,7 +129,7 @@ export const QuestionnairePage: React.FC = () => {
           <div className="disclaimer-banner">
             <MaterialIcon name="info" />
             <span>
-              This is not financial advice. Do your own research and consult a qualified financial advisor.
+              {t('questionnaire.disclaimer')}
             </span>
           </div>
 
@@ -136,8 +138,8 @@ export const QuestionnairePage: React.FC = () => {
             <div className="celebration-animation">
               <MaterialIcon name="celebration" className="celebration-icon" />
             </div>
-            <h1>Your FIRE Persona</h1>
-            <p className="results-subtitle">Based on your responses, here's your personalized FIRE strategy</p>
+            <h1>{t('questionnaire.resultsTitle')}</h1>
+            <p className="results-subtitle">{t('questionnaire.resultsSubtitle')}</p>
           </div>
 
           {/* Persona Card */}
@@ -157,9 +159,9 @@ export const QuestionnairePage: React.FC = () => {
                 <MaterialIcon name="percent" />
               </div>
               <div className="metric-content">
-                <div className="metric-label">Safe Withdrawal Rate</div>
+                <div className="metric-label">{t('questionnaire.metrics.safeWithdrawalRate')}</div>
                 <div className="metric-value">{results.safeWithdrawalRate}%</div>
-                <div className="metric-description">Annual withdrawal from portfolio</div>
+                <div className="metric-description">{t('questionnaire.metrics.annualWithdrawal')}</div>
               </div>
             </div>
 
@@ -168,9 +170,9 @@ export const QuestionnairePage: React.FC = () => {
                 <MaterialIcon name="savings" />
               </div>
               <div className="metric-content">
-                <div className="metric-label">Target Savings Rate</div>
+                <div className="metric-label">{t('questionnaire.metrics.targetSavingsRate')}</div>
                 <div className="metric-value">{results.suggestedSavingsRate}%</div>
-                <div className="metric-description">Percentage of income to save</div>
+                <div className="metric-description">{t('questionnaire.metrics.incomeToSave')}</div>
               </div>
             </div>
 
@@ -179,11 +181,11 @@ export const QuestionnairePage: React.FC = () => {
                 <MaterialIcon name="psychology" />
               </div>
               <div className="metric-content">
-                <div className="metric-label">Risk Tolerance</div>
+                <div className="metric-label">{t('questionnaire.metrics.riskTolerance')}</div>
                 <div className="metric-value risk-tolerance">
                   {results.riskTolerance.charAt(0).toUpperCase() + results.riskTolerance.slice(1)}
                 </div>
-                <div className="metric-description">Investment risk profile</div>
+                <div className="metric-description">{t('questionnaire.metrics.investmentRiskProfile')}</div>
               </div>
             </div>
           </div>
@@ -192,7 +194,7 @@ export const QuestionnairePage: React.FC = () => {
           <div className="results-section">
             <h3>
               <MaterialIcon name="pie_chart" />
-              Recommended Asset Allocation
+              {t('questionnaire.recommendedAssetAllocation')}
             </h3>
             <div className="allocation-chart">
               <div className="allocation-pie">
@@ -203,7 +205,7 @@ export const QuestionnairePage: React.FC = () => {
                     style={{ '--segment-size': `${results.assetAllocation.stocks}%` } as React.CSSProperties}
                   >
                     <span className="segment-label">
-                      Stocks<br />{results.assetAllocation.stocks}%
+                      {t('questionnaire.assetClasses.stocks')}<br />{results.assetAllocation.stocks}%
                     </span>
                   </div>
                   <div 
@@ -211,7 +213,7 @@ export const QuestionnairePage: React.FC = () => {
                     style={{ '--segment-size': `${results.assetAllocation.bonds}%` } as React.CSSProperties}
                   >
                     <span className="segment-label">
-                      Bonds<br />{results.assetAllocation.bonds}%
+                      {t('questionnaire.assetClasses.bonds')}<br />{results.assetAllocation.bonds}%
                     </span>
                   </div>
                   <div 
@@ -219,7 +221,7 @@ export const QuestionnairePage: React.FC = () => {
                     style={{ '--segment-size': `${results.assetAllocation.cash}%` } as React.CSSProperties}
                   >
                     <span className="segment-label">
-                      Cash<br />{results.assetAllocation.cash}%
+                      {t('questionnaire.assetClasses.cash')}<br />{results.assetAllocation.cash}%
                     </span>
                   </div>
                   {results.assetAllocation.crypto && results.assetAllocation.crypto > 0 && (
@@ -228,7 +230,7 @@ export const QuestionnairePage: React.FC = () => {
                       style={{ '--segment-size': `${results.assetAllocation.crypto}%` } as React.CSSProperties}
                     >
                       <span className="segment-label">
-                        Crypto<br />{results.assetAllocation.crypto}%
+                        {t('questionnaire.assetClasses.crypto')}<br />{results.assetAllocation.crypto}%
                       </span>
                     </div>
                   )}
@@ -238,7 +240,7 @@ export const QuestionnairePage: React.FC = () => {
                       style={{ '--segment-size': `${results.assetAllocation.realEstate}%` } as React.CSSProperties}
                     >
                       <span className="segment-label">
-                        Real Estate<br />{results.assetAllocation.realEstate}%
+                        {t('questionnaire.assetClasses.realEstate')}<br />{results.assetAllocation.realEstate}%
                       </span>
                     </div>
                   )}
@@ -251,7 +253,7 @@ export const QuestionnairePage: React.FC = () => {
           <div className="results-section">
             <h3>
               <MaterialIcon name="inventory_2" />
-              Suitable Asset Types
+              {t('questionnaire.suitableAssetTypes')}
             </h3>
             <ul className="assets-list">
               {results.suitableAssets.map((asset, index) => (
@@ -267,15 +269,15 @@ export const QuestionnairePage: React.FC = () => {
           <div className="results-actions">
             <button className="btn-secondary" onClick={handleRetake}>
               <MaterialIcon name="refresh" />
-              Retake Questionnaire
+              {t('questionnaire.retakeQuestionnaire')}
             </button>
             <button className="btn-primary" onClick={handleExport}>
               <MaterialIcon name="download" />
-              Export Results
+              {t('questionnaire.exportResults')}
             </button>
             <button className="btn-secondary" onClick={() => navigate('/fire-calculator')}>
               <MaterialIcon name="calculate" />
-              Go to FIRE Calculator
+              {t('questionnaire.goToFireCalculator')}
             </button>
           </div>
         </div>
@@ -291,10 +293,10 @@ export const QuestionnairePage: React.FC = () => {
         <div className="questionnaire-header">
           <h1>
             <MaterialIcon name="quiz" className="page-header-emoji" />
-            FIRE Persona Questionnaire
+            {t('questionnaire.title')}
           </h1>
           <p className="questionnaire-subtitle">
-            Answer 12 questions to discover your ideal FIRE strategy and get personalized recommendations
+            {t('questionnaire.subtitle')}
           </p>
         </div>
 
@@ -307,7 +309,7 @@ export const QuestionnairePage: React.FC = () => {
             />
           </div>
           <div className="progress-text">
-            Question {currentStep + 1} of {totalSteps}
+            {t('questionnaire.progress', { current: currentStep + 1, total: totalSteps })}
           </div>
         </div>
 
@@ -346,14 +348,14 @@ export const QuestionnairePage: React.FC = () => {
           {currentStep > 0 && (
             <button className="btn-back" onClick={handleBack}>
               <MaterialIcon name="arrow_back" />
-              Back
+              {t('questionnaire.back')}
             </button>
           )}
           <button 
             className="btn-text"
             onClick={() => navigate('/')}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       </div>

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import './ScrollToTopButton.css';
 
@@ -16,6 +17,7 @@ interface ScrollToTopButtonProps {
 }
 
 export const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({ threshold = 300 }) => {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -51,8 +53,8 @@ export const ScrollToTopButton: React.FC<ScrollToTopButtonProps> = ({ threshold 
     <button
       className="scroll-to-top-button"
       onClick={scrollToTop}
-      aria-label="Scroll to top"
-      title="Go to top"
+      aria-label={t('scrollToTop.ariaLabel')}
+      title={t('scrollToTop.title')}
     >
       <MaterialIcon name="arrow_upward" />
     </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import {
   loadNotificationState,
@@ -31,6 +32,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   onNotificationClick,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -159,10 +161,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
     
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('notifications.justNow');
+    if (diffMins < 60) return t('notifications.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('notifications.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('notifications.daysAgo', { count: diffDays });
     
     return formatDate(then, dateFormat);
   };
@@ -172,7 +174,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       <button
         className="notification-bell-button"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+        aria-label={unreadCount > 0 ? t('notifications.bellAriaUnread', { count: unreadCount }) : t('notifications.bellAria')}
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -185,16 +187,16 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       </button>
 
       {isOpen && (
-        <div className="notification-panel" role="menu" aria-label="Notifications">
+        <div className="notification-panel" role="menu" aria-label={t('notifications.title')}>
           <div className="notification-panel-header">
-            <h3>Notifications</h3>
+            <h3>{t('notifications.title')}</h3>
             {unreadCount > 0 && (
               <button
                 className="mark-all-read-btn"
                 onClick={handleMarkAllRead}
-                aria-label="Mark all as read"
+                aria-label={t('notifications.markAllAsRead')}
               >
-                Mark all read
+                {t('notifications.markAllRead')}
               </button>
             )}
           </div>
@@ -203,7 +205,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
             {notifications.length === 0 ? (
               <div className="notification-empty">
                 <MaterialIcon name="notifications_none" />
-                <p>No notifications</p>
+                <p>{t('notifications.empty')}</p>
               </div>
             ) : (
               notifications.map(notification => {
@@ -234,16 +236,16 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                       <button
                         className="notification-read-btn"
                         onClick={(e) => handleToggleReadStatus(e, notification)}
-                        aria-label={notification.read ? 'Mark as unread' : 'Mark as read'}
-                        title={notification.read ? 'Mark as unread' : 'Mark as read'}
+                        aria-label={notification.read ? t('notifications.markAsUnread') : t('notifications.markAsRead')}
+                        title={notification.read ? t('notifications.markAsUnread') : t('notifications.markAsRead')}
                       >
                         <MaterialIcon name={notification.read ? 'mark_email_unread' : 'mark_email_read'} size="small" />
                       </button>
                       <button
                         className="notification-delete-btn"
                         onClick={(e) => handleDeleteNotification(e, notification.id)}
-                        aria-label="Delete notification"
-                        title="Delete"
+                        aria-label={t('notifications.deleteNotification')}
+                        title={t('common.delete')}
                       >
                         <MaterialIcon name="close" size="small" />
                       </button>
@@ -263,7 +265,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
                   setIsOpen(false);
                 }}
               >
-                <MaterialIcon name="settings" size="small" /> Notification Settings
+                <MaterialIcon name="settings" size="small" /> {t('notifications.settings')}
               </button>
             </div>
           )}

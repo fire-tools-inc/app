@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { CategoryBreakdown, getCategoryInfo, CustomCategory } from '../types/expenseTracker';
 import { MaterialIcon } from './MaterialIcon';
@@ -35,6 +36,7 @@ interface CustomTooltipProps {
 }
 
 function CustomTooltip({ active, payload, currency, customCategories }: CustomTooltipProps) {
+  const { t } = useTranslation();
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
@@ -55,7 +57,7 @@ function CustomTooltip({ active, payload, currency, customCategories }: CustomTo
         {formatCurrency(data.totalAmount, currency)} ({data.percentage.toFixed(1)}%)
       </p>
       <p style={{ margin: '0.25rem 0 0', color: '#64748B', fontSize: '0.85rem' }}>
-        {data.transactionCount} transaction{data.transactionCount !== 1 ? 's' : ''}
+        {t('charts.transactionCount', { count: data.transactionCount })}
       </p>
     </div>
   );
@@ -85,6 +87,7 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
 }
 
 export function ExpenseBreakdownChart({ data, currency, customCategories }: ExpenseBreakdownChartProps) {
+  const { t } = useTranslation();
   if (data.length === 0) {
     return (
       <div style={{ 
@@ -94,7 +97,7 @@ export function ExpenseBreakdownChart({ data, currency, customCategories }: Expe
         background: '#1A1D26',
         borderRadius: '8px',
       }}>
-        <p>No expense data to display. Add some expenses to see the breakdown.</p>
+        <p>{t('charts.noExpenseData')}</p>
       </div>
     );
   }

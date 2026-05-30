@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 
 interface DataManagementProps {
@@ -20,6 +21,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   fileFormat = 'csv',
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { t } = useTranslation();
   
   const formatLabel = fileFormat.toUpperCase();
   const acceptType = fileFormat === 'json' ? '.json' : '.csv';
@@ -33,7 +35,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
         aria-controls="data-management-content"
       >
         <h4>
-          <MaterialIcon name="save" /> Data Management <span className="collapse-icon-small" aria-hidden="true">{isOpen ? '▼' : '▶'}</span>
+          <MaterialIcon name="save" /> {t('dataManagement.title')} <span className="collapse-icon-small" aria-hidden="true">{isOpen ? '▼' : '▶'}</span>
         </h4>
       </button>
       {isOpen && (
@@ -49,18 +51,18 @@ export const DataManagement: React.FC<DataManagementProps> = ({
                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white'
               }}
-              aria-label="Load demo expense data for the current year"
+              aria-label={t('dataManagement.loadDemoAriaLabel')}
             >
-              <MaterialIcon name="casino" /> Load Demo Data
+              <MaterialIcon name="casino" /> {t('dataManagement.loadDemoData')}
             </button>
           )}
           <button 
             onClick={onExport} 
             className="action-btn export-btn" 
             style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
-            aria-label={`Export calculator data to ${formatLabel} file`}
+            aria-label={t('dataManagement.exportAriaLabel', { format: formatLabel })}
           >
-            <MaterialIcon name="download" /> Export {formatLabel}
+            <MaterialIcon name="download" /> {t('dataManagement.exportButton', { format: formatLabel })}
           </button>
           <label 
             className="action-btn import-btn" 
@@ -73,22 +75,22 @@ export const DataManagement: React.FC<DataManagementProps> = ({
               }
             }}
           >
-            <MaterialIcon name="upload" /> Import {formatLabel}
+            <MaterialIcon name="upload" /> {t('dataManagement.importButton', { format: formatLabel })}
             <input
               type="file"
               accept={acceptType}
               onChange={onImport}
               style={{ display: 'none' }}
-              aria-label={`Import calculator data from ${formatLabel} file`}
+              aria-label={t('dataManagement.importAriaLabel', { format: formatLabel })}
             />
           </label>
           <button 
             onClick={onReset} 
             className="action-btn reset-btn" 
             style={{ width: '100%', backgroundColor: '#ef4444', color: 'white', justifyContent: 'center' }}
-            aria-label="Reset all calculator data to defaults"
+            aria-label={t('dataManagement.resetAriaLabel')}
           >
-            <MaterialIcon name="refresh" /> Reset All Data
+            <MaterialIcon name="refresh" /> {t('dataManagement.resetButton')}
           </button>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { CalculationResult } from '../types/calculator';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import { PrivacyBlur } from './PrivacyBlur';
 import { AbbreviatedValue } from './AbbreviatedValue';
@@ -19,6 +20,7 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
   isPrivacyMode = false,
   onTogglePrivacyMode
 }) => {
+  const { t } = useTranslation();
   const { yearsToFIRE, fireTarget, validationErrors, projections } = result;
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -73,60 +75,60 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
   return (
     <section className="fire-metrics" aria-labelledby="fire-metrics-heading" data-tour="results-section">
       <div className="fire-metrics-header">
-        <h3 id="fire-metrics-heading"><MaterialIcon name="gps_fixed" /> FIRE Metrics</h3>
+        <h3 id="fire-metrics-heading"><MaterialIcon name="gps_fixed" /> {t('fireMetrics.heading')}</h3>
         <button 
           className="share-button" 
           onClick={handleShare}
-          aria-label={copied ? 'Link copied to clipboard' : 'Copy link to share this calculation'}
+          aria-label={copied ? t('fireMetrics.ariaLinkCopied') : t('fireMetrics.ariaCopyLink')}
         >
-          {copied ? <MaterialIcon name="check" /> : copyFailed ? <MaterialIcon name="close" /> : <MaterialIcon name="link" />} {copied ? 'Copied!' : copyFailed ? 'Failed' : 'Share'}
+          {copied ? <MaterialIcon name="check" /> : copyFailed ? <MaterialIcon name="close" /> : <MaterialIcon name="link" />} {copied ? t('fireMetrics.copied') : copyFailed ? t('fireMetrics.failed') : t('fireMetrics.share')}
         </button>
       </div>
       <div className="metrics-grid" role="list">
         <div className="metric-card" role="listitem">
           <div className="metric-header">
-            <span className="metric-label">FIRE Target</span>
+            <span className="metric-label">{t('fireMetrics.fireTarget')}</span>
             {onTogglePrivacyMode && (
               <button 
                 className="privacy-eye-btn metric-privacy-btn"
                 onClick={onTogglePrivacyMode}
-                title={isPrivacyMode ? 'Show values' : 'Hide values'}
+                title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
                 aria-pressed={isPrivacyMode}
               >
                 <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
               </button>
             )}
           </div>
-          <div className="metric-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{hasErrors ? 'N/A' : <AbbreviatedValue value={fireTarget} />}</PrivacyBlur></div>
-          <div className="metric-subtitle">for standard FIRE</div>
+          <div className="metric-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{hasErrors ? t('fireMetrics.notAvailable') : <AbbreviatedValue value={fireTarget} />}</PrivacyBlur></div>
+          <div className="metric-subtitle">{t('fireMetrics.fireTargetSubtitle')}</div>
         </div>
         
         <div className="metric-card highlight" role="listitem">
           <div className="metric-header">
-            <span className="metric-label">Years to FIRE</span>
+            <span className="metric-label">{t('fireMetrics.yearsToFIRE')}</span>
           </div>
           <div className="metric-value">
-            {hasErrors ? 'N/A' : yearsToFIRE >= 0 ? yearsToFIRE : 'N/A'}
+            {hasErrors ? t('fireMetrics.notAvailable') : yearsToFIRE >= 0 ? yearsToFIRE : t('fireMetrics.notAvailable')}
           </div>
           {!hasErrors && yearsToFIRE >= 0 && (
-            <div className="metric-subtitle">At age {currentAge + yearsToFIRE}</div>
+            <div className="metric-subtitle">{t('fireMetrics.atAge', { age: currentAge + yearsToFIRE })}</div>
           )}
         </div>
 
         <div className="metric-card" role="listitem">
           <div className="metric-header">
-            <span className="metric-label">Portfolio Value</span>
+            <span className="metric-label">{t('fireMetrics.portfolioValue')}</span>
           </div>
-          <div className="metric-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{hasErrors ? 'N/A' : <AbbreviatedValue value={displayedFinalPortfolioValue} />}</PrivacyBlur></div>
-          <div className="metric-subtitle">At age {displayedEndAge}</div>
+          <div className="metric-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{hasErrors ? t('fireMetrics.notAvailable') : <AbbreviatedValue value={displayedFinalPortfolioValue} />}</PrivacyBlur></div>
+          <div className="metric-subtitle">{t('fireMetrics.atAge', { age: displayedEndAge })}</div>
         </div>
 
         <div className="metric-card highlight" role="listitem">
           <div className="metric-header">
-            <span className="metric-label">Current Age</span>
+            <span className="metric-label">{t('fireMetrics.currentAge')}</span>
           </div>
           <div className="metric-value">{currentAge}</div>
-          <div className="metric-subtitle">years</div>
+          <div className="metric-subtitle">{t('fireMetrics.years')}</div>
         </div>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { YearProjection } from '../types/calculator';
 import { formatCurrency } from '../utils/allocationCalculator';
@@ -27,6 +28,7 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
   onCustomZoomInputChange,
   isPrivacyMode = false
 }) => {
+  const { t } = useTranslation();
   // Filter data based on zoom level
   const getFilteredData = () => {
     let filtered = projections;
@@ -82,48 +84,48 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
   return (
     <section className="chart-container" aria-labelledby="net-worth-chart-heading">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3 id="net-worth-chart-heading">Net Worth Growth</h3>
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }} role="group" aria-label="Chart zoom controls">
+        <h3 id="net-worth-chart-heading">{t('charts.netWorthGrowth')}</h3>
+        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }} role="group" aria-label={t('charts.zoomControls')}>
           <button
             onClick={() => onZoomChange(20)}
             className={`zoom-button ${zoomYears === 20 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 20)}
             aria-pressed={zoomYears === 20}
-            aria-label="Zoom to 20 years"
+            aria-label={t('charts.zoomToYears', { years: 20 })}
           >
-            20 Years
+            {t('charts.twentyYears')}
           </button>
           <button
             onClick={() => onZoomChange(30)}
             className={`zoom-button ${zoomYears === 30 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 30)}
             aria-pressed={zoomYears === 30}
-            aria-label="Zoom to 30 years"
+            aria-label={t('charts.zoomToYears', { years: 30 })}
           >
-            30 Years
+            {t('charts.thirtyYears')}
           </button>
           <button
             onClick={() => onZoomChange(40)}
             className={`zoom-button ${zoomYears === 40 ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 40)}
             aria-pressed={zoomYears === 40}
-            aria-label="Zoom to 40 years"
+            aria-label={t('charts.zoomToYears', { years: 40 })}
           >
-            40 Years
+            {t('charts.fortyYears')}
           </button>
           <button
             onClick={() => onZoomChange('all')}
             className={`zoom-button ${zoomYears === 'all' ? 'active' : ''}`}
             style={buttonStyle(zoomYears === 'all')}
             aria-pressed={zoomYears === 'all'}
-            aria-label="Show all years"
+            aria-label={t('charts.showAllYears')}
           >
-            All Years
+            {t('charts.allYears')}
           </button>
           <input
             type="number"
             inputMode="numeric"
-            placeholder="Custom"
+            placeholder={t('charts.customZoom')}
             value={customZoomInput}
             onChange={(e) => onCustomZoomInputChange(e.target.value)}
             onKeyPress={handleCustomZoomKeyPress}
@@ -139,16 +141,16 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
             }}
             min="1"
             step="1"
-            aria-label="Custom zoom in years"
+            aria-label={t('charts.customZoomAriaLabel')}
           />
         </div>
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={data} aria-label="Net worth growth chart over time">
+        <LineChart data={data} aria-label={t('charts.netWorthChartAriaLabel')}>
           <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
           <XAxis 
             dataKey="age" 
-            label={{ value: 'Age', position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
+            label={{ value: t('charts.ageLabel'), position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
             interval={calculateXAxisInterval(data.length)}
             tick={{ fill: '#94A3B8' }}
             stroke="#3A3D46"
@@ -162,14 +164,14 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
           />
           <Tooltip 
             formatter={(value) => isPrivacyMode ? PRIVACY_PLACEHOLDER : formatCurrency(Number(value))} 
-            labelFormatter={(label) => `Age ${label}`}
+            labelFormatter={(label) => t('charts.ageTooltip', { age: label })}
             contentStyle={{ background: '#1A1D26', border: '1px solid #2DD4BF', borderRadius: '8px', color: '#F8FAFC' }}
             labelStyle={{ color: '#F8FAFC' }}
             itemStyle={{ color: '#F8FAFC' }}
           />
           <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
-          <Line type="monotone" dataKey="Net Worth" stroke="#22C55E" strokeWidth={2} />
-          <Line type="monotone" dataKey="FIRE Target" stroke="#2DD4BF" strokeWidth={2} strokeDasharray="5 5" />
+          <Line type="monotone" dataKey="Net Worth" name={t('charts.netWorth')} stroke="#22C55E" strokeWidth={2} />
+          <Line type="monotone" dataKey="FIRE Target" name={t('charts.fireTarget')} stroke="#2DD4BF" strokeWidth={2} strokeDasharray="5 5" />
         </LineChart>
       </ResponsiveContainer>
     </section>

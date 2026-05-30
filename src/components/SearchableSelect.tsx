@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import './SearchableSelect.css';
 
 export interface SelectOption {
@@ -39,6 +40,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const isSearchable = options.length >= searchThreshold;
 
@@ -115,14 +117,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
                 className="searchable-select-search-input"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search..."
-                aria-label="Search options"
+                placeholder={t('searchableSelect.searchPlaceholder')}
+                aria-label={t('searchableSelect.searchAriaLabel')}
               />
             </div>
           )}
           <ul className="searchable-select-options" role="listbox">
             {filteredOptions.length === 0 ? (
-              <li className="searchable-select-no-results">No results found</li>
+              <li className="searchable-select-no-results">{t('searchableSelect.noResults')}</li>
             ) : (
               filteredOptions.map(option => (
                 <li

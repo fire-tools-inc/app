@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AssetClassSummary, AllocationMode, AssetClass } from '../types/assetAllocation';
 import { formatCurrency, formatPercent, formatAssetName } from '../utils/allocationCalculator';
 import { NumberInput } from './NumberInput';
@@ -34,6 +35,7 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
   const [editMode, setEditMode] = useState<AllocationMode>('PERCENTAGE');
   const [editPercent, setEditPercent] = useState<number>(0);
   const tableRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // Click outside to save
   useEffect(() => {
@@ -113,15 +115,15 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
       <table className="asset-class-table">
         <thead>
           <tr>
-            <th>Asset Class</th>
-            <th>Target Mode</th>
-            <th>% Target (class)</th>
-            <th>% Current</th>
-            <th>Absolute Current</th>
-            <th>Absolute Target</th>
-            <th>Delta</th>
-            <th>Action</th>
-            <th>Edit</th>
+            <th>{t('tables.assetClass')}</th>
+            <th>{t('tables.targetMode')}</th>
+            <th>{t('tables.percentTargetClass')}</th>
+            <th>{t('tables.percentCurrent')}</th>
+            <th>{t('tables.absoluteCurrent')}</th>
+            <th>{t('tables.absoluteTarget')}</th>
+            <th>{t('tables.delta')}</th>
+            <th>{t('tables.action')}</th>
+            <th>{t('tables.editColumn')}</th>
           </tr>
         </thead>
         <tbody>
@@ -234,11 +236,11 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
                 <td>
                   {isEditing ? (
                     <div className="edit-actions">
-                      <button onClick={saveEditing} className="btn-save" title="Save">✓</button>
-                      <button onClick={cancelEditing} className="btn-cancel-edit" title="Cancel">✕</button>
+                      <button onClick={saveEditing} className="btn-save" title={t('common.save')}>✓</button>
+                      <button onClick={cancelEditing} className="btn-cancel-edit" title={t('common.cancel')}>✕</button>
                     </div>
                   ) : (
-                    <button onClick={() => startEditing(ac)} className="btn-edit" title="Edit">✎</button>
+                    <button onClick={() => startEditing(ac)} className="btn-edit" title={t('common.edit')}>✎</button>
                   )}
                 </td>
               </tr>
@@ -246,7 +248,7 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
           });
           })()}
           <tr className="total-row">
-            <td><strong>Total Portfolio</strong></td>
+            <td><strong>{t('tables.totalPortfolio')}</strong></td>
             <td colSpan={3}></td>
             <td className="currency-value"><strong><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(totalHoldings, currency)}</PrivacyBlur></strong></td>
             <td colSpan={4}></td>

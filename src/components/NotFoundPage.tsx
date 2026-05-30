@@ -1,47 +1,48 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import './NotFoundPage.css';
 
 export function NotFoundPage() {
+  const { t } = useTranslation();
   return (
     <main className="not-found-page" id="main-content">
       <div className="not-found-container">
         <div className="not-found-icon" aria-hidden="true"><MaterialIcon name="search" size="large" /></div>
-        <h1 className="not-found-title">404 - Page Not Found</h1>
+        <h1 className="not-found-title">{t('notFound.title')}</h1>
         <p className="not-found-message">
-          Oops! The page you're looking for doesn't exist. 
-          It might have been moved or deleted.
+          {t('notFound.message')}
         </p>
         <div className="not-found-actions">
           <Link to="/" className="btn-home">
-            <MaterialIcon name="home" /> Back to Home
+            <MaterialIcon name="home" /> {t('notFound.backHome')}
           </Link>
           <Link to="/fire-calculator" className="btn-calculator">
-            <MaterialIcon name="local_fire_department" /> FIRE Calculator
+            <MaterialIcon name="local_fire_department" /> {t('nav.fireCalculator')}
           </Link>
         </div>
         <div className="helpful-links">
-          <h2>Popular Pages</h2>
-          <nav aria-label="Popular pages navigation">
+          <h2>{t('notFound.popularPages')}</h2>
+          <nav aria-label={t('notFound.popularPagesNavigation')}>
             <ul>
               <li>
                 <Link to="/asset-allocation">
-                  <MaterialIcon name="pie_chart" /> Asset Allocation Manager
+                  <MaterialIcon name="pie_chart" /> {t('home.cards.assetAllocation.title')}
                 </Link>
               </li>
               <li>
                 <Link to="/expense-tracker">
-                  <MaterialIcon name="account_balance_wallet" /> Cashflow Tracker
+                  <MaterialIcon name="account_balance_wallet" /> {t('home.cards.cashflow.title')}
                 </Link>
               </li>
               <li>
                 <Link to="/monte-carlo">
-                  <MaterialIcon name="casino" /> Monte Carlo Simulations
+                  <MaterialIcon name="casino" /> {t('home.cards.monteCarlo.title')}
                 </Link>
               </li>
               <li>
                 <Link to="/settings">
-                  <MaterialIcon name="settings" /> Settings
+                  <MaterialIcon name="settings" /> {t('settings.title')}
                 </Link>
               </li>
             </ul>

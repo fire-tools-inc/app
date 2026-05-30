@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import './PolicyModal.css';
 
 export type PolicyType = 'privacy' | 'cookie';
@@ -11,6 +12,7 @@ interface PolicyModalProps {
 }
 
 export function PolicyModal({ isOpen, onClose, policyType, onSwitchPolicy }: PolicyModalProps) {
+  const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -66,13 +68,13 @@ export function PolicyModal({ isOpen, onClose, policyType, onSwitchPolicy }: Pol
       >
         <div className="policy-modal-header">
           <h1 id="policy-modal-title">
-            {policyType === 'privacy' ? 'Privacy Policy' : 'Cookie Policy'}
+            {policyType === 'privacy' ? t('legal.privacyPolicy') : t('legal.cookiePolicy')}
           </h1>
           <button
             ref={closeButtonRef}
             className="policy-modal-close"
             onClick={onClose}
-            aria-label="Close policy modal"
+            aria-label={t('legal.closePolicyModal')}
           >
             ×
           </button>
@@ -93,11 +95,16 @@ interface PrivacyPolicyContentProps {
 }
 
 function PrivacyPolicyContent({ onSwitchToCookie }: PrivacyPolicyContentProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       <p className="last-updated">
-        <strong>Last Updated:</strong> December 31, 2025
+        <strong>{t('legal.lastUpdated')}:</strong> December 31, 2025
       </p>
+      <p className="policy-language-note">{t('legal.contentEnglishOnly')}</p>
+
+      {/* TODO(i18n): translate legal text content in a future revision */}
 
       <section className="policy-section">
         <h2>1. Introduction</h2>
@@ -181,7 +188,7 @@ function PrivacyPolicyContent({ onSwitchToCookie }: PrivacyPolicyContentProps) {
         <p>
           For detailed information about cookies we use, please see our{' '}
           <button type="button" className="policy-inline-link" onClick={onSwitchToCookie}>
-            Cookie Policy
+            {t('legal.switchToCookiePolicy')}
           </button>.
         </p>
         <p>
@@ -327,11 +334,16 @@ interface CookiePolicyContentProps {
 }
 
 function CookiePolicyContent({ onSwitchToPrivacy }: CookiePolicyContentProps) {
+  const { t } = useTranslation();
+
   return (
     <>
       <p className="last-updated">
-        <strong>Last Updated:</strong> December 31, 2025
+        <strong>{t('legal.lastUpdated')}:</strong> December 31, 2025
       </p>
+      <p className="policy-language-note">{t('legal.contentEnglishOnly')}</p>
+
+      {/* TODO(i18n): translate legal text content in a future revision */}
 
       <section className="policy-section">
         <h2>What Are Cookies?</h2>
@@ -545,7 +557,7 @@ function CookiePolicyContent({ onSwitchToPrivacy }: CookiePolicyContentProps) {
         <p>
           For information about how we handle your data overall, please see our{' '}
           <button type="button" className="policy-inline-link" onClick={onSwitchToPrivacy}>
-            Privacy Policy
+            {t('legal.switchToPrivacyPolicy')}
           </button>.
         </p>
       </section>

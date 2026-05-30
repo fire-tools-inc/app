@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Asset, PortfolioAllocation } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, exportToCSV, importFromCSV } from '../utils/allocationCalculator';
 import { DEFAULT_ASSETS } from '../utils/defaultAssets';
@@ -8,6 +9,7 @@ import { AllocationChart } from './AllocationChart';
 import { MaterialIcon } from './MaterialIcon';
 
 export const AssetAllocationManager: React.FC = () => {
+  const { t } = useTranslation();
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [currency] = useState<string>('EUR');
   const [allocation, setAllocation] = useState<PortfolioAllocation>(() =>
@@ -31,7 +33,7 @@ export const AssetAllocationManager: React.FC = () => {
   const handleAddAsset = () => {
     const newAsset: Asset = {
       id: `asset-${Date.now()}`,
-      name: 'New Asset',
+      name: t('assetAllocation.defaultNewAssetName'),
       ticker: 'NEW',
       assetClass: 'STOCKS',
       subAssetType: 'ETF',
@@ -66,14 +68,14 @@ export const AssetAllocationManager: React.FC = () => {
         const importedAssets = importFromCSV(csv);
         updateAllocation(importedAssets);
       } catch (error) {
-        alert(`Error importing CSV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        alert(t('assetAllocation.messages.importCsvError', { message: error instanceof Error ? error.message : t('common.unknownError') }));
       }
     };
     reader.readAsText(file);
   };
 
   const assetClassChartData = prepareAssetClassChartData(allocation.assetClasses);
-  const selectedAssetClass = selectedClass 
+  const selectedAssetClass = selectedClass
     ? allocation.assetClasses.find(ac => ac.assetClass === selectedClass)
     : null;
   const assetChartData = selectedAssetClass
@@ -83,16 +85,15 @@ export const AssetAllocationManager: React.FC = () => {
   return (
     <div className="asset-allocation-manager">
       <div className="manager-header">
-        <h2><MaterialIcon name="pie_chart" /> Asset Allocation Manager</h2>
+        <h2><MaterialIcon name="pie_chart" /> {t('assetAllocation.title')}</h2>
         <p className="section-description">
-          Manage and visualize your portfolio asset allocation. Set target allocations,
-          track current positions, and see recommended actions to rebalance your portfolio.
+          {t('assetAllocation.description')}
         </p>
       </div>
 
       {!allocation.isValid && (
         <div className="validation-errors">
-          <strong><MaterialIcon name="warning" /> Validation Errors:</strong>
+          <strong><MaterialIcon name="warning" /> {t('assetAllocation.validationErrors')}</strong>
           <ul>
             {allocation.validationErrors.map((error, index) => (
               <li key={index}>{error}</li>
@@ -103,13 +104,13 @@ export const AssetAllocationManager: React.FC = () => {
 
       <div className="manager-actions">
         <button onClick={handleAddAsset} className="action-btn add-btn">
-          <MaterialIcon name="add" /> Add Asset
+          <MaterialIcon name="add" /> {t('assetAllocation.addAsset')}
         </button>
         <button onClick={handleExport} className="action-btn export-btn">
-          <MaterialIcon name="download" /> Export CSV
+          <MaterialIcon name="download" /> {t('assetAllocation.exportCsv')}
         </button>
         <label className="action-btn import-btn">
-          <MaterialIcon name="upload" /> Import CSV
+          <MaterialIcon name="upload" /> {t('assetAllocation.importCsv')}
           <input
             type="file"
             accept=".csv"
@@ -120,7 +121,7 @@ export const AssetAllocationManager: React.FC = () => {
       </div>
 
       <div className="allocation-section">
-        <h3>Asset Class Summary</h3>
+        <h3>{t('assetAllocation.assetClassSummary')}</h3>
         <AssetClassTable
           assetClasses={allocation.assetClasses}
           totalValue={allocation.totalValue}
@@ -131,27 +132,27 @@ export const AssetAllocationManager: React.FC = () => {
       <div className="charts-row">
         <AllocationChart
           data={assetClassChartData}
-          title="Portfolio Allocation by Asset Class"
+          title={t('assetAllocation.charts.byAssetClass')}
           currency={currency}
         />
-        
+
         {selectedAssetClass && (
           <AllocationChart
             data={assetChartData}
-            title={`${selectedAssetClass.assetClass} Breakdown`}
+            title={t('assetAllocation.charts.breakdown', { assetClass: selectedAssetClass.assetClass })}
             currency={currency}
           />
         )}
       </div>
 
       <div className="class-selector">
-        <label>View Asset Class Details:</label>
-        <select 
-          value={selectedClass || ''} 
+        <label>{t('assetAllocation.viewAssetClassDetails')}</label>
+        <select
+          value={selectedClass || ''}
           onChange={(e) => setSelectedClass(e.target.value || null)}
           className="class-select"
         >
-          <option value="">Select Asset Class</option>
+          <option value="">{t('assetAllocation.selectAssetClass')}</option>
           {allocation.assetClasses.map(ac => (
             <option key={ac.assetClass} value={ac.assetClass}>
               {ac.assetClass}
@@ -161,7 +162,7 @@ export const AssetAllocationManager: React.FC = () => {
       </div>
 
       <div className="allocation-section">
-        <h3>Detailed Asset Allocation</h3>
+        <h3>{t('assetAllocation.detailedAssetAllocation')}</h3>
         <AllocationTable
           assets={assets}
           deltas={allocation.deltas}
@@ -171,18 +172,18 @@ export const AssetAllocationManager: React.FC = () => {
       </div>
 
       <div className="allocation-info">
-        <h4><MaterialIcon name="lightbulb" /> How to Use</h4>
+        <h4><MaterialIcon name="lightbulb" /> {t('assetAllocation.howToUse.title')}</h4>
         <ul>
-          <li><strong>Target Mode:</strong> Choose "%" for percentage-based allocation, "SET" for fixed amounts (e.g., emergency cash), or "OFF" to exclude from calculations</li>
-          <li><strong>Percentage targets</strong> for active assets should sum to 100%</li>
-          <li><strong>Actions:</strong> 
-            <span className="info-badge buy">BUY/SAVE</span> = Increase position | 
-            <span className="info-badge sell">SELL/INVEST</span> = Decrease position | 
-            <span className="info-badge hold">HOLD</span> = Within target range |
-            <span className="info-badge excluded">EXCLUDED</span> = Not in allocation
+          <li><strong>{t('assetAllocation.howToUse.targetModeLabel')}</strong> {t('assetAllocation.howToUse.targetModeText')}</li>
+          <li><strong>{t('assetAllocation.howToUse.percentageTargetsLabel')}</strong> {t('assetAllocation.howToUse.percentageTargetsText')}</li>
+          <li><strong>{t('assetAllocation.howToUse.actionsLabel')}</strong>
+            <span className="info-badge buy">BUY/SAVE</span> = {t('assetAllocation.howToUse.increasePosition')} |
+            <span className="info-badge sell">SELL/INVEST</span> = {t('assetAllocation.howToUse.decreasePosition')} |
+            <span className="info-badge hold">HOLD</span> = {t('assetAllocation.howToUse.withinTargetRange')} |
+            <span className="info-badge excluded">EXCLUDED</span> = {t('assetAllocation.howToUse.notInAllocation')}
           </li>
-          <li><strong>Delta:</strong> Positive values indicate how much to buy, negative values indicate how much to sell</li>
-          <li><strong>For Cash assets:</strong> Actions show "SAVE" (increase) or "INVEST" (move to other assets) instead of buy/sell</li>
+          <li><strong>{t('assetAllocation.howToUse.deltaLabel')}</strong> {t('assetAllocation.howToUse.deltaText')}</li>
+          <li><strong>{t('assetAllocation.howToUse.cashAssetsLabel')}</strong> {t('assetAllocation.howToUse.cashAssetsText')}</li>
         </ul>
       </div>
     </div>

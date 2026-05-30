@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CalculatorInputs } from '../types/calculator';
 import { NumberInput } from './NumberInput';
 import { SliderInput } from './SliderInput';
@@ -27,6 +28,7 @@ interface CalculatorInputsProps {
 }
 
 export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, onChange, assetAllocationData, isPrivacyMode = false }) => {
+  const { t } = useTranslation();
   // Get currency symbol from settings - recalculated on each render to pick up changes
   const settings = loadSettings();
   const currencySymbol = getCurrencySymbol(settings.currencySettings.defaultCurrency);
@@ -125,7 +127,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
 
   return (
     <div className="inputs-form">
-      <h2>FIRE Calculator Inputs</h2>
+      <h2>{t('fireCalculator.title')}</h2>
       
       <div id="section-initial-values" className="form-section collapsible-section" data-tour="initial-savings">
         <button 
@@ -135,16 +137,16 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-controls="initial-values-content"
         >
           <h3>
-            <MaterialIcon name="savings" /> Initial Values 
-            {inputs.useAssetAllocationValue && <span className="calculated-label"> - From Asset Allocation</span>}
+            <MaterialIcon name="savings" /> {t('fireCalculator.sections.initialValues')}
+            {inputs.useAssetAllocationValue && <span className="calculated-label"> - {t('fireCalculator.fromAssetAllocation')}</span>}
             <span className="collapse-icon-small" aria-hidden="true">{openSections.initialValues ? '▼' : '▶'}</span>
           </h3>
         </button>
         {openSections.initialValues && (<div id="initial-values-content" className="form-section-content">
         <div className="form-group">
           <label htmlFor="initial-savings">
-            Initial Savings / Portfolio Value ({currencySymbol})
-            {inputs.useAssetAllocationValue && <span className="calculated-label"> - From Asset Allocation</span>}
+            {t('fireCalculator.labels.initialSavings', { currency: currencySymbol })}
+            {inputs.useAssetAllocationValue && <span className="calculated-label"> - {t('fireCalculator.fromAssetAllocation')}</span>}
           </label>
           {inputs.useAssetAllocationValue ? (
             <PrivacyBlur isPrivacyMode={isPrivacyMode}>
@@ -179,14 +181,14 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-controls="asset-allocation-content"
         >
           <h3>
-            <MaterialIcon name="pie_chart" /> Asset Allocation 
-            {inputs.useAssetAllocationValue && <span className="calculated-label"> - From Asset Allocation</span>}
+            <MaterialIcon name="pie_chart" /> {t('fireCalculator.sections.assetAllocation')}
+            {inputs.useAssetAllocationValue && <span className="calculated-label"> - {t('fireCalculator.fromAssetAllocation')}</span>}
             <span className="collapse-icon-small" aria-hidden="true">{openSections.assetAllocation ? '▼' : '▶'}</span>
           </h3>
         </button>
         {openSections.assetAllocation && (<div id="asset-allocation-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="stocks-percent">Stocks (%)</label>
+          <label htmlFor="stocks-percent">{t('fireCalculator.labels.stocksPercent')}</label>
           {inputs.useAssetAllocationValue ? (
             <input
               id="stocks-percent"
@@ -206,7 +208,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           )}
         </div>
         <div className="form-group">
-          <label htmlFor="bonds-percent">Bonds (%)</label>
+          <label htmlFor="bonds-percent">{t('fireCalculator.labels.bondsPercent')}</label>
           {inputs.useAssetAllocationValue ? (
             <input
               id="bonds-percent"
@@ -226,7 +228,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           )}
         </div>
         <div className="form-group">
-          <label htmlFor="cash-percent">Cash (%)</label>
+          <label htmlFor="cash-percent">{t('fireCalculator.labels.cashPercent')}</label>
           {inputs.useAssetAllocationValue ? (
             <input
               id="cash-percent"
@@ -246,9 +248,9 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           )}
         </div>
         <div className="allocation-sum" role="status" aria-live="polite">
-          Total: {(effectiveStocksPercent + effectiveBondsPercent + effectiveCashPercent).toFixed(2)}%
+          {t('fireCalculator.allocationTotal', { value: (effectiveStocksPercent + effectiveBondsPercent + effectiveCashPercent).toFixed(2) })}
           {Math.abs((effectiveStocksPercent + effectiveBondsPercent + effectiveCashPercent) - 100) > 0.01 && 
-            <span className="warning"> <MaterialIcon name="warning" size="small" /> Should equal 100%</span>
+            <span className="warning"> <MaterialIcon name="warning" size="small" /> {t('fireCalculator.allocationWarning')}</span>
           }
         </div>
         </div>)}
@@ -261,11 +263,11 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.income}
           aria-controls="income-content"
         >
-          <h3><MaterialIcon name="payments" /> Income <span className="collapse-icon-small" aria-hidden="true">{openSections.income ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="payments" /> {t('fireCalculator.sections.income')} <span className="collapse-icon-small" aria-hidden="true">{openSections.income ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.income && (<div id="income-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="labor-income">Current Annual Labor Income (Net) ({currencySymbol})</label>
+          <label htmlFor="labor-income">{t('fireCalculator.labels.laborIncome', { currency: currencySymbol })}</label>
           {inputs.useExpenseTrackerIncome ? (
             <PrivacyBlur isPrivacyMode={isPrivacyMode}>
               <input
@@ -289,7 +291,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           )}
         </div>
         <div className="form-group">
-          <label htmlFor="labor-income-growth">Labor Income Growth Rate (%)</label>
+          <label htmlFor="labor-income-growth">{t('fireCalculator.labels.laborIncomeGrowthRate')}</label>
           <NumberInput
             id="labor-income-growth"
             value={inputs.laborIncomeGrowthRate}
@@ -297,7 +299,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="other-income">Side Income / Working After FIRE (Annual) ({currencySymbol})</label>
+          <label htmlFor="other-income">{t('fireCalculator.labels.otherIncome', { currency: currencySymbol })}</label>
           <PrivacyBlur isPrivacyMode={isPrivacyMode}>
             <NumberInput
               id="other-income"
@@ -316,11 +318,11 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.pension}
           aria-controls="pension-content"
         >
-          <h3><MaterialIcon name="account_balance" /> Pension <span className="collapse-icon-small" aria-hidden="true">{openSections.pension ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="account_balance" /> {t('fireCalculator.sections.pension')} <span className="collapse-icon-small" aria-hidden="true">{openSections.pension ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.pension && (<div id="pension-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="retirement-age">Retirement Age for State Pension</label>
+          <label htmlFor="retirement-age">{t('fireCalculator.labels.retirementAge')}</label>
           <NumberInput
             id="retirement-age"
             value={inputs.retirementAge}
@@ -329,7 +331,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="state-pension">State Pension Income (Annual) ({currencySymbol})</label>
+          <label htmlFor="state-pension">{t('fireCalculator.labels.statePension', { currency: currencySymbol })}</label>
           <PrivacyBlur isPrivacyMode={isPrivacyMode}>
             <NumberInput
               id="state-pension"
@@ -339,7 +341,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           </PrivacyBlur>
         </div>
         <div className="form-group">
-          <label htmlFor="private-pension">Private Pension Income (Annual) ({currencySymbol})</label>
+          <label htmlFor="private-pension">{t('fireCalculator.labels.privatePension', { currency: currencySymbol })}</label>
           <PrivacyBlur isPrivacyMode={isPrivacyMode}>
             <NumberInput
               id="private-pension"
@@ -358,11 +360,11 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.expenses}
           aria-controls="expenses-content"
         >
-          <h3><MaterialIcon name="shopping_cart" /> Expenses & Savings <span className="collapse-icon-small" aria-hidden="true">{openSections.expenses ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="shopping_cart" /> {t('fireCalculator.sections.expenses')} <span className="collapse-icon-small" aria-hidden="true">{openSections.expenses ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.expenses && (<div id="expenses-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="current-expenses">Current Annual Expenses ({currencySymbol})</label>
+          <label htmlFor="current-expenses">{t('fireCalculator.labels.currentExpenses', { currency: currencySymbol })}</label>
           {inputs.useExpenseTrackerExpenses ? (
             <PrivacyBlur isPrivacyMode={isPrivacyMode}>
               <input
@@ -386,7 +388,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           )}
         </div>
         <div className="form-group">
-          <label htmlFor="fire-expenses">FIRE Annual Expenses ({currencySymbol})</label>
+          <label htmlFor="fire-expenses">{t('fireCalculator.labels.fireExpenses', { currency: currencySymbol })}</label>
           <PrivacyBlur isPrivacyMode={isPrivacyMode}>
             <NumberInput
               id="fire-expenses"
@@ -396,7 +398,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           </PrivacyBlur>
         </div>
         <div className="form-group">
-          <label htmlFor="savings-rate">Savings Rate (%) <span className="calculated-label">- Auto-calculated</span></label>
+          <label htmlFor="savings-rate">{t('fireCalculator.labels.savingsRate')} <span className="calculated-label">- {t('fireCalculator.autoCalculated')}</span></label>
           <PrivacyBlur isPrivacyMode={isPrivacyMode}>
             <input
               id="savings-rate"
@@ -419,11 +421,11 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.fireParams}
           aria-controls="fire-params-content"
         >
-          <h3><MaterialIcon name="gps_fixed" /> FIRE Parameters <span className="collapse-icon-small" aria-hidden="true">{openSections.fireParams ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="gps_fixed" /> {t('fireCalculator.sections.fireParams')} <span className="collapse-icon-small" aria-hidden="true">{openSections.fireParams ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.fireParams && (<div id="fire-params-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="current-age">Current Age</label>
+          <label htmlFor="current-age">{t('fireCalculator.labels.currentAge')}</label>
           <NumberInput
             id="current-age"
             value={currentYear - inputs.yearOfBirth}
@@ -432,7 +434,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="withdrawal-rate">Desired Withdrawal Rate (%)</label>
+          <label htmlFor="withdrawal-rate">{t('fireCalculator.labels.withdrawalRate')}</label>
           <NumberInput
             id="withdrawal-rate"
             value={inputs.desiredWithdrawalRate}
@@ -440,7 +442,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="years-of-expenses">Years of Expenses Needed for FIRE <span className="calculated-label">- Auto-calculated</span></label>
+          <label htmlFor="years-of-expenses">{t('fireCalculator.labels.yearsOfExpenses')} <span className="calculated-label">- {t('fireCalculator.autoCalculated')}</span></label>
           <input
             id="years-of-expenses"
             type="number"
@@ -461,11 +463,11 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.expectedReturns}
           aria-controls="expected-returns-content"
         >
-          <h3><MaterialIcon name="trending_up" /> Expected Returns <span className="collapse-icon-small" aria-hidden="true">{openSections.expectedReturns ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="trending_up" /> {t('fireCalculator.sections.expectedReturns')} <span className="collapse-icon-small" aria-hidden="true">{openSections.expectedReturns ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.expectedReturns && (<div id="expected-returns-content" className="form-section-content">
         <div className="form-group">
-          <label htmlFor="stock-return">Expected Stock Return (%)</label>
+          <label htmlFor="stock-return">{t('fireCalculator.labels.stockReturn')}</label>
           <SliderInput
             id="stock-return"
             value={inputs.expectedStockReturn}
@@ -476,7 +478,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="bond-return">Expected Bond Return (%)</label>
+          <label htmlFor="bond-return">{t('fireCalculator.labels.bondReturn')}</label>
           <SliderInput
             id="bond-return"
             value={inputs.expectedBondReturn}
@@ -487,7 +489,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
         </div>
         <div className="form-group">
-          <label htmlFor="cash-return">Cash / Inflation Rate (%)</label>
+          <label htmlFor="cash-return">{t('fireCalculator.labels.cashReturn')}</label>
           <SliderInput
             id="cash-return"
             value={inputs.expectedCashReturn}
@@ -498,7 +500,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           />
           {inputs.expectedCashReturn > 0 && (
             <div className="deflation-warning" role="alert">
-              <MaterialIcon name="warning" /> A positive value indicates deflation. Long periods of deflation are historically rare - consider this carefully in your projections.
+              <MaterialIcon name="warning" /> {t('fireCalculator.deflationWarning')}
             </div>
           )}
         </div>
@@ -512,7 +514,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.options}
           aria-controls="options-content"
         >
-          <h3><MaterialIcon name="settings" /> Options <span className="collapse-icon-small" aria-hidden="true">{openSections.options ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="settings" /> {t('fireCalculator.sections.options')} <span className="collapse-icon-small" aria-hidden="true">{openSections.options ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.options && (<div id="options-content" className="form-section-content">
         <div className="form-group checkbox-group">
@@ -523,7 +525,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
               onChange={(e) => handleChange('stopWorkingAtFIRE', e.target.checked)}
             />
             <span className="toggle-switch"></span>
-            Stop working when reaching FIRE number
+            {t('fireCalculator.options.stopWorking')}
           </label>
         </div>
         <div className="form-group checkbox-group">
@@ -534,7 +536,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
               onChange={(e) => handleChange('useAssetAllocationValue', e.target.checked)}
             />
             <span className="toggle-switch"></span>
-            Use Asset Allocation portfolio value and allocation
+            {t('fireCalculator.options.useAssetAllocation')}
           </label>
         </div>
         <div className="form-group checkbox-group">
@@ -545,7 +547,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
               onChange={(e) => handleChange('useExpenseTrackerExpenses', e.target.checked)}
             />
             <span className="toggle-switch"></span>
-            Calculate current expenses from last 12 months of Expense Tracker
+            {t('fireCalculator.options.useExpenseTrackerExpenses')}
           </label>
         </div>
         <div className="form-group checkbox-group">
@@ -556,7 +558,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
               onChange={(e) => handleChange('useExpenseTrackerIncome', e.target.checked)}
             />
             <span className="toggle-switch"></span>
-            Calculate labor income from last 12 months of Expense Tracker
+            {t('fireCalculator.options.useExpenseTrackerIncome')}
           </label>
         </div>
         </div>)}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { loadTourCompleted, saveTourCompleted } from '../utils/tourPreferences';
 import { saveFireCalculatorInputs, saveAssetAllocation, saveExpenseTrackerData, saveNetWorthTrackerData, clearAllData, loadFireCalculatorInputs, loadAssetAllocation } from '../utils/cookieStorage';
 import { saveSettings, loadSettings, DEFAULT_SETTINGS } from '../utils/cookieSettings';
@@ -71,6 +72,7 @@ function closeAnyOpenDialog(): boolean {
 
 export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [demoDataLoaded, setDemoDataLoaded] = useState(false);
@@ -318,7 +320,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       
       // Allow zero if the step specifies allowZero: true
       if (isEmpty || (isZero && !currentInteractiveStep.allowZero)) {
-        setValidationError(`Please enter a value for ${currentInteractiveStep.inputLabel || 'this field'} to continue`);
+        setValidationError(t('guidedTour.validation.enterValueForField', { field: currentInteractiveStep.inputLabel || t('guidedTour.validation.thisField') }));
         input.focus();
         return false;
       }
@@ -385,137 +387,129 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
 
   const tourSteps: TourStep[] = [
     {
-      title: 'Welcome to Fire Tools!',
+      title: t('guidedTour.overview.welcome.title'),
       icon: 'waving_hand',
       content: (
         <div className="tour-step-content">
           <p>
-            Welcome! Fire Tools is a comprehensive suite of financial planning tools 
-            designed to help you achieve <strong>Financial Independence and Retire Early (FIRE)</strong>.
+            {t('guidedTour.overview.welcome.paragraph1Start')} <strong>{t('guidedTour.overview.welcome.fireStrong')}</strong>.
           </p>
           <p>
-            This quick tour will show you the main features and how to get the most 
-            out of the application. We'll also load some demo data so you can see 
-            everything in action.
+            {t('guidedTour.overview.welcome.paragraph2')}
           </p>
           <p className="tour-privacy-note">
             <span className="tour-note-icon"><MaterialIcon name="lock" size="small" /></span>
-            <span>All your data stays on your device - we never send it anywhere.</span>
+            <span>{t('guidedTour.overview.welcome.privacyNote')}</span>
           </p>
         </div>
       ),
     },
     {
-      title: 'Asset Allocation Manager',
+      title: t('guidedTour.overview.assetAllocation.title'),
       icon: 'pie_chart',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>Track and manage your investment portfolio</strong> with intelligent 
-            asset allocation tools.
+            <strong>{t('guidedTour.overview.assetAllocation.strong')}</strong> {t('guidedTour.overview.assetAllocation.text')}
           </p>
           <ul className="tour-feature-list">
-            <li><span className="tour-feature-icon"><MaterialIcon name="work" size="small" /></span> Add stocks, bonds, ETFs, and other assets</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="balance" size="small" /></span> Set target allocations and see rebalancing recommendations</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="show_chart" size="small" /></span> Use the DCA (Dollar Cost Averaging) helper for regular investments</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="work" size="small" /></span> {t('guidedTour.overview.assetAllocation.features.addAssets')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="balance" size="small" /></span> {t('guidedTour.overview.assetAllocation.features.targets')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="show_chart" size="small" /></span> {t('guidedTour.overview.assetAllocation.features.dca')}</li>
           </ul>
         </div>
       ),
     },
     {
-      title: 'Cashflow Tracker',
+      title: t('guidedTour.overview.cashflow.title'),
       icon: 'account_balance_wallet',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>Monitor your income and expenses</strong> to understand your spending 
-            patterns and savings rate.
+            <strong>{t('guidedTour.overview.cashflow.strong')}</strong> {t('guidedTour.overview.cashflow.text')}
           </p>
           <ul className="tour-feature-list">
-            <li><span className="tour-feature-icon"><MaterialIcon name="receipt_long" size="small" /></span> Log income and expenses by category</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="savings" size="small" /></span> Set budgets using the 50/30/20 rule</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="analytics" size="small" /></span> View charts and analytics of your spending</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="receipt_long" size="small" /></span> {t('guidedTour.overview.cashflow.features.log')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="savings" size="small" /></span> {t('guidedTour.overview.cashflow.features.budgets')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="analytics" size="small" /></span> {t('guidedTour.overview.cashflow.features.analytics')}</li>
           </ul>
         </div>
       ),
     },
     {
-      title: 'Net Worth Tracker',
+      title: t('guidedTour.overview.netWorth.title'),
       icon: 'trending_up',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>Track your financial progress over time</strong> with monthly snapshots 
-            of your net worth.
+            <strong>{t('guidedTour.overview.netWorth.strong')}</strong> {t('guidedTour.overview.netWorth.text')}
           </p>
           <ul className="tour-feature-list">
-            <li><span className="tour-feature-icon"><MaterialIcon name="work" size="small" /></span> Monitor assets, cash, and pension accounts</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="trending_up" size="small" /></span> See historical charts of your wealth growth</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="sync" size="small" /></span> Sync with Asset Allocation for consistency</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="work" size="small" /></span> {t('guidedTour.overview.netWorth.features.monitor')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="trending_up" size="small" /></span> {t('guidedTour.overview.netWorth.features.charts')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="sync" size="small" /></span> {t('guidedTour.overview.netWorth.features.sync')}</li>
           </ul>
         </div>
       ),
     },
     {
-      title: 'FIRE Calculator',
+      title: t('guidedTour.overview.fireCalculator.title'),
       icon: 'local_fire_department',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>Calculate your path to Financial Independence</strong> with detailed 
-            projections and timeline analysis.
+            <strong>{t('guidedTour.overview.fireCalculator.strong')}</strong> {t('guidedTour.overview.fireCalculator.text')}
           </p>
           <ul className="tour-feature-list">
-            <li><span className="tour-feature-icon"><MaterialIcon name="bar_chart" size="small" /></span> Visual projections of your net worth over time</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="gps_fixed" size="small" /></span> See exactly when you can reach FIRE</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="settings" size="small" /></span> Adjust parameters to see different scenarios</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="bar_chart" size="small" /></span> {t('guidedTour.overview.fireCalculator.features.projections')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="gps_fixed" size="small" /></span> {t('guidedTour.overview.fireCalculator.features.reachFire')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="settings" size="small" /></span> {t('guidedTour.overview.fireCalculator.features.scenarios')}</li>
           </ul>
         </div>
       ),
     },
     {
-      title: 'Monte Carlo Simulations',
+      title: t('guidedTour.overview.monteCarlo.title'),
       icon: 'casino',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>Assess the probability of reaching your FIRE goals</strong> by running 
-            thousands of simulations with randomized market returns.
+            <strong>{t('guidedTour.overview.monteCarlo.strong')}</strong> {t('guidedTour.overview.monteCarlo.text')}
           </p>
           <ul className="tour-feature-list">
-            <li><span className="tour-feature-icon"><MaterialIcon name="gps_fixed" size="small" /></span> See your success probability percentage</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="ssid_chart" size="small" /></span> Account for market volatility and black swan events</li>
-            <li><span className="tour-feature-icon"><MaterialIcon name="bolt" size="small" /></span> Understand the range of possible outcomes</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="gps_fixed" size="small" /></span> {t('guidedTour.overview.monteCarlo.features.success')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="ssid_chart" size="small" /></span> {t('guidedTour.overview.monteCarlo.features.volatility')}</li>
+            <li><span className="tour-feature-icon"><MaterialIcon name="bolt" size="small" /></span> {t('guidedTour.overview.monteCarlo.features.outcomes')}</li>
           </ul>
         </div>
       ),
     },
     {
-      title: 'Tools Work Together',
+      title: t('guidedTour.overview.together.title'),
       icon: 'handshake',
       content: (
         <div className="tour-step-content">
           <p>
-            <strong>The real power comes from using FIRE tools together, but each tool can also work independently!</strong>
+            <strong>{t('guidedTour.overview.together.strong')}</strong>
           </p>
           <div className="tour-integration-diagram">
             <div className="tour-integration-item">
               <span className="tour-integration-icon"><MaterialIcon name="pie_chart" size="small" /></span>
               <span className="tour-integration-arrow">→</span>
               <span className="tour-integration-icon"><MaterialIcon name="local_fire_department" size="small" /></span>
-              <span className="tour-integration-text">Asset values flow into FIRE Calculator</span>
+              <span className="tour-integration-text">{t('guidedTour.overview.together.assetValues')}</span>
             </div>
             <div className="tour-integration-item">
               <span className="tour-integration-icon"><MaterialIcon name="account_balance_wallet" size="small" /></span>
               <span className="tour-integration-arrow">→</span>
               <span className="tour-integration-icon"><MaterialIcon name="local_fire_department" size="small" /></span>
-              <span className="tour-integration-text">Income/expenses update savings calculations</span>
+              <span className="tour-integration-text">{t('guidedTour.overview.together.cashflowUpdates')}</span>
             </div>
             <div className="tour-integration-item">
               <span className="tour-integration-icon"><MaterialIcon name="trending_up" size="small" /></span>
               <span className="tour-integration-arrow">↔</span>
               <span className="tour-integration-icon"><MaterialIcon name="pie_chart" size="small" /></span>
-              <span className="tour-integration-text">Net Worth syncs with Asset Allocation</span>
+              <span className="tour-integration-text">{t('guidedTour.overview.together.netWorthSync')}</span>
             </div>
           </div>
         </div>
@@ -527,59 +521,59 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const fireCalculatorSteps: InteractiveStep[] = [
     {
       page: '/fire-calculator',
-      title: 'Initial Savings',
-      description: 'Enter your current savings or portfolio value. This is your starting point for FIRE calculations.',
+      title: t('guidedTour.interactive.fireCalculator.initialSavings.title'),
+      description: t('guidedTour.interactive.fireCalculator.initialSavings.description'),
       position: 'center',
       elementSelector: '[data-tour="initial-savings"]',
       inputSelector: '#initial-savings',
-      inputLabel: 'Initial Savings',
+      inputLabel: t('guidedTour.interactive.fireCalculator.initialSavings.title'),
       allowZero: true, // Zero is valid for someone just starting
     },
     {
       page: '/fire-calculator',
-      title: 'Annual Income',
-      description: 'Enter your annual net labor income. This determines how much you can save each year toward FIRE.',
+      title: t('guidedTour.interactive.fireCalculator.annualIncome.title'),
+      description: t('guidedTour.interactive.fireCalculator.annualIncome.description'),
       position: 'center',
       elementSelector: '[data-tour="income-section"]',
       inputSelector: '#labor-income',
-      inputLabel: 'Annual Income',
+      inputLabel: t('guidedTour.interactive.fireCalculator.annualIncome.title'),
     },
     {
       page: '/fire-calculator',
-      title: 'Annual Expenses',
-      description: 'Set your current annual expenses. Lower expenses mean a faster path to FIRE!',
+      title: t('guidedTour.interactive.fireCalculator.annualExpenses.title'),
+      description: t('guidedTour.interactive.fireCalculator.annualExpenses.description'),
       position: 'center',
       elementSelector: '[data-tour="expenses-section"]',
       inputSelector: '#current-expenses',
-      inputLabel: 'Annual Expenses',
+      inputLabel: t('guidedTour.interactive.fireCalculator.annualExpenses.title'),
     },
     {
       page: '/fire-calculator',
-      title: 'Withdrawal Rate',
-      description: 'The withdrawal rate (typically 3-4%) determines your FIRE target. A 4% rate means you need 25x your annual expenses.',
+      title: t('guidedTour.interactive.fireCalculator.withdrawalRate.title'),
+      description: t('guidedTour.interactive.fireCalculator.withdrawalRate.description'),
       position: 'center',
       elementSelector: '[data-tour="fire-params"]',
       inputSelector: '#withdrawal-rate',
-      inputLabel: 'Withdrawal Rate',
+      inputLabel: t('guidedTour.interactive.fireCalculator.withdrawalRate.title'),
     },
     {
       page: '/fire-calculator',
-      title: 'Integration Options',
-      description: 'These options connect tools together: sync portfolio values from Asset Allocation, or use actual income/expenses from Cashflow Tracker for more accurate calculations.',
+      title: t('guidedTour.interactive.fireCalculator.integrationOptions.title'),
+      description: t('guidedTour.interactive.fireCalculator.integrationOptions.description'),
       position: 'center',
       elementSelector: '[data-tour="options-section"]',
     },
     {
       page: '/fire-calculator',
-      title: 'FIRE Metrics',
-      description: 'See your FIRE target, years to FIRE, and projected portfolio value. These are your key milestones!',
+      title: t('guidedTour.interactive.fireCalculator.fireMetrics.title'),
+      description: t('guidedTour.interactive.fireCalculator.fireMetrics.description'),
       position: 'center',
       elementSelector: '[data-tour="results-section"]',
     },
     {
       page: '/fire-calculator',
-      title: 'Growth Charts',
-      description: 'Visualize your journey! The Net Worth Growth chart shows your portfolio over time, and Income vs Expenses shows your cash flow.',
+      title: t('guidedTour.interactive.fireCalculator.growthCharts.title'),
+      description: t('guidedTour.interactive.fireCalculator.growthCharts.description'),
       position: 'center',
       elementSelector: '[data-tour="charts-section"]',
     },
@@ -588,15 +582,15 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const assetAllocationSteps: InteractiveStep[] = [
     {
       page: '/asset-allocation',
-      title: 'Your Assets',
-      description: 'This table shows your portfolio holdings. You can see each asset\'s current value, target allocation, and recommended action (BUY/SELL/HOLD).',
+      title: t('guidedTour.interactive.assetAllocation.yourAssets.title'),
+      description: t('guidedTour.interactive.assetAllocation.yourAssets.description'),
       position: 'center',
       elementSelector: '[data-tour="asset-list"]',
     },
     {
       page: '/asset-allocation',
-      title: 'Add New Assets',
-      description: 'Click the "Add Asset" button to add a new holding to your portfolio. Go ahead, click it now!',
+      title: t('guidedTour.interactive.assetAllocation.addNewAssets.title'),
+      description: t('guidedTour.interactive.assetAllocation.addNewAssets.description'),
       position: 'center',
       elementSelector: '[data-tour="add-asset-button"]',
       waitForUserClick: true,
@@ -605,24 +599,24 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     // Add Asset Dialog steps
     {
       page: '/asset-allocation',
-      title: 'Asset Class Selection',
-      description: 'First, choose the asset class (Stocks, Bonds, Cash, Crypto, or Real Estate). This determines how the asset is categorized in your portfolio.',
+      title: t('guidedTour.interactive.assetAllocation.assetClassSelection.title'),
+      description: t('guidedTour.interactive.assetAllocation.assetClassSelection.description'),
       position: 'center',
       elementSelector: '.dialog-content',
       isDialogStep: true,
     },
     {
       page: '/asset-allocation',
-      title: '🏷️ Asset Details',
-      description: 'Enter the asset name, ticker symbol (e.g., AAPL, VTI), number of shares you own, and the price per share. The total value is calculated automatically.',
+      title: t('guidedTour.interactive.assetAllocation.assetDetails.title'),
+      description: t('guidedTour.interactive.assetAllocation.assetDetails.description'),
       position: 'center',
       elementSelector: '.dialog-content',
       isDialogStep: true,
     },
     {
       page: '/asset-allocation',
-      title: 'Target Allocation',
-      description: 'Set your target allocation mode: "%" for percentage of the asset class, "SET" for a fixed amount, or "OFF" to exclude from rebalancing.',
+      title: t('guidedTour.interactive.assetAllocation.targetAllocation.title'),
+      description: t('guidedTour.interactive.assetAllocation.targetAllocation.description'),
       position: 'center',
       elementSelector: '.dialog-content',
       isDialogStep: true,
@@ -630,15 +624,15 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       page: '/asset-allocation',
-      title: 'Target Allocations',
-      description: 'Set your target percentages for each asset class. The tool calculates what to buy or sell to reach your targets.',
+      title: t('guidedTour.interactive.assetAllocation.targetAllocations.title'),
+      description: t('guidedTour.interactive.assetAllocation.targetAllocations.description'),
       position: 'center',
       elementSelector: '[data-tour="target-allocations"]',
     },
     {
       page: '/asset-allocation',
-      title: '💹 DCA Helper',
-      description: 'The DCA (Dollar Cost Averaging) Helper calculates how to split a lump sum investment. Click the "DCA Helper" button to see how it works!',
+      title: t('guidedTour.interactive.assetAllocation.dcaHelper.title'),
+      description: t('guidedTour.interactive.assetAllocation.dcaHelper.description'),
       position: 'center',
       elementSelector: '[data-tour="dca-helper"]',
       waitForUserClick: true,
@@ -647,24 +641,24 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     // DCA Helper Dialog steps
     {
       page: '/asset-allocation',
-      title: 'Enter Investment Amount',
-      description: 'Enter the amount you want to invest. The DCA Helper will calculate how to split it across your assets according to your target allocations.',
+      title: t('guidedTour.interactive.assetAllocation.enterInvestmentAmount.title'),
+      description: t('guidedTour.interactive.assetAllocation.enterInvestmentAmount.description'),
       position: 'center',
       elementSelector: '.dca-dialog',
       isDialogStep: true,
     },
     {
       page: '/asset-allocation',
-      title: 'Investment Breakdown',
-      description: 'After calculating, you\'ll see exactly how much to invest in each asset and how many shares to buy. Current prices are fetched from Yahoo Finance.',
+      title: t('guidedTour.interactive.assetAllocation.investmentBreakdown.title'),
+      description: t('guidedTour.interactive.assetAllocation.investmentBreakdown.description'),
       position: 'center',
       elementSelector: '.dca-dialog',
       isDialogStep: true,
     },
     {
       page: '/asset-allocation',
-      title: '✅ Confirm',
-      description: 'After making your investments, you can confirm the actual shares purchased to track deviations from the suggested amounts.',
+      title: t('guidedTour.interactive.assetAllocation.confirm.title'),
+      description: t('guidedTour.interactive.assetAllocation.confirm.description'),
       position: 'center',
       elementSelector: '.dca-dialog',
       isDialogStep: true,
@@ -675,8 +669,8 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const expenseTrackerSteps: InteractiveStep[] = [
     {
       page: '/expense-tracker',
-      title: 'Add Income',
-      description: 'Track your income and expenses here. Click "Add Income" to see how to add income!',
+      title: t('guidedTour.interactive.expenseTracker.addIncome.title'),
+      description: t('guidedTour.interactive.expenseTracker.addIncome.description'),
       position: 'center',
       elementSelector: '[data-tour="transaction-actions"]',
       waitForUserClick: true,
@@ -685,16 +679,16 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     // Add Income Dialog steps
     {
       page: '/expense-tracker',
-      title: '📅 Date & Amount',
-      description: 'Select the date when you received the income and enter the amount. This helps track your income over time.',
+      title: t('guidedTour.interactive.expenseTracker.dateAmount.title'),
+      description: t('guidedTour.interactive.expenseTracker.dateAmount.description'),
       position: 'center',
       elementSelector: '.dialog',
       isDialogStep: true,
     },
     {
       page: '/expense-tracker',
-      title: 'Income Source',
-      description: 'Choose the income source: Salary, Bonus, Dividend, Freelance, Investment, Rental, or Other. This categorizes your income for better analytics.',
+      title: t('guidedTour.interactive.expenseTracker.incomeSource.title'),
+      description: t('guidedTour.interactive.expenseTracker.incomeSource.description'),
       position: 'center',
       elementSelector: '.dialog',
       isDialogStep: true,
@@ -702,8 +696,8 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       page: '/expense-tracker',
-      title: '💸 Add Expense',
-      description: 'Now click "Add Expense" to see how to record your spending.',
+      title: t('guidedTour.interactive.expenseTracker.addExpense.title'),
+      description: t('guidedTour.interactive.expenseTracker.addExpense.description'),
       position: 'center',
       elementSelector: '[data-tour="transaction-actions"]',
       waitForUserClick: true,
@@ -712,16 +706,16 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     // Add Expense Dialog steps
     {
       page: '/expense-tracker',
-      title: '📅 Expense Details',
-      description: 'Enter the date, amount, and a description of the expense. Be specific to help you track spending patterns.',
+      title: t('guidedTour.interactive.expenseTracker.expenseDetails.title'),
+      description: t('guidedTour.interactive.expenseTracker.expenseDetails.description'),
       position: 'center',
       elementSelector: '.dialog',
       isDialogStep: true,
     },
     {
       page: '/expense-tracker',
-      title: '🏷️ Category & Type',
-      description: 'Select a category (Housing, Food, Transport, etc.) and classify as Need or Want. This powers the 50/30/20 budget analysis.',
+      title: t('guidedTour.interactive.expenseTracker.categoryType.title'),
+      description: t('guidedTour.interactive.expenseTracker.categoryType.description'),
       position: 'center',
       elementSelector: '.dialog',
       isDialogStep: true,
@@ -729,38 +723,38 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       page: '/expense-tracker',
-      title: '50/30/20 Budget Rule',
-      description: 'See how your spending compares to the 50/30/20 rule: 50% for needs (housing, food), 30% for wants (entertainment), and 20% for savings.',
+      title: t('guidedTour.interactive.expenseTracker.budgetRule.title'),
+      description: t('guidedTour.interactive.expenseTracker.budgetRule.description'),
       position: 'center',
       elementSelector: '[data-tour="budget-analysis"]',
     },
     {
       page: '/expense-tracker',
-      title: 'Set Budgets',
-      description: 'Click the Budgets tab to set monthly spending limits for each category. Track your progress with visual indicators.',
+      title: t('guidedTour.interactive.expenseTracker.setBudgets.title'),
+      description: t('guidedTour.interactive.expenseTracker.setBudgets.description'),
       position: 'center',
       elementSelector: '[data-tour="budgets-tab"]',
       waitForUserClick: true,
     },
     {
       page: '/expense-tracker',
-      title: 'Budget Categories',
-      description: 'Here you can set monthly budget limits for each expense category. The progress bars show how much you\'ve spent vs. your budget. Edit the amounts to customize your spending goals.',
+      title: t('guidedTour.interactive.expenseTracker.budgetCategories.title'),
+      description: t('guidedTour.interactive.expenseTracker.budgetCategories.description'),
       position: 'center',
       elementSelector: '[data-tour="expense-tabs"], [data-tour="budgets-content"]',
     },
     {
       page: '/expense-tracker',
-      title: 'Analytics',
-      description: 'Click the Analytics tab to see spending trends, category breakdowns, and monthly comparisons to help you understand your financial habits.',
+      title: t('guidedTour.interactive.expenseTracker.analytics.title'),
+      description: t('guidedTour.interactive.expenseTracker.analytics.description'),
       position: 'center',
       elementSelector: '[data-tour="analytics-tab"]',
       waitForUserClick: true,
     },
     {
       page: '/expense-tracker',
-      title: 'Spending Insights',
-      description: 'View detailed charts and analytics: spending trends over time, category breakdowns, and monthly comparisons. Use the view selector to switch between monthly, quarterly, and yearly perspectives.',
+      title: t('guidedTour.interactive.expenseTracker.spendingInsights.title'),
+      description: t('guidedTour.interactive.expenseTracker.spendingInsights.description'),
       position: 'center',
       elementSelector: '[data-tour="expense-tabs"], [data-tour="analytics-content"]',
     },
@@ -769,15 +763,15 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const netWorthSteps: InteractiveStep[] = [
     {
       page: '/net-worth-tracker',
-      title: 'Log Assets',
-      description: 'Just like in Asset Allocation, you can add assets here to track your historical net worth. Click "Log Asset" to add stocks, bonds, crypto, real estate, and other holdings with their current values.',
+      title: t('guidedTour.interactive.netWorth.logAssets.title'),
+      description: t('guidedTour.interactive.netWorth.logAssets.description'),
       position: 'center',
       elementSelector: '[data-tour="assets-section"]',
     },
     {
       page: '/net-worth-tracker',
-      title: 'Log Operations',
-      description: 'Click "Log Operation" to track financial operations like dividends, purchases, and sales.',
+      title: t('guidedTour.interactive.netWorth.logOperations.title'),
+      description: t('guidedTour.interactive.netWorth.logOperations.description'),
       position: 'center',
       elementSelector: '[data-tour="assets-section"]',
       waitForUserClick: true,
@@ -786,16 +780,16 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     // Log Operation Dialog steps
     {
       page: '/net-worth-tracker',
-      title: '📅 Operation Details',
-      description: 'Select the date and operation type: Dividend, Purchase, Sale, Deposit, Withdrawal, Interest, or Tax.',
+      title: t('guidedTour.interactive.netWorth.operationDetails.title'),
+      description: t('guidedTour.interactive.netWorth.operationDetails.description'),
       position: 'center',
       elementSelector: '.net-worth-dialog',
       isDialogStep: true,
     },
     {
       page: '/net-worth-tracker',
-      title: 'Amount & Description',
-      description: 'Enter the amount and a description. Income operations (dividends, interest) increase your net worth; expenses (taxes) decrease it.',
+      title: t('guidedTour.interactive.netWorth.amountDescription.title'),
+      description: t('guidedTour.interactive.netWorth.amountDescription.description'),
       position: 'center',
       elementSelector: '.net-worth-dialog',
       isDialogStep: true,
@@ -803,15 +797,15 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       page: '/net-worth-tracker',
-      title: 'Historical Chart',
-      description: 'Watch your wealth grow over time! The chart shows your net worth progression with monthly variations and forecasted growth.',
+      title: t('guidedTour.interactive.netWorth.historicalChart.title'),
+      description: t('guidedTour.interactive.netWorth.historicalChart.description'),
       position: 'center',
       elementSelector: '[data-tour="historical-chart"]',
     },
     {
       page: '/net-worth-tracker',
-      title: 'Asset Allocation Sync',
-      description: 'Enable sync to automatically keep your asset data consistent between Net Worth Tracker and Asset Allocation Manager.',
+      title: t('guidedTour.interactive.netWorth.assetAllocationSync.title'),
+      description: t('guidedTour.interactive.netWorth.assetAllocationSync.description'),
       position: 'center',
       elementSelector: '[data-tour="sync-options"]',
     },
@@ -821,22 +815,22 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
   const monteCarloSteps: InteractiveStep[] = [
     {
       page: '/monte-carlo',
-      title: 'Simulation Base Data',
-      description: 'This section shows the FIRE Calculator data used for simulations: your portfolio value, FIRE target, income, savings rate, and expected returns. These values come from your FIRE Calculator inputs.',
+      title: t('guidedTour.interactive.monteCarlo.baseData.title'),
+      description: t('guidedTour.interactive.monteCarlo.baseData.description'),
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-base-data"]',
     },
     {
       page: '/monte-carlo',
-      title: 'Simulation Parameters',
-      description: 'Adjust the simulation settings: number of simulations (1000-100000), stock/bond volatility (higher = more uncertain), and black swan event probability. These affect how conservative or optimistic your projections are.',
+      title: t('guidedTour.interactive.monteCarlo.parameters.title'),
+      description: t('guidedTour.interactive.monteCarlo.parameters.description'),
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-params"]',
     },
     {
       page: '/monte-carlo',
-      title: '▶️ Run Simulation',
-      description: 'Click the "Run Simulations" button to run the Monte Carlo analysis. This will generate thousands of scenarios based on your parameters.',
+      title: t('guidedTour.interactive.monteCarlo.runSimulation.title'),
+      description: t('guidedTour.interactive.monteCarlo.runSimulation.description'),
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-run-btn"]',
       requiresAction: true,
@@ -844,25 +838,25 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       page: '/monte-carlo',
-      title: 'Results & Success Rate',
-      description: 'See your success probability, median outcome, and the range of possible results. Green means high probability of success!',
+      title: t('guidedTour.interactive.monteCarlo.results.title'),
+      description: t('guidedTour.interactive.monteCarlo.results.description'),
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-results"]',
     },
     {
       page: '/monte-carlo',
-      title: 'Simulation Logs',
-      description: 'After running simulations, you can view detailed logs showing the yearly breakdown of each simulation, including returns, expenses (adjusted for inflation), and portfolio values. Export the logs as CSV or JSON for further analysis.',
+      title: t('guidedTour.interactive.monteCarlo.logs.title'),
+      description: t('guidedTour.interactive.monteCarlo.logs.description'),
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-logs"]',
     },
   ];
 
   const pageTours: Record<string, { steps: InteractiveStep[]; nextPage: string | null; previousPage: string | null; pageName: string }> = {
-    '/fire-calculator': { steps: fireCalculatorSteps, nextPage: '/asset-allocation', previousPage: null, pageName: 'Asset Allocation' },
-    '/asset-allocation': { steps: assetAllocationSteps, nextPage: '/expense-tracker', previousPage: '/fire-calculator', pageName: 'Cashflow Tracker' },
-    '/expense-tracker': { steps: expenseTrackerSteps, nextPage: '/net-worth-tracker', previousPage: '/asset-allocation', pageName: 'Net Worth Tracker' },
-    '/net-worth-tracker': { steps: netWorthSteps, nextPage: '/monte-carlo', previousPage: '/expense-tracker', pageName: 'Monte Carlo' },
+    '/fire-calculator': { steps: fireCalculatorSteps, nextPage: '/asset-allocation', previousPage: null, pageName: t('guidedTour.pageNames.assetAllocation') },
+    '/asset-allocation': { steps: assetAllocationSteps, nextPage: '/expense-tracker', previousPage: '/fire-calculator', pageName: t('guidedTour.pageNames.cashflowTracker') },
+    '/expense-tracker': { steps: expenseTrackerSteps, nextPage: '/net-worth-tracker', previousPage: '/asset-allocation', pageName: t('guidedTour.pageNames.netWorthTracker') },
+    '/net-worth-tracker': { steps: netWorthSteps, nextPage: '/monte-carlo', previousPage: '/expense-tracker', pageName: t('guidedTour.pageNames.monteCarlo') },
     '/monte-carlo': { steps: monteCarloSteps, nextPage: null, previousPage: '/net-worth-tracker', pageName: '' },
   };
 
@@ -1001,7 +995,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
 
     // If current step requires an action (like clicking Run), check if action was completed
     if (currentInteractiveStep?.requiresAction && !actionCompleted) {
-      setValidationError('Please complete the action (click the button) before continuing');
+      setValidationError(t('guidedTour.validation.completeActionBeforeContinuing'));
       return;
     }
 
@@ -1261,40 +1255,40 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
         <div className="tour-modal tour-continue-modal">
           <div className="tour-continue-header">
             <span className="tour-continue-icon"><MaterialIcon name="auto_awesome" /></span>
-            <h2>Page Tour Complete!</h2>
+            <h2>{t('guidedTour.pageCompleteTitle')}</h2>
           </div>
           <div className="tour-continue-content">
             {hasNextPage ? (
               <>
                 <p>
-                  You've explored this page. Would you like to continue with the <strong>{currentTour.pageName}</strong> tour?
+                  {t('guidedTour.pageCompleteContinueStart')} <strong>{currentTour.pageName}</strong> {t('guidedTour.pageCompleteContinueEnd')}
                 </p>
                 <div className="tour-continue-actions">
                   <button 
                     className="tour-btn tour-btn-secondary"
                     onClick={finishInteractiveTour}
                   >
-                    Finish Tour
+                    {t('guidedTour.finishTour')}
                   </button>
                   <button 
                     className="tour-btn tour-btn-primary"
                     onClick={continueToNextPage}
                   >
-                    Continue to {currentTour.pageName} →
+                    {t('guidedTour.continueTo', { pageName: currentTour.pageName })} →
                   </button>
                 </div>
               </>
             ) : (
               <>
                 <p>
-                  You've completed the interactive tour of all pages!
+                  {t('guidedTour.allPagesComplete')}
                 </p>
                 <div className="tour-continue-actions">
                   <button 
                     className="tour-btn tour-btn-primary"
                     onClick={finishInteractiveTour}
                   >
-                    Finish Tour
+                    {t('guidedTour.finishTour')}
                   </button>
                 </div>
               </>
@@ -1333,25 +1327,25 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
               <div 
                 className="tour-tooltip-header tour-draggable"
                 onMouseDown={handleDragStart}
-                title="Drag to move"
+                title={t('guidedTour.dragToMove')}
               >
                 <h3>{currentInteractiveStep.title}</h3>
                 <div className="tour-tooltip-skip-options">
                   <button 
                     className="tour-tooltip-skip tour-tooltip-skip-step"
                     onClick={skipCurrentPage}
-                    aria-label="Skip this page"
-                    title="Skip this page"
+                    aria-label={t('guidedTour.skipThisPage')}
+                    title={t('guidedTour.skipThisPage')}
                   >
-                    Skip Page
+                    {t('guidedTour.skipPage')}
                   </button>
                   <button 
                     className="tour-tooltip-skip"
                     onClick={skipInteractiveTour}
-                    aria-label="Skip entire tour"
-                    title="Skip entire tour"
+                    aria-label={t('guidedTour.skipEntireTour')}
+                    title={t('guidedTour.skipEntireTour')}
                   >
-                    Skip Tour
+                    {t('guidedTour.skipTour')}
                   </button>
                 </div>
               </div>
@@ -1359,19 +1353,19 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
               {hasInputValidation && (
                 <p className="tour-tooltip-hint">
                   <span className="tour-hint-icon"><MaterialIcon name="edit" size="small" /></span>
-                  Enter a value in the highlighted field to continue
+                  {t('guidedTour.hints.enterValue')}
                 </p>
               )}
               {waitingForUserClick && (
                 <p className="tour-tooltip-hint">
                   <span className="tour-hint-icon"><MaterialIcon name="touch_app" size="small" /></span>
-                  Click the highlighted button to continue
+                  {t('guidedTour.hints.clickHighlighted')}
                 </p>
               )}
               {currentInteractiveStep?.requiresAction && !actionCompleted && (
                 <p className="tour-tooltip-hint">
                   <span className="tour-hint-icon"><MaterialIcon name="play_arrow" size="small" /></span>
-                  Click the button to run the action, then click Next
+                  {t('guidedTour.hints.runActionThenNext')}
                 </p>
               )}
               {validationError && (
@@ -1386,7 +1380,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                   onClick={handleInteractivePrev}
                   disabled={interactiveStep === 0 && !currentTour.previousPage}
                 >
-                  ← Back
+                  ← {t('guidedTour.back')}
                 </button>
                 <span className="tour-tooltip-count">
                   {interactiveStep + 1} / {currentTour.steps.length}
@@ -1395,7 +1389,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                   className="tour-btn tour-btn-primary tour-btn-small"
                   onClick={handleInteractiveNext}
                 >
-                  {interactiveStep === currentTour.steps.length - 1 ? 'Done' : 'Next →'}
+                  {interactiveStep === currentTour.steps.length - 1 ? t('guidedTour.done') : t('guidedTour.nextArrow')}
                 </button>
               </div>
             </div>
@@ -1413,14 +1407,14 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
           <div className="tour-modal tour-end-modal">
             <div className="tour-end-header">
               <span className="tour-end-icon"><MaterialIcon name="celebration" /></span>
-              <h2 id="tour-end-title">Overview Complete!</h2>
+              <h2 id="tour-end-title">{t('guidedTour.overviewCompleteTitle')}</h2>
             </div>
             <div className="tour-end-content">
               <p>
-                Great! You've seen an overview of Fire Tools. {hadExistingData ? 'You have existing data in the app.' : 'We\'ve loaded demo data so you can explore.'}
+                {t('guidedTour.dataChoice.greatOverview')} {hadExistingData ? t('guidedTour.dataChoice.existingData') : t('guidedTour.dataChoice.demoDataLoaded')}
               </p>
               <p className="tour-end-question">
-                <strong>What would you like to do?</strong>
+                <strong>{t('guidedTour.dataChoice.question')}</strong>
               </p>
             </div>
             <div className="tour-end-actions">
@@ -1429,8 +1423,8 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                 onClick={handleClearDataAndContinue}
               >
                 <span className="tour-btn-icon"><MaterialIcon name="delete" size="small" /></span>
-                Start Fresh
-                <span className="tour-btn-hint">Clear all data</span>
+                {t('guidedTour.dataChoice.startFresh')}
+                <span className="tour-btn-hint">{t('guidedTour.dataChoice.clearAllData')}</span>
               </button>
               {hadExistingData ? (
                 <button 
@@ -1438,8 +1432,8 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                   onClick={handleKeepCurrentDataAndContinue}
                 >
                   <span className="tour-btn-icon"><MaterialIcon name="folder" size="small" /></span>
-                  Keep My Data
-                  <span className="tour-btn-hint">Keep your current data</span>
+                  {t('guidedTour.dataChoice.keepMyData')}
+                  <span className="tour-btn-hint">{t('guidedTour.dataChoice.keepCurrentData')}</span>
                 </button>
               ) : (
                 <button 
@@ -1447,14 +1441,14 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                   onClick={handleKeepDataAndContinue}
                 >
                   <span className="tour-btn-icon"><MaterialIcon name="auto_awesome" size="small" /></span>
-                  Keep Demo Data
-                  <span className="tour-btn-hint">Explore with sample data</span>
+                  {t('guidedTour.dataChoice.keepDemoData')}
+                  <span className="tour-btn-hint">{t('guidedTour.dataChoice.exploreSampleData')}</span>
                 </button>
               )}
             </div>
             <p className="tour-end-note">
               <span className="tour-note-icon"><MaterialIcon name="lightbulb" size="small" /></span>
-              You can restart this tour anytime from Settings → Restart Tour
+              {t('guidedTour.restartNote')}
             </p>
           </div>
         </div>
@@ -1468,14 +1462,14 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
           <div className="tour-modal tour-end-modal">
             <div className="tour-end-header">
               <span className="tour-end-icon"><MaterialIcon name="gps_fixed" /></span>
-              <h2 id="tour-prompt-title">Interactive Walkthrough</h2>
+              <h2 id="tour-prompt-title">{t('guidedTour.interactivePrompt.title')}</h2>
             </div>
             <div className="tour-end-content">
               <p>
-                Would you like a hands-on walkthrough of each page? We'll guide you through the key features and show you how everything works.
+                {t('guidedTour.interactivePrompt.description')}
               </p>
               <p className="tour-end-question">
-                <strong>Learn by doing!</strong> We'll walk you through each tool step by step.
+                <strong>{t('guidedTour.interactivePrompt.learnByDoing')}</strong> {t('guidedTour.interactivePrompt.stepByStep')}
               </p>
             </div>
             <div className="tour-end-actions">
@@ -1484,21 +1478,21 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
                 onClick={finishWithoutInteractive}
               >
                 <span className="tour-btn-icon"><MaterialIcon name="auto_awesome" size="small" /></span>
-                Explore on My Own
-                <span className="tour-btn-hint">Skip walkthrough</span>
+                {t('guidedTour.interactivePrompt.exploreOwn')}
+                <span className="tour-btn-hint">{t('guidedTour.interactivePrompt.skipWalkthrough')}</span>
               </button>
               <button 
                 className="tour-btn tour-btn-primary"
                 onClick={startInteractiveTour}
               >
                 <span className="tour-btn-icon"><MaterialIcon name="gps_fixed" size="small" /></span>
-                Yes, Guide Me!
-                <span className="tour-btn-hint">Interactive walkthrough</span>
+                {t('guidedTour.interactivePrompt.yesGuideMe')}
+                <span className="tour-btn-hint">{t('guidedTour.interactivePrompt.walkthroughHint')}</span>
               </button>
             </div>
             <p className="tour-end-note">
               <span className="tour-note-icon"><MaterialIcon name="lightbulb" size="small" /></span>
-              You can restart this tour anytime from Settings → Restart Tour
+              {t('guidedTour.restartNote')}
             </p>
           </div>
         </div>
@@ -1519,16 +1513,16 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
               <div
                 key={index}
                 className={`tour-step-dot ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}`}
-                aria-label={`Step ${index + 1} of ${tourSteps.length}`}
+                aria-label={t('guidedTour.stepIndicatorAria', { current: index + 1, total: tourSteps.length })}
               />
             ))}
           </div>
           <button
             className="tour-skip-btn"
             onClick={handleSkip}
-            aria-label="Skip tour"
+            aria-label={t('guidedTour.skipTour')}
           >
-            Skip tour
+            {t('guidedTour.skipTour')}
           </button>
         </div>
 
@@ -1543,9 +1537,9 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
             className="tour-btn tour-btn-secondary"
             onClick={handlePrev}
             disabled={isFirstStep}
-            aria-label="Previous step"
+            aria-label={t('guidedTour.previousStep')}
           >
-            ← Back
+            ← {t('guidedTour.back')}
           </button>
           <span className="tour-step-count">
             {currentStep + 1} / {tourSteps.length}
@@ -1553,9 +1547,9 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
           <button
             className="tour-btn tour-btn-primary"
             onClick={handleNext}
-            aria-label={isLastStep ? 'Finish tour' : 'Next step'}
+            aria-label={isLastStep ? t('guidedTour.finishTour') : t('guidedTour.nextStep')}
           >
-            {isLastStep ? 'Finish' : 'Next →'}
+            {isLastStep ? t('guidedTour.finish') : t('guidedTour.nextArrow')}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Asset, AssetClass, SubAssetType, AllocationMode, MortgageData } from '../types/assetAllocation';
 import { AssetHolding, VehicleDepreciation, DepreciationMethod, MortgageInfo } from '../types/netWorthTracker';
 import { calculateMonthlyPayment, calculateRemainingYears } from '../utils/mortgageCalculator';
@@ -60,14 +61,14 @@ const VALUE_ONLY_TYPES: SubAssetType[] = ['PROPERTY', 'CAR', 'MOTORCYCLE', 'BOAT
 const UCITS_WARNING_TYPES: SubAssetType[] = ['ETF', 'MONEY_ETF'];
 
 // Get ticker label based on sub-asset type
-const getTickerLabel = (subAssetType: SubAssetType): string => {
+const getTickerLabel = (subAssetType: SubAssetType, t: (key: string) => string): string => {
   if (subAssetType === 'SINGLE_BOND') {
-    return 'Nation Code *';
+    return t('dialogs.shared.nationCodeRequired');
   }
   if (NO_TICKER_REQUIRED.includes(subAssetType)) {
-    return 'Reference (optional)';
+    return t('dialogs.shared.referenceOptional');
   }
-  return 'Ticker/Symbol *';
+  return t('dialogs.shared.tickerSymbolRequired');
 };
 
 // Map Asset Allocation AssetClass to Net Worth Tracker assetClass
@@ -114,6 +115,8 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
   isNameDuplicate,
   existingAssets,
 }) => {
+  const { t } = useTranslation();
+
   // Determine if editing
   const isEditing = Boolean(initialData);
   
@@ -166,6 +169,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
   // Get banks for the user's country
   const countryBanks: BankInfo[] = settings.country ? getBanksByCountry(settings.country) : [];
+
+  const getAssetClassLabel = (cls: AssetClass) =>
+    t(`dialogs.shared.assetClassNames.${cls}`, { defaultValue: formatAssetName(cls) });
+
+  const getSubAssetTypeLabel = (type: SubAssetType) =>
+    t(`dialogs.shared.subAssetTypeNames.${type}`, { defaultValue: formatAssetName(type) });
 
   // Initialize form with initial data
   useEffect(() => {
@@ -370,7 +379,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
   // Fetch price and metadata from Yahoo Finance for the current ticker
   const handleTickerLookup = async () => {
     if (!ticker.trim()) {
-      setLookupStatus('Enter a ticker first');
+      setLookupStatus(t('dialogs.shared.lookup.enterTickerFirst'));
       return;
     }
 
@@ -453,26 +462,26 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
     e.preventDefault();
 
     if (!name.trim()) {
-      alert('Please enter an asset name');
+      alert(t('dialogs.shared.validation.assetNameRequired'));
       return;
     }
 
     // Check duplicate name
     if (isNameDuplicate && isNameDuplicate(name.trim())) {
-      alert('An asset with this name already exists');
+      alert(t('dialogs.shared.validation.duplicateAssetName'));
       return;
     }
 
     // Check if ticker is required
     const needsTicker = !NO_TICKER_REQUIRED.includes(subAssetType);
     if (needsTicker && !ticker.trim()) {
-      alert(`Please enter a ${subAssetType === 'SINGLE_BOND' ? 'nation code' : 'ticker/symbol'}`);
+      alert(t(subAssetType === 'SINGLE_BOND' ? 'dialogs.shared.validation.nationCodeRequired' : 'dialogs.shared.validation.tickerSymbolRequired'));
       return;
     }
 
     // Check if ISIN is required (now includes MONEY_ETF)
     if (ISIN_REQUIRED.includes(subAssetType) && !isin.trim()) {
-      alert('Please enter an ISIN code');
+      alert(t('dialogs.shared.validation.isinRequired'));
       return;
     }
 
@@ -482,11 +491,11 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
     
     if (!isCashAccount && !isValueOnlyAsset) {
       if (!shares.trim() || parseFloat(shares) <= 0) {
-        alert('Please enter a valid number of shares');
+        alert(t('dialogs.shared.validation.validSharesRequired'));
         return;
       }
       if (!pricePerShare.trim() || parseFloat(pricePerShare) <= 0) {
-        alert('Please fetch the price first by entering a ticker and clicking the fetch button');
+        alert(t('dialogs.shared.validation.fetchPriceFirst'));
         return;
       }
     }
@@ -600,33 +609,33 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
     <div className="dialog-overlay" onClick={onClose}>
       <div className="dialog-content" onClick={(e) => e.stopPropagation()}>
         <div className="dialog-header">
-          <h3>{isEditing ? 'Edit' : 'Add'} Asset</h3>
-          <button className="dialog-close" onClick={onClose}><MaterialIcon name="close" size="small" /></button>
+          <h3>{isEditing ? t('dialogs.shared.editAsset') : t('dialogs.shared.addAsset')}</h3>
+          <button className="dialog-close" onClick={onClose} aria-label={t('common.close')}><MaterialIcon name="close" size="small" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="dialog-form">
           <div className="form-row">
             <div className="form-group">
-              <label>Asset Class *</label>
+              <label>{t('dialogs.shared.assetClassRequired')}</label>
               <select
                 value={assetClass}
                 onChange={(e) => handleAssetClassChange(e.target.value as AssetClass)}
                 className="dialog-select"
               >
-                <option value="STOCKS">Stocks</option>
-                <option value="BONDS">Bonds</option>
-                <option value="CASH">Cash</option>
-                <option value="CRYPTO">Crypto</option>
-                <option value="REAL_ESTATE">Real Estate</option>
-                <option value="COMMODITIES">Commodities</option>
-                <option value="VEHICLE">Vehicle</option>
-                <option value="COLLECTIBLE">Collectible</option>
-                <option value="ART">Art</option>
+                <option value="STOCKS">{getAssetClassLabel('STOCKS')}</option>
+                <option value="BONDS">{getAssetClassLabel('BONDS')}</option>
+                <option value="CASH">{getAssetClassLabel('CASH')}</option>
+                <option value="CRYPTO">{getAssetClassLabel('CRYPTO')}</option>
+                <option value="REAL_ESTATE">{getAssetClassLabel('REAL_ESTATE')}</option>
+                <option value="COMMODITIES">{getAssetClassLabel('COMMODITIES')}</option>
+                <option value="VEHICLE">{getAssetClassLabel('VEHICLE')}</option>
+                <option value="COLLECTIBLE">{getAssetClassLabel('COLLECTIBLE')}</option>
+                <option value="ART">{getAssetClassLabel('ART')}</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Type *</label>
+              <label>{t('dialogs.shared.typeRequired')}</label>
               <select
                 value={subAssetType}
                 onChange={(e) => handleSubAssetTypeChange(e.target.value as SubAssetType)}
@@ -634,7 +643,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
               >
                 {SUB_ASSET_TYPES[assetClass].map(type => (
                   <option key={type} value={type}>
-                    {formatAssetName(type)}
+                    {getSubAssetTypeLabel(type)}
                   </option>
                 ))}
               </select>
@@ -642,11 +651,11 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
           </div>
 
           <div className="form-group">
-            <label>Asset Name *</label>
+            <label>{t('dialogs.shared.assetNameRequired')}</label>
             {!isEditing && existingAssets && existingAssets.length > 0 && !isNewAsset ? (
               <SearchableSelect
                 options={[
-                  { id: '__new__', label: '+ Add new asset...' },
+                  { id: '__new__', label: t('dialogs.shared.addNewAssetOption') },
                   ...existingAssets.map(a => ({ id: a.id, label: a.name })),
                 ]}
                 value={existingAssets.find(a => a.name === name)?.id || '__new__'}
@@ -664,7 +673,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                 }}
                 searchThreshold={settings.searchThreshold ?? 8}
                 className="dialog-select"
-                ariaLabel="Select existing asset or add new"
+                ariaLabel={t('dialogs.shared.selectExistingAssetAria')}
               />
             ) : (
               <>
@@ -672,7 +681,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., S&P 500 Index Fund"
+                  placeholder={t('dialogs.shared.placeholders.assetName')}
                   className="dialog-input"
                   required
                 />
@@ -682,9 +691,9 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     className="ticker-fetch-btn"
                     style={{ marginTop: '0.25rem', fontSize: '0.8rem' }}
                     onClick={() => setIsNewAsset(false)}
-                    title="Select from existing assets"
+                    title={t('dialogs.shared.selectExistingAssetsTitle')}
                   >
-                    Choose existing
+                    {t('dialogs.shared.chooseExisting')}
                   </button>
                 )}
               </>
@@ -696,37 +705,37 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
             <div className="form-row">
               <div className="form-group">
                 <label>
-                  Bank/Institution{!settings.country && ' (Set country in Settings)'}
+                  {t('dialogs.shared.bankInstitution')}{!settings.country && t('netWorth.setCountryInSettings')}
                 </label>
                 <SearchableSelect
                   options={[
-                    { id: '', label: 'Select Bank/Broker...' },
+                    { id: '', label: t('dialogs.shared.selectBankBroker') },
                     ...countryBanks.map(bank => ({
                       id: bank.code,
                       label: `${bank.name}${bank.supportsOpenBanking ? ' 🔗' : ''}`,
                     })),
-                    { id: 'OTHER', label: 'Other (Custom Name)' },
+                    { id: 'OTHER', label: t('dialogs.shared.otherCustomName') },
                   ]}
                   value={institutionCode}
                   onChange={(val) => handleInstitutionChange(val)}
                   searchThreshold={settings.searchThreshold ?? 8}
                   className="dialog-select"
-                  ariaLabel="Bank or institution"
+                  ariaLabel={t('dialogs.shared.bankOrInstitutionAria')}
                 />
                 {institutionCode && getBankByCode(institutionCode)?.supportsOpenBanking && (
                   <div className="openbanking-info">
-                    <MaterialIcon name="link" size="small" /> Supports OpenBanking PSD2
+                    <MaterialIcon name="link" size="small" /> {t('dialogs.shared.supportsOpenBanking')}
                   </div>
                 )}
               </div>
               {institutionCode === 'OTHER' && (
                 <div className="form-group">
-                  <label>Institution Name *</label>
+                  <label>{t('dialogs.shared.institutionNameRequired')}</label>
                   <input
                     type="text"
                     value={institutionName}
                     onChange={(e) => setInstitutionName(e.target.value)}
-                    placeholder="e.g., Local Credit Union"
+                    placeholder={t('dialogs.shared.placeholders.institutionName')}
                     className="dialog-input"
                   />
                 </div>
@@ -738,12 +747,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
           <div className="form-row">
             {subAssetType !== 'PRIVATE_EQUITY' && (
               <div className="form-group">
-                <label>{getTickerLabel(subAssetType)}</label>
+                <label>{getTickerLabel(subAssetType, t)}</label>
                 {!isEditing && existingAssets && existingAssets.length > 0 && !isNewTicker ? (
                   <>
                     <SearchableSelect
                       options={[
-                        { id: '__new__', label: '+ Enter new ticker...' },
+                        { id: '__new__', label: t('dialogs.shared.enterNewTickerOption') },
                         ...Array.from(new Map(
                           existingAssets
                             .filter(a => a.ticker && a.ticker.trim().length > 0)
@@ -773,7 +782,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                       }}
                       searchThreshold={settings.searchThreshold ?? 8}
                       className="dialog-select"
-                      ariaLabel="Select existing ticker or enter new"
+                      ariaLabel={t('dialogs.shared.selectExistingTickerAria')}
                     />
                     {lookupStatus && (
                       <div className={`ticker-lookup-status ${lookupStatus.startsWith('⚠') ? 'error' : 'success'}`}>
@@ -789,7 +798,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                         value={ticker}
                         onChange={(e) => { setTicker(e.target.value); setLookupStatus(null); }}
                         onBlur={() => { if (ticker.trim() && needsTicker) handleTickerLookup(); }}
-                        placeholder={needsTicker ? "e.g., SPY" : "Optional"}
+                        placeholder={needsTicker ? t('dialogs.shared.placeholders.ticker') : t('dialogs.shared.optional')}
                         className="dialog-input"
                       />
                       {needsTicker && (
@@ -798,7 +807,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                           className="ticker-fetch-btn"
                           onClick={handleTickerLookup}
                           disabled={isLookingUp || !ticker.trim()}
-                          title="Fetch price and info from Yahoo Finance"
+                          title={t('dialogs.shared.fetchPriceTitle')}
                         >
                           <MaterialIcon name={isLookingUp ? 'hourglass_empty' : 'download'} size="small" />
                         </button>
@@ -810,9 +819,9 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                         className="ticker-fetch-btn"
                         style={{ marginTop: '0.25rem', fontSize: '0.8rem' }}
                         onClick={() => setIsNewTicker(false)}
-                        title="Select from existing tickers"
+                        title={t('dialogs.shared.selectExistingTickersTitle')}
                       >
-                        Choose existing
+                        {t('dialogs.shared.chooseExisting')}
                       </button>
                     )}
                     {lookupStatus && (
@@ -827,12 +836,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
             {needsIsin && (
               <div className="form-group">
-                <label>ISIN *</label>
+                <label>{t('dialogs.shared.isinRequired')}</label>
                 <input
                   type="text"
                   value={isin}
                   onChange={(e) => setIsin(e.target.value)}
-                  placeholder="e.g., US78462F1030"
+                  placeholder={t('dialogs.shared.placeholders.isin')}
                   className="dialog-input"
                   required
                 />
@@ -850,12 +859,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
             <>
               <div className="form-row">
                 <div className="form-group">
-                  <label>Number of Shares *</label>
+                  <label>{t('dialogs.shared.numberOfSharesRequired')}</label>
                   <input
                     type="number"
                     value={shares}
                     onChange={(e) => handleSharesChange(e.target.value)}
-                    placeholder="e.g., 100"
+                    placeholder={t('dialogs.shared.placeholders.shares')}
                     className="dialog-input"
                     min="0"
                     step="any"
@@ -864,17 +873,17 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                 </div>
 
                 <div className="form-group">
-                  <label>Price per Share (Market)</label>
+                  <label>{t('dialogs.shared.pricePerShareMarket')}</label>
                   <input
                     type="text"
                     value={pricePerShare ? `${parseFloat(pricePerShare).toFixed(2)}` : '—'}
                     className="dialog-input dialog-input-calculated"
                     disabled
-                    title="Fetched automatically from Yahoo Finance"
+                    title={t('dialogs.shared.fetchedAutomaticallyTitle')}
                   />
                   {!pricePerShare && needsTicker && ticker.trim() && (
                     <span className="setting-help" style={{ color: 'var(--warning)' }}>
-                      Click the fetch button next to the ticker to get the price
+                      {t('dialogs.shared.clickFetchButtonHint')}
                     </span>
                   )}
                 </div>
@@ -884,19 +893,19 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
               {needsTicker && (
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Acquisition Price per Share</label>
+                    <label>{t('dialogs.shared.acquisitionPricePerShare')}</label>
                     <input
                       type="number"
                       value={acquisitionPrice}
                       onChange={(e) => setAcquisitionPrice(e.target.value)}
-                      placeholder={pricePerShare ? `Defaults to ${parseFloat(pricePerShare).toFixed(2)}` : 'Price you paid'}
+                      placeholder={pricePerShare ? t('dialogs.shared.placeholders.defaultsToPrice', { price: parseFloat(pricePerShare).toFixed(2) }) : t('dialogs.shared.placeholders.pricePaid')}
                       className="dialog-input"
                       min="0"
                       step="any"
-                      title="The price at which you originally bought this asset"
+                      title={t('dialogs.shared.acquisitionPriceTitle')}
                     />
                     <span className="setting-help">
-                      Leave blank to use market price as acquisition price
+                      {t('dialogs.shared.leaveBlankMarketPrice')}
                     </span>
                   </div>
                 </div>
@@ -913,7 +922,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
             return (
               <div className="form-row">
                 <div className="form-group">
-                  <label>Current Value {showCalculatedLabel || showCalculatedLabelNetWorth ? '(Calculated)' : ''} *</label>
+                  <label>{t('dialogs.shared.currentValue')} {showCalculatedLabel || showCalculatedLabelNetWorth ? t('dialogs.shared.calculatedSuffix') : ''} *</label>
                   <input
                     type={isValueDirectlyEditable ? 'number' : 'text'}
                     value={currentValue}
@@ -923,7 +932,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     } : undefined}
                     className="dialog-input dialog-input-calculated"
                     disabled={!isValueDirectlyEditable}
-                    placeholder={isValueDirectlyEditable ? (VALUE_ONLY_TYPES.includes(subAssetType) ? 'Enter estimated value' : 'Enter cash amount') : ''}
+                    placeholder={isValueDirectlyEditable ? (VALUE_ONLY_TYPES.includes(subAssetType) ? t('dialogs.shared.placeholders.estimatedValue') : t('dialogs.shared.placeholders.cashAmount')) : ''}
                     min={isValueDirectlyEditable ? '0' : undefined}
                     step={isValueDirectlyEditable ? 'any' : undefined}
                     required
@@ -931,7 +940,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                 </div>
 
                 <div className="form-group">
-                  <label>Currency *</label>
+                  <label>{t('dialogs.shared.currencyRequired')}</label>
                   <SearchableSelect
                     options={SUPPORTED_CURRENCIES.map(curr => ({
                       id: curr.code,
@@ -941,7 +950,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     onChange={(val) => setCurrency(val as SupportedCurrency)}
                     searchThreshold={settings.searchThreshold ?? 8}
                     className="dialog-select"
-                    ariaLabel="Currency"
+                    ariaLabel={t('dialogs.shared.currencyAria')}
                   />
                 </div>
               </div>
@@ -958,31 +967,31 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     checked={enableDepreciation}
                     onChange={(e) => setEnableDepreciation(e.target.checked)}
                   />
-                  Track Depreciation
+                  {t('dialogs.shared.trackDepreciation')}
                 </label>
               </legend>
               {enableDepreciation && (
                 <div className="fieldset-content">
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Method *</label>
+                      <label>{t('dialogs.shared.methodRequired')}</label>
                       <select
                         value={depMethod}
                         onChange={(e) => setDepMethod(e.target.value as DepreciationMethod)}
                         className="dialog-select"
                       >
-                        <option value="STRAIGHT_LINE">Straight Line</option>
-                        <option value="DECLINING_BALANCE">Declining Balance</option>
-                        <option value="MANUAL">Manual</option>
+                        <option value="STRAIGHT_LINE">{t('dialogs.shared.depreciationMethods.straightLine')}</option>
+                        <option value="DECLINING_BALANCE">{t('dialogs.shared.depreciationMethods.decliningBalance')}</option>
+                        <option value="MANUAL">{t('dialogs.shared.depreciationMethods.manual')}</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label>Purchase Price *</label>
+                      <label>{t('dialogs.shared.purchasePriceRequired')}</label>
                       <input
                         type="number"
                         value={depPurchasePrice}
                         onChange={(e) => setDepPurchasePrice(e.target.value)}
-                        placeholder="e.g., 25000"
+                        placeholder={t('dialogs.shared.placeholders.purchasePrice')}
                         className="dialog-input"
                         min="0"
                         step="any"
@@ -991,7 +1000,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Purchase Date *</label>
+                      <label>{t('dialogs.shared.purchaseDateRequired')}</label>
                       <input
                         type="date"
                         value={depPurchaseDate}
@@ -1000,12 +1009,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                       />
                     </div>
                     <div className="form-group">
-                      <label>Useful Life (years) *</label>
+                      <label>{t('dialogs.shared.usefulLifeYearsRequired')}</label>
                       <input
                         type="number"
                         value={depUsefulLife}
                         onChange={(e) => setDepUsefulLife(e.target.value)}
-                        placeholder="e.g., 10"
+                        placeholder={t('dialogs.shared.placeholders.usefulLife')}
                         className="dialog-input"
                         min="1"
                         step="1"
@@ -1014,12 +1023,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Salvage Value</label>
+                      <label>{t('dialogs.shared.salvageValue')}</label>
                       <input
                         type="number"
                         value={depSalvageValue}
                         onChange={(e) => setDepSalvageValue(e.target.value)}
-                        placeholder="e.g., 3000"
+                        placeholder={t('dialogs.shared.placeholders.salvageValue')}
                         className="dialog-input"
                         min="0"
                         step="any"
@@ -1027,12 +1036,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     </div>
                     {depMethod === 'DECLINING_BALANCE' && (
                       <div className="form-group">
-                        <label>Annual Rate (%)</label>
+                        <label>{t('dialogs.shared.annualRatePercent')}</label>
                         <input
                           type="number"
                           value={depAnnualRate}
                           onChange={(e) => setDepAnnualRate(e.target.value)}
-                          placeholder="e.g., 20"
+                          placeholder={t('dialogs.shared.placeholders.annualRate')}
                           className="dialog-input"
                           min="0"
                           max="100"
@@ -1042,12 +1051,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     )}
                     {depMethod === 'MANUAL' && (
                       <div className="form-group">
-                        <label>Accumulated Depreciation</label>
+                        <label>{t('dialogs.shared.accumulatedDepreciation')}</label>
                         <input
                           type="number"
                           value={depCurrentDepreciation}
                           onChange={(e) => setDepCurrentDepreciation(e.target.value)}
-                          placeholder="e.g., 5000"
+                          placeholder={t('dialogs.shared.placeholders.accumulatedDepreciation')}
                           className="dialog-input"
                           min="0"
                           step="any"
@@ -1070,31 +1079,31 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                     checked={enableMortgage}
                     onChange={(e) => setEnableMortgage(e.target.checked)}
                   />
-                  Has Mortgage
+                  {t('dialogs.shared.hasMortgage')}
                 </label>
               </legend>
               {enableMortgage && (
                 <div className="fieldset-content">
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Original Loan Amount *</label>
+                      <label>{t('dialogs.shared.originalLoanAmountRequired')}</label>
                       <input
                         type="number"
                         value={mortPrincipal}
                         onChange={(e) => setMortPrincipal(e.target.value)}
-                        placeholder="e.g., 200000"
+                        placeholder={t('dialogs.shared.placeholders.originalLoanAmount')}
                         className="dialog-input"
                         min="0"
                         step="any"
                       />
                     </div>
                     <div className="form-group">
-                      <label>Current Balance *</label>
+                      <label>{t('dialogs.shared.currentBalanceRequired')}</label>
                       <input
                         type="number"
                         value={mortCurrentBalance}
                         onChange={(e) => setMortCurrentBalance(e.target.value)}
-                        placeholder="e.g., 180000"
+                        placeholder={t('dialogs.shared.placeholders.currentBalance')}
                         className="dialog-input"
                         min="0"
                         step="any"
@@ -1103,12 +1112,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Interest Rate (%) *</label>
+                      <label>{t('dialogs.shared.interestRatePercentRequired')}</label>
                       <input
                         type="number"
                         value={mortInterestRate}
                         onChange={(e) => setMortInterestRate(e.target.value)}
-                        placeholder="e.g., 3.5"
+                        placeholder={t('dialogs.shared.placeholders.interestRate')}
                         className="dialog-input"
                         min="0"
                         max="30"
@@ -1116,12 +1125,12 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                       />
                     </div>
                     <div className="form-group">
-                      <label>Term (years) *</label>
+                      <label>{t('dialogs.shared.termYearsRequired')}</label>
                       <input
                         type="number"
                         value={mortTermYears}
                         onChange={(e) => setMortTermYears(e.target.value)}
-                        placeholder="e.g., 30"
+                        placeholder={t('dialogs.shared.placeholders.termYears')}
                         className="dialog-input"
                         min="1"
                         step="1"
@@ -1130,7 +1139,7 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Start Date</label>
+                      <label>{t('dialogs.shared.startDate')}</label>
                       <input
                         type="date"
                         value={mortStartDate}
@@ -1139,21 +1148,21 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                       />
                     </div>
                     <div className="form-group">
-                      <label>Lender (optional)</label>
+                      <label>{t('dialogs.shared.lenderOptional')}</label>
                       <input
                         type="text"
                         value={mortLender}
                         onChange={(e) => setMortLender(e.target.value)}
-                        placeholder="e.g., ABC Bank"
+                        placeholder={t('dialogs.shared.placeholders.lender')}
                         className="dialog-input"
                       />
                     </div>
                   </div>
                   {mortPrincipal && mortInterestRate && mortTermYears && (
                     <div className="mortgage-summary">
-                      <span>Monthly Payment: <strong>{calculateMonthlyPayment(parseFloat(mortPrincipal) || 0, parseFloat(mortInterestRate) || 0, parseFloat(mortTermYears) || 30).toFixed(2)}</strong></span>
+                      <span>{t('dialogs.shared.monthlyPayment')}: <strong>{calculateMonthlyPayment(parseFloat(mortPrincipal) || 0, parseFloat(mortInterestRate) || 0, parseFloat(mortTermYears) || 30).toFixed(2)}</strong></span>
                       {mortCurrentBalance && (
-                        <span>Remaining: <strong>{calculateRemainingYears(parseFloat(mortCurrentBalance) || 0, calculateMonthlyPayment(parseFloat(mortPrincipal) || 0, parseFloat(mortInterestRate) || 0, parseFloat(mortTermYears) || 30), parseFloat(mortInterestRate) || 0)} yrs</strong></span>
+                        <span>{t('dialogs.shared.remaining')}: <strong>{calculateRemainingYears(parseFloat(mortCurrentBalance) || 0, calculateMonthlyPayment(parseFloat(mortPrincipal) || 0, parseFloat(mortInterestRate) || 0, parseFloat(mortTermYears) || 30), parseFloat(mortInterestRate) || 0)} {t('dialogs.shared.yearsAbbr')}</strong></span>
                       )}
                     </div>
                   )}
@@ -1173,34 +1182,34 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
                       checked={isPrimaryResidence}
                       onChange={(e) => setIsPrimaryResidence(e.target.checked)}
                     />
-                    Primary Residence (excluded from FIRE calculation)
+                    {t('dialogs.shared.primaryResidenceExcluded')}
                   </label>
                 </div>
               )}
               <div className="form-row">
                 <div className="form-group">
-                  <label>Target Mode *</label>
+                  <label>{t('dialogs.shared.targetModeRequired')}</label>
                   <select
                     value={targetMode}
                     onChange={(e) => setTargetMode(e.target.value as AllocationMode)}
                     className="dialog-select"
                   >
-                    <option value="PERCENTAGE">Percentage (%)</option>
+                    <option value="PERCENTAGE">{t('dialogs.shared.targetModes.percentage')}</option>
                     {SET_MODE_ALLOWED.includes(subAssetType) && (
-                      <option value="SET">Fixed Amount</option>
+                      <option value="SET">{t('dialogs.shared.targetModes.fixedAmount')}</option>
                     )}
-                    <option value="OFF">Off (Excluded)</option>
+                    <option value="OFF">{t('dialogs.shared.targetModes.offExcluded')}</option>
                   </select>
                 </div>
 
                 {targetMode === 'PERCENTAGE' && (
                   <div className="form-group">
-                    <label>Target % (within asset class) *</label>
+                    <label>{t('dialogs.shared.targetPercentWithinClass')}</label>
                     <input
                       type="number"
                       value={targetPercent}
                       onChange={(e) => setTargetPercent(e.target.value)}
-                      placeholder="e.g., 50"
+                      placeholder={t('dialogs.shared.placeholders.targetPercent')}
                       className="dialog-input"
                       min="0"
                       max="100"
@@ -1214,11 +1223,11 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
           {mode === 'netWorthTracker' && (
             <div className="form-group">
-              <label>Notes (optional)</label>
+              <label>{t('dialogs.shared.notesOptional')}</label>
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Any notes about this asset..."
+                placeholder={t('dialogs.shared.placeholders.notes')}
                 className="dialog-input"
                 rows={2}
               />
@@ -1227,10 +1236,10 @@ export const SharedAssetDialog: React.FC<SharedAssetDialogProps> = ({
 
           <div className="dialog-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </button>
             <button type="submit" className="btn-submit">
-              {isEditing ? 'Update' : mode === 'assetAllocation' ? 'Add' : 'Log'} Asset
+              {isEditing ? t('common.update') : mode === 'assetAllocation' ? t('common.add') : t('netWorth.log')} {t('dialogs.shared.asset')}
             </button>
           </div>
         </form>
