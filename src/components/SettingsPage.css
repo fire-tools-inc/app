@@ -229,7 +229,8 @@
 
 .setting-item input[type="text"],
 .setting-item input[type="number"],
-.setting-item input[type="password"] {
+.setting-item input[type="password"],
+.setting-item textarea {
   width: 100%;
   padding: 0.75rem 1rem;
   border: 2px solid var(--border-subtle);
@@ -241,7 +242,15 @@
   box-sizing: border-box;
 }
 
-.setting-item input:focus {
+.setting-item textarea {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  resize: vertical;
+  min-height: 6rem;
+  line-height: 1.5;
+}
+
+.setting-item input:focus,
+.setting-item textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: var(--glow-primary);

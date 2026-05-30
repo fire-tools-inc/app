@@ -1340,7 +1340,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     onChange={(e) => setApiBody(e.target.value)}
                     placeholder='{"key": "value"}'
                     rows={4}
-                    style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.85rem' }}
                   />
                 </div>
               )}
