@@ -52,6 +52,33 @@ To start completely fresh, delete the file referenced by `DATABASE_URL`
 and boot again, or run `npm run migrate:down -- all` followed by
 `npm run migrate`.
 
+## Settings JSON mirror
+
+User preferences live in the `user_settings` and `notification_preferences`
+tables (DB is source of truth) and are also mirrored to a sibling file
+`settings.json` placed next to the SQLite database. In Electron this lands
+in the platform user data folder, alongside `firetools.db`.
+
+- Writes are atomic: temp file + `fsync` + rename, mode `0o600`.
+- Boot performs a one-shot legacy filename migration
+  (`firetools-settings.json`, `fire-tools-settings.json`,
+  `preferences.json` → `settings.json`) and then syncs DB → JSON.
+- A corrupt JSON file is quarantined as `settings.json.corrupt-<ts>`
+  and a fresh file is written from the DB.
+- In-memory DBs (tests) skip the file mirror entirely.
+
+Endpoints:
+
+| Method | Path                    | Purpose                                              |
+|--------|-------------------------|------------------------------------------------------|
+| GET    | `/settings/file`        | Return absolute path, `exists`, and parsed contents  |
+| POST   | `/settings/file/sync`   | Force re-sync of DB → `settings.json`                |
+| POST   | `/settings/file/import` | Apply a settings file payload into the DB            |
+
+`import` is strict for `notificationPreferences` (all fields required, same
+as `PUT /settings/notifications`) but accepts partial `settings` patches.
+See [`../docs/api/openapi.yaml`](../docs/api/openapi.yaml).
+
 ## Tests
 
 ```sh

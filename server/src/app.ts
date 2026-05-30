@@ -18,6 +18,7 @@ import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
 import { buildUiPreferencesRouter } from './routes/uiPreferences.js';
+import { createSettingsFileStore, migrateLegacySettingsFile, type SettingsFileStore } from './settingsFile.js';
 
 export interface BuildAppOptions {
   db: DB;
@@ -63,9 +64,25 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
       }),
     );
   }
+  // Settings file persistence: mirror DB → JSON in the DB's directory.
+  // Skipped for in-memory DBs (tests) where there is no meaningful path.
+  const isInMemoryDb = dbPath === ':memory:' || dbPath === '';
+  let settingsFileStore: SettingsFileStore | undefined;
+  if (!isInMemoryDb) {
+    try {
+      migrateLegacySettingsFile(dbPath);
+      settingsFileStore = createSettingsFileStore(dbPath);
+      // Initial mirror so the file always reflects current DB state at boot.
+      settingsFileStore.syncFromDb(db);
+    } catch (err) {
+      console.error('[app] failed to initialise settings file store', err);
+      settingsFileStore = undefined;
+    }
+  }
+
   v1.use(buildHealthRouter(db, dbPath));
   v1.use(buildUsersRouter(db));
-  v1.use(buildSettingsRouter(db));
+  v1.use(buildSettingsRouter(db, settingsFileStore));
   v1.use(buildNotificationsRouter(db));
   v1.use(buildCalculatorRouter(db));
   v1.use(buildMonteCarloRouter(db));
