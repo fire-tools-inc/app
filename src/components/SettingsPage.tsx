@@ -138,18 +138,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     if (!isElectron) return;
     let cancelled = false;
-    (async () => {
-      const info = await getEmbeddedBackendInfo();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    // Poll until the embedded backend reports a URL or error. The main
+    // process answers immediately even while `startEmbedded()` is still
+    // running, so a single fetch on mount races the server boot.
+    const poll = async () => {
       if (cancelled) return;
-      if (info?.error) {
-        setEmbeddedBackendError(info.error);
+      try {
+        const info = await getEmbeddedBackendInfo();
+        if (cancelled) return;
+        if (info?.error) {
+          setEmbeddedBackendError(info.error);
+          setEmbeddedBackendUrl(null);
+          return;
+        }
+        if (info?.url) {
+          setEmbeddedBackendUrl(info.url);
+          setEmbeddedBackendError(null);
+          return;
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setEmbeddedBackendError(err instanceof Error ? err.message : String(err));
         setEmbeddedBackendUrl(null);
-      } else if (info?.url) {
-        setEmbeddedBackendUrl(info.url);
-        setEmbeddedBackendError(null);
+        return;
       }
-    })();
-    return () => { cancelled = true; };
+      timer = setTimeout(poll, 500);
+    };
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [isElectron]);
 
   // Show temporary message
@@ -345,11 +365,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       }
       origin = trimmed;
     } else {
-      if (!embeddedBackendUrl) {
+      let url = embeddedBackendUrl;
+      if (!url) {
+        // Backend might still be starting; ask main one more time before
+        // declaring it unavailable to avoid a stale-state false negative.
+        try {
+          const info = await getEmbeddedBackendInfo();
+          if (info?.url) {
+            url = info.url;
+            setEmbeddedBackendUrl(info.url);
+            setEmbeddedBackendError(null);
+          } else if (info?.error) {
+            setEmbeddedBackendError(info.error);
+          }
+        } catch {
+          // Fall through to the error branch below.
+        }
+      }
+      if (!url) {
         setBackendTestState({ status: 'error', message: embeddedBackendError || t('settings.backend.embeddedUnavailable') });
         return;
       }
-      origin = embeddedBackendUrl;
+      origin = url;
     }
     try {
       await probeBackend(origin);
