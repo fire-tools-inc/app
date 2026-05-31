@@ -68,7 +68,7 @@
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
-    "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^11.10.0",
+    "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^12.10.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
     "electron-updater": "^6.8.3",
