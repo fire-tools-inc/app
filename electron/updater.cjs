@@ -104,6 +104,52 @@ function emit(payload) {
   }
 }
 
+/**
+ * Build a fake autoUpdater used when FIRETOOLS_UPDATER_MOCK=1.
+ * Simulates: checking -> available -> downloading (3 ticks) -> downloaded.
+ * quitAndInstall() runs takeBackupSafe but never calls app.quit, so the dev
+ * app keeps running and the UI / backup directory can be inspected.
+ */
+function createMockAutoUpdater(notify) {
+  const fakeInfo = { version: '99.0.0-mock', releaseDate: new Date().toISOString() };
+  let downloaded = false;
+  return {
+    autoDownload: false,
+    autoInstallOnAppQuit: false,
+    allowPrerelease: false,
+    forceDevUpdateConfig: false,
+    logger: null,
+    on() {},
+    async checkForUpdates() {
+      emit({ status: 'checking' });
+      await new Promise((r) => setTimeout(r, 400));
+      emit({ status: 'available', info: fakeInfo });
+      if (notify) {
+        try {
+          notify({ title: 'Fire Tools update available (mock)', body: `Version ${fakeInfo.version}` });
+        } catch (err) {
+          console.error('[fire-tools][mock-updater] notify failed:', err);
+        }
+      }
+      return { updateInfo: fakeInfo };
+    },
+    async downloadUpdate() {
+      for (const pct of [25, 60, 100]) {
+        await new Promise((r) => setTimeout(r, 250));
+        emit({ status: 'downloading', progress: { percent: pct, transferred: pct * 1024, total: 100 * 1024, bytesPerSecond: 1024 } });
+      }
+      downloaded = true;
+      emit({ status: 'downloaded', info: fakeInfo });
+      return fakeInfo;
+    },
+    quitAndInstall() {
+      console.log('[fire-tools][mock-updater] quitAndInstall called (no-op in mock mode), downloaded=', downloaded);
+      // Real install path is skipped — dev app keeps running so the user
+      // can inspect the backup that takeBackupSafe just produced.
+    },
+  };
+}
+
 async function takeBackupSafe(reason) {
   try {
     const created = await backup.createBackup({
@@ -142,8 +188,28 @@ async function setupUpdater({ getWindow, notify } = {}) {
   getWindowFn = typeof getWindow === 'function' ? getWindow : null;
   notifyFn = typeof notify === 'function' ? notify : null;
 
-  if (!app.isPackaged) {
+  const forceDev = process.env.FIRETOOLS_UPDATER_FORCE_DEV === '1';
+  const mock = process.env.FIRETOOLS_UPDATER_MOCK === '1';
+
+  if (mock) {
+    // Test-only: simulate a complete update lifecycle without contacting GitHub
+    // and without quitting the app. Useful for exercising the UI + backup path
+    // in dev. Never enable in production builds.
+    console.log('[fire-tools] auto-updater MOCK mode enabled (FIRETOOLS_UPDATER_MOCK=1)');
+    autoUpdater = createMockAutoUpdater(notifyFn);
+    setTimeout(() => {
+      autoUpdater
+        .checkForUpdates()
+        .catch((err) => emit({ status: 'error', error: err && err.message ? err.message : String(err) }));
+    }, 1500);
+    return { skipped: false, mock: true };
+  }
+
+  if (!app.isPackaged && !forceDev) {
     // Dev mode: keep API surface available but never reach out to GitHub.
+    // Set FIRETOOLS_UPDATER_FORCE_DEV=1 to opt into real update checks against
+    // GitHub releases (requires dev-app-update.yml next to the main process).
+    // Set FIRETOOLS_UPDATER_MOCK=1 to simulate the full flow locally without GitHub.
     console.log('[fire-tools] auto-updater disabled in dev (app not packaged)');
     emit({ status: 'disabled-dev' });
     return { skipped: true, reason: 'dev' };
@@ -160,6 +226,10 @@ async function setupUpdater({ getWindow, notify } = {}) {
   }
 
   autoUpdater = mod.autoUpdater;
+  if (!app.isPackaged && forceDev) {
+    autoUpdater.forceDevUpdateConfig = true;
+    console.log('[fire-tools] auto-updater forced ON in dev (FIRETOOLS_UPDATER_FORCE_DEV=1)');
+  }
   autoUpdater.autoDownload = false; // we drive downloads ourselves based on prefs
   autoUpdater.autoInstallOnAppQuit = true;
   autoUpdater.allowPrerelease = false;
