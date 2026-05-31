@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Database } from 'better-sqlite3';
 import { fromBool01 } from './http.js';
+import { logger } from './logger.js';
 
 export const SETTINGS_FILE_NAME = 'settings.json';
 export const SETTINGS_SCHEMA_VERSION = 1;
@@ -67,7 +68,7 @@ export const readSettingsFile = (filePath: string): SettingsFileShape | null => 
     raw = fs.readFileSync(filePath, 'utf8');
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
-    console.error('[settingsFile] failed to read', filePath, err);
+    logger.error('settingsFile', null, `failed to read ${filePath}: ${err}`);
     return null;
   }
   if (raw.trim() === '') return null;
@@ -75,12 +76,12 @@ export const readSettingsFile = (filePath: string): SettingsFileShape | null => 
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    console.error('[settingsFile] malformed JSON at', filePath, err);
+    logger.error('settingsFile', null, `malformed JSON at ${filePath}: ${err}`);
     quarantine(filePath);
     return null;
   }
   if (!isSettingsFileShape(parsed)) {
-    console.error('[settingsFile] unexpected shape at', filePath);
+    logger.error('settingsFile', null, `unexpected shape at ${filePath}`);
     quarantine(filePath);
     return null;
   }
@@ -107,10 +108,10 @@ const quarantine = (filePath: string): void => {
     if (fs.existsSync(filePath)) {
       const dest = corruptPathFor(filePath);
       fs.renameSync(filePath, dest);
-      console.error('[settingsFile] quarantined corrupt file to', dest);
+      logger.error('settingsFile', null, `quarantined corrupt file to ${dest}`);
     }
   } catch (err) {
-    console.error('[settingsFile] failed to quarantine', filePath, err);
+    logger.error('settingsFile', null, `failed to quarantine ${filePath}: ${err}`);
   }
 };
 
@@ -141,14 +142,14 @@ export const writeSettingsFileAtomic = (
     } catch (err) {
       // fsync may legitimately fail on some FS (e.g. tmpfs, network mounts);
       // log but proceed — the rename still provides crash-consistency.
-      console.error('[settingsFile] fsync failed (continuing)', err);
+      logger.error('settingsFile', null, `fsync failed (continuing): ${err}`);
     }
     fs.closeSync(fd);
     fd = null;
     fs.renameSync(tmp, filePath);
     return true;
   } catch (err) {
-    console.error('[settingsFile] atomic write failed for', filePath, err);
+    logger.error('settingsFile', null, `atomic write failed for ${filePath}: ${err}`);
     if (fd !== null) {
       try {
         fs.closeSync(fd);
@@ -180,10 +181,10 @@ export const migrateLegacySettingsFile = (dbPath: string): string | null => {
     if (!fs.existsSync(candidate)) continue;
     try {
       fs.renameSync(candidate, target);
-      console.error('[settingsFile] migrated legacy file', candidate, '->', target);
+      logger.systemEvent('settingsFile', null, `migrated legacy file ${candidate} -> ${target}`);
       return candidate;
     } catch (err) {
-      console.error('[settingsFile] legacy rename failed', candidate, err);
+      logger.error('settingsFile', null, `legacy rename failed ${candidate}: ${err}`);
     }
   }
   return null;
@@ -334,7 +335,7 @@ export const syncSettingsToFile = (db: Database, filePath: string): boolean => {
     const shape = projectFromDb(db);
     return writeSettingsFileAtomic(filePath, shape);
   } catch (err) {
-    console.error('[settingsFile] sync from DB failed', err);
+    logger.error('settingsFile', null, `sync from DB failed: ${err}`);
     return false;
   }
 };

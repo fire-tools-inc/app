@@ -13,6 +13,7 @@ import { AssetClass } from '../types/assetAllocation';
 import { LlmCategorizationConfig } from '../types/pdfImport';
 import { encryptData, decryptData } from './cookieEncryption';
 import { IS_DEMO_MODE } from './demoMode';
+import { logger } from './logger';
 
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
@@ -85,6 +86,19 @@ export interface UserSettings {
   decimalPlaces: number;
   currencySettings: CurrencySettings;
   privacyMode: boolean;
+  /**
+   * When `true`, the diagnostic logger is allowed to record financial PII
+   * (tickers, quantities, account names, portfolio values, etc.) alongside
+   * regular log messages. Off by default. Independent from `privacyMode`,
+   * which only controls UI value blurring.
+   */
+  loggingPiiEnabled: boolean;
+  /**
+   * Maximum on-disk log file size before rotation, in megabytes. The Electron
+   * main process clamps the effective value to 1–500MB. The log file lives in
+   * the same directory as the SQLite database. Has no effect in the web build.
+   */
+  maxLogFileSizeMb: number;
   country?: string;
   dateFormat: DateFormat;
   fireAssetClassInclusion: Record<AssetClass, boolean>;
@@ -120,6 +134,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   decimalPlaces: 2,
   currencySettings: DEFAULT_CURRENCY_SETTINGS,
   privacyMode: false,
+  loggingPiiEnabled: false,
+  maxLogFileSizeMb: 50,
   country: undefined,
   dateFormat: 'DD/MM/YYYY',
   fireAssetClassInclusion: DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
@@ -152,7 +168,7 @@ export function saveSettings(settings: UserSettings): void {
     const encryptedSettings = encryptData(settingsJson);
     SafeCookies.set(SETTINGS_KEY, encryptedSettings, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save settings:', error);
+    logger.error('cookie-settings', 'save-failed', 'failed to save settings', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save settings.');
   }
 }
@@ -219,7 +235,7 @@ export function loadSettings(): UserSettings {
     }
     return DEFAULT_SETTINGS;
   } catch (error) {
-    console.error('Failed to load settings from cookies:', error);
+    logger.error('cookie-settings', 'load-failed', 'failed to load settings from cookies', { pii: { error: (error as Error)?.message } });
     return DEFAULT_SETTINGS;
   }
 }
@@ -231,7 +247,7 @@ export function clearSettings(): void {
   try {
     SafeCookies.remove(SETTINGS_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear settings:', error);
+    logger.error('cookie-settings', 'clear-failed', 'failed to clear settings', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -309,6 +325,10 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
     if (!validLanguages.includes(settings.language as LanguageCode)) {
       errors.push('Language must be one of: en, it, fr, de, es');
     }
+  }
+
+  if (settings.loggingPiiEnabled !== undefined && typeof settings.loggingPiiEnabled !== 'boolean') {
+    errors.push('loggingPiiEnabled must be a boolean');
   }
 
   if (settings.backend !== undefined) {

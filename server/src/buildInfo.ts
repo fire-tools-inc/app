@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { logger } from './logger.js';
 
 export interface BuildInfo {
   version: string;
@@ -33,7 +34,7 @@ const loadPackageJson = (): {
       }
     }
   } catch (err) {
-    console.error('[buildInfo] failed to read package.json:', (err as Error).message);
+    logger.error('build-info', 'read-package-json-failed', `failed to read package.json: ${(err as Error).message}`);
   }
   return {};
 };

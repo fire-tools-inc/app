@@ -18,6 +18,7 @@ import {
   getDemoExpenseTracker,
   getDemoNetWorthTracker,
 } from './demoMode';
+import { logger } from './logger';
 
 // Cookie keys
 const ASSET_ALLOCATION_KEY = 'fire-calculator-asset-allocation';
@@ -91,7 +92,7 @@ export function saveAssetAllocation(
     SafeCookies.set(ASSET_ALLOCATION_KEY, encryptedAssets, COOKIE_OPTIONS);
     SafeCookies.set(ASSET_CLASS_TARGETS_KEY, encryptedTargets, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save asset allocation to cookies:', error);
+    logger.error('cookie-storage', 'save-failed', 'failed to save asset allocation to cookies', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to cookies. Cookies may be disabled.');
   }
 }
@@ -141,7 +142,7 @@ export function loadAssetAllocation(): {
 
     return { assets, assetClassTargets };
   } catch (error) {
-    console.error('Failed to load asset allocation from cookies:', error);
+    logger.error('cookie-storage', 'load-failed', 'failed to load asset allocation from cookies', { pii: { error: (error as Error)?.message } });
     return { assets: null, assetClassTargets: null };
   }
 }
@@ -154,7 +155,7 @@ export function clearAssetAllocation(): void {
     SafeCookies.remove(ASSET_ALLOCATION_KEY, { path: '/' });
     SafeCookies.remove(ASSET_CLASS_TARGETS_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear asset allocation from cookies:', error);
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear asset allocation from cookies', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -169,7 +170,7 @@ export function saveFireCalculatorInputs(inputs: CalculatorInputs): void {
     
     SafeCookies.set(FIRE_CALCULATOR_INPUTS_KEY, encryptedInputs, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save FIRE calculator inputs to cookies:', error);
+    logger.error('cookie-storage', 'save-failed', 'failed to save FIRE calculator inputs to cookies', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to cookies. Cookies may be disabled.');
   }
 }
@@ -195,7 +196,7 @@ export function loadFireCalculatorInputs(): CalculatorInputs | null {
     }
     return null;
   } catch (error) {
-    console.error('Failed to load FIRE calculator inputs from cookies:', error);
+    logger.error('cookie-storage', 'load-failed', 'failed to load FIRE calculator inputs from cookies', { pii: { error: (error as Error)?.message } });
     return null;
   }
 }
@@ -207,7 +208,7 @@ export function clearFireCalculatorInputs(): void {
   try {
     SafeCookies.remove(FIRE_CALCULATOR_INPUTS_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear FIRE calculator inputs from cookies:', error);
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear FIRE calculator inputs from cookies', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -283,7 +284,7 @@ export function saveExpenseTrackerData(data: ExpenseTrackerData): void {
     
     localStorage.setItem(EXPENSE_TRACKER_KEY, encryptedData);
   } catch (error) {
-    console.error('Failed to save expense tracker data to localStorage:', error);
+    logger.error('cookie-storage', 'save-failed', 'failed to save expense tracker data to localStorage', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to localStorage. Storage may be full or disabled.');
   }
 }
@@ -303,7 +304,7 @@ export function loadExpenseTrackerData(): ExpenseTrackerData | null {
     if (!encryptedData) {
       const cookieData = SafeCookies.get(EXPENSE_TRACKER_KEY);
       if (cookieData) {
-        console.log('Migrating expense tracker data from cookies to localStorage...');
+        logger.systemEvent('cookie-storage', 'migrate', 'migrating expense tracker data from cookies to localStorage');
         // Save to localStorage
         localStorage.setItem(EXPENSE_TRACKER_KEY, cookieData);
         // Remove from cookie
@@ -323,7 +324,7 @@ export function loadExpenseTrackerData(): ExpenseTrackerData | null {
     }
     return null;
   } catch (error) {
-    console.error('Failed to load expense tracker data from localStorage:', error);
+    logger.error('cookie-storage', 'load-failed', 'failed to load expense tracker data from localStorage', { pii: { error: (error as Error)?.message } });
     return null;
   }
 }
@@ -335,7 +336,7 @@ export function clearExpenseTrackerData(): void {
   try {
     localStorage.removeItem(EXPENSE_TRACKER_KEY);
   } catch (error) {
-    console.error('Failed to clear expense tracker data from localStorage:', error);
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear expense tracker data from localStorage', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -444,7 +445,7 @@ export function saveNetWorthTrackerData(data: NetWorthTrackerData): void {
     
     localStorage.setItem(NET_WORTH_TRACKER_KEY, encryptedData);
   } catch (error) {
-    console.error('Failed to save net worth tracker data to localStorage:', error);
+    logger.error('cookie-storage', 'save-failed', 'failed to save net worth tracker data to localStorage', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to localStorage. Storage may be full or disabled.');
   }
 }
@@ -480,7 +481,7 @@ export function loadNetWorthTrackerData(): NetWorthTrackerData | null {
     if (!encryptedData) {
       const cookieData = SafeCookies.get(NET_WORTH_TRACKER_KEY);
       if (cookieData) {
-        console.log('Migrating net worth tracker data from cookies to localStorage...');
+        logger.systemEvent('cookie-storage', 'migrate', 'migrating net worth tracker data from cookies to localStorage');
         // Save to localStorage
         localStorage.setItem(NET_WORTH_TRACKER_KEY, cookieData);
         // Remove from cookie
@@ -502,7 +503,7 @@ export function loadNetWorthTrackerData(): NetWorthTrackerData | null {
     }
     return null;
   } catch (error) {
-    console.error('Failed to load net worth tracker data from localStorage:', error);
+    logger.error('cookie-storage', 'load-failed', 'failed to load net worth tracker data from localStorage', { pii: { error: (error as Error)?.message } });
     return null;
   }
 }
@@ -516,7 +517,7 @@ export function clearNetWorthTrackerData(): void {
     // Also remove from cookies in case there's legacy data
     SafeCookies.remove(NET_WORTH_TRACKER_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear net worth tracker data from localStorage:', error);
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear net worth tracker data from localStorage', { pii: { error: (error as Error)?.message } });
   }
 }
 

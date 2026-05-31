@@ -310,6 +310,12 @@ Fire Tools takes your privacy seriously:
 - ✅ **Secure cookies (browser)** - `SameSite=Strict` and `Secure` flags
   protect against attacks
 - ✅ **Open source** - Full transparency, audit the code yourself
+- ✅ **Structured logs, PII-gated** - Diagnostic logs are kept in an
+  in-memory ring buffer and never include financial data (tickers,
+  amounts, allocations) unless you explicitly enable the "Include PII in
+  logs" toggle in Settings. Export logs from Settings → "Export logs" to
+  attach a sanitized log to a bug report. See
+  [`docs/engineering/logging.md`](docs/engineering/logging.md).
 
 Learn more in our [Security Policy](SECURITY.md).
 

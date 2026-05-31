@@ -360,7 +360,9 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Modalità test",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Controlla se i log diagnostici includono dettagli finanziari sensibili. I log non lasciano mai il tuo dispositivo a meno che tu non li esporti.",
+      "maxLogFileSize": "Dimensione massima del file di log su disco prima che le voci più vecchie vengano ruotate. I log si trovano accanto al tuo database."
     },
     "triggerTestNotifications": "Invia notifiche di prova",
     "unavailable": "Unavailable",
@@ -400,6 +402,14 @@
       "pathMustStartWithSlash": "Il percorso deve iniziare con /",
       "invalidJson": "Il corpo della richiesta non è un JSON valido"
     },
+    "loggingPii": "Log diagnostici dettagliati",
+    "loggingPiiOn": "Dettagliato",
+    "loggingPiiOff": "Minimo",
+    "loggingPiiHelp": "Quando disattivato (predefinito), i log diagnostici rimuovono i dettagli finanziari (ticker, importi, nomi conto). Quando attivo, il contesto completo viene mantenuto localmente per facilitare il debug.",
+    "loggingPiiWarning": "I log dettagliati possono contenere dati finanziari. Condividi i log esportati solo con persone fidate.",
+    "exportLogs": "Esporta log diagnostici",
+    "maxLogFileSize": "Dimensione massima del file di log (MB)",
+    "maxLogFileSizeHelp": "Limita la dimensione del file di log su disco (1–500 MB, 50 di default). Quando viene superata, le voci più vecchie vengono spostate in un unico file di backup. Si applica solo all'app desktop.",
     "updater": {
       "description": "Configura gli aggiornamenti automatici e gestisci i backup locali.",
       "desktopOnly": "L'aggiornamento automatico è disponibile solo nell'app desktop.",

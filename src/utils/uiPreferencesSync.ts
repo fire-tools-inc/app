@@ -17,6 +17,7 @@ import SafeCookies from './safeCookies';
 import type { CookieAttributes } from './safeCookies';
 import { encryptData } from './cookieEncryption';
 import { getApiBaseUrl } from './apiBase';
+import { logger } from './logger';
 
 export const PREF_KEY_TOUR_COMPLETED = 'tour_completed';
 export const PREF_KEY_QUESTIONNAIRE_PROMPT_DISMISSED = 'questionnaire_prompt_dismissed';
@@ -41,7 +42,7 @@ const writeMirroredCookie = (cookieName: string, plaintextJson: string): void =>
     const encrypted = encryptData(plaintextJson);
     SafeCookies.set(cookieName, encrypted, COOKIE_OPTIONS);
   } catch (error) {
-    console.error(`Failed to mirror preference into ${cookieName}:`, error);
+    logger.error('ui-preferences-sync', 'mirror-failed', `failed to mirror preference into ${cookieName}`, { pii: { error: (error as Error)?.message } });
   }
 };
 
@@ -64,7 +65,7 @@ export const syncPreferencesFromBackend = async (): Promise<void> => {
       writeMirroredCookie(cookieName, value);
     }
   } catch (error) {
-    console.error('Failed to sync UI preferences from backend:', error);
+    logger.error('ui-preferences-sync', 'sync-failed', 'failed to sync UI preferences from backend', { pii: { error: (error as Error)?.message } });
   }
 };
 
@@ -83,10 +84,10 @@ export const pushPreferenceToBackend = (key: string, value: string): void => {
         body: JSON.stringify({ value }),
       });
       if (!res.ok) {
-        console.error(`Failed to push preference ${key}: HTTP ${res.status}`);
+        logger.error('ui-preferences-sync', 'push-failed', `failed to push preference ${key} to backend`, { pii: { httpStatus: res.status } });
       }
     } catch (error) {
-      console.error(`Failed to push preference ${key} to backend:`, error);
+      logger.error('ui-preferences-sync', 'push-failed', `failed to push preference ${key} to backend`, { pii: { error: (error as Error)?.message } });
     }
   })();
 };
@@ -104,10 +105,10 @@ export const deletePreferenceFromBackend = (key: string): void => {
         method: 'DELETE',
       });
       if (!res.ok && res.status !== 404) {
-        console.error(`Failed to delete preference ${key}: HTTP ${res.status}`);
+        logger.error('ui-preferences-sync', 'delete-failed', `failed to delete preference ${key} from backend`, { pii: { httpStatus: res.status } });
       }
     } catch (error) {
-      console.error(`Failed to delete preference ${key} from backend:`, error);
+      logger.error('ui-preferences-sync', 'delete-failed', `failed to delete preference ${key} from backend`, { pii: { error: (error as Error)?.message } });
     }
   })();
 };

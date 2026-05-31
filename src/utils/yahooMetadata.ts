@@ -24,6 +24,7 @@
 import { AssetMetadata, RegionWeight } from '../types/portfolioBreakdown';
 import { yahooFetch, hasRateLimitCapacity, YahooRateLimitError } from './yahooProxy';
 import { inferEtfInfo, isinToCountryCode } from './etfHeuristics';
+import { logger } from './logger';
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const CACHE_PREFIX = 'fire-tools:asset-metadata:';
@@ -63,7 +64,7 @@ function readFromStorage(ticker: string): AssetMetadata | null {
     memoryCache.set(ticker.toUpperCase(), parsed.data);
     return parsed.data;
   } catch (err) {
-    console.error('Failed to read asset metadata cache', err);
+    logger.error('yahoo-metadata', 'read-failed', 'failed to read asset metadata cache', { pii: { error: (err as Error)?.message } });
     return null;
   }
 }
@@ -82,7 +83,7 @@ function writeToStorage(ticker: string, data: AssetMetadata): void {
     };
     localStorage.setItem(cacheKey(ticker), JSON.stringify(entry));
   } catch (err) {
-    console.error('Failed to write asset metadata cache', err);
+    logger.error('yahoo-metadata', 'write-failed', 'failed to write asset metadata cache', { pii: { error: (err as Error)?.message } });
   }
 }
 
@@ -100,7 +101,7 @@ export function clearAssetMetadataCache(): void {
     }
     toRemove.forEach(k => localStorage.removeItem(k));
   } catch (err) {
-    console.error('Failed to clear asset metadata cache', err);
+    logger.error('yahoo-metadata', 'clear-failed', 'failed to clear asset metadata cache', { pii: { error: (err as Error)?.message } });
   }
 }
 

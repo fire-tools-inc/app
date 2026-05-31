@@ -7,6 +7,7 @@ import SafeCookies from './safeCookies';
 import type { CookieAttributes } from './safeCookies';
 import { QuestionnaireResults } from '../types/questionnaire';
 import { encryptData, decryptData } from './cookieEncryption';
+import { logger } from './logger';
 
 // Storage key
 const QUESTIONNAIRE_RESULTS_KEY = 'fire-tools-questionnaire-results';
@@ -47,7 +48,7 @@ export function saveQuestionnaireResults(results: QuestionnaireResults): void {
 
     SafeCookies.set(QUESTIONNAIRE_RESULTS_KEY, encryptedResults, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save questionnaire results:', error);
+    logger.error('questionnaire-storage', 'save-failed', 'failed to save questionnaire results', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save questionnaire results.');
   }
 }
@@ -74,7 +75,7 @@ export function loadQuestionnaireResults(): QuestionnaireResults | null {
 
     return null;
   } catch (error) {
-    console.error('Failed to load questionnaire results:', error);
+    logger.error('questionnaire-storage', 'load-failed', 'failed to load questionnaire results', { pii: { error: (error as Error)?.message } });
     return null;
   }
 }
@@ -86,7 +87,7 @@ export function clearQuestionnaireResults(): void {
   try {
     SafeCookies.remove(QUESTIONNAIRE_RESULTS_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear questionnaire results:', error);
+    logger.error('questionnaire-storage', 'clear-failed', 'failed to clear questionnaire results', { pii: { error: (error as Error)?.message } });
   }
 }
 

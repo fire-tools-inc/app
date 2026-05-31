@@ -2,6 +2,7 @@
 import { loadEnv } from './env.js';
 import { initDb } from './db.js';
 import { getMigrationStatus, rollbackMigrations, runMigrations } from './migrate.js';
+import { logger } from './logger.js';
 
 const env = loadEnv();
 const [cmd = 'up', ...rest] = process.argv.slice(2);
@@ -24,45 +25,51 @@ try {
   if (cmd === 'up') {
     const result = runMigrations(db, env.migrationsPath);
     if (result.migrationsApplied.length === 0) {
-      console.error(
-        `[migrate] no pending migrations (${result.totalMigrations} total) at ${dbPath}`,
+      logger.systemEvent(
+        'cli-migrate',
+        'no-pending',
+        `no pending migrations (${result.totalMigrations} total) at ${dbPath}`,
       );
     } else {
-      console.error(
-        `[migrate] applied ${result.migrationsApplied.length} migration(s) at ${dbPath}:`,
+      logger.systemEvent(
+        'cli-migrate',
+        'applied-migrations',
+        `applied ${result.migrationsApplied.length} migration(s) at ${dbPath}`,
       );
       for (const id of result.migrationsApplied) {
-        console.error(`  - ${id}`);
+        logger.systemEvent('cli-migrate', 'migration-item', `- ${id}`);
       }
     }
   } else if (cmd === 'down') {
     const steps = parseSteps(rest[0]);
     const result = rollbackMigrations(db, env.migrationsPath, steps);
     if (result.migrationsRolledBack.length === 0) {
-      console.error(`[migrate] nothing to roll back at ${dbPath}`);
+      logger.systemEvent('cli-migrate', 'nothing-to-rollback', `nothing to roll back at ${dbPath}`);
     } else {
-      console.error(
-        `[migrate] rolled back ${result.migrationsRolledBack.length} migration(s) at ${dbPath}:`,
+      logger.systemEvent(
+        'cli-migrate',
+        'rolled-back-migrations',
+        `rolled back ${result.migrationsRolledBack.length} migration(s) at ${dbPath}`,
       );
       for (const id of result.migrationsRolledBack) {
-        console.error(`  - ${id}`);
+        logger.systemEvent('cli-migrate', 'migration-item', `- ${id}`);
       }
     }
   } else if (cmd === 'status') {
     const status = getMigrationStatus(db, env.migrationsPath);
-    console.error(`[migrate] status (${dbPath}):`);
+    logger.systemEvent('cli-migrate', 'status', `status (${dbPath})`);
     for (const m of status) {
       const mark = m.applied ? '✓' : '·';
       const when = m.appliedAt ? ` @ ${m.appliedAt}` : '';
-      console.error(`  ${mark} ${m.id}_${m.name}${when}`);
+      logger.systemEvent('cli-migrate', 'migration-status', `${mark} ${m.id}_${m.name}${when}`);
     }
   } else {
-    console.error(`Unknown command "${cmd}". Usage: migrate [up|down [N|all]|status]`);
+    logger.error('cli-migrate', 'unknown-command', `Unknown command "${cmd}". Usage: migrate [up|down [N|all]|status]`);
     db.close();
     process.exit(1);
   }
 } catch (err) {
-  console.error(`[migrate] ${(err as Error).message}`);
+  logger.error('cli-migrate', 'execution-failed', `${(err as Error).message}`, { pii: { error: (err as Error)?.message } });
   db.close();
   process.exit(1);
 }

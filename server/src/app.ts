@@ -18,6 +18,7 @@ import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
 import { buildUiPreferencesRouter } from './routes/uiPreferences.js';
+import { logger } from './logger.js';
 import { createSettingsFileStore, migrateLegacySettingsFile, type SettingsFileStore } from './settingsFile.js';
 
 export interface BuildAppOptions {
@@ -75,7 +76,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
       // Initial mirror so the file always reflects current DB state at boot.
       settingsFileStore.syncFromDb(db);
     } catch (err) {
-      console.error('[app] failed to initialise settings file store', err);
+      logger.error('app', null, `failed to initialise settings file store: ${err}`);
       settingsFileStore = undefined;
     }
   }
@@ -102,7 +103,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
       res.status(403).json({ error: { code: 'cors_denied', message: err.message } });
       return;
     }
-    console.error('[express] unhandled', err);
+    logger.error('express', 'unhandled-error', err.message, { pii: { stack: err.stack } });
     res.status(500).json({
       error: { code: 'internal_error', message: err.message },
     });

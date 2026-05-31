@@ -360,7 +360,9 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Test Mode",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Controls whether diagnostic logs include sensitive financial details. Logs never leave your device unless you export them.",
+      "maxLogFileSize": "Maximum on-disk log file size before older entries are rotated out. Logs live next to your database."
     },
     "triggerTestNotifications": "Trigger Test Notifications",
     "unavailable": "Unavailable",
@@ -400,6 +402,14 @@
       "pathMustStartWithSlash": "Path must start with /",
       "invalidJson": "Request body is not valid JSON"
     },
+    "loggingPii": "Detailed diagnostic logging",
+    "loggingPiiOn": "Detailed",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "When off (default), diagnostic logs strip out financial details (tickers, amounts, account names). When on, full context is kept locally to help debug issues.",
+    "loggingPiiWarning": "Detailed logs may contain financial data. Only share exported logs with people you trust.",
+    "exportLogs": "Export diagnostic logs",
+    "maxLogFileSize": "Max log file size (MB)",
+    "maxLogFileSizeHelp": "Caps the on-disk log file (1–500 MB, default 50). When exceeded, the oldest entries roll into a single backup file. Only applies to the desktop app.",
     "updater": {
       "description": "Configure auto-updates and manage local backups.",
       "desktopOnly": "Auto-update is only available in the desktop app.",

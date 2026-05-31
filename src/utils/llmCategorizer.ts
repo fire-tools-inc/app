@@ -16,6 +16,7 @@ import {
   LlmCategorizationConfig,
   ParsedTransactionDraft,
 } from '../types/pdfImport';
+import { logger } from './logger';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -111,7 +112,9 @@ export async function categorizeWithLlm(
     });
 
     if (!res.ok) {
-      console.error(`LLM categorization failed: HTTP ${res.status}`);
+      logger.error('llm-categorizer', 'http-error', 'LLM categorization request failed', {
+        pii: { status: res.status },
+      });
       return drafts;
     }
 
@@ -146,7 +149,9 @@ export async function categorizeWithLlm(
       return next;
     });
   } catch (error) {
-    console.error('LLM categorization error:', error);
+    logger.error('llm-categorizer', 'unexpected-error', 'LLM categorization error', {
+      pii: { error: (error as Error)?.message },
+    });
     return drafts;
   } finally {
     clearTimeout(timeout);
