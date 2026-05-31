@@ -2448,15 +2448,18 @@
   "update": {
     "available": {
       "title": "Update verfügbar",
-      "message": "Version {{version}} kann heruntergeladen werden."
+      "message": "Version {{version}} kann heruntergeladen werden.",
+      "messageNoVersion": "Eine neue Version von Fire Tools kann heruntergeladen werden."
     },
     "downloading": {
-      "title": "Update wird heruntergeladen",
-      "message": "Fire Tools {{version}} wird heruntergeladen."
+      "title": "Fire Tools {{version}} wird heruntergeladen…",
+      "message": "Fire Tools {{version}} wird heruntergeladen.",
+      "titleNoVersion": "Update wird heruntergeladen…"
     },
     "downloaded": {
       "title": "Update bereit",
-      "message": "Neu starten, um Version {{version}} zu installieren. Vorher wird eine Sicherung erstellt."
+      "message": "Neu starten, um Version {{version}} zu installieren. Vorher wird eine Sicherung erstellt.",
+      "messageNoVersion": "Jetzt neu starten, um das Update zu installieren. Eine Sicherung wird automatisch erstellt."
     },
     "backupFailed": {
       "title": "Sicherung fehlgeschlagen",

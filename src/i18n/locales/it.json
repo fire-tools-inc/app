@@ -2448,15 +2448,18 @@
   "update": {
     "available": {
       "title": "Aggiornamento disponibile",
-      "message": "La versione {{version}} è pronta per il download."
+      "message": "La versione {{version}} è pronta per il download.",
+      "messageNoVersion": "Una nuova versione di Fire Tools è pronta per il download."
     },
     "downloading": {
-      "title": "Download in corso",
-      "message": "Fire Tools {{version}} è in download."
+      "title": "Download di Fire Tools {{version}}…",
+      "message": "Fire Tools {{version}} è in download.",
+      "titleNoVersion": "Download in corso…"
     },
     "downloaded": {
       "title": "Aggiornamento pronto",
-      "message": "Riavvia per installare la versione {{version}}. Verrà prima creato un backup."
+      "message": "Riavvia per installare la versione {{version}}. Verrà prima creato un backup.",
+      "messageNoVersion": "Riavvia ora per applicare. Verrà creato automaticamente un backup."
     },
     "backupFailed": {
       "title": "Backup non riuscito",

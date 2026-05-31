@@ -1534,23 +1534,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <span className="setting-help">{t('settings.updater.keepBackupsHelp', { defaultValue: 'Older backups are rotated out automatically. At least one backup is always kept.' })}</span>
               </div>
 
-              <div className="setting-item" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div className="setting-item updater-actions">
                 <button
-                  className="action-button"
+                  className="secondary-btn"
                   onClick={handleManualCheck}
                   disabled={!hasUpdaterBridge || updaterBusy !== 'idle'}
                 >
                   <MaterialIcon name="refresh" size="small" /> {updaterBusy === 'check' ? t('settings.updater.checking', { defaultValue: 'Checking…' }) : t('settings.updater.checkNow', { defaultValue: 'Check for updates now' })}
                 </button>
                 <button
-                  className="action-button"
+                  className="secondary-btn"
                   onClick={handleCreateBackup}
                   disabled={!hasBackupsBridge || updaterBusy !== 'idle'}
                 >
                   <MaterialIcon name="save" size="small" /> {updaterBusy === 'backup' ? t('settings.updater.backingUp', { defaultValue: 'Backing up…' }) : t('settings.updater.createBackup', { defaultValue: 'Create backup now' })}
                 </button>
                 <button
-                  className="action-button"
+                  className="secondary-btn"
                   onClick={refreshBackupsList}
                   disabled={!hasBackupsBridge || updaterBusy !== 'idle'}
                 >
@@ -1619,7 +1619,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                             </td>
                             <td style={{ padding: '0.25rem 0.5rem' }}>
                               <button
-                                className="action-button"
+                                className="secondary-btn"
                                 onClick={() => handleRestoreBackup(b.id)}
                                 disabled={updaterBusy !== 'idle' || b.valid === false}
                               >

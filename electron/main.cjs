@@ -1,6 +1,6 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeTheme, Notification } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, nativeImage, nativeTheme, Notification } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -11,6 +11,25 @@ const updater = require('./updater.cjs');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 const isMac = process.platform === 'darwin';
+
+// Force the product name early so the OS (especially macOS NotificationCenter
+// in dev mode, where the bundle id is Electron's default) attributes
+// notifications, the menu bar, and About panel to "Fire Tools".
+app.setName('Fire Tools');
+
+// Resolve the brand icon once. Used for native notifications and the macOS
+// Dock so the user always sees the Fire Tools logo regardless of how the
+// app is launched (dev electron binary vs packaged app).
+const BRAND_ICON_PATH = path.join(__dirname, 'build', 'icon.png');
+let brandIconImage = null;
+try {
+  if (fs.existsSync(BRAND_ICON_PATH)) {
+    const img = nativeImage.createFromPath(BRAND_ICON_PATH);
+    if (!img.isEmpty()) brandIconImage = img;
+  }
+} catch (err) {
+  console.warn('[fire-tools] could not load brand icon:', err && err.message ? err.message : err);
+}
 
 // Enforce single instance: prevents two processes racing on the SQLite DB
 // and gives users a clean "focus existing window" UX when they re-launch.
@@ -181,6 +200,10 @@ function showNativeNotification(opts) {
       body,
       silent: false,
       urgency, // Linux only; ignored elsewhere
+      // Explicit icon so macOS NotificationCenter (and other platforms)
+      // show the Fire Tools logo even in dev mode where the bundle id
+      // falls back to Electron's default.
+      ...(brandIconImage ? { icon: brandIconImage } : {}),
     });
     liveNotifications.add(notification);
     const release = () => liveNotifications.delete(notification);
@@ -304,6 +327,16 @@ app.whenReady().then(async () => {
   // application identity. Must match electron-builder.yml `appId`.
   if (typeof app.setAppUserModelId === 'function') {
     app.setAppUserModelId('dev.mb-consulting.firetools');
+  }
+
+  // Make sure the Dock icon on macOS matches the brand, even in dev
+  // where Electron would otherwise show its own logo.
+  if (isMac && brandIconImage && app.dock && typeof app.dock.setIcon === 'function') {
+    try {
+      app.dock.setIcon(brandIconImage);
+    } catch (err) {
+      console.warn('[fire-tools] dock.setIcon failed:', err && err.message ? err.message : err);
+    }
   }
 
   // Populate the macOS "About <app>" panel with real metadata.

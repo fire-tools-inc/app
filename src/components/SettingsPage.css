@@ -272,6 +272,31 @@
   margin-top: 1rem;
 }
 
+/* Action button row in the Updater/Backups section: tighter, themed,
+   wraps cleanly, and the secondary-btn pills inside line up with the
+   rest of the settings UI instead of falling back to raw browser buttons. */
+.updater-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.updater-actions .secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+}
+
+.updater-actions .secondary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .toggle-group {
   display: flex;
   gap: 0.5rem;

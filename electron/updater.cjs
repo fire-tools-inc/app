@@ -126,7 +126,10 @@ function createMockAutoUpdater(notify) {
       emit({ status: 'available', info: fakeInfo });
       if (notify) {
         try {
-          notify({ title: 'Fire Tools update available (mock)', body: `Version ${fakeInfo.version}` });
+          notify({
+            title: `Update available — v${fakeInfo.version}`,
+            body: `Version ${fakeInfo.version} is ready to download.`,
+          });
         } catch (err) {
           console.error('[fire-tools][mock-updater] notify failed:', err);
         }
@@ -245,9 +248,12 @@ async function setupUpdater({ getWindow, notify } = {}) {
     emit({ status: 'available', info });
     if (notifyFn) {
       try {
+        const v = info && info.version ? info.version : '';
         notifyFn({
-          title: 'Fire Tools update available',
-          body: `Version ${info && info.version ? info.version : ''} is ready to download.`,
+          title: v ? `Update available — v${v}` : 'Update available',
+          body: v
+            ? `Version ${v} is ready to download.`
+            : 'A new version is ready to download.',
         });
       } catch (err) {
         console.error('[fire-tools] update-available notify failed:', err);

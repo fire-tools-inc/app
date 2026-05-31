@@ -120,9 +120,14 @@ export default function UpdateNotification() {
               {version ? ` — v${version}` : ''}
             </span>
             <span className="update-notification__message">
-              {t('update.available.message', {
-                defaultValue: 'A new version of Fire Tools is ready to download.',
-              })}
+              {version
+                ? t('update.available.message', {
+                    version,
+                    defaultValue: 'Version {{version}} is ready to download.',
+                  })
+                : t('update.available.messageNoVersion', {
+                    defaultValue: 'A new version of Fire Tools is ready to download.',
+                  })}
             </span>
             <div className="update-notification__actions">
               <button
@@ -149,8 +154,9 @@ export default function UpdateNotification() {
         return (
           <>
             <span className="update-notification__title">
-              {t('update.downloading.title', { defaultValue: 'Downloading update…' })}
-              {version ? ` v${version}` : ''}
+              {version
+                ? t('update.downloading.title', { version, defaultValue: 'Downloading Fire Tools {{version}}…' })
+                : t('update.downloading.titleNoVersion', { defaultValue: 'Downloading update…' })}
             </span>
             <div
               className="update-notification__progress"
@@ -180,9 +186,14 @@ export default function UpdateNotification() {
               {version ? ` — v${version}` : ''}
             </span>
             <span className="update-notification__message">
-              {t('update.downloaded.message', {
-                defaultValue: 'Restart now to apply. A backup will be created automatically.',
-              })}
+              {version
+                ? t('update.downloaded.message', {
+                    version,
+                    defaultValue: 'Restart to install version {{version}}. A backup will be taken first.',
+                  })
+                : t('update.downloaded.messageNoVersion', {
+                    defaultValue: 'Restart now to apply. A backup will be created automatically.',
+                  })}
             </span>
             <div className="update-notification__actions">
               <button
