@@ -76,7 +76,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
       // Initial mirror so the file always reflects current DB state at boot.
       settingsFileStore.syncFromDb(db);
     } catch (err) {
-      console.error('[app] failed to initialise settings file store', err);
+      logger.error('app', null, `failed to initialise settings file store: ${err}`);
       settingsFileStore = undefined;
     }
   }
