@@ -21,7 +21,7 @@
     "migrate:status": "tsx src/cli-migrate.ts status"
   },
   "dependencies": {
-    "better-sqlite3": "^11.3.0",
+    "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^12.10.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "express-rate-limit": "^8.5.2",

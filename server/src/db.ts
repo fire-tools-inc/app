@@ -29,6 +29,39 @@ export interface InitDbOptions {
   skipMigrations?: boolean;
 }
 
+/** Escapes a SQLCipher passphrase for safe injection into a `PRAGMA key='...'` statement. */
+export const escapePassphrase = (passphrase: string): string =>
+  passphrase.replace(/'/g, "''");
+
+export class WrongPassphraseError extends Error {
+  readonly code = 'wrong_passphrase';
+  constructor(message = 'Database is encrypted and the supplied passphrase is incorrect (or the database is corrupt).') {
+    super(message);
+    this.name = 'WrongPassphraseError';
+  }
+}
+
+/**
+ * Applies `PRAGMA key` to an open handle and verifies the key by performing a
+ * trivial read. Throws `WrongPassphraseError` if the key does not match.
+ *
+ * The verification step is required because SQLCipher defers key validation
+ * until the first page is decrypted — opening a handle with the wrong key
+ * succeeds silently otherwise.
+ */
+export const applyPassphrase = (db: DB, passphrase: string): void => {
+  db.pragma(`key = '${escapePassphrase(passphrase)}'`);
+  try {
+    db.prepare('SELECT count(*) FROM sqlite_master').get();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('not a database') || msg.includes('file is encrypted')) {
+      throw new WrongPassphraseError();
+    }
+    throw err;
+  }
+};
+
 export const initDb = (env: ServerEnv, opts: InitDbOptions = {}): InitDbResult => {
   if (env.databaseUrl.startsWith('postgres://') || env.databaseUrl.startsWith('postgresql://')) {
     throw new Error(
@@ -41,6 +74,13 @@ export const initDb = (env: ServerEnv, opts: InitDbOptions = {}): InitDbResult =
   mkdirSync(dirname(dbPath), { recursive: true });
 
   const db = new Database(dbPath);
+
+  // SQLCipher requires `PRAGMA key` to be issued BEFORE any other I/O — including
+  // `journal_mode = WAL`, which writes to the database header.
+  if (env.passphrase) {
+    applyPassphrase(db, env.passphrase);
+  }
+
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 

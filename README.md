@@ -307,6 +307,9 @@ Fire Tools takes your privacy seriously:
   your device unless you explicitly opt in.
 - ✅ **AES-256 encryption (browser)** - Cookie-stored values are encrypted
   before being written
+- ✅ **Optional passphrase-based DB encryption (desktop)** - Encrypt the
+  local SQLite database at rest with a passphrase stored in your OS keychain.
+  See [`docs/security/passphrase.md`](docs/security/passphrase.md).
 - ✅ **Secure cookies (browser)** - `SameSite=Strict` and `Secure` flags
   protect against attacks
 - ✅ **Open source** - Full transparency, audit the code yourself

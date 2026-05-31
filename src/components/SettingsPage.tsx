@@ -53,7 +53,7 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'backend', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support', 'about'] as const;
+const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support', 'about'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
@@ -83,6 +83,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [embeddedBackendUrl, setEmbeddedBackendUrl] = useState<string | null>(null);
   const [embeddedBackendError, setEmbeddedBackendError] = useState<string | null>(null);
   const isElectron = typeof window !== 'undefined' && !!window.fireTools?.getEmbeddedBackend;
+
+  // DB encryption (Electron only)
+  const [dbEncStatus, setDbEncStatus] = useState<{
+    encrypted: boolean;
+    safeStorageAvailable: boolean;
+    hasStoredPassphrase: boolean;
+  } | null>(null);
+  const [dbEncAction, setDbEncAction] = useState<'set' | 'rotate' | 'remove'>('set');
+  const [dbEncCurrent, setDbEncCurrent] = useState('');
+  const [dbEncNew, setDbEncNew] = useState('');
+  const [dbEncConfirm, setDbEncConfirm] = useState('');
+  const [dbEncBusy, setDbEncBusy] = useState(false);
+  const [dbEncMessage, setDbEncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   // Auto-updater state (Electron only)
   const hasUpdaterBridge = updaterBridgeAvailable();
@@ -199,6 +212,79 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       if (timer) clearTimeout(timer);
     };
   }, [isElectron]);
+
+  // Load DB encryption status (Electron only)
+  const refreshDbEncStatus = async () => {
+    const bridge = window.fireTools;
+    if (!bridge?.getDbEncryptionStatus) return;
+    try {
+      const status = await bridge.getDbEncryptionStatus();
+      setDbEncStatus(status);
+      setDbEncAction(status.encrypted ? 'rotate' : 'set');
+    } catch (err) {
+      logger.error('settings', 'db-enc-status-failed', `Failed to load DB encryption status: ${(err as Error)?.message ?? String(err)}`);
+    }
+  };
+
+  useEffect(() => {
+    if (!isElectron) return;
+    refreshDbEncStatus();
+  }, [isElectron]);
+
+  const resetDbEncForm = () => {
+    setDbEncCurrent('');
+    setDbEncNew('');
+    setDbEncConfirm('');
+  };
+
+  const handleDbPassphraseSubmit = async () => {
+    const bridge = window.fireTools;
+    if (!bridge?.setDbPassphrase) return;
+    setDbEncMessage(null);
+
+    if (dbEncAction === 'set' || dbEncAction === 'rotate') {
+      if (dbEncNew.length < 8) {
+        setDbEncMessage({ type: 'error', text: 'Passphrase must be at least 8 characters.' });
+        return;
+      }
+      if (dbEncNew !== dbEncConfirm) {
+        setDbEncMessage({ type: 'error', text: 'Passphrases do not match.' });
+        return;
+      }
+    }
+    if ((dbEncAction === 'rotate' || dbEncAction === 'remove') && !dbEncCurrent) {
+      setDbEncMessage({ type: 'error', text: 'Current passphrase is required.' });
+      return;
+    }
+
+    setDbEncBusy(true);
+    try {
+      const result = await bridge.setDbPassphrase({
+        action: dbEncAction,
+        currentPassphrase: dbEncAction === 'set' ? undefined : dbEncCurrent,
+        newPassphrase: dbEncAction === 'remove' ? undefined : dbEncNew,
+      });
+      if (result.ok) {
+        const msg =
+          dbEncAction === 'set'
+            ? `Database encryption enabled.${result.backupPath ? ` Unencrypted backup saved to: ${result.backupPath}` : ''}`
+            : dbEncAction === 'rotate'
+              ? 'Passphrase rotated successfully.'
+              : 'Database encryption disabled.';
+        setDbEncMessage({ type: 'success', text: msg });
+        resetDbEncForm();
+        await refreshDbEncStatus();
+      } else {
+        const detail = result.backupPath ? ` Backup: ${result.backupPath}` : '';
+        setDbEncMessage({ type: 'error', text: `${result.message}${detail}` });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setDbEncMessage({ type: 'error', text: `Unexpected error: ${message}` });
+    } finally {
+      setDbEncBusy(false);
+    }
+  };
 
   // Show temporary message
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -1503,6 +1589,166 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             </div>
           )}
         </section>
+
+        {/* Security — DB encryption (Electron only) */}
+        {isElectron && (
+          <section className="settings-section collapsible-section">
+            <button
+              className="collapsible-header"
+              onClick={() => toggleSection('security')}
+              aria-expanded={!collapsedSections.has('security')}
+              aria-controls="security-content"
+            >
+              <h2><MaterialIcon name="lock" /> Security <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('security') ? '▶' : '▼'}</span></h2>
+            </button>
+            {!collapsedSections.has('security') && (
+              <div id="security-content" className="collapsible-content">
+                <p className="setting-help">
+                  Encrypt your local database file at rest with a passphrase. The passphrase is stored in your OS keychain (Keychain on macOS, Credential Vault on Windows, Secret Service on Linux) and never written to disk in plain text.
+                </p>
+
+                {dbEncStatus === null ? (
+                  <div className="setting-item"><span className="setting-help">Loading status…</span></div>
+                ) : !dbEncStatus.safeStorageAvailable ? (
+                  <div className="setting-item">
+                    <span className="setting-help" style={{ color: 'var(--error-color, #ef4444)' }}>
+                      <MaterialIcon name="error" size="small" /> OS keychain is not available. On Linux, install gnome-keyring or kwallet and relaunch the app.
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="setting-item">
+                      <span className="setting-help">
+                        Status: <strong>{dbEncStatus.encrypted ? 'Encrypted' : 'Not encrypted'}</strong>
+                      </span>
+                    </div>
+
+                    <div className="setting-item">
+                      <div className="label-with-tooltip">
+                        <label>Action</label>
+                      </div>
+                      <div className="toggle-group">
+                        <button
+                          className={`toggle-btn ${dbEncAction === 'set' ? 'active' : ''}`}
+                          onClick={() => { setDbEncAction('set'); resetDbEncForm(); setDbEncMessage(null); }}
+                          disabled={dbEncStatus.encrypted}
+                          title={dbEncStatus.encrypted ? 'Database is already encrypted' : undefined}
+                        >
+                          <MaterialIcon name="lock" size="small" /> Enable
+                        </button>
+                        <button
+                          className={`toggle-btn ${dbEncAction === 'rotate' ? 'active' : ''}`}
+                          onClick={() => { setDbEncAction('rotate'); resetDbEncForm(); setDbEncMessage(null); }}
+                          disabled={!dbEncStatus.encrypted}
+                        >
+                          <MaterialIcon name="key" size="small" /> Rotate
+                        </button>
+                        <button
+                          className={`toggle-btn ${dbEncAction === 'remove' ? 'active' : ''}`}
+                          onClick={() => { setDbEncAction('remove'); resetDbEncForm(); setDbEncMessage(null); }}
+                          disabled={!dbEncStatus.encrypted}
+                        >
+                          <MaterialIcon name="lock_open" size="small" /> Disable
+                        </button>
+                      </div>
+                    </div>
+
+                    {(dbEncAction === 'rotate' || dbEncAction === 'remove') && (
+                      <div className="setting-item">
+                        <div className="label-with-tooltip">
+                          <label htmlFor="dbEncCurrent">Current passphrase</label>
+                        </div>
+                        <input
+                          id="dbEncCurrent"
+                          type="password"
+                          value={dbEncCurrent}
+                          onChange={(e) => setDbEncCurrent(e.target.value)}
+                          autoComplete="current-password"
+                        />
+                      </div>
+                    )}
+
+                    {(dbEncAction === 'set' || dbEncAction === 'rotate') && (
+                      <>
+                        <div className="setting-item">
+                          <div className="label-with-tooltip">
+                            <label htmlFor="dbEncNew">New passphrase</label>
+                          </div>
+                          <input
+                            id="dbEncNew"
+                            type="password"
+                            value={dbEncNew}
+                            onChange={(e) => setDbEncNew(e.target.value)}
+                            autoComplete="new-password"
+                          />
+                          <span className="setting-help">At least 8 characters. Use something memorable; there is no recovery if forgotten.</span>
+                        </div>
+                        <div className="setting-item">
+                          <div className="label-with-tooltip">
+                            <label htmlFor="dbEncConfirm">Confirm new passphrase</label>
+                          </div>
+                          <input
+                            id="dbEncConfirm"
+                            type="password"
+                            value={dbEncConfirm}
+                            onChange={(e) => setDbEncConfirm(e.target.value)}
+                            autoComplete="new-password"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {dbEncAction === 'set' && (
+                      <div className="setting-item">
+                        <span className="setting-help" style={{ color: 'var(--warning-color, #f59e0b)' }}>
+                          <MaterialIcon name="warning" size="small" /> An unencrypted backup of the database will be saved alongside the original before encryption is applied. Delete it once you have verified the encrypted database works.
+                        </span>
+                      </div>
+                    )}
+                    {dbEncAction === 'remove' && (
+                      <div className="setting-item">
+                        <span className="setting-help" style={{ color: 'var(--warning-color, #f59e0b)' }}>
+                          <MaterialIcon name="warning" size="small" /> Disabling encryption will leave the database readable by anyone with access to the file.
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="setting-item">
+                      <div className="toggle-group">
+                        <button
+                          className="toggle-btn"
+                          onClick={handleDbPassphraseSubmit}
+                          disabled={dbEncBusy}
+                        >
+                          <MaterialIcon name="save" size="small" /> {dbEncBusy ? 'Working…' : 'Apply'}
+                        </button>
+                      </div>
+                      {dbEncMessage && (
+                        <span
+                          className="setting-help"
+                          style={{
+                            color:
+                              dbEncMessage.type === 'success'
+                                ? 'var(--success-color, #22c55e)'
+                                : dbEncMessage.type === 'error'
+                                  ? 'var(--error-color, #ef4444)'
+                                  : undefined,
+                          }}
+                        >
+                          <MaterialIcon
+                            name={dbEncMessage.type === 'success' ? 'check_circle' : dbEncMessage.type === 'error' ? 'error' : 'info'}
+                            size="small"
+                          />{' '}
+                          {dbEncMessage.text}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Updater — auto-update & backups (Electron only) */}
         <section className="settings-section collapsible-section">

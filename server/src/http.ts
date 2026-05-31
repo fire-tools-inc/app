@@ -142,6 +142,23 @@ export const handler =
     }
   };
 
+/**
+ * Async variant of `handler` for routes that need to await Promises (e.g. the
+ * admin rekey endpoint, which uses `db.backup()` to snapshot the unencrypted
+ * file before turning encryption on).
+ */
+export const asyncHandler =
+  (fn: (req: Request, res: Response) => Promise<void>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res).catch((err) => {
+      if (isApiError(err)) {
+        sendError(res, err);
+        return;
+      }
+      next(err);
+    });
+  };
+
 export const bool01 = (v: unknown): 0 | 1 => (v ? 1 : 0);
 export const fromBool01 = (v: number | null | undefined): boolean => v === 1;
 export const nowIso = (): string => new Date().toISOString();

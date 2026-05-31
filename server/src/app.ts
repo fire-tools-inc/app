@@ -18,6 +18,7 @@ import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
 import { buildUiPreferencesRouter } from './routes/uiPreferences.js';
+import { buildAdminRouter, type AdminState } from './routes/admin.js';
 import { logger } from './logger.js';
 import { createSettingsFileStore, migrateLegacySettingsFile, type SettingsFileStore } from './settingsFile.js';
 
@@ -26,9 +27,16 @@ export interface BuildAppOptions {
   env: ServerEnv;
   dbPath: string;
   disableRateLimit?: boolean;
+  /**
+   * Shared encryption-state object. Lets the embed layer keep the HTTP admin
+   * route and its in-process `rekey()` method in sync. When omitted (e.g. in
+   * unit-test apps), the router uses a closure-local flag seeded from
+   * `Boolean(env.passphrase)`.
+   */
+  adminState?: AdminState;
 }
 
-export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions) => {
+export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: BuildAppOptions) => {
   const corsOptions: CorsOptions = {
     origin: (origin, cb) => {
       if (!origin) {
@@ -95,6 +103,16 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit }: BuildAppOptions)
   v1.use(buildPortfolioBreakdownRouter(db));
   v1.use(buildBanksRouter(db));
   v1.use(buildUiPreferencesRouter(db));
+
+  let encryptedFlag = Boolean(env.passphrase);
+  const state: AdminState = adminState ?? {
+    isEncrypted: () => encryptedFlag,
+    setEncrypted: (v: boolean) => {
+      encryptedFlag = v;
+    },
+  };
+  v1.use(buildAdminRouter(db, dbPath, state));
+
   v1.use(buildNotImplementedRouter());
   app.use('/api/v1', v1);
 
