@@ -59,7 +59,9 @@ type SettingsSection = typeof SETTINGS_SECTIONS[number];
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<UserSettings>(() => {
+    try { return loadSettings(); } catch { return DEFAULT_SETTINGS; }
+  });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rateTextValues, setRateTextValues] = useState<Record<string, string>>({});
@@ -134,7 +136,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     const loaded = loadSettings();
     setSettings(loaded);
-    
+
+    // Push the persisted log-size cap to the Electron main process so a
+    // user-customised value survives app restarts.
+    try {
+      const bridge = (globalThis as { fireTools?: { logs?: { setMaxMb?: (n: number) => unknown } } }).fireTools;
+      const mb = Math.max(1, Math.min(500, Math.floor(loaded.maxLogFileSizeMb ?? 50)));
+      void bridge?.logs?.setMaxMb?.(mb);
+    } catch { /* no-op outside Electron */ }
+
     // Load notification preferences
     const notifState = loadNotificationState();
     setNotificationPrefs(notifState.preferences);
@@ -352,7 +362,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     }
     handleSettingChange('updater', next);
     if (hasUpdaterBridge) {
-      persistUpdaterPrefs(next).catch((err) => console.error('[fire-tools] persistUpdaterPrefs failed:', err));
+      persistUpdaterPrefs(next).catch((err) => logger.error('settings', 'updater-prefs-failed', `persistUpdaterPrefs failed: ${(err as Error)?.message ?? String(err)}`));
     }
   };
 
@@ -1332,6 +1342,32 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   >
                     <MaterialIcon name="download" size="small" /> {t('settings.exportLogs')}
                   </button>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <div className="label-with-tooltip">
+                    <label htmlFor="maxLogFileSizeMb">{t('settings.maxLogFileSize')}</label>
+                    <Tooltip content={t('settings.tooltips.maxLogFileSize')}>
+                      <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
+                    </Tooltip>
+                  </div>
+                  <input
+                    id="maxLogFileSizeMb"
+                    type="number"
+                    min={1}
+                    max={500}
+                    step={1}
+                    value={settings.maxLogFileSizeMb ?? 50}
+                    onChange={(e) => {
+                      const raw = Number(e.target.value);
+                      if (!Number.isFinite(raw)) return;
+                      const clamped = Math.max(1, Math.min(500, Math.floor(raw)));
+                      handleSettingChange('maxLogFileSizeMb', clamped);
+                      const bridge = (globalThis as { fireTools?: { logs?: { setMaxMb?: (n: number) => unknown } } }).fireTools;
+                      try { void bridge?.logs?.setMaxMb?.(clamped); } catch { /* no-op */ }
+                    }}
+                    style={{ maxWidth: '8rem' }}
+                  />
+                  <span className="setting-help">{t('settings.maxLogFileSizeHelp')}</span>
                 </div>
               </div>
               <div className="setting-item">

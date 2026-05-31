@@ -361,7 +361,8 @@
       "searchThreshold": "Search Threshold",
       "testMode": "Testmodus",
       "uxUiSuggestion": "Ux Ui Suggestion",
-      "loggingPii": "Steuert, ob Diagnoseprotokolle sensible Finanzdetails enthalten. Protokolle verlassen Ihr Gerät nur, wenn Sie sie exportieren."
+      "loggingPii": "Steuert, ob Diagnoseprotokolle sensible Finanzdetails enthalten. Protokolle verlassen Ihr Gerät nur, wenn Sie sie exportieren.",
+      "maxLogFileSize": "Maximale Größe der Protokolldatei auf der Festplatte, bevor ältere Einträge rotiert werden. Protokolle liegen neben Ihrer Datenbank."
     },
     "triggerTestNotifications": "Test-Benachrichtigungen senden",
     "unavailable": "Unavailable",
@@ -407,6 +408,8 @@
     "loggingPiiHelp": "Bei deaktivierter Einstellung (Standard) entfernen Diagnoseprotokolle Finanzdetails (Ticker, Beträge, Kontonamen). Bei aktivierter Einstellung wird der vollständige Kontext lokal gespeichert, um die Fehlersuche zu erleichtern.",
     "loggingPiiWarning": "Detaillierte Protokolle können Finanzdaten enthalten. Teilen Sie exportierte Protokolle nur mit vertrauenswürdigen Personen.",
     "exportLogs": "Diagnoseprotokolle exportieren",
+    "maxLogFileSize": "Maximale Protokolldateigröße (MB)",
+    "maxLogFileSizeHelp": "Begrenzt die Protokolldatei auf der Festplatte (1–500 MB, Standard 50). Bei Überschreitung werden die ältesten Einträge in eine einzelne Sicherungsdatei verschoben. Gilt nur für die Desktop-App.",
     "updater": {
       "description": "Automatische Updates konfigurieren und lokale Sicherungen verwalten.",
       "desktopOnly": "Automatische Updates sind nur in der Desktop-App verfügbar.",

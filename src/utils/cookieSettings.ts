@@ -93,6 +93,12 @@ export interface UserSettings {
    * which only controls UI value blurring.
    */
   loggingPiiEnabled: boolean;
+  /**
+   * Maximum on-disk log file size before rotation, in megabytes. The Electron
+   * main process clamps the effective value to 1–500MB. The log file lives in
+   * the same directory as the SQLite database. Has no effect in the web build.
+   */
+  maxLogFileSizeMb: number;
   country?: string;
   dateFormat: DateFormat;
   fireAssetClassInclusion: Record<AssetClass, boolean>;
@@ -129,6 +135,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   currencySettings: DEFAULT_CURRENCY_SETTINGS,
   privacyMode: false,
   loggingPiiEnabled: false,
+  maxLogFileSizeMb: 50,
   country: undefined,
   dateFormat: 'DD/MM/YYYY',
   fireAssetClassInclusion: DEFAULT_FIRE_ASSET_CLASS_INCLUSION,

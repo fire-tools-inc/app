@@ -361,7 +361,8 @@
       "searchThreshold": "Search Threshold",
       "testMode": "Mode test",
       "uxUiSuggestion": "Ux Ui Suggestion",
-      "loggingPii": "Contrôle si les journaux de diagnostic incluent des détails financiers sensibles. Les journaux ne quittent jamais votre appareil à moins que vous ne les exportiez."
+      "loggingPii": "Contrôle si les journaux de diagnostic incluent des détails financiers sensibles. Les journaux ne quittent jamais votre appareil à moins que vous ne les exportiez.",
+      "maxLogFileSize": "Taille maximale du fichier journal sur disque avant la rotation des anciennes entrées. Les journaux sont stockés à côté de votre base de données."
     },
     "triggerTestNotifications": "Envoyer des notifications de test",
     "unavailable": "Unavailable",
@@ -407,6 +408,8 @@
     "loggingPiiHelp": "Lorsqu'il est désactivé (par défaut), les journaux suppriment les détails financiers (tickers, montants, noms de compte). Lorsqu'il est activé, le contexte complet est conservé localement pour faciliter le débogage.",
     "loggingPiiWarning": "Les journaux détaillés peuvent contenir des données financières. Ne partagez les journaux exportés qu’avec des personnes de confiance.",
     "exportLogs": "Exporter les journaux de diagnostic",
+    "maxLogFileSize": "Taille maximale du fichier journal (Mo)",
+    "maxLogFileSizeHelp": "Limite la taille du fichier journal sur disque (1–500 Mo, 50 par défaut). Lorsqu'elle est dépassée, les entrées les plus anciennes sont déplacées dans un fichier de sauvegarde unique. Ne s'applique qu'à l'application de bureau.",
     "updater": {
       "description": "Configurer les mises à jour automatiques et gérer les sauvegardes locales.",
       "desktopOnly": "La mise à jour automatique n'est disponible que dans l'application de bureau.",

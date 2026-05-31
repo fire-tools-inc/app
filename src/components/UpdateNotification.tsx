@@ -10,6 +10,7 @@ import {
   updaterBridgeAvailable,
   type UpdaterState,
 } from '../utils/updater';
+import { logger } from '../utils/logger';
 import './UpdateNotification.css';
 
 /**
@@ -44,10 +45,10 @@ export default function UpdateNotification() {
 
         const prefs = await getUpdaterPrefs();
         if (!cancelled && mountedRef.current && prefs?.autoCheck) {
-          checkForUpdates().catch((err) => console.error('[fire-tools] update check failed:', err));
+          checkForUpdates().catch((err) => logger.error('updater', 'check-failed', `update check failed: ${(err as Error)?.message ?? String(err)}`));
         }
       } catch (err) {
-        console.error('[fire-tools] updater init failed:', err);
+        logger.error('updater', 'init-failed', `updater init failed: ${(err as Error)?.message ?? String(err)}`);
       }
     };
     void init();
@@ -85,7 +86,7 @@ export default function UpdateNotification() {
       const next = await downloadUpdate();
       if (mountedRef.current) setState(next);
     } catch (err) {
-      console.error('[fire-tools] downloadUpdate failed:', err);
+      logger.error('updater', 'download-failed', `downloadUpdate failed: ${(err as Error)?.message ?? String(err)}`);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -96,7 +97,7 @@ export default function UpdateNotification() {
     try {
       await installUpdate();
     } catch (err) {
-      console.error('[fire-tools] installUpdate failed:', err);
+      logger.error('updater', 'install-failed', `installUpdate failed: ${(err as Error)?.message ?? String(err)}`);
     } finally {
       if (mountedRef.current) setBusy(false);
     }

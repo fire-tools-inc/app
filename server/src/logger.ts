@@ -51,13 +51,28 @@ const isPiiLoggingEnabled = (): boolean => {
   return v === '1' || v === 'true';
 };
 
+/** Optional sink for forwarding fully-formatted log lines to disk / IPC /
+ *  whatever the host wants. Set via {@link setLogSink}; cleared with `null`.
+ *  Failures inside the sink must never propagate. */
+export type LogSink = (line: string, level: LogLevel) => void;
+let extraSink: LogSink | null = null;
+
+export const setLogSink = (sink: LogSink | null): void => {
+  extraSink = sink;
+};
+
 const writeLine = (level: LogLevel, line: string, pii?: unknown): void => {
   const suffix = pii !== undefined ? ` ${safeStringify(pii)}` : '';
+  const fullLine = `${line}${suffix}\n`;
   // Backend always uses stderr so structured stdout stays clean.
-  const stream = process.stderr;
-  stream.write(`${line}${suffix}\n`);
-  // Silence unused-var lint when level isn't routed differently.
-  void level;
+  process.stderr.write(fullLine);
+  if (extraSink) {
+    try {
+      extraSink(fullLine, level);
+    } catch {
+      // Sink failures must never crash the logger.
+    }
+  }
 };
 
 const safeStringify = (value: unknown): string => {

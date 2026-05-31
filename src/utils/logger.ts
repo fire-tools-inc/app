@@ -95,6 +95,28 @@ const mirrorToConsole = (entry: LogEntry): void => {
   }
 };
 
+/** Forward each entry to the Electron main process so it lands in the
+ *  on-disk log file alongside backend output. Web build / tests have no
+ *  bridge, so the call is a no-op there. PII is only attached when the
+ *  flag is on (handled upstream in {@link log}). */
+const mirrorToFile = (entry: LogEntry): void => {
+  const bridge = (globalThis as { fireTools?: { logs?: { append?: (line: string) => unknown } } }).fireTools;
+  const append = bridge?.logs?.append;
+  if (typeof append !== 'function') return;
+  const base = formatLogEntry(entry);
+  const piiSuffix = entry.pii !== undefined ? ` ${(() => {
+    try { return JSON.stringify(entry.pii); } catch { return '[unserialisable]'; }
+  })()}` : '';
+  try {
+    const result = append(`${base}${piiSuffix}`);
+    if (result && typeof (result as Promise<unknown>).catch === 'function') {
+      (result as Promise<unknown>).catch(() => { /* never throw from logger */ });
+    }
+  } catch {
+    /* never throw from logger */
+  }
+};
+
 /**
  * Core log function. All convenience helpers funnel through here.
  *
@@ -124,6 +146,7 @@ export const log = (
   };
   pushEntry(entry);
   mirrorToConsole(entry);
+  mirrorToFile(entry);
 };
 
 export const logger = {
