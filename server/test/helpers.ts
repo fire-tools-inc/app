@@ -2,6 +2,9 @@ import Database from 'better-sqlite3';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { runMigrations } from '../src/migrate.js';
 import { buildApp } from '../src/app.js';
 import type { ServerEnv } from '../src/env.js';
@@ -52,4 +55,35 @@ export const makeFileApp = () => {
   };
   const app = buildApp({ db, env, dbPath, disableRateLimit: true, adminState });
   return { app, db, dbPath, dir };
+};
+
+/**
+ * Build an app backed by a real on-disk SQLite database in a fresh tmpdir.
+ * Use this when tests need to exercise the settings.json sidecar.
+ *
+ * Returns a `cleanup()` that removes the tmpdir.
+ */
+export const makeAppWithTmpDb = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fire-tools-test-'));
+  const dbPath = path.join(dir, 'firetools.db');
+  const db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('foreign_keys = ON');
+  const env = testEnv();
+  runMigrations(db, env.migrationsPath);
+  const app = buildApp({ db, env, dbPath, disableRateLimit: true });
+  const settingsPath = path.join(dir, 'settings.json');
+  const cleanup = (): void => {
+    try {
+      db.close();
+    } catch {
+      /* ignore */
+    }
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch {
+      /* ignore */
+    }
+  };
+  return { app, db, dir, dbPath, settingsPath, cleanup };
 };

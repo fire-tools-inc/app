@@ -174,6 +174,72 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/NotificationPreferences' }
 
+  /settings/file:
+    get:
+      tags: [Settings]
+      summary: Inspect the settings.json sidecar file
+      description: |
+        Returns the absolute path of the on-disk settings.json sidecar that
+        mirrors the database, plus its current parsed contents. The file lives
+        next to the SQLite database (Electron user data folder in production).
+      operationId: getSettingsFile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SettingsFileEnvelope' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /settings/file/sync:
+    post:
+      tags: [Settings]
+      summary: Force-resync settings.json from the database
+      description: |
+        Rewrites the sidecar file from current DB state. Useful after manual
+        DB modifications or to recover from a quarantined file.
+      operationId: syncSettingsFile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [path, ok]
+                properties:
+                  path: { type: string }
+                  ok: { type: boolean }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /settings/file/import:
+    post:
+      tags: [Settings]
+      summary: Import a settings.json payload into the database
+      description: |
+        Applies a SettingsFileShape payload into the database for the resolved
+        user, then resyncs the sidecar file. Partial settings are allowed; partial
+        notificationPreferences are rejected (use PUT /settings/notifications).
+      operationId: importSettingsFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SettingsFileShape' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [settings, notificationPreferences]
+                properties:
+                  settings: { $ref: '#/components/schemas/UserSettings' }
+                  notificationPreferences: { $ref: '#/components/schemas/NotificationPreferences' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
   # ---------------------------------------------------------------------------
   # Notifications
   # ---------------------------------------------------------------------------
@@ -1575,6 +1641,16 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnavailable:
+      description: Required subsystem is unavailable (e.g. settings file disabled for in-memory DB)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
 
   schemas:
     # -- Shared --------------------------------------------------------------
@@ -1792,6 +1868,32 @@ components:
           items: { type: integer, minimum: 1, maximum: 12 }
         taxReminderDaysBefore:    { type: integer, minimum: 0 }
         lastChecked: { type: string, format: date-time, nullable: true }
+
+    PerUserSettings:
+      type: object
+      properties:
+        settings:                 { $ref: '#/components/schemas/UserSettingsPatch' }
+        notificationPreferences:  { $ref: '#/components/schemas/NotificationPreferences' }
+
+    SettingsFileShape:
+      type: object
+      required: [schemaVersion, generatedAt, users]
+      properties:
+        schemaVersion: { type: integer, example: 1 }
+        generatedAt:   { type: string, format: date-time }
+        users:
+          type: object
+          description: Per-user settings, keyed by user id (string). Single-user installs use "1".
+          additionalProperties: { $ref: '#/components/schemas/PerUserSettings' }
+
+    SettingsFileEnvelope:
+      type: object
+      required: [path, exists]
+      properties:
+        path:     { type: string, description: Absolute path to settings.json }
+        exists:   { type: boolean }
+        contents:
+          $ref: '#/components/schemas/SettingsFileShape'
 
     # -- Calculator ----------------------------------------------------------
     CalculatorInputs:
