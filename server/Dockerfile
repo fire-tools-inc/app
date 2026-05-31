@@ -12,11 +12,15 @@ COPY server/src ./src
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runtime
+ARG GIT_COMMIT_HASH=unknown
+ARG BUILD_TIME
 ENV NODE_ENV=production \
     PORT=8787 \
     HOST=0.0.0.0 \
     DATABASE_URL=file:/data/firetools.db \
-    MIGRATIONS_PATH=/app/migrations
+    MIGRATIONS_PATH=/app/migrations \
+    GIT_COMMIT_HASH=${GIT_COMMIT_HASH} \
+    BUILD_TIME=${BUILD_TIME}
 WORKDIR /app
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates dumb-init \

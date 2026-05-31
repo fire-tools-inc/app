@@ -12,6 +12,9 @@ services:
     build:
       context: .
       dockerfile: server/Dockerfile
+      args:
+        GIT_COMMIT_HASH: ${GIT_COMMIT_HASH:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-}
     image: firetools/backend:dev
     environment:
       NODE_ENV: production
@@ -35,6 +38,9 @@ services:
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
+      args:
+        GIT_COMMIT_HASH: ${GIT_COMMIT_HASH:-unknown}
+        BUILD_TIME: ${BUILD_TIME:-}
     image: firetools/frontend:dev
     depends_on:
       backend:

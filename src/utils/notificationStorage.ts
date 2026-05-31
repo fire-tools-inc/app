@@ -14,6 +14,7 @@ import {
   DEFAULT_NOTIFICATION_PREFERENCES,
 } from '../types/notification';
 import { showNativeNotification } from './nativeNotifications';
+import { logger } from './logger';
 
 const NOTIFICATIONS_KEY = 'fire-tools-notifications';
 const MAX_NOTIFICATIONS = 50; // Limit to prevent cookie overflow
@@ -31,7 +32,7 @@ const emitNotificationsChanged = (): void => {
   try {
     window.dispatchEvent(new CustomEvent(NOTIFICATIONS_CHANGED_EVENT));
   } catch (error) {
-    console.error('Failed to dispatch notifications-changed event:', error);
+    logger.error('notification-storage', 'dispatch-failed', 'failed to dispatch notifications-changed event', { pii: { error: (error as Error)?.message } });
   }
 };
 
@@ -52,7 +53,7 @@ export function saveNotificationState(state: NotificationState): void {
     const encryptedState = encryptData(stateJson);
     SafeCookies.set(NOTIFICATIONS_KEY, encryptedState, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save notification state:', error);
+    logger.error('notification-storage', 'save-failed', 'failed to save notification state', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -79,7 +80,7 @@ export function loadNotificationState(): NotificationState {
     }
     return DEFAULT_NOTIFICATION_STATE;
   } catch (error) {
-    console.error('Failed to load notification state:', error);
+    logger.error('notification-storage', 'load-failed', 'failed to load notification state', { pii: { error: (error as Error)?.message } });
     return DEFAULT_NOTIFICATION_STATE;
   }
 }
@@ -98,7 +99,7 @@ export function clearNotifications(): void {
     saveNotificationState(clearedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to clear notifications:', error);
+    logger.error('notification-storage', 'clear-failed', 'failed to clear notifications', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -134,7 +135,7 @@ export function addNotification(notification: Notification): void {
       });
     }
   } catch (error) {
-    console.error('Failed to add notification:', error);
+    logger.error('notification-storage', 'add-failed', 'failed to add notification', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -157,7 +158,7 @@ export function markNotificationAsRead(notificationId: string): void {
     saveNotificationState(updatedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to mark notification as read:', error);
+    logger.error('notification-storage', 'read-failed', 'failed to mark notification as read', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -180,7 +181,7 @@ export function markNotificationAsUnread(notificationId: string): void {
     saveNotificationState(updatedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to mark notification as unread:', error);
+    logger.error('notification-storage', 'unread-failed', 'failed to mark notification as unread', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -205,7 +206,7 @@ export function markAllNotificationsAsRead(): void {
     saveNotificationState(updatedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to mark all notifications as read:', error);
+    logger.error('notification-storage', 'mark-all-failed', 'failed to mark all notifications as read', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -226,7 +227,7 @@ export function deleteNotification(notificationId: string): void {
     saveNotificationState(updatedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to delete notification:', error);
+    logger.error('notification-storage', 'delete-failed', 'failed to delete notification', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -238,7 +239,7 @@ export function getUnreadCount(): number {
     const state = loadNotificationState();
     return state.notifications.filter(n => !n.read).length;
   } catch (error) {
-    console.error('Failed to get unread count:', error);
+    logger.error('notification-storage', 'unread-count-failed', 'failed to get unread count', { pii: { error: (error as Error)?.message } });
     return 0;
   }
 }
@@ -262,7 +263,7 @@ export function getActiveNotifications(): Notification[] {
       return expiresAt > now;
     });
   } catch (error) {
-    console.error('Failed to get active notifications:', error);
+    logger.error('notification-storage', 'get-active-failed', 'failed to get active notifications', { pii: { error: (error as Error)?.message } });
     return [];
   }
 }
@@ -287,7 +288,7 @@ export function updateNotificationPreferences(
     saveNotificationState(updatedState);
     emitNotificationsChanged();
   } catch (error) {
-    console.error('Failed to update notification preferences:', error);
+    logger.error('notification-storage', 'update-prefs-failed', 'failed to update notification preferences', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -299,7 +300,7 @@ export function areNotificationsEnabled(): boolean {
     const state = loadNotificationState();
     return state.preferences.enableInAppNotifications;
   } catch (error) {
-    console.error('Failed to check notification preferences:', error);
+    logger.error('notification-storage', 'check-prefs-failed', 'failed to check notification preferences', { pii: { error: (error as Error)?.message } });
     return true;
   }
 }
@@ -312,7 +313,7 @@ export function getNotificationPreferences(): NotificationPreferences {
     const state = loadNotificationState();
     return state.preferences;
   } catch (error) {
-    console.error('Failed to get notification preferences:', error);
+    logger.error('notification-storage', 'get-prefs-failed', 'failed to get notification preferences', { pii: { error: (error as Error)?.message } });
     return DEFAULT_NOTIFICATION_PREFERENCES;
   }
 }

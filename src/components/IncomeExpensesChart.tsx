@@ -166,7 +166,7 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
           />
           <Tooltip 
             formatter={(value) => isPrivacyMode ? PRIVACY_PLACEHOLDER : formatCurrency(Number(value))} 
-            labelFormatter={(label) => t('charts.ageTooltip', { age: label })}
+            labelFormatter={(label) => t('charts.ageTooltipLabel', { age: label })}
             contentStyle={{ background: '#1A1D26', border: '1px solid #2DD4BF', borderRadius: '8px', color: '#F8FAFC' }}
             labelStyle={{ color: '#F8FAFC' }}
             itemStyle={{ color: '#F8FAFC' }}

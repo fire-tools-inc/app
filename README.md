@@ -76,6 +76,9 @@ Back up your data anytime with CSV export. Import previously saved data to resto
 **🌍 Multi-language UI**  
 The interface ships in English (default), Italian, French, German, and Spanish. Change the language from **Settings → Language**; the choice is stored alongside your other (encrypted) preferences and is independent of the display currency. See [Internationalization (i18n)](#-internationalization-i18n) for coverage details.
 
+**ℹ️ About / Build Info**
+A built-in **Settings → About** section shows the running app version, the git commit hash the build was produced from (with a link to GitHub), the build timestamp, and the versions of major dependencies (React, Vite, Recharts, etc.). When the local backend is reachable, it also surfaces the backend's version and its own dependency set (Express, better-sqlite3, …) — useful for filing bug reports and confirming the frontend and backend are running the same release.
+
 ---
 
 ## 🚀 Quick Start
@@ -284,6 +287,11 @@ Tracking issues: [#133](https://github.com/mbianchidev/fire-tools/issues/133) (t
 ### Desktop ([`electron/`](electron/))
 - **Electron 33** with hardened defaults (contextIsolation, sandbox, no nodeIntegration)
 - **electron-builder** producing `dmg` / `nsis` / `AppImage`
+- **Auto-updater** ([`electron-updater`](https://www.electron.build/auto-update))
+  pulls releases from GitHub and takes a **pre-install backup** of your DB
+  every time, keeping at least one snapshot alive (configurable retention,
+  minimum 1). Restore any snapshot from **Settings → Updates & backups**.
+  Design notes in [`docs/engineering/auto-updater.md`](docs/engineering/auto-updater.md).
 
 ### Mobile (separate repo — see [`docs/mobile/README.md`](docs/mobile/README.md))
 - **Flutter** consuming the same OpenAPI contract — lives in `fire-tools-mobile`.
@@ -305,6 +313,12 @@ Fire Tools takes your privacy seriously:
 - ✅ **Secure cookies (browser)** - `SameSite=Strict` and `Secure` flags
   protect against attacks
 - ✅ **Open source** - Full transparency, audit the code yourself
+- ✅ **Structured logs, PII-gated** - Diagnostic logs are kept in an
+  in-memory ring buffer and never include financial data (tickers,
+  amounts, allocations) unless you explicitly enable the "Include PII in
+  logs" toggle in Settings. Export logs from Settings → "Export logs" to
+  attach a sanitized log to a bug report. See
+  [`docs/engineering/logging.md`](docs/engineering/logging.md).
 
 Learn more in our [Security Policy](SECURITY.md).
 

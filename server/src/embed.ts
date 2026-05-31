@@ -11,6 +11,7 @@ import { initDb } from './db.js';
 import { buildApp } from './app.js';
 import type { ServerEnv } from './env.js';
 import { rekeyDatabase, type RekeyAction, type RekeyResult } from './rekey.js';
+import { logger, setLogSink, type LogSink } from './logger.js';
 
 export interface EmbedOptions {
   /** Absolute path to the SQLite file (e.g. `${userData}/firetools.db`). */
@@ -28,6 +29,9 @@ export interface EmbedOptions {
    * encrypted mode; the caller (e.g. Electron + safeStorage) owns key storage.
    */
   passphrase?: string;
+  /** Optional sink that receives every formatted log line. Used by Electron
+   *  to append to the on-disk log file alongside stderr output. */
+  logSink?: LogSink;
 }
 
 export interface RekeyRequest {
@@ -56,6 +60,9 @@ export interface EmbeddedServer {
 export const startEmbeddedServer = async (
   opts: EmbedOptions,
 ): Promise<EmbeddedServer> => {
+  if (opts.logSink) {
+    setLogSink(opts.logSink);
+  }
   const host = opts.host ?? '127.0.0.1';
   const port = opts.port ?? 0;
   const env: ServerEnv = {
@@ -110,7 +117,9 @@ export const startEmbeddedServer = async (
     try {
       db.close();
     } catch (err) {
-      console.error('[embed] failed to close db', err);
+      logger.error('embed', 'db-close-failed', (err as Error).message, {
+        pii: { stack: (err as Error).stack },
+      });
     }
   };
 

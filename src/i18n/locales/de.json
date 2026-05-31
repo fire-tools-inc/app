@@ -31,6 +31,8 @@
     "spanish": "Spanisch",
     "hideValues": "Werte ausblenden",
     "notAvailable": "k.A.",
+    "copyToClipboard": "Klicken zum Kopieren",
+    "copied": "Kopiert!",
     "months": {
       "april": "April",
       "august": "August",
@@ -137,7 +139,9 @@
       "language": "Sprache",
       "disclaimer": "Haftungsausschluss",
       "backend": "Backend",
-      "advanced": "Erweitert"
+      "advanced": "Erweitert",
+      "updater": "Updates & Sicherungen",
+      "about": "Info"
     },
     "accountName": "Kontoname",
     "accountNameHelp": "Dieser Name wird in der gesamten App angezeigt",
@@ -356,7 +360,9 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Testmodus",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Steuert, ob Diagnoseprotokolle sensible Finanzdetails enthalten. Protokolle verlassen Ihr Gerät nur, wenn Sie sie exportieren.",
+      "maxLogFileSize": "Maximale Größe der Protokolldatei auf der Festplatte, bevor ältere Einträge rotiert werden. Protokolle liegen neben Ihrer Datenbank."
     },
     "triggerTestNotifications": "Test-Benachrichtigungen senden",
     "unavailable": "Unavailable",
@@ -395,6 +401,51 @@
       "noBackend": "Kein Backend konfiguriert. Konfigurieren Sie eines im Abschnitt Backend oben.",
       "pathMustStartWithSlash": "Pfad muss mit / beginnen",
       "invalidJson": "Anfragetext ist kein gültiges JSON"
+    },
+    "loggingPii": "Detaillierte Diagnoseprotokolle",
+    "loggingPiiOn": "Detailliert",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "Bei deaktivierter Einstellung (Standard) entfernen Diagnoseprotokolle Finanzdetails (Ticker, Beträge, Kontonamen). Bei aktivierter Einstellung wird der vollständige Kontext lokal gespeichert, um die Fehlersuche zu erleichtern.",
+    "loggingPiiWarning": "Detaillierte Protokolle können Finanzdaten enthalten. Teilen Sie exportierte Protokolle nur mit vertrauenswürdigen Personen.",
+    "exportLogs": "Diagnoseprotokolle exportieren",
+    "maxLogFileSize": "Maximale Protokolldateigröße (MB)",
+    "maxLogFileSizeHelp": "Begrenzt die Protokolldatei auf der Festplatte (1–500 MB, Standard 50). Bei Überschreitung werden die ältesten Einträge in eine einzelne Sicherungsdatei verschoben. Gilt nur für die Desktop-App.",
+    "updater": {
+      "description": "Automatische Updates konfigurieren und lokale Sicherungen verwalten.",
+      "desktopOnly": "Automatische Updates sind nur in der Desktop-App verfügbar.",
+      "autoCheck": "Automatisch nach Updates suchen",
+      "autoCheckHelp": "Beim Start und regelmäßig, während die App geöffnet ist.",
+      "autoDownload": "Updates automatisch herunterladen",
+      "autoDownloadHelp": "Wenn deaktiviert, wählen Sie selbst, wann eine neue Version geladen wird.",
+      "notifyOnly": "Nur benachrichtigen (nicht herunterladen)",
+      "notifyOnlyHelp": "Benachrichtigen, wenn ein Update vorhanden ist, aber nichts herunterladen oder installieren.",
+      "keepBackups": "Aufzubewahrende Sicherungen",
+      "keepBackupsHelp": "Ältere Sicherungen werden gelöscht. Mindestens 1 wird immer behalten.",
+      "checkNow": "Jetzt prüfen",
+      "checking": "Wird geprüft…",
+      "createBackup": "Sicherung jetzt erstellen",
+      "backingUp": "Sicherung wird erstellt…",
+      "refreshList": "Liste aktualisieren",
+      "backupsList": "Lokale Sicherungen",
+      "noBackups": "Noch keine Sicherungen.",
+      "restoreBackup": "Wiederherstellen",
+      "confirmRestore": "Diese Sicherung wiederherstellen? Ihre aktuellen Daten werden ersetzt. Vorher wird ein Sicherheits-Snapshot erstellt.",
+      "col": {
+        "timestamp": "Wann",
+        "version": "Version",
+        "size": "Größe",
+        "valid": "Gültig",
+        "actions": "Aktionen"
+      },
+      "feedback": {
+        "available": "Eine neue Version ist verfügbar.",
+        "upToDate": "Sie sind auf dem neuesten Stand.",
+        "disabledDev": "Auto-Update ist in Entwicklungs-Builds deaktiviert.",
+        "missingDep": "Die Unterstützung für Auto-Update fehlt in diesem Build.",
+        "backupCreated": "Sicherung erstellt.",
+        "backupFailed": "Sicherung fehlgeschlagen.",
+        "restored": "Sicherung wiederhergestellt. App neu starten, um die Änderungen zu übernehmen."
+      }
     }
   },
   "assetAllocation": {
@@ -2403,5 +2454,50 @@
       ],
       "lastUpdatedDate": "31. Dezember 2025"
     }
+  },
+  "update": {
+    "available": {
+      "title": "Update verfügbar",
+      "message": "Version {{version}} kann heruntergeladen werden.",
+      "messageNoVersion": "Eine neue Version von Fire Tools kann heruntergeladen werden."
+    },
+    "downloading": {
+      "title": "Fire Tools {{version}} wird heruntergeladen…",
+      "message": "Fire Tools {{version}} wird heruntergeladen.",
+      "titleNoVersion": "Update wird heruntergeladen…"
+    },
+    "downloaded": {
+      "title": "Update bereit",
+      "message": "Neu starten, um Version {{version}} zu installieren. Vorher wird eine Sicherung erstellt.",
+      "messageNoVersion": "Jetzt neu starten, um das Update zu installieren. Eine Sicherung wird automatisch erstellt."
+    },
+    "backupFailed": {
+      "title": "Sicherung fehlgeschlagen",
+      "message": "Die Sicherung vor der Installation wurde nicht abgeschlossen. Die Installation wurde aus Sicherheitsgründen abgebrochen."
+    },
+    "error": {
+      "title": "Update-Fehler",
+      "message": "Etwas ist schiefgelaufen: {{error}}"
+    },
+    "actions": {
+      "download": "Herunterladen",
+      "install": "Neustart & installieren",
+      "later": "Später",
+      "dismiss": "Verwerfen"
+    }
+  },
+  "about": {
+    "appInfo": "App-Informationen",
+    "appVersion": "Version",
+    "commit": "Commit",
+    "buildTime": "Erstellt am",
+    "backendInfo": "Backend",
+    "backendVersion": "Backend-Version",
+    "dependencies": "Wichtige Abhängigkeiten",
+    "dependencyName": "Paket",
+    "dependencyVersion": "Version",
+    "backendUnreachable": "Backend nicht erreichbar. App läuft im Nur-Client-Modus.",
+    "backendDepTag": "backend",
+    "refresh": "Aktualisieren"
   }
 }

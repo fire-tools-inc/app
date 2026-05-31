@@ -11,6 +11,8 @@
  * pdfjs v5 only ships an ESM worker bundle.
  */
 
+import { logger } from './logger';
+
 export interface PdfTextLine {
   /** Page number (1-indexed). */
   page: number;
@@ -75,7 +77,7 @@ async function loadPdfJs() {
       pdfjsLib.GlobalWorkerOptions.workerPort = new WorkerCtor();
       workerConfigured = true;
     } catch (error) {
-      console.error('Failed to configure pdfjs worker:', error);
+      logger.error('pdf-text-extractor', 'worker-config-failed', 'failed to configure pdfjs worker', { pii: { error: (error as Error)?.message } });
       throw new Error('PDF engine could not be initialised. Please reload and try again.');
     }
   }

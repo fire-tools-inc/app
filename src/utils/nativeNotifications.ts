@@ -11,6 +11,7 @@
  */
 
 import type { Notification as AppNotification } from '../types/notification';
+import { logger } from './logger';
 
 interface NativeNotificationBridge {
   showNativeNotification?: (opts: {
@@ -42,7 +43,7 @@ export async function ensureNativeNotificationPermission(): Promise<boolean> {
     const result = await Notification.requestPermission();
     return result === 'granted';
   } catch (error) {
-    console.error('Failed to request notification permission:', error);
+    logger.error('native-notifications', 'permission-request-failed', 'failed to request notification permission', { pii: { error: (error as Error)?.message } });
     return false;
   }
 }
@@ -71,7 +72,7 @@ export async function showNativeNotification(
     try {
       return await bridge.showNativeNotification({ title, body, urgency });
     } catch (error) {
-      console.error('Failed to show native notification via Electron:', error);
+      logger.error('native-notifications', 'electron-show-failed', 'failed to show native notification via Electron', { pii: { error: (error as Error)?.message } });
       return false;
     }
   }
@@ -90,7 +91,7 @@ export async function showNativeNotification(
     new Notification(title, { body });
     return true;
   } catch (error) {
-    console.error('Failed to show web notification:', error);
+    logger.error('native-notifications', 'web-show-failed', 'failed to show web notification', { pii: { error: (error as Error)?.message } });
     return false;
   }
 }

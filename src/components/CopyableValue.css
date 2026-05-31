@@ -1,0 +1,46 @@
+.copyable-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.copyable-value:hover code {
+  outline: 1px dashed var(--text-secondary, #888);
+  outline-offset: 1px;
+}
+
+.copyable-value:focus-visible {
+  outline: 2px solid var(--accent-primary, #3b82f6);
+  outline-offset: 2px;
+}
+
+.copyable-value code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: var(--bg-tertiary, #f3f4f6);
+  color: var(--text-primary, #111);
+  border: 1px solid var(--border-subtle, transparent);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.copyable-value-feedback {
+  font-size: 0.7rem;
+  color: var(--success, #047857);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  min-width: 0;
+}
+
+.copyable-value:not(.copyable-value--copied) .copyable-value-feedback:empty {
+  display: none;
+}

@@ -11,6 +11,7 @@ import {
   pushPreferenceToBackend,
   deletePreferenceFromBackend,
 } from './uiPreferencesSync';
+import { logger } from './logger';
 
 const QUESTIONNAIRE_PROMPT_DISMISSED_KEY = 'fire-tools-questionnaire-prompt-dismissed';
 
@@ -28,7 +29,7 @@ export function saveQuestionnairePromptDismissed(dismissed: boolean): void {
     SafeCookies.set(QUESTIONNAIRE_PROMPT_DISMISSED_KEY, encrypted, COOKIE_OPTIONS);
     pushPreferenceToBackend(PREF_KEY_QUESTIONNAIRE_PROMPT_DISMISSED, payload);
   } catch (error) {
-    console.error('Failed to save questionnaire prompt preference:', error);
+    logger.error('questionnaire-prompt-preferences', 'save-failed', 'failed to save questionnaire prompt preference', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -47,7 +48,7 @@ export function loadQuestionnairePromptDismissed(): boolean {
     const parsed = JSON.parse(decrypted);
     return parsed.dismissed === true;
   } catch (error) {
-    console.error('Failed to load questionnaire prompt preference:', error);
+    logger.error('questionnaire-prompt-preferences', 'load-failed', 'failed to load questionnaire prompt preference', { pii: { error: (error as Error)?.message } });
     return false;
   }
 }
@@ -57,6 +58,6 @@ export function clearQuestionnairePromptPreference(): void {
     SafeCookies.remove(QUESTIONNAIRE_PROMPT_DISMISSED_KEY, { path: '/' });
     deletePreferenceFromBackend(PREF_KEY_QUESTIONNAIRE_PROMPT_DISMISSED);
   } catch (error) {
-    console.error('Failed to clear questionnaire prompt preference:', error);
+    logger.error('questionnaire-prompt-preferences', 'clear-failed', 'failed to clear questionnaire prompt preference', { pii: { error: (error as Error)?.message } });
   }
 }

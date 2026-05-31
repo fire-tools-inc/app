@@ -23,6 +23,7 @@ import { NotificationBell } from './components/NotificationBell';
 import { SettingsPage } from './components/SettingsPage';
 import { CookieConsent } from './components/CookieConsent';
 import { DemoBanner } from './components/DemoBanner';
+import UpdateNotification from './components/UpdateNotification';
 import { GuidedTour } from './components/GuidedTour';
 import { NotFoundPage } from './components/NotFoundPage';
 import { QuestionnairePage } from './components/QuestionnairePage';
@@ -530,6 +531,7 @@ function App() {
         <div className={isElectron ? 'app app--electron' : 'app'}>
           <NavigateBridge />
           <DemoBanner />
+          {isElectron && <UpdateNotification />}
           <a href="#main-content" className="skip-link">{t('app.skipToContent')}</a>
           
           <header className="app-header">

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, setLanguage, type SupportedLanguage } from '../i18n';
+import { logger } from '../utils/logger';
 
 const LABEL_KEYS: Record<SupportedLanguage, string> = {
   en: 'common.english',
@@ -20,7 +21,7 @@ export function LanguageSelector() {
     try {
       await setLanguage(next);
     } catch (error) {
-      console.error('Failed to change language:', error);
+      logger.error('language-selector', 'set-language-failed', 'failed to change language', { pii: { error: (error as Error)?.message } });
     }
   };
 

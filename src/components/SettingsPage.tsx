@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { loadSettings, saveSettings, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, type UserSettings, type BackendSettings } from '../utils/cookieSettings';
+import { loadSettings, saveSettings, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, DEFAULT_UPDATER_SETTINGS, MIN_KEEP_BACKUPS, MAX_KEEP_BACKUPS, type UserSettings, type BackendSettings, type UpdaterSettings } from '../utils/cookieSettings';
 import { SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES, type SupportedCurrency } from '../types/currency';
 import { ALL_COUNTRIES, isEUCountry } from '../types/country';
 import { recalculateFallbackRates, convertAssetsToNewCurrency, convertNetWorthDataToNewCurrency, convertExpenseDataToNewCurrency, convertFireCalculatorInputsToNewCurrency } from '../utils/currencyConverter';
@@ -32,8 +32,20 @@ import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { SearchableSelect } from './SearchableSelect';
 import { LanguageSelector } from './LanguageSelector';
 import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
+import {
+  checkForUpdates as runUpdateCheck,
+  createBackupNow,
+  listBackups as listUpdaterBackups,
+  restoreBackup as restoreUpdaterBackup,
+  setUpdaterPrefs as persistUpdaterPrefs,
+  updaterBridgeAvailable,
+  backupsBridgeAvailable,
+  type BackupRecord,
+} from '../utils/updater';
 import { API_ENDPOINTS, type ApiEndpoint } from '../utils/apiCatalog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { downloadLogs, logger } from '../utils/logger';
+import { AboutSection } from './AboutSection';
 import './SettingsPage.css';
 
 interface SettingsPageProps {
@@ -41,13 +53,15 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support'] as const;
+const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'support', 'about'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<UserSettings>(() => {
+    try { return loadSettings(); } catch { return DEFAULT_SETTINGS; }
+  });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rateTextValues, setRateTextValues] = useState<Record<string, string>>({});
@@ -82,6 +96,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [dbEncConfirm, setDbEncConfirm] = useState('');
   const [dbEncBusy, setDbEncBusy] = useState(false);
   const [dbEncMessage, setDbEncMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // Auto-updater state (Electron only)
+  const hasUpdaterBridge = updaterBridgeAvailable();
+  const hasBackupsBridge = backupsBridgeAvailable();
+  const [updaterBackups, setUpdaterBackups] = useState<BackupRecord[]>([]);
+  const [updaterBusy, setUpdaterBusy] = useState<'idle' | 'check' | 'backup' | 'restore' | 'list'>('idle');
+  const [updaterFeedback, setUpdaterFeedback] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   // API explorer state (advanced settings)
   const [apiSelectedIndex, setApiSelectedIndex] = useState<number>(0);
@@ -128,7 +149,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     const loaded = loadSettings();
     setSettings(loaded);
-    
+
+    // Push the persisted log-size cap to the Electron main process so a
+    // user-customised value survives app restarts.
+    try {
+      const bridge = (globalThis as { fireTools?: { logs?: { setMaxMb?: (n: number) => unknown } } }).fireTools;
+      const mb = Math.max(1, Math.min(500, Math.floor(loaded.maxLogFileSizeMb ?? 50)));
+      void bridge?.logs?.setMaxMb?.(mb);
+    } catch { /* no-op outside Electron */ }
+
     // Load notification preferences
     const notifState = loadNotificationState();
     setNotificationPrefs(notifState.preferences);
@@ -150,18 +179,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     if (!isElectron) return;
     let cancelled = false;
-    (async () => {
-      const info = await getEmbeddedBackendInfo();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    // Poll until the embedded backend reports a URL or error. The main
+    // process answers immediately even while `startEmbedded()` is still
+    // running, so a single fetch on mount races the server boot.
+    const poll = async () => {
       if (cancelled) return;
-      if (info?.error) {
-        setEmbeddedBackendError(info.error);
+      try {
+        const info = await getEmbeddedBackendInfo();
+        if (cancelled) return;
+        if (info?.error) {
+          setEmbeddedBackendError(info.error);
+          setEmbeddedBackendUrl(null);
+          return;
+        }
+        if (info?.url) {
+          setEmbeddedBackendUrl(info.url);
+          setEmbeddedBackendError(null);
+          return;
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setEmbeddedBackendError(err instanceof Error ? err.message : String(err));
         setEmbeddedBackendUrl(null);
-      } else if (info?.url) {
-        setEmbeddedBackendUrl(info.url);
-        setEmbeddedBackendError(null);
+        return;
       }
-    })();
-    return () => { cancelled = true; };
+      timer = setTimeout(poll, 500);
+    };
+    poll();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [isElectron]);
 
   // Load DB encryption status (Electron only)
@@ -173,7 +222,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       setDbEncStatus(status);
       setDbEncAction(status.encrypted ? 'rotate' : 'set');
     } catch (err) {
-      console.error('Failed to load DB encryption status:', err);
+      logger.error('settings', 'db-enc-status-failed', `Failed to load DB encryption status: ${(err as Error)?.message ?? String(err)}`);
     }
   };
 
@@ -388,6 +437,108 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     showMessage('success', t('settings.messages.settingsSaved'));
   };
 
+  // Auto-updater helpers
+  const updaterSettings: UpdaterSettings = settings.updater ?? DEFAULT_UPDATER_SETTINGS;
+
+  const handleUpdaterChange = (patch: Partial<UpdaterSettings>) => {
+    const next: UpdaterSettings = { ...updaterSettings, ...patch };
+    if (typeof next.keepBackups === 'number') {
+      const floored = Math.floor(next.keepBackups);
+      next.keepBackups = Math.min(MAX_KEEP_BACKUPS, Math.max(MIN_KEEP_BACKUPS, Number.isFinite(floored) ? floored : DEFAULT_UPDATER_SETTINGS.keepBackups));
+    }
+    handleSettingChange('updater', next);
+    if (hasUpdaterBridge) {
+      persistUpdaterPrefs(next).catch((err) => logger.error('settings', 'updater-prefs-failed', `persistUpdaterPrefs failed: ${(err as Error)?.message ?? String(err)}`));
+    }
+  };
+
+  const refreshBackupsList = useCallback(async () => {
+    if (!hasBackupsBridge) return;
+    setUpdaterBusy('list');
+    try {
+      const list = await listUpdaterBackups();
+      setUpdaterBackups(list);
+    } catch (err) {
+      setUpdaterFeedback({ kind: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setUpdaterBusy('idle');
+    }
+  }, [hasBackupsBridge]);
+
+  useEffect(() => {
+    if (hasBackupsBridge) void refreshBackupsList();
+  }, [hasBackupsBridge, refreshBackupsList]);
+
+  const handleManualCheck = async () => {
+    if (!hasUpdaterBridge) return;
+    setUpdaterBusy('check');
+    setUpdaterFeedback(null);
+    try {
+      const state = await runUpdateCheck();
+      if (state.status === 'available') {
+        setUpdaterFeedback({ kind: 'success', text: t('settings.updater.feedback.available', { defaultValue: 'Update available: v{{version}}', version: state.info?.version ?? '?' }) });
+      } else if (state.status === 'not-available') {
+        setUpdaterFeedback({ kind: 'info', text: t('settings.updater.feedback.upToDate', { defaultValue: 'You are on the latest version.' }) });
+      } else if (state.status === 'error') {
+        setUpdaterFeedback({ kind: 'error', text: state.error ?? 'Update check failed' });
+      } else if (state.status === 'disabled-dev') {
+        setUpdaterFeedback({ kind: 'info', text: t('settings.updater.feedback.disabledDev', { defaultValue: 'Auto-update is disabled in development builds.' }) });
+      } else if (state.status === 'disabled-missing-dep') {
+        setUpdaterFeedback({ kind: 'error', text: t('settings.updater.feedback.missingDep', { defaultValue: 'electron-updater is not bundled with this build.' }) });
+      }
+    } catch (err) {
+      setUpdaterFeedback({ kind: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setUpdaterBusy('idle');
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    if (!hasBackupsBridge) return;
+    setUpdaterBusy('backup');
+    setUpdaterFeedback(null);
+    try {
+      const rec = await createBackupNow();
+      if (rec) {
+        setUpdaterFeedback({ kind: 'success', text: t('settings.updater.feedback.backupCreated', { defaultValue: 'Backup created.' }) });
+        await refreshBackupsList();
+      } else {
+        setUpdaterFeedback({ kind: 'error', text: t('settings.updater.feedback.backupFailed', { defaultValue: 'Backup failed.' }) });
+      }
+    } catch (err) {
+      setUpdaterFeedback({ kind: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setUpdaterBusy('idle');
+    }
+  };
+
+  const handleRestoreBackup = async (backupId: string) => {
+    if (!hasBackupsBridge) return;
+    const confirmed = window.confirm(t('settings.updater.confirmRestore', { defaultValue: 'Restore this backup? The app will need to be restarted afterwards. A safety snapshot of current data will be taken first.' }));
+    if (!confirmed) return;
+    setUpdaterBusy('restore');
+    setUpdaterFeedback(null);
+    try {
+      const res = await restoreUpdaterBackup(backupId);
+      if (res.ok) {
+        setUpdaterFeedback({
+          kind: 'success',
+          text: t('settings.updater.feedback.restored', {
+            defaultValue: 'Restore complete. Please restart the app to apply.',
+          }),
+        });
+        await refreshBackupsList();
+      } else {
+        setUpdaterFeedback({ kind: 'error', text: res.error ?? 'Restore failed' });
+      }
+    } catch (err) {
+      setUpdaterFeedback({ kind: 'error', text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setUpdaterBusy('idle');
+    }
+  };
+
+
   // Backend mode change
   const handleBackendModeChange = (mode: BackendSettings['mode']) => {
     const next: BackendSettings = mode === 'custom'
@@ -430,11 +581,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       }
       origin = trimmed;
     } else {
-      if (!embeddedBackendUrl) {
+      let url = embeddedBackendUrl;
+      if (!url) {
+        // Backend might still be starting; ask main one more time before
+        // declaring it unavailable to avoid a stale-state false negative.
+        try {
+          const info = await getEmbeddedBackendInfo();
+          if (info?.url) {
+            url = info.url;
+            setEmbeddedBackendUrl(info.url);
+            setEmbeddedBackendError(null);
+          } else if (info?.error) {
+            setEmbeddedBackendError(info.error);
+          }
+        } catch {
+          // Fall through to the error branch below.
+        }
+      }
+      if (!url) {
         setBackendTestState({ status: 'error', message: embeddedBackendError || t('settings.backend.embeddedUnavailable') });
         return;
       }
-      origin = embeddedBackendUrl;
+      origin = url;
     }
     try {
       await probeBackend(origin);
@@ -1221,6 +1389,75 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               </div>
               <div className="setting-item">
                 <div className="label-with-tooltip">
+                  <label htmlFor="loggingPiiEnabled">{t('settings.loggingPii')}</label>
+                  <Tooltip content={t('settings.tooltips.loggingPii')}>
+                    <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
+                  </Tooltip>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!settings.loggingPiiEnabled ? 'active' : ''}`}
+                    onClick={() => handleSettingChange('loggingPiiEnabled', false)}
+                  >
+                    <MaterialIcon name="lock" size="small" /> {t('settings.loggingPiiOff')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${settings.loggingPiiEnabled ? 'active' : ''}`}
+                    onClick={() => {
+                      handleSettingChange('loggingPiiEnabled', true);
+                      logger.userAction('settings', 'logging-pii-enabled', 'user enabled PII logging');
+                    }}
+                  >
+                    <MaterialIcon name="lock_open" size="small" /> {t('settings.loggingPiiOn')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.loggingPiiHelp')}</span>
+                {settings.loggingPiiEnabled && (
+                  <span className="setting-help" style={{ color: 'var(--color-error, #d32f2f)', fontWeight: 600 }}>
+                    ⚠ {t('settings.loggingPiiWarning')}
+                  </span>
+                )}
+                <div style={{ marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      downloadLogs();
+                      logger.userAction('settings', 'export-logs', 'user exported diagnostic logs');
+                    }}
+                  >
+                    <MaterialIcon name="download" size="small" /> {t('settings.exportLogs')}
+                  </button>
+                </div>
+                <div style={{ marginTop: '1rem' }}>
+                  <div className="label-with-tooltip">
+                    <label htmlFor="maxLogFileSizeMb">{t('settings.maxLogFileSize')}</label>
+                    <Tooltip content={t('settings.tooltips.maxLogFileSize')}>
+                      <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
+                    </Tooltip>
+                  </div>
+                  <input
+                    id="maxLogFileSizeMb"
+                    type="number"
+                    min={1}
+                    max={500}
+                    step={1}
+                    value={settings.maxLogFileSizeMb ?? 50}
+                    onChange={(e) => {
+                      const raw = Number(e.target.value);
+                      if (!Number.isFinite(raw)) return;
+                      const clamped = Math.max(1, Math.min(500, Math.floor(raw)));
+                      handleSettingChange('maxLogFileSizeMb', clamped);
+                      const bridge = (globalThis as { fireTools?: { logs?: { setMaxMb?: (n: number) => unknown } } }).fireTools;
+                      try { void bridge?.logs?.setMaxMb?.(clamped); } catch { /* no-op */ }
+                    }}
+                    style={{ maxWidth: '8rem' }}
+                  />
+                  <span className="setting-help">{t('settings.maxLogFileSizeHelp')}</span>
+                </div>
+              </div>
+              <div className="setting-item">
+                <div className="label-with-tooltip">
                   <label htmlFor="country">{t('settings.country')}</label>
                   <Tooltip content={t('settings.tooltips.country')}>
                     <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
@@ -1512,6 +1749,219 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             )}
           </section>
         )}
+
+        {/* Updater — auto-update & backups (Electron only) */}
+        <section className="settings-section collapsible-section">
+          <button
+            className="collapsible-header"
+            onClick={() => toggleSection('updater')}
+            aria-expanded={!collapsedSections.has('updater')}
+            aria-controls="updater-content"
+          >
+            <h2><MaterialIcon name="system_update" /> {t('settings.sections.updater', { defaultValue: 'Updates & Backups' })} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('updater') ? '▶' : '▼'}</span></h2>
+          </button>
+          {!collapsedSections.has('updater') && (
+            <div id="updater-content" className="collapsible-content">
+              <p className="setting-help">{t('settings.updater.description', { defaultValue: 'Configure how the desktop app downloads and installs updates. A snapshot of your data is taken before each install so you can roll back.' })}</p>
+
+              {!hasUpdaterBridge && (
+                <p className="setting-help" style={{ marginTop: '0.75rem' }}>
+                  <MaterialIcon name="desktop_access_disabled" size="small" /> {t('settings.updater.desktopOnly', { defaultValue: 'Auto-updates are only available in the desktop app.' })}
+                </p>
+              )}
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="updaterAutoCheck">{t('settings.updater.autoCheck', { defaultValue: 'Check for updates automatically' })}</label>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!updaterSettings.autoCheck ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ autoCheck: false })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.disabled')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${updaterSettings.autoCheck ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ autoCheck: true })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.enabled')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.updater.autoCheckHelp', { defaultValue: 'Periodically check GitHub Releases for a newer version.' })}</span>
+              </div>
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="updaterAutoDownload">{t('settings.updater.autoDownload', { defaultValue: 'Download updates automatically' })}</label>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!updaterSettings.autoDownload ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ autoDownload: false })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.disabled')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${updaterSettings.autoDownload ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ autoDownload: true })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.enabled')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.updater.autoDownloadHelp', { defaultValue: 'When off, you will be notified and asked before downloading.' })}</span>
+              </div>
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="updaterNotifyOnly">{t('settings.updater.notifyOnly', { defaultValue: 'Notify only (never install)' })}</label>
+                </div>
+                <div className="toggle-group">
+                  <button
+                    className={`toggle-btn ${!updaterSettings.notifyOnly ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ notifyOnly: false })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.disabled')}
+                  </button>
+                  <button
+                    className={`toggle-btn ${updaterSettings.notifyOnly ? 'active' : ''}`}
+                    onClick={() => handleUpdaterChange({ notifyOnly: true })}
+                    disabled={!hasUpdaterBridge}
+                  >
+                    {t('settings.enabled')}
+                  </button>
+                </div>
+                <span className="setting-help">{t('settings.updater.notifyOnlyHelp', { defaultValue: 'You will be notified when an update is available but nothing will be downloaded or installed.' })}</span>
+              </div>
+
+              <div className="setting-item">
+                <div className="label-with-tooltip">
+                  <label htmlFor="updaterKeepBackups">{t('settings.updater.keepBackups', { defaultValue: 'Backups to keep' })}</label>
+                </div>
+                <input
+                  id="updaterKeepBackups"
+                  type="number"
+                  min={MIN_KEEP_BACKUPS}
+                  max={MAX_KEEP_BACKUPS}
+                  step={1}
+                  value={updaterSettings.keepBackups}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!Number.isNaN(v)) handleUpdaterChange({ keepBackups: v });
+                  }}
+                  style={{ width: '6rem' }}
+                  disabled={!hasUpdaterBridge}
+                />
+                <span className="setting-help">{t('settings.updater.keepBackupsHelp', { defaultValue: 'Older backups are rotated out automatically. At least one backup is always kept.' })}</span>
+              </div>
+
+              <div className="setting-item updater-actions">
+                <button
+                  className="secondary-btn"
+                  onClick={handleManualCheck}
+                  disabled={!hasUpdaterBridge || updaterBusy !== 'idle'}
+                >
+                  <MaterialIcon name="refresh" size="small" /> {updaterBusy === 'check' ? t('settings.updater.checking', { defaultValue: 'Checking…' }) : t('settings.updater.checkNow', { defaultValue: 'Check for updates now' })}
+                </button>
+                <button
+                  className="secondary-btn"
+                  onClick={handleCreateBackup}
+                  disabled={!hasBackupsBridge || updaterBusy !== 'idle'}
+                >
+                  <MaterialIcon name="save" size="small" /> {updaterBusy === 'backup' ? t('settings.updater.backingUp', { defaultValue: 'Backing up…' }) : t('settings.updater.createBackup', { defaultValue: 'Create backup now' })}
+                </button>
+                <button
+                  className="secondary-btn"
+                  onClick={refreshBackupsList}
+                  disabled={!hasBackupsBridge || updaterBusy !== 'idle'}
+                >
+                  <MaterialIcon name="cached" size="small" /> {t('settings.updater.refreshList', { defaultValue: 'Refresh list' })}
+                </button>
+              </div>
+
+              {updaterFeedback && (
+                <div
+                  className="setting-help"
+                  role="status"
+                  style={{
+                    marginTop: '0.5rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    background: updaterFeedback.kind === 'error' ? 'rgba(220,53,69,0.12)' : updaterFeedback.kind === 'success' ? 'rgba(40,167,69,0.12)' : 'rgba(13,110,253,0.12)',
+                    color: updaterFeedback.kind === 'error' ? '#a51d2d' : updaterFeedback.kind === 'success' ? '#1e7e34' : '#0a58ca',
+                  }}
+                >
+                  {updaterFeedback.text}
+                </div>
+              )}
+
+              <div className="setting-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <h3 style={{ margin: '0.5rem 0' }}>{t('settings.updater.backupsList', { defaultValue: 'Available backups' })}</h3>
+                {!hasBackupsBridge ? (
+                  <p className="setting-help">{t('settings.updater.desktopOnly', { defaultValue: 'Auto-updates are only available in the desktop app.' })}</p>
+                ) : updaterBackups.length === 0 ? (
+                  <p className="setting-help">{t('settings.updater.noBackups', { defaultValue: 'No backups yet.' })}</p>
+                ) : (
+                  <table className="backup-table" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '0.5rem' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--color-border, #ddd)' }}>
+                        <th style={{ padding: '0.25rem 0.5rem' }}>{t('settings.updater.col.timestamp', { defaultValue: 'When' })}</th>
+                        <th style={{ padding: '0.25rem 0.5rem' }}>{t('settings.updater.col.version', { defaultValue: 'Version' })}</th>
+                        <th style={{ padding: '0.25rem 0.5rem' }}>{t('settings.updater.col.size', { defaultValue: 'Size' })}</th>
+                        <th style={{ padding: '0.25rem 0.5rem' }}>{t('settings.updater.col.valid', { defaultValue: 'Valid' })}</th>
+                        <th style={{ padding: '0.25rem 0.5rem' }}>{t('settings.updater.col.actions', { defaultValue: 'Actions' })}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {updaterBackups.map((b) => {
+                        const ts = (() => {
+                          try { return new Date(b.timestamp).toLocaleString(); } catch { return b.timestamp; }
+                        })();
+                        // Prefer the manifest-provided totalBytes (computed in
+                        // backup.cjs); fall back to summing file entries for
+                        // older payloads.
+                        const totalSize = typeof b.totalBytes === 'number'
+                          ? b.totalBytes
+                          : Array.isArray(b.files)
+                            ? b.files.reduce((acc, f) => acc + (typeof f.bytes === 'number' ? f.bytes : 0), 0)
+                            : 0;
+                        const sizeKb = totalSize > 0 ? `${(totalSize / 1024).toFixed(1)} KB` : '—';
+                        return (
+                          <tr key={b.id} style={{ borderBottom: '1px solid var(--color-border, #eee)' }}>
+                            <td style={{ padding: '0.25rem 0.5rem' }}>{ts}</td>
+                            <td style={{ padding: '0.25rem 0.5rem' }}>{b.version ?? '—'}</td>
+                            <td style={{ padding: '0.25rem 0.5rem' }}>{sizeKb}</td>
+                            <td style={{ padding: '0.25rem 0.5rem' }}>
+                              {b.valid === false ? (
+                                <span style={{ color: '#a51d2d' }}>✗</span>
+                              ) : (
+                                <span style={{ color: '#1e7e34' }}>✓</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '0.25rem 0.5rem' }}>
+                              <button
+                                className="secondary-btn"
+                                onClick={() => handleRestoreBackup(b.id)}
+                                disabled={updaterBusy !== 'idle' || b.valid === false}
+                              >
+                                {t('settings.updater.restoreBackup', { defaultValue: 'Restore' })}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* Advanced — API explorer */}
         <section className="settings-section collapsible-section">
@@ -2448,6 +2898,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   </a>
                 </div>
               </div>
+            </div>
+          )}
+        </section>
+
+        {/* About */}
+        <section className="settings-section collapsible-section">
+          <button
+            className="collapsible-header"
+            onClick={() => toggleSection('about')}
+            aria-expanded={!collapsedSections.has('about')}
+            aria-controls="about-content"
+          >
+            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('about') ? '▶' : '▼'}</span></h2>
+          </button>
+          {!collapsedSections.has('about') && (
+            <div id="about-content" className="collapsible-content">
+              <AboutSection />
             </div>
           )}
         </section>

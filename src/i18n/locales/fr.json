@@ -31,6 +31,8 @@
     "spanish": "Espagnol",
     "hideValues": "Masquer les valeurs",
     "notAvailable": "N/D",
+    "copyToClipboard": "Cliquer pour copier",
+    "copied": "Copié !",
     "months": {
       "april": "Avril",
       "august": "Août",
@@ -137,7 +139,9 @@
       "language": "Langue",
       "disclaimer": "Avertissement",
       "backend": "Backend",
-      "advanced": "Avancé"
+      "advanced": "Avancé",
+      "updater": "Mises à jour & Sauvegardes",
+      "about": "À propos"
     },
     "accountName": "Nom de compte",
     "accountNameHelp": "Ce nom sera affiché dans toute l'application",
@@ -356,7 +360,9 @@
       "requestFeature": "Request Feature",
       "searchThreshold": "Search Threshold",
       "testMode": "Mode test",
-      "uxUiSuggestion": "Ux Ui Suggestion"
+      "uxUiSuggestion": "Ux Ui Suggestion",
+      "loggingPii": "Contrôle si les journaux de diagnostic incluent des détails financiers sensibles. Les journaux ne quittent jamais votre appareil à moins que vous ne les exportiez.",
+      "maxLogFileSize": "Taille maximale du fichier journal sur disque avant la rotation des anciennes entrées. Les journaux sont stockés à côté de votre base de données."
     },
     "triggerTestNotifications": "Envoyer des notifications de test",
     "unavailable": "Unavailable",
@@ -395,6 +401,51 @@
       "noBackend": "Aucun backend configuré. Configurez-en un dans la section Backend ci-dessus.",
       "pathMustStartWithSlash": "Le chemin doit commencer par /",
       "invalidJson": "Le corps de la requête n'est pas un JSON valide"
+    },
+    "loggingPii": "Journaux de diagnostic détaillés",
+    "loggingPiiOn": "Détaillé",
+    "loggingPiiOff": "Minimal",
+    "loggingPiiHelp": "Lorsqu'il est désactivé (par défaut), les journaux suppriment les détails financiers (tickers, montants, noms de compte). Lorsqu'il est activé, le contexte complet est conservé localement pour faciliter le débogage.",
+    "loggingPiiWarning": "Les journaux détaillés peuvent contenir des données financières. Ne partagez les journaux exportés qu’avec des personnes de confiance.",
+    "exportLogs": "Exporter les journaux de diagnostic",
+    "maxLogFileSize": "Taille maximale du fichier journal (Mo)",
+    "maxLogFileSizeHelp": "Limite la taille du fichier journal sur disque (1–500 Mo, 50 par défaut). Lorsqu'elle est dépassée, les entrées les plus anciennes sont déplacées dans un fichier de sauvegarde unique. Ne s'applique qu'à l'application de bureau.",
+    "updater": {
+      "description": "Configurer les mises à jour automatiques et gérer les sauvegardes locales.",
+      "desktopOnly": "La mise à jour automatique n'est disponible que dans l'application de bureau.",
+      "autoCheck": "Vérifier les mises à jour automatiquement",
+      "autoCheckHelp": "Au démarrage et périodiquement pendant que l'application est ouverte.",
+      "autoDownload": "Télécharger les mises à jour automatiquement",
+      "autoDownloadHelp": "Si désactivé, vous choisissez quand télécharger une nouvelle version.",
+      "notifyOnly": "Notifier uniquement (ne pas télécharger)",
+      "notifyOnlyHelp": "Afficher une notification quand une mise à jour existe sans télécharger ni installer.",
+      "keepBackups": "Sauvegardes à conserver",
+      "keepBackupsHelp": "Les anciennes sauvegardes sont supprimées. Au moins 1 est toujours conservée.",
+      "checkNow": "Vérifier maintenant",
+      "checking": "Vérification…",
+      "createBackup": "Créer une sauvegarde maintenant",
+      "backingUp": "Création de la sauvegarde…",
+      "refreshList": "Actualiser la liste",
+      "backupsList": "Sauvegardes locales",
+      "noBackups": "Aucune sauvegarde.",
+      "restoreBackup": "Restaurer",
+      "confirmRestore": "Restaurer cette sauvegarde ? Vos données actuelles seront remplacées. Un instantané de sécurité sera pris d'abord.",
+      "col": {
+        "timestamp": "Quand",
+        "version": "Version",
+        "size": "Taille",
+        "valid": "Valide",
+        "actions": "Actions"
+      },
+      "feedback": {
+        "available": "Une nouvelle version est disponible.",
+        "upToDate": "Vous êtes à jour.",
+        "disabledDev": "La mise à jour automatique est désactivée dans les builds de développement.",
+        "missingDep": "Le support de la mise à jour automatique est absent de ce build.",
+        "backupCreated": "Sauvegarde créée.",
+        "backupFailed": "Échec de la sauvegarde.",
+        "restored": "Sauvegarde restaurée. Redémarrez l'application pour appliquer."
+      }
     }
   },
   "assetAllocation": {
@@ -2403,5 +2454,50 @@
       ],
       "lastUpdatedDate": "31 décembre 2025"
     }
+  },
+  "update": {
+    "available": {
+      "title": "Mise à jour disponible",
+      "message": "La version {{version}} est prête à être téléchargée.",
+      "messageNoVersion": "Une nouvelle version de Fire Tools est prête à être téléchargée."
+    },
+    "downloading": {
+      "title": "Téléchargement de Fire Tools {{version}}…",
+      "message": "Fire Tools {{version}} est en téléchargement.",
+      "titleNoVersion": "Téléchargement de la mise à jour…"
+    },
+    "downloaded": {
+      "title": "Mise à jour prête",
+      "message": "Redémarrer pour installer la version {{version}}. Une sauvegarde sera prise d'abord.",
+      "messageNoVersion": "Redémarrer maintenant pour appliquer. Une sauvegarde sera créée automatiquement."
+    },
+    "backupFailed": {
+      "title": "Échec de la sauvegarde",
+      "message": "La sauvegarde pré-installation a échoué. L'installation a été annulée par sécurité."
+    },
+    "error": {
+      "title": "Erreur de mise à jour",
+      "message": "Une erreur est survenue : {{error}}"
+    },
+    "actions": {
+      "download": "Télécharger",
+      "install": "Redémarrer et installer",
+      "later": "Plus tard",
+      "dismiss": "Ignorer"
+    }
+  },
+  "about": {
+    "appInfo": "Informations sur l'application",
+    "appVersion": "Version",
+    "commit": "Commit",
+    "buildTime": "Compilé le",
+    "backendInfo": "Backend",
+    "backendVersion": "Version backend",
+    "dependencies": "Dépendances principales",
+    "dependencyName": "Paquet",
+    "dependencyVersion": "Version",
+    "backendUnreachable": "Backend injoignable. L'application fonctionne en mode client uniquement.",
+    "backendDepTag": "backend",
+    "refresh": "Actualiser"
   }
 }

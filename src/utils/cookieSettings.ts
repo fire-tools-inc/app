@@ -13,6 +13,7 @@ import { AssetClass } from '../types/assetAllocation';
 import { LlmCategorizationConfig } from '../types/pdfImport';
 import { encryptData, decryptData } from './cookieEncryption';
 import { IS_DEMO_MODE } from './demoMode';
+import { logger } from './logger';
 
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
@@ -57,12 +58,47 @@ export const DEFAULT_BACKEND_SETTINGS: BackendSettings = {
   mode: 'embedded',
 };
 
+/** Auto-updater settings (Electron desktop only). Web builds ignore these. */
+export interface UpdaterSettings {
+  /** Periodically check for updates on app start. */
+  autoCheck: boolean;
+  /** Automatically download an available update in the background. */
+  autoDownload: boolean;
+  /** Number of pre-install backups to keep. Minimum 1. */
+  keepBackups: number;
+  /** Notify only — never download or install automatically. */
+  notifyOnly: boolean;
+}
+
+export const MIN_KEEP_BACKUPS = 1;
+export const MAX_KEEP_BACKUPS = 100;
+
+export const DEFAULT_UPDATER_SETTINGS: UpdaterSettings = {
+  autoCheck: true,
+  autoDownload: false,
+  keepBackups: 3,
+  notifyOnly: false,
+};
+
 export interface UserSettings {
   accountName: string;
   decimalSeparator: '.' | ',';
   decimalPlaces: number;
   currencySettings: CurrencySettings;
   privacyMode: boolean;
+  /**
+   * When `true`, the diagnostic logger is allowed to record financial PII
+   * (tickers, quantities, account names, portfolio values, etc.) alongside
+   * regular log messages. Off by default. Independent from `privacyMode`,
+   * which only controls UI value blurring.
+   */
+  loggingPiiEnabled: boolean;
+  /**
+   * Maximum on-disk log file size before rotation, in megabytes. The Electron
+   * main process clamps the effective value to 1–500MB. The log file lives in
+   * the same directory as the SQLite database. Has no effect in the web build.
+   */
+  maxLogFileSizeMb: number;
   country?: string;
   dateFormat: DateFormat;
   fireAssetClassInclusion: Record<AssetClass, boolean>;
@@ -76,6 +112,8 @@ export interface UserSettings {
   llmCategorization?: LlmCategorizationConfig;
   /** Where the app finds its backend API (embedded vs. custom URL). */
   backend: BackendSettings;
+  /** Auto-updater preferences (Electron desktop only). */
+  updater: UpdaterSettings;
 }
 
 export const DEFAULT_FIRE_ASSET_CLASS_INCLUSION: Record<AssetClass, boolean> = {
@@ -96,6 +134,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   decimalPlaces: 2,
   currencySettings: DEFAULT_CURRENCY_SETTINGS,
   privacyMode: false,
+  loggingPiiEnabled: false,
+  maxLogFileSizeMb: 50,
   country: undefined,
   dateFormat: 'DD/MM/YYYY',
   fireAssetClassInclusion: DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
@@ -104,6 +144,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   experimentalFeatures: DEFAULT_EXPERIMENTAL_FEATURES,
   language: 'en',
   backend: DEFAULT_BACKEND_SETTINGS,
+  updater: DEFAULT_UPDATER_SETTINGS,
 };
 
 const SETTINGS_KEY = 'fire-calculator-settings';
@@ -127,9 +168,30 @@ export function saveSettings(settings: UserSettings): void {
     const encryptedSettings = encryptData(settingsJson);
     SafeCookies.set(SETTINGS_KEY, encryptedSettings, COOKIE_OPTIONS);
   } catch (error) {
-    console.error('Failed to save settings:', error);
+    logger.error('cookie-settings', 'save-failed', 'failed to save settings', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save settings.');
   }
+}
+
+/**
+ * Merge a partial / unknown updater payload with defaults and clamp the
+ * backup retention count to the supported range.
+ */
+export function mergeUpdaterSettings(input: unknown): UpdaterSettings {
+  const partial = (input && typeof input === 'object' ? input : {}) as Partial<UpdaterSettings>;
+  // Only accept finite numeric input; NaN / Infinity / wrong types fall back
+  // to the default so we never produce a non-finite or NaN keepBackups.
+  const rawNum =
+    typeof partial.keepBackups === 'number' && Number.isFinite(partial.keepBackups)
+      ? Math.floor(partial.keepBackups)
+      : DEFAULT_UPDATER_SETTINGS.keepBackups;
+  const keepBackups = Math.max(MIN_KEEP_BACKUPS, Math.min(MAX_KEEP_BACKUPS, rawNum));
+  return {
+    autoCheck: typeof partial.autoCheck === 'boolean' ? partial.autoCheck : DEFAULT_UPDATER_SETTINGS.autoCheck,
+    autoDownload: typeof partial.autoDownload === 'boolean' ? partial.autoDownload : DEFAULT_UPDATER_SETTINGS.autoDownload,
+    notifyOnly: typeof partial.notifyOnly === 'boolean' ? partial.notifyOnly : DEFAULT_UPDATER_SETTINGS.notifyOnly,
+    keepBackups,
+  };
 }
 
 /**
@@ -167,12 +229,13 @@ export function loadSettings(): UserSettings {
             ...DEFAULT_BACKEND_SETTINGS,
             ...(parsed.backend || {}),
           },
+          updater: mergeUpdaterSettings(parsed.updater),
         };
       }
     }
     return DEFAULT_SETTINGS;
   } catch (error) {
-    console.error('Failed to load settings from cookies:', error);
+    logger.error('cookie-settings', 'load-failed', 'failed to load settings from cookies', { pii: { error: (error as Error)?.message } });
     return DEFAULT_SETTINGS;
   }
 }
@@ -184,7 +247,7 @@ export function clearSettings(): void {
   try {
     SafeCookies.remove(SETTINGS_KEY, { path: '/' });
   } catch (error) {
-    console.error('Failed to clear settings:', error);
+    logger.error('cookie-settings', 'clear-failed', 'failed to clear settings', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -264,6 +327,10 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
     }
   }
 
+  if (settings.loggingPiiEnabled !== undefined && typeof settings.loggingPiiEnabled !== 'boolean') {
+    errors.push('loggingPiiEnabled must be a boolean');
+  }
+
   if (settings.backend !== undefined) {
     if (settings.backend.mode !== 'embedded' && settings.backend.mode !== 'custom') {
       errors.push('Backend mode must be "embedded" or "custom"');
@@ -278,6 +345,28 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
           new URL(url);
         } catch {
           errors.push('Custom backend URL must be a valid absolute URL');
+        }
+      }
+    }
+  }
+
+  if (settings.updater !== undefined) {
+    if (typeof settings.updater !== 'object' || settings.updater === null) {
+      errors.push('Updater settings must be an object');
+    } else {
+      if (settings.updater.autoCheck !== undefined && typeof settings.updater.autoCheck !== 'boolean') {
+        errors.push('Updater autoCheck must be a boolean');
+      }
+      if (settings.updater.autoDownload !== undefined && typeof settings.updater.autoDownload !== 'boolean') {
+        errors.push('Updater autoDownload must be a boolean');
+      }
+      if (settings.updater.notifyOnly !== undefined && typeof settings.updater.notifyOnly !== 'boolean') {
+        errors.push('Updater notifyOnly must be a boolean');
+      }
+      if (settings.updater.keepBackups !== undefined) {
+        const keep = settings.updater.keepBackups;
+        if (typeof keep !== 'number' || !Number.isInteger(keep) || keep < MIN_KEEP_BACKUPS || keep > MAX_KEEP_BACKUPS) {
+          errors.push(`Updater keepBackups must be an integer between ${MIN_KEEP_BACKUPS} and ${MAX_KEEP_BACKUPS}`);
         }
       }
     }

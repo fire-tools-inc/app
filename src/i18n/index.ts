@@ -6,6 +6,7 @@ import fr from './locales/fr.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
 import { loadSettings, saveSettings } from '../utils/cookieSettings';
+import { logger } from '../utils/logger';
 
 export const SUPPORTED_LANGUAGES = ['en', 'it', 'fr', 'de', 'es'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -23,7 +24,7 @@ function resolveInitialLanguage(): SupportedLanguage {
     const stored = loadSettings().language;
     if (isSupportedLanguage(stored)) return stored;
   } catch (error) {
-    console.error('Failed to read language from settings cookie:', error);
+    logger.error('i18n', 'load-language-failed', 'failed to read language from settings cookie', { pii: { error: (error as Error)?.message } });
   }
   return DEFAULT_LANGUAGE;
 }
@@ -50,7 +51,7 @@ void i18n.use(initReactI18next).init({
  */
 export async function setLanguage(lang: SupportedLanguage): Promise<void> {
   if (!isSupportedLanguage(lang)) {
-    console.error('Unsupported language requested:', lang);
+    logger.error('i18n', 'unsupported-language', 'unsupported language requested', { pii: { language: lang as string } });
     return;
   }
   try {
@@ -59,7 +60,7 @@ export async function setLanguage(lang: SupportedLanguage): Promise<void> {
       saveSettings({ ...current, language: lang });
     }
   } catch (error) {
-    console.error('Failed to persist language preference:', error);
+    logger.error('i18n', 'save-language-failed', 'failed to persist language preference', { pii: { error: (error as Error)?.message } });
   }
   await i18n.changeLanguage(lang);
 }

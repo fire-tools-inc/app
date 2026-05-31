@@ -11,6 +11,7 @@ instead.
 - [API & custom clients (OpenAPI)](./api-client.md)
 - [Database & schema](./database.md)
 - [Migrations & rollbacks](./migrations.md)
+- [Logging & PII handling](./logging.md)
 
 ## Architecture at a glance
 

@@ -72,4 +72,8 @@ linux:
       arch:
         - x64
 
-publish: null
+publish:
+  provider: github
+  owner: mbianchidev
+  repo: fire-tools
+  releaseType: release

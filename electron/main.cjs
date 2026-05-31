@@ -1,14 +1,36 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeTheme, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, shell, ipcMain, nativeImage, nativeTheme, Notification, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
 const windowState = require('./windowState.cjs');
 const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
+const backup = require('./backup.cjs');
+const updater = require('./updater.cjs');
+const logFile = require('./logFile.cjs');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 const isMac = process.platform === 'darwin';
+
+// Force the product name early so the OS (especially macOS NotificationCenter
+// in dev mode, where the bundle id is Electron's default) attributes
+// notifications, the menu bar, and About panel to "Fire Tools".
+app.setName('Fire Tools');
+
+// Resolve the brand icon once. Used for native notifications and the macOS
+// Dock so the user always sees the Fire Tools logo regardless of how the
+// app is launched (dev electron binary vs packaged app).
+const BRAND_ICON_PATH = path.join(__dirname, 'build', 'icon.png');
+let brandIconImage = null;
+try {
+  if (fs.existsSync(BRAND_ICON_PATH)) {
+    const img = nativeImage.createFromPath(BRAND_ICON_PATH);
+    if (!img.isEmpty()) brandIconImage = img;
+  }
+} catch (err) {
+  console.warn('[fire-tools] could not load brand icon:', err && err.message ? err.message : err);
+}
 
 // Enforce single instance: prevents two processes racing on the SQLite DB
 // and gives users a clean "focus existing window" UX when they re-launch.
@@ -65,6 +87,53 @@ function removeStoredPassphrase() {
   }
 }
 
+// Initialise the on-disk log file before anything else can call logInfo/Error.
+// Logs live next to the SQLite DB so bug reports and backups always travel
+// together. Size cap defaults to 50MB; users can adjust via Settings.
+try {
+  logFile.init({ dir: app.getPath('userData') });
+} catch (err) {
+  console.error('[fire-tools] failed to init log file:', err);
+}
+
+// Wrap raw console output so every main-process diagnostic also lands in the
+// on-disk log file alongside backend/renderer entries. Kept tiny on purpose;
+// callers still get console output, the file just gets a mirrored copy.
+function nowStamp() {
+  const d = new Date();
+  const pad = (n, w = 2) => String(n).padStart(w, '0');
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}-` +
+    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`
+  );
+}
+
+function mainLogLine(level, parts) {
+  const text = parts
+    .map((p) => {
+      if (p instanceof Error) return p.stack || p.message;
+      if (typeof p === 'string') return p;
+      try { return JSON.stringify(p); } catch { return String(p); }
+    })
+    .join(' ');
+  return `[${nowStamp()}] [electron-main] [system] [${level}]: ${text}\n`;
+}
+
+function logInfo(...args) {
+  console.log(...args);
+  try { logFile.append(mainLogLine('info', args)); } catch { /* ignore */ }
+}
+
+function logWarn(...args) {
+  console.warn(...args);
+  try { logFile.append(mainLogLine('warn', args)); } catch { /* ignore */ }
+}
+
+function logError(...args) {
+  console.error(...args);
+  try { logFile.append(mainLogLine('error', args)); } catch { /* ignore */ }
+}
+
 async function startEmbedded() {
   try {
     const dbPath = path.join(app.getPath('userData'), 'firetools.db');
@@ -96,13 +165,16 @@ async function startEmbedded() {
       host: '127.0.0.1',
       corsAllowAll: true,
       passphrase: passphrase || undefined,
+      // Funnel backend log lines into the same on-disk file the renderer
+      // writes to, so bug-report exports contain both sides of the stack.
+      logSink: (line) => logFile.append(line),
     });
-    console.log(
+    logInfo(
       `[fire-tools] embedded backend started at ${embeddedServer.url} (db: ${embeddedServer.dbPath}, encrypted: ${embeddedServer.encrypted})`
     );
   } catch (err) {
     embeddedServerError = err && err.message ? err.message : String(err);
-    console.error('[fire-tools] failed to start embedded backend:', err);
+    logError('[fire-tools] failed to start embedded backend:', err);
   }
 }
 
@@ -303,6 +375,30 @@ ipcMain.handle('fire-tools:open-external', (_event, url) => {
   return true;
 });
 
+// --- Log file IPC -------------------------------------------------------
+// Renderer ships fully formatted log lines (already PII-gated) to be
+// appended to the shared on-disk log. setMaxMb adjusts the rotation
+// threshold without restarting the app.
+ipcMain.handle('fire-tools:log-append', (_event, line) => {
+  if (typeof line !== 'string' || line.length === 0) return false;
+  try { logFile.append(line); return true; } catch { return false; }
+});
+
+ipcMain.handle('fire-tools:log-set-max-mb', (_event, mb) => {
+  const num = typeof mb === 'number' ? mb : Number(mb);
+  if (!Number.isFinite(num) || num <= 0) return false;
+  try { logFile.setMaxBytes(Math.floor(num) * 1024 * 1024); return true; } catch { return false; }
+});
+
+ipcMain.handle('fire-tools:log-get-info', () => {
+  try {
+    const info = logFile.getInfo();
+    return { ok: true, ...info, maxMb: Math.round(info.maxBytes / (1024 * 1024)) };
+  } catch (err) {
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
 // Hold strong references to in-flight Notifications. Electron's docs warn
 // that without this the GC can collect them before they're displayed,
 // which is exactly what was happening on macOS — show() returned but the
@@ -311,7 +407,7 @@ const liveNotifications = new Set();
 
 // Show a native OS notification (macOS NotificationCenter / Windows Action
 // Center / Linux libnotify). Title is required; everything else is opt-in.
-ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
+function showNativeNotification(opts) {
   try {
     if (!Notification.isSupported()) {
       console.warn('[fire-tools] native notifications not supported on this platform');
@@ -330,6 +426,10 @@ ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
       body,
       silent: false,
       urgency, // Linux only; ignored elsewhere
+      // Explicit icon so macOS NotificationCenter (and other platforms)
+      // show the Fire Tools logo even in dev mode where the bundle id
+      // falls back to Electron's default.
+      ...(brandIconImage ? { icon: brandIconImage } : {}),
     });
     liveNotifications.add(notification);
     const release = () => liveNotifications.delete(notification);
@@ -351,6 +451,97 @@ ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
     console.error('[fire-tools] failed to show native notification:', err);
     return false;
   }
+}
+
+ipcMain.handle('fire-tools:show-native-notification', (_event, opts) => {
+  return showNativeNotification(opts);
+});
+
+// --- Auto-updater IPC ---------------------------------------------------
+ipcMain.handle('fire-tools:updater-check', async () => {
+  try {
+    return await updater.check();
+  } catch (err) {
+    console.error('[fire-tools] updater check failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-download', async () => {
+  try {
+    return await updater.download();
+  } catch (err) {
+    console.error('[fire-tools] updater download failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-install', async () => {
+  try {
+    return await updater.quitAndInstall();
+  } catch (err) {
+    console.error('[fire-tools] updater install failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:updater-state', () => updater.getState());
+
+ipcMain.handle('fire-tools:updater-get-prefs', () => updater.getPrefs());
+
+ipcMain.handle('fire-tools:updater-set-prefs', (_event, prefs) => {
+  try {
+    return updater.setPrefs(prefs || {});
+  } catch (err) {
+    console.error('[fire-tools] updater set-prefs failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+// --- Backup IPC ---------------------------------------------------------
+ipcMain.handle('fire-tools:backups-list', async () => {
+  try {
+    const backups = await backup.listBackups({ userDataDir: app.getPath('userData') });
+    return { ok: true, backups };
+  } catch (err) {
+    console.error('[fire-tools] backups list failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:backups-create', async () => {
+  try {
+    const result = await backup.createBackup({
+      userDataDir: app.getPath('userData'),
+      version: app.getVersion(),
+    });
+    const prefs = await updater.getPrefs();
+    await backup.rotateBackups({
+      userDataDir: app.getPath('userData'),
+      keep: prefs && typeof prefs.keepBackups === 'number' ? prefs.keepBackups : 3,
+    });
+    return { ok: true, backup: result };
+  } catch (err) {
+    console.error('[fire-tools] backups create failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+});
+
+ipcMain.handle('fire-tools:backups-restore', async (_event, opts) => {
+  try {
+    if (!opts || typeof opts.backupId !== 'string') {
+      return { ok: false, error: 'backupId required' };
+    }
+    const result = await backup.restoreBackup({
+      userDataDir: app.getPath('userData'),
+      backupId: opts.backupId,
+      currentVersion: app.getVersion(),
+    });
+    return { ok: true, ...result };
+  } catch (err) {
+    console.error('[fire-tools] backups restore failed:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
 });
 
 app.on('second-instance', () => {
@@ -362,6 +553,16 @@ app.whenReady().then(async () => {
   // application identity. Must match electron-builder.yml `appId`.
   if (typeof app.setAppUserModelId === 'function') {
     app.setAppUserModelId('dev.mb-consulting.firetools');
+  }
+
+  // Make sure the Dock icon on macOS matches the brand, even in dev
+  // where Electron would otherwise show its own logo.
+  if (isMac && brandIconImage && app.dock && typeof app.dock.setIcon === 'function') {
+    try {
+      app.dock.setIcon(brandIconImage);
+    } catch (err) {
+      console.warn('[fire-tools] dock.setIcon failed:', err && err.message ? err.message : err);
+    }
   }
 
   // Populate the macOS "About <app>" panel with real metadata.
@@ -381,6 +582,16 @@ app.whenReady().then(async () => {
   await startEmbedded();
   installMenu();
   createWindow();
+
+  // Wire auto-updater after the window exists so it can broadcast events.
+  updater
+    .setupUpdater({
+      getWindow: () => mainWindow,
+      notify: (opts) => showNativeNotification(opts),
+    })
+    .catch((err) => {
+      console.error('[fire-tools] failed to initialize auto-updater:', err);
+    });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

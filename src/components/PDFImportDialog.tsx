@@ -31,6 +31,7 @@ import { extractPdfText } from '../utils/pdfTextExtractor';
 import { IS_DEMO_MODE } from '../utils/demoMode';
 import { parsePdf } from '../utils/pdfHeuristics';
 import { categorizeWithLlm } from '../utils/llmCategorizer';
+import { logger } from '../utils/logger';
 import { MaterialIcon } from './MaterialIcon';
 import './PDFImportDialog.css';
 
@@ -109,7 +110,7 @@ export function PDFImportDialog({
           }
           collected.push(...parsed);
         } catch (err) {
-          console.error('Failed to parse PDF', file.name, err);
+          logger.error('pdf-import-dialog', 'pdf-parse-failed', 'failed to parse PDF', { pii: { fileName: file.name, error: (err as Error)?.message } });
           const reason = err instanceof Error ? err.message : t('common.unknownError');
           setError(prev => appendError(prev, t('dialogs.pdfImport.errors.failedToRead', { fileName: file.name, reason })));
         }
@@ -121,7 +122,7 @@ export function PDFImportDialog({
         try {
           final = await categorizer(collected, llmConfig!, categories);
         } catch (err) {
-          console.error('LLM categorization failed', err);
+          logger.error('pdf-import-dialog', 'llm-categorization-failed', 'LLM categorization failed', { pii: { error: (err as Error)?.message } });
           setError(t('dialogs.pdfImport.errors.llmFailed'));
         }
       }

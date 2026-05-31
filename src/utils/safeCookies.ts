@@ -15,6 +15,7 @@
  * authoritative and uses `localStorage` only as a fallback layer.
  */
 import Cookies from 'js-cookie';
+import { logger } from './logger';
 
 export type CookieAttributes = Cookies.CookieAttributes;
 
@@ -44,7 +45,7 @@ const lsSet = (key: string, value: string): void => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(key, value);
   } catch (error) {
-    console.error(`Failed to write ${key} to localStorage:`, error);
+    logger.error('safe-cookies', 'localStorage-write-failed', 'failed to write to localStorage', { pii: { key, error: (error as Error)?.message } });
   }
 };
 
@@ -53,7 +54,7 @@ const lsRemove = (key: string): void => {
     if (typeof window === 'undefined') return;
     window.localStorage.removeItem(key);
   } catch (error) {
-    console.error(`Failed to remove ${key} from localStorage:`, error);
+    logger.error('safe-cookies', 'localStorage-remove-failed', 'failed to remove from localStorage', { pii: { key, error: (error as Error)?.message } });
   }
 };
 
