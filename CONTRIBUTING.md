@@ -269,6 +269,29 @@ Issues are organized with labels:
 
 This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to security@mb-consulting.dev.
 
+## Releasing
+
+Releases are fully automated via GitHub Actions. To create a new release:
+
+1. **Bump the version** in `package.json` (and `package-lock.json`) to match the tag you intend to push:
+   ```bash
+   npm version <major|minor|patch> --no-git-tag-version
+   ```
+2. **Commit and merge** the version bump to `main`.
+3. **Push a new tag** to the remote:
+   ```bash
+   git tag v<version>    # e.g. git tag v2.0.1
+   git push origin v<version>
+   ```
+
+Pushing the tag triggers the **Release** workflow (`.github/workflows/release.yml`), which:
+
+1. **Verifies** the tag's semver core matches the `version` field in `package.json`.
+2. **Builds** macOS DMGs (arm64 + x64) and a Windows NSIS installer.
+3. **Publishes** a GitHub Release with auto-generated release notes and all build artifacts attached.
+
+> **Important:** The tag version and `package.json` version must match, otherwise the workflow will fail at the verification step.
+
 ## Additional Resources
 
 - [README.md](README.md) - Project overview and usage
