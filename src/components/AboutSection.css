@@ -49,9 +49,11 @@
 
 .about-grid code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: var(--code-bg, #f3f4f6);
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
+  background: var(--bg-tertiary, #f3f4f6);
+  color: var(--text-primary, #111);
+  border: 1px solid var(--border-subtle, transparent);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
   font-size: 0.9rem;
 }
 
@@ -64,7 +66,7 @@
 }
 
 .about-status-error {
-  color: var(--color-error, #b91c1c);
+  color: var(--error, #b91c1c);
 }
 
 .about-deps-table {
@@ -76,7 +78,7 @@
 .about-deps-table td {
   text-align: left;
   padding: 0.35rem 0.5rem;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--border-subtle, #e5e7eb);
 }
 
 .about-deps-table th {
@@ -88,8 +90,9 @@
 .about-dep-tag {
   display: inline-block;
   font-size: 0.7rem;
-  background: var(--badge-bg, #e0e7ff);
-  color: var(--badge-fg, #3730a3);
+  background: var(--bg-elevated, #e0e7ff);
+  color: var(--accent-primary, #3730a3);
+  border: 1px solid var(--border-subtle, transparent);
   padding: 0.05rem 0.4rem;
   border-radius: 999px;
   margin-left: 0.3rem;

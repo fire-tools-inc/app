@@ -230,6 +230,9 @@
 .setting-item input[type="text"],
 .setting-item input[type="number"],
 .setting-item input[type="password"],
+.setting-item input[type="url"],
+.setting-item input[type="email"],
+.setting-item input[type="search"],
 .setting-item textarea {
   width: 100%;
   padding: 0.75rem 1rem;

@@ -18,21 +18,23 @@
 }
 
 .copyable-value:focus-visible {
-  outline: 2px solid var(--color-accent, #3b82f6);
+  outline: 2px solid var(--accent-primary, #3b82f6);
   outline-offset: 2px;
 }
 
 .copyable-value code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: var(--code-bg, #f3f4f6);
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
+  background: var(--bg-tertiary, #f3f4f6);
+  color: var(--text-primary, #111);
+  border: 1px solid var(--border-subtle, transparent);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
   font-size: 0.9rem;
 }
 
 .copyable-value-feedback {
   font-size: 0.7rem;
-  color: var(--color-success, #047857);
+  color: var(--success, #047857);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
