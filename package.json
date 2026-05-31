@@ -71,6 +71,7 @@
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
+    "electron-updater": "^6.8.3",
     "express": "^4.21.0",
     "express-rate-limit": "^8.5.2",
     "i18next": "^26.3.0",

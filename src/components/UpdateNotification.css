@@ -1,0 +1,94 @@
+.update-notification {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--banner-bg, #1e3a5f);
+  color: var(--banner-fg, #ffffff);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+}
+
+.update-notification__body {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.update-notification__title {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.update-notification__message {
+  flex: 1 1 200px;
+  opacity: 0.95;
+}
+
+.update-notification__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.update-notification__btn {
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.update-notification__btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.update-notification__btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.update-notification__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.update-notification__btn--primary {
+  background: #2ea043;
+  border-color: #2ea043;
+}
+
+.update-notification__btn--primary:hover:not(:disabled) {
+  background: #3fb950;
+  border-color: #3fb950;
+}
+
+.update-notification__progress {
+  flex: 1 1 200px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.update-notification__progress-bar {
+  height: 100%;
+  background: #58a6ff;
+  transition: width 0.2s ease;
+}
+
+.update-notification--error,
+.update-notification--backup-failed {
+  background: #6e1f1f;
+}
+
+.update-notification--downloaded {
+  background: #1f5f3a;
+}

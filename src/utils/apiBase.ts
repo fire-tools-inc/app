@@ -22,8 +22,100 @@ interface FireToolsBridge {
   versions?: { electron?: string; chrome?: string; node?: string };
   getEmbeddedBackend?: () => Promise<EmbeddedBackendInfo>;
   openExternal?: (url: string) => Promise<boolean>;
+  showNativeNotification?: (opts: {
+    title: string;
+    body?: string;
+    urgency?: 'low' | 'normal' | 'critical';
+  }) => Promise<boolean>;
   onNavigate?: (callback: (path: string) => void) => () => void;
   onMenuAction?: (callback: (action: string) => void) => () => void;
+  onUpdaterEvent?: (callback: (event: UpdaterEvent) => void) => () => void;
+  updater?: {
+    check: () => Promise<UpdaterState>;
+    download: () => Promise<UpdaterState>;
+    install: () => Promise<boolean>;
+    getState: () => Promise<UpdaterState>;
+    getPrefs: () => Promise<UpdaterPrefs>;
+    setPrefs: (prefs: Partial<UpdaterPrefs>) => Promise<UpdaterPrefs>;
+  };
+  backups?: {
+    list: () => Promise<{ ok: boolean; backups?: BackupRecord[]; error?: string }>;
+    create: () => Promise<{ ok: boolean; backup?: BackupRecord; error?: string }>;
+    restore: (opts: { backupId: string }) => Promise<{
+      ok: boolean;
+      restored?: string[];
+      safetyBackupId?: string;
+      error?: string;
+    }>;
+  };
+}
+
+export interface UpdaterPrefs {
+  autoCheck: boolean;
+  autoDownload: boolean;
+  keepBackups: number;
+  notifyOnly: boolean;
+}
+
+export type UpdaterStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'downloaded'
+  | 'backup-failed'
+  | 'error'
+  | 'disabled-dev'
+  | 'disabled-missing-dep';
+
+export interface UpdaterInfo {
+  version?: string;
+  releaseDate?: string;
+  releaseName?: string;
+  releaseNotes?: string;
+}
+
+export interface UpdaterProgress {
+  percent?: number;
+  transferred?: number;
+  total?: number;
+  bytesPerSecond?: number;
+}
+
+export interface UpdaterState {
+  status: UpdaterStatus;
+  error: string | null;
+  info: UpdaterInfo | null;
+  progress: UpdaterProgress | null;
+  result?: { version?: string } | null;
+}
+
+export interface UpdaterEvent {
+  status?: UpdaterStatus;
+  error?: string | null;
+  info?: UpdaterInfo | null;
+  progress?: UpdaterProgress | null;
+  backup?: {
+    id: string;
+    reason: string;
+    kept?: string[];
+    removed?: string[];
+  };
+  ts: number;
+}
+
+export interface BackupRecord {
+  id: string;
+  dir: string;
+  timestamp: string;
+  version: string;
+  /** Bytes per file as recorded by the manifest (schema v1). */
+  files?: Array<{ name: string; bytes: number; sha256: string }>;
+  /** Total size in bytes across all files in the backup. */
+  totalBytes?: number;
+  valid?: boolean;
+  error?: string;
 }
 
 declare global {

@@ -287,6 +287,11 @@ Tracking issues: [#133](https://github.com/mbianchidev/fire-tools/issues/133) (t
 ### Desktop ([`electron/`](electron/))
 - **Electron 33** with hardened defaults (contextIsolation, sandbox, no nodeIntegration)
 - **electron-builder** producing `dmg` / `nsis` / `AppImage`
+- **Auto-updater** ([`electron-updater`](https://www.electron.build/auto-update))
+  pulls releases from GitHub and takes a **pre-install backup** of your DB
+  every time, keeping at least one snapshot alive (configurable retention,
+  minimum 1). Restore any snapshot from **Settings → Updates & backups**.
+  Design notes in [`docs/engineering/auto-updater.md`](docs/engineering/auto-updater.md).
 
 ### Mobile (separate repo — see [`docs/mobile/README.md`](docs/mobile/README.md))
 - **Flutter** consuming the same OpenAPI contract — lives in `fire-tools-mobile`.

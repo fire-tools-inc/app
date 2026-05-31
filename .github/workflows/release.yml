@@ -90,6 +90,8 @@ jobs:
           path: |
             release/**/*.dmg
             release/**/*.zip
+            release/**/*.yml
+            release/**/*.blockmap
           if-no-files-found: error
 
   build-windows:
@@ -132,6 +134,8 @@ jobs:
             release/**/*.exe
             release/**/*.nupkg
             release/**/*.zip
+            release/**/*.yml
+            release/**/*.blockmap
           if-no-files-found: error
 
   release:
@@ -164,8 +168,12 @@ jobs:
           files: |
             artifacts/macos/**/*.dmg
             artifacts/macos/**/*.zip
+            artifacts/macos/**/*.yml
+            artifacts/macos/**/*.blockmap
             artifacts/windows/**/*.exe
             artifacts/windows/**/*.nupkg
+            artifacts/windows/**/*.yml
+            artifacts/windows/**/*.blockmap
           body: |
             ## Installation
 
