@@ -48,7 +48,7 @@
   "bugs": {
     "url": "https://github.com/mbianchidev/fire-tools/issues"
   },
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@testing-library/react": "^16.3.2",

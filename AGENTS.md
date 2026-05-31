@@ -26,15 +26,16 @@ This document provides comprehensive instructions for AI agents working on the F
 ### Node.js Version Requirements
 - Node.js ^20.19.0 || ^22.12.0 || >=24.0.0
 
-### Planned Backend (contract-only, not yet implemented)
+### Backend (implemented — [`server/`](server/))
 Local-deployment / Electron path (issues [#133](https://github.com/mbianchidev/fire-tools/issues/133),
 [#189](https://github.com/mbianchidev/fire-tools/issues/189),
 [#195](https://github.com/mbianchidev/fire-tools/issues/195),
 [#222](https://github.com/mbianchidev/fire-tools/issues/222)):
+- **Runtime**: Node.js + Express 4 + TypeScript (strict, ESM)
 - **REST API**: OpenAPI 3.0.3 contract at [`docs/api/openapi.yaml`](docs/api/openapi.yaml). See [`docs/api/README.md`](docs/api/README.md) for conventions, type mapping, and client generation.
-- **Database**: SQLite as the **first-class** target, **PostgreSQL-compatible** schema. DDL at [`docs/database/schema.sql`](docs/database/schema.sql); design notes and ERD at [`docs/database/README.md`](docs/database/README.md).
+- **Database**: better-sqlite3 (SQLite as the **first-class** target), **PostgreSQL-compatible** schema. DDL at [`docs/database/schema.sql`](docs/database/schema.sql); design notes and ERD at [`docs/database/README.md`](docs/database/README.md).
 - **Auth model**: single-user-by-default; schema/API are already multi-tenant-ready (a `users` table exists and every domain row carries `user_id`).
-- **Status**: contract only. No server implementation yet. The implementation language is intentionally not chosen — the spec is implementation-agnostic.
+- **Deployment**: Docker Compose ([`docker-compose.yml`](docker-compose.yml)) or bundled in Electron.
 
 When adding or changing a domain type in `src/types/*.ts`, update **all three**:
 1. The TS interface / union
