@@ -43,3 +43,33 @@ Use **Import CSV** to load a previously exported file.
   affects success rate.
 - The expected return is a *real* return (after inflation). If you input a
   nominal return, set inflation to zero so you don't double-count it.
+
+## Reverse FIRE Calculator
+
+The companion **Reverse FIRE** page (linked from the FIRE Calculator header,
+or navigate to `/reverse-fire-calculator`) flips the question around: instead
+of asking *when* you'll reach FIRE, you pick a **target retirement age** and
+the tool tells you **how much you must save each month** to get there.
+
+Inputs:
+
+- Target retirement age
+- Current savings
+- Annual FIRE expenses + withdrawal rate (defines the FIRE target)
+- Expected stock, bond and cash returns (weighted by your asset allocation)
+- Inflation proxy (absolute value of the cash return)
+- "Inflate FIRE target to retirement year" toggle — when on, the target is
+  expressed in future euros; when off, both target and returns are treated
+  as real values.
+
+Output:
+
+- Required monthly and annual savings (annuity-due — contributions assumed
+  at the start of each year)
+- Projected future value of your current savings alone
+- The FIRE target you're aiming at
+- An "already on track" badge when no further contributions are needed
+
+The page shares its inputs with the forward FIRE calculator via the same
+encrypted cookie storage, so toggling between the two views never loses
+your numbers.

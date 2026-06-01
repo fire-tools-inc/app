@@ -1,5 +1,6 @@
 import { CalculationResult } from '../types/calculator';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import { logger } from '../utils/logger';
@@ -77,13 +78,22 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
     <section className="fire-metrics" aria-labelledby="fire-metrics-heading" data-tour="results-section">
       <div className="fire-metrics-header">
         <h3 id="fire-metrics-heading"><MaterialIcon name="gps_fixed" /> {t('fireMetrics.heading')}</h3>
-        <button 
-          className="share-button" 
-          onClick={handleShare}
-          aria-label={copied ? t('fireMetrics.ariaLinkCopied') : t('fireMetrics.ariaCopyLink')}
-        >
-          {copied ? <MaterialIcon name="check" /> : copyFailed ? <MaterialIcon name="close" /> : <MaterialIcon name="link" />} {copied ? t('fireMetrics.copied') : copyFailed ? t('fireMetrics.failed') : t('fireMetrics.share')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <Link
+            to="/reverse-fire-calculator"
+            className="share-button"
+            aria-label="Open Reverse FIRE calculator"
+          >
+            <MaterialIcon name="undo" /> Reverse FIRE
+          </Link>
+          <button 
+            className="share-button" 
+            onClick={handleShare}
+            aria-label={copied ? t('fireMetrics.ariaLinkCopied') : t('fireMetrics.ariaCopyLink')}
+          >
+            {copied ? <MaterialIcon name="check" /> : copyFailed ? <MaterialIcon name="close" /> : <MaterialIcon name="link" />} {copied ? t('fireMetrics.copied') : copyFailed ? t('fireMetrics.failed') : t('fireMetrics.share')}
+          </button>
+        </div>
       </div>
       <div className="metrics-grid" role="list">
         <div className="metric-card" role="listitem">
