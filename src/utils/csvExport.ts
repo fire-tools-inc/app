@@ -35,6 +35,11 @@ export function exportFireCalculatorToCSV(inputs: CalculatorInputs): string {
     ['Savings Rate', escapeCSV(inputs.savingsRate)],
     ['Desired Withdrawal Rate', escapeCSV(inputs.desiredWithdrawalRate)],
     ['Years Of Expenses', escapeCSV(inputs.yearsOfExpenses)],
+    ['FIRE Type', escapeCSV(inputs.fireType)],
+    ['Lean Expense Multiplier', escapeCSV(inputs.leanExpenseMultiplier)],
+    ['Fat Expense Multiplier', escapeCSV(inputs.fatExpenseMultiplier)],
+    ['Barista Annual Income', escapeCSV(inputs.baristaAnnualIncome)],
+    ['Coast Target Age', escapeCSV(inputs.coastTargetAge)],
     ['Expected Stock Return', escapeCSV(inputs.expectedStockReturn)],
     ['Expected Bond Return', escapeCSV(inputs.expectedBondReturn)],
     ['Expected Cash Return', escapeCSV(inputs.expectedCashReturn)],
@@ -93,6 +98,11 @@ export function importFireCalculatorFromCSV(csv: string): CalculatorInputs {
       'Savings Rate': 'savingsRate',
       'Desired Withdrawal Rate': 'desiredWithdrawalRate',
       'Years Of Expenses': 'yearsOfExpenses',
+      'FIRE Type': 'fireType',
+      'Lean Expense Multiplier': 'leanExpenseMultiplier',
+      'Fat Expense Multiplier': 'fatExpenseMultiplier',
+      'Barista Annual Income': 'baristaAnnualIncome',
+      'Coast Target Age': 'coastTargetAge',
       'Expected Stock Return': 'expectedStockReturn',
       'Expected Bond Return': 'expectedBondReturn',
       'Expected Cash Return': 'expectedCashReturn',
@@ -113,6 +123,8 @@ export function importFireCalculatorFromCSV(csv: string): CalculatorInputs {
       if (propName === 'stopWorkingAtFIRE' || propName === 'useAssetAllocationValue' || 
           propName === 'useExpenseTrackerExpenses' || propName === 'useExpenseTrackerIncome') {
         data[propName] = value.toLowerCase() === 'true';
+      } else if (propName === 'fireType') {
+        data[propName] = value;
       } else {
         const numValue = parseFloat(value);
         if (!isNaN(numValue)) {

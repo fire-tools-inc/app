@@ -892,6 +892,11 @@
       "currentAge": "Current Age",
       "withdrawalRate": "Desired Withdrawal Rate (%)",
       "yearsOfExpenses": "Years of Expenses Needed for FIRE",
+      "fireType": "FIRE Variant",
+      "leanExpenseMultiplier": "Lean FIRE Expense Multiplier (×)",
+      "fatExpenseMultiplier": "Fat FIRE Expense Multiplier (×)",
+      "baristaAnnualIncome": "Barista Part-Time Annual Income ({{currency}})",
+      "coastTargetAge": "Coast FIRE Target Age",
       "stockReturn": "Expected Stock Return (%)",
       "bondReturn": "Expected Bond Return (%)",
       "cashReturn": "Cash / Inflation Rate (%)"
@@ -899,6 +904,28 @@
     "allocationTotal": "Total: {{value}}%",
     "allocationWarning": "Should equal 100%",
     "deflationWarning": "A positive value indicates deflation. Long periods of deflation are historically rare - consider this carefully in your projections.",
+    "fireTypes": {
+      "standard": {
+        "label": "Standard FIRE",
+        "description": "Classic Financial Independence — portfolio sustains your target expenses at the desired withdrawal rate."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "description": "Minimalist FIRE with a smaller nest egg and a frugal post-retirement budget (FIRE expenses are scaled by the lean multiplier)."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "description": "A larger nest egg supporting a more comfortable lifestyle (FIRE expenses are scaled up by the fat multiplier)."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "description": "You keep a part-time, low-stress job that covers part of your expenses; the portfolio only needs to fund the gap."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "description": "Save enough today so your portfolio compounds untouched to the standard FIRE target by your chosen target age."
+      }
+    },
     "options": {
       "stopWorking": "Stop working when reaching FIRE number",
       "useAssetAllocation": "Use Asset Allocation portfolio value and allocation",

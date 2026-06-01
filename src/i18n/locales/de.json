@@ -892,6 +892,11 @@
       "currentAge": "Aktuelles Alter",
       "withdrawalRate": "Gewünschte Entnahmerate (%)",
       "yearsOfExpenses": "Benötigte Jahre der Ausgaben für FIRE",
+      "fireType": "FIRE-Variante",
+      "leanExpenseMultiplier": "Lean-FIRE-Ausgabenmultiplikator (×)",
+      "fatExpenseMultiplier": "Fat-FIRE-Ausgabenmultiplikator (×)",
+      "baristaAnnualIncome": "Barista-Teilzeit-Jahreseinkommen ({{currency}})",
+      "coastTargetAge": "Coast-FIRE-Zielalter",
       "stockReturn": "Erwartete Aktienrendite (%)",
       "bondReturn": "Erwartete Anleihenrendite (%)",
       "cashReturn": "Bargeld / Inflationsrate (%)"
@@ -899,6 +904,28 @@
     "allocationTotal": "Gesamt: {{value}}%",
     "allocationWarning": "Sollte 100% ergeben",
     "deflationWarning": "Ein positiver Wert deutet auf Deflation hin. Lange Deflationsphasen sind historisch selten – bitte sorgfältig in den Projektionen berücksichtigen.",
+    "fireTypes": {
+      "standard": {
+        "label": "Standard-FIRE",
+        "description": "Klassische finanzielle Unabhängigkeit – das Portfolio finanziert die Zielausgaben zur gewünschten Entnahmerate."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "description": "Minimalistisches FIRE mit kleinerem Kapital und sparsamem Lebensstil (FIRE-Ausgaben werden durch den Lean-Multiplikator reduziert)."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "description": "Größeres Kapital für einen komfortableren Lebensstil (FIRE-Ausgaben werden durch den Fat-Multiplikator erhöht)."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "description": "Du behältst einen entspannten Teilzeitjob, der einen Teil der Ausgaben deckt; das Portfolio finanziert nur die Lücke."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "description": "Spare heute genug, damit das Portfolio ohne weitere Beiträge bis zum gewählten Zielalter das Standard-FIRE-Ziel erreicht."
+      }
+    },
     "options": {
       "stopWorking": "Aufhören zu arbeiten, wenn die FIRE-Zahl erreicht ist",
       "useAssetAllocation": "Portfoliowert und Aufteilung aus der Vermögensaufteilung verwenden",

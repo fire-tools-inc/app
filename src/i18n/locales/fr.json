@@ -892,6 +892,11 @@
       "currentAge": "Âge actuel",
       "withdrawalRate": "Taux de retrait souhaité (%)",
       "yearsOfExpenses": "Années de dépenses nécessaires pour le FIRE",
+      "fireType": "Variante FIRE",
+      "leanExpenseMultiplier": "Multiplicateur de dépenses Lean FIRE (×)",
+      "fatExpenseMultiplier": "Multiplicateur de dépenses Fat FIRE (×)",
+      "baristaAnnualIncome": "Revenu annuel à temps partiel Barista ({{currency}})",
+      "coastTargetAge": "Âge cible Coast FIRE",
       "stockReturn": "Rendement attendu des actions (%)",
       "bondReturn": "Rendement attendu des obligations (%)",
       "cashReturn": "Liquidités / Taux d'inflation (%)"
@@ -899,6 +904,28 @@
     "allocationTotal": "Total : {{value}}%",
     "allocationWarning": "Doit être égal à 100%",
     "deflationWarning": "Une valeur positive indique de la déflation. Les longues périodes de déflation sont historiquement rares – à prendre en compte avec précaution dans vos projections.",
+    "fireTypes": {
+      "standard": {
+        "label": "FIRE Standard",
+        "description": "Indépendance financière classique : le portefeuille couvre les dépenses cibles au taux de retrait souhaité."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "description": "FIRE minimaliste avec un capital plus modeste et un mode de vie sobre (les dépenses FIRE sont réduites par le multiplicateur lean)."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "description": "Un capital plus important pour soutenir un style de vie confortable (les dépenses FIRE sont augmentées par le multiplicateur fat)."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "description": "Vous conservez un emploi à temps partiel peu stressant qui couvre une partie des dépenses ; le portefeuille finance uniquement l'écart."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "description": "Épargnez assez aujourd'hui pour que le portefeuille atteigne la cible FIRE standard sans nouvelles contributions à l'âge choisi."
+      }
+    },
     "options": {
       "stopWorking": "Arrêter de travailler en atteignant le nombre FIRE",
       "useAssetAllocation": "Utiliser la valeur et l'allocation du portefeuille de l'Allocation d'actifs",

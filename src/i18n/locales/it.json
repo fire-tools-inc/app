@@ -892,6 +892,11 @@
       "currentAge": "Età attuale",
       "withdrawalRate": "Tasso di prelievo desiderato (%)",
       "yearsOfExpenses": "Anni di spese necessari per il FIRE",
+      "fireType": "Variante FIRE",
+      "leanExpenseMultiplier": "Moltiplicatore spese Lean FIRE (×)",
+      "fatExpenseMultiplier": "Moltiplicatore spese Fat FIRE (×)",
+      "baristaAnnualIncome": "Reddito part-time annuale Barista ({{currency}})",
+      "coastTargetAge": "Età obiettivo per Coast FIRE",
       "stockReturn": "Rendimento atteso delle azioni (%)",
       "bondReturn": "Rendimento atteso delle obbligazioni (%)",
       "cashReturn": "Liquidità / Tasso di inflazione (%)"
@@ -899,6 +904,28 @@
     "allocationTotal": "Totale: {{value}}%",
     "allocationWarning": "Dovrebbe essere pari al 100%",
     "deflationWarning": "Un valore positivo indica deflazione. Periodi prolungati di deflazione sono storicamente rari – considerare attentamente nelle proprie proiezioni.",
+    "fireTypes": {
+      "standard": {
+        "label": "FIRE Standard",
+        "description": "Indipendenza finanziaria classica: il portafoglio sostiene le spese target al tasso di prelievo desiderato."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "description": "FIRE minimalista con un capitale più piccolo e uno stile di vita frugale (le spese FIRE vengono ridotte dal moltiplicatore lean)."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "description": "Capitale più ampio per sostenere uno stile di vita confortevole (le spese FIRE vengono aumentate dal moltiplicatore fat)."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "description": "Mantieni un lavoro part-time poco stressante che copre parte delle spese; il portafoglio finanzia solo la differenza."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "description": "Risparmia abbastanza oggi così che il portafoglio cresca senza ulteriori contributi fino al target FIRE all'età scelta."
+      }
+    },
     "options": {
       "stopWorking": "Smettere di lavorare al raggiungimento del numero FIRE",
       "useAssetAllocation": "Utilizzare il valore e l'allocazione del portafoglio dall'Allocazione Patrimoniale",

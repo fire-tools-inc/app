@@ -892,6 +892,11 @@
       "currentAge": "Edad actual",
       "withdrawalRate": "Tasa de retiro deseada (%)",
       "yearsOfExpenses": "Años de gastos necesarios para el FIRE",
+      "fireType": "Variante de FIRE",
+      "leanExpenseMultiplier": "Multiplicador de gastos Lean FIRE (×)",
+      "fatExpenseMultiplier": "Multiplicador de gastos Fat FIRE (×)",
+      "baristaAnnualIncome": "Ingresos anuales a tiempo parcial Barista ({{currency}})",
+      "coastTargetAge": "Edad objetivo de Coast FIRE",
       "stockReturn": "Rendimiento esperado de acciones (%)",
       "bondReturn": "Rendimiento esperado de bonos (%)",
       "cashReturn": "Efectivo / Tasa de inflación (%)"
@@ -899,6 +904,28 @@
     "allocationTotal": "Total: {{value}}%",
     "allocationWarning": "Debe ser igual al 100%",
     "deflationWarning": "Un valor positivo indica deflación. Los períodos prolongados de deflación son históricamente raros; considérelo cuidadosamente en sus proyecciones.",
+    "fireTypes": {
+      "standard": {
+        "label": "FIRE Estándar",
+        "description": "Independencia financiera clásica: la cartera sostiene los gastos objetivo a la tasa de retiro deseada."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "description": "FIRE minimalista con un capital más pequeño y un estilo de vida frugal (los gastos FIRE se reducen mediante el multiplicador lean)."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "description": "Capital mayor para sostener un estilo de vida cómodo (los gastos FIRE se incrementan mediante el multiplicador fat)."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "description": "Mantienes un trabajo a tiempo parcial poco estresante que cubre parte de los gastos; la cartera financia solo la diferencia."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "description": "Ahorra hoy lo suficiente para que la cartera crezca sin más aportes hasta alcanzar el FIRE estándar a la edad objetivo."
+      }
+    },
     "options": {
       "stopWorking": "Dejar de trabajar al alcanzar el número FIRE",
       "useAssetAllocation": "Usar el valor y la asignación de cartera de Asignación de activos",

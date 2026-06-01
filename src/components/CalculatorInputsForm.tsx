@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalculatorInputs } from '../types/calculator';
+import { CalculatorInputs, FireType, FIRE_TYPES } from '../types/calculator';
 import { NumberInput } from './NumberInput';
 import { SliderInput } from './SliderInput';
 import { MaterialIcon } from './MaterialIcon';
@@ -59,7 +59,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleChange = (field: keyof CalculatorInputs, value: number | boolean) => {
+  const handleChange = (field: keyof CalculatorInputs, value: number | boolean | FireType) => {
     const newInputs = { ...inputs, [field]: value };
     
     // Auto-calculate savings rate when income or expenses change
@@ -424,6 +424,64 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           <h3><MaterialIcon name="gps_fixed" /> {t('fireCalculator.sections.fireParams')} <span className="collapse-icon-small" aria-hidden="true">{openSections.fireParams ? '▼' : '▶'}</span></h3>
         </button>
         {openSections.fireParams && (<div id="fire-params-content" className="form-section-content">
+        <div className="form-group">
+          <label htmlFor="fire-type">{t('fireCalculator.labels.fireType')}</label>
+          <select
+            id="fire-type"
+            value={inputs.fireType}
+            onChange={(e) => handleChange('fireType', e.target.value as FireType)}
+          >
+            {FIRE_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`fireCalculator.fireTypes.${type}.label`)}
+              </option>
+            ))}
+          </select>
+          <p className="field-hint">{t(`fireCalculator.fireTypes.${inputs.fireType}.description`)}</p>
+        </div>
+        {inputs.fireType === 'lean' && (
+          <div className="form-group">
+            <label htmlFor="lean-multiplier">{t('fireCalculator.labels.leanExpenseMultiplier')}</label>
+            <NumberInput
+              id="lean-multiplier"
+              value={inputs.leanExpenseMultiplier}
+              onChange={(value) => handleChange('leanExpenseMultiplier', value)}
+            />
+          </div>
+        )}
+        {inputs.fireType === 'fat' && (
+          <div className="form-group">
+            <label htmlFor="fat-multiplier">{t('fireCalculator.labels.fatExpenseMultiplier')}</label>
+            <NumberInput
+              id="fat-multiplier"
+              value={inputs.fatExpenseMultiplier}
+              onChange={(value) => handleChange('fatExpenseMultiplier', value)}
+            />
+          </div>
+        )}
+        {inputs.fireType === 'barista' && (
+          <div className="form-group">
+            <label htmlFor="barista-income">{t('fireCalculator.labels.baristaAnnualIncome', { currency: currencySymbol })}</label>
+            <PrivacyBlur isPrivacyMode={isPrivacyMode}>
+              <NumberInput
+                id="barista-income"
+                value={inputs.baristaAnnualIncome}
+                onChange={(value) => handleChange('baristaAnnualIncome', value)}
+              />
+            </PrivacyBlur>
+          </div>
+        )}
+        {inputs.fireType === 'coast' && (
+          <div className="form-group">
+            <label htmlFor="coast-target-age">{t('fireCalculator.labels.coastTargetAge')}</label>
+            <NumberInput
+              id="coast-target-age"
+              value={inputs.coastTargetAge}
+              onChange={(value) => handleChange('coastTargetAge', value)}
+              allowDecimals={false}
+            />
+          </div>
+        )}
         <div className="form-group">
           <label htmlFor="current-age">{t('fireCalculator.labels.currentAge')}</label>
           <NumberInput

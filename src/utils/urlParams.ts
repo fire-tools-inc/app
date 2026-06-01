@@ -1,4 +1,4 @@
-import { CalculatorInputs } from '../types/calculator';
+import { CalculatorInputs, FIRE_TYPES, FireType } from '../types/calculator';
 import { DEFAULT_INPUTS } from './defaults';
 
 /**
@@ -30,6 +30,13 @@ export function serializeInputsToURL(inputs: CalculatorInputs): URLSearchParams 
   // FIRE Target
   params.set('desiredWithdrawalRate', inputs.desiredWithdrawalRate.toString());
   params.set('yearsOfExpenses', inputs.yearsOfExpenses.toString());
+
+  // FIRE Variant
+  params.set('fireType', inputs.fireType);
+  params.set('leanExpenseMultiplier', inputs.leanExpenseMultiplier.toString());
+  params.set('fatExpenseMultiplier', inputs.fatExpenseMultiplier.toString());
+  params.set('baristaAnnualIncome', inputs.baristaAnnualIncome.toString());
+  params.set('coastTargetAge', inputs.coastTargetAge.toString());
 
   // Expected Returns
   params.set('expectedStockReturn', inputs.expectedStockReturn.toString());
@@ -77,6 +84,13 @@ export function deserializeInputsFromURL(params: URLSearchParams): CalculatorInp
     return value === 'true';
   };
 
+  const parseFireType = (value: string | null): FireType => {
+    if (value && (FIRE_TYPES as readonly string[]).includes(value)) {
+      return value as FireType;
+    }
+    return DEFAULT_INPUTS.fireType;
+  };
+
   return {
     // Initial Values
     initialSavings: parseNumber(params.get('initialSavings'), DEFAULT_INPUTS.initialSavings),
@@ -100,6 +114,13 @@ export function deserializeInputsFromURL(params: URLSearchParams): CalculatorInp
     // FIRE Target
     desiredWithdrawalRate: parseNumber(params.get('desiredWithdrawalRate'), DEFAULT_INPUTS.desiredWithdrawalRate),
     yearsOfExpenses: parseNumber(params.get('yearsOfExpenses'), DEFAULT_INPUTS.yearsOfExpenses),
+
+    // FIRE Variant
+    fireType: parseFireType(params.get('fireType')),
+    leanExpenseMultiplier: parseNumber(params.get('leanExpenseMultiplier'), DEFAULT_INPUTS.leanExpenseMultiplier),
+    fatExpenseMultiplier: parseNumber(params.get('fatExpenseMultiplier'), DEFAULT_INPUTS.fatExpenseMultiplier),
+    baristaAnnualIncome: parseNumber(params.get('baristaAnnualIncome'), DEFAULT_INPUTS.baristaAnnualIncome),
+    coastTargetAge: parseInt(params.get('coastTargetAge'), DEFAULT_INPUTS.coastTargetAge),
 
     // Expected Returns
     expectedStockReturn: parseNumber(params.get('expectedStockReturn'), DEFAULT_INPUTS.expectedStockReturn),

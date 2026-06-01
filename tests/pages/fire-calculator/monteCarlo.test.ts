@@ -28,6 +28,11 @@ describe('Monte Carlo Simulation', () => {
     useAssetAllocationValue: false,
     useExpenseTrackerExpenses: false,
     useExpenseTrackerIncome: false,
+  fireType: 'standard',
+  leanExpenseMultiplier: 0.7,
+  fatExpenseMultiplier: 2.0,
+  baristaAnnualIncome: 20000,
+  coastTargetAge: 65,
   };
 
   const baseMcInputs: MonteCarloInputs = {
