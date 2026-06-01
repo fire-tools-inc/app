@@ -47,7 +47,6 @@ mac:
   notarize: false
 
 win:
-  publisherName: Fire Tools Contributors
   legalTrademarks: ""
   target:
     - target: nsis
