@@ -12,6 +12,7 @@ import { IncomeExpensesChart } from './components/IncomeExpensesChart';
 import { NetWorthChart } from './components/NetWorthChart';
 import { FIREMetrics } from './components/FIREMetrics';
 import { MonteCarloPage } from './components/MonteCarloPage';
+import { WithdrawalRatePage } from './components/WithdrawalRatePage';
 import { AssetAllocationPage } from './components/AssetAllocationPage';
 import { PortfolioBreakdownPage } from './components/PortfolioBreakdownPage';
 import { ExpenseTrackerPage } from './components/ExpenseTrackerPage';
@@ -134,6 +135,14 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
           aria-current={location.pathname === '/monte-carlo' ? 'page' : undefined}
         >
           <MaterialIcon name="casino" className="nav-icon" /> {NAVBAR_LABELS.monteCarlo}
+        </Link>
+        <Link
+          to="/withdrawal-rate"
+          className={`nav-link ${location.pathname === '/withdrawal-rate' ? 'active' : ''}`}
+          onClick={closeMenu}
+          aria-current={location.pathname === '/withdrawal-rate' ? 'page' : undefined}
+        >
+          <MaterialIcon name="trending_down" className="nav-icon" /> {NAVBAR_LABELS.withdrawalRate}
         </Link>
       </div>
       <div className="nav-actions">
@@ -546,6 +555,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/fire-calculator" element={<FIRECalculatorPage />} />
             <Route path="/monte-carlo" element={<MonteCarloPage />} />
+            <Route path="/withdrawal-rate" element={<WithdrawalRatePage />} />
             <Route path="/asset-allocation" element={<AssetAllocationPage />} />
             <Route path="/portfolio-breakdown" element={settings.experimentalFeatures?.portfolioBreakdown ? <PortfolioBreakdownPage /> : <NotFoundPage />} />
             <Route path="/expense-tracker" element={<ExpenseTrackerPage />} />

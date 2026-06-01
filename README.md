@@ -21,6 +21,7 @@ This software is for **educational and planning purposes only** — not financia
 |---------|-------------|
 | 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns |
 | 🎲 **Monte Carlo Simulations** | Probabilistic success analysis with volatility and black-swan modelling |
+| 📉 **Withdrawal Rate Simulator** | Trinity-style portfolio longevity test across withdrawal rates with a live slider |
 | 📊 **Asset Allocation Manager** | Portfolio tracking with rebalancing recommendations |
 | 🍩 **Portfolio Breakdown** *(experimental)* | Multi-dimensional view (sector, region, currency, provider) — [details](docs/pdf-import.md) |
 | 📄 **PDF Import** *(experimental)* | Parse receipts/statements in-browser; optional LLM categorization — [details](docs/pdf-import.md) |
