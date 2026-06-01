@@ -16,6 +16,7 @@ import { AssetAllocationPage } from './components/AssetAllocationPage';
 import { PortfolioBreakdownPage } from './components/PortfolioBreakdownPage';
 import { ExpenseTrackerPage } from './components/ExpenseTrackerPage';
 import { NetWorthTrackerPage } from './components/NetWorthTrackerPage';
+import { DebtPayoffPage } from './components/DebtPayoffPage';
 import { HomePage } from './components/HomePage';
 import { DataManagement } from './components/DataManagement';
 import { ProfileMenu } from './components/ProfileMenu';
@@ -118,6 +119,14 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
           aria-current={location.pathname === '/net-worth-tracker' ? 'page' : undefined}
         >
           <MaterialIcon name="trending_up" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
+        </Link>
+        <Link
+          to="/debt-payoff"
+          className={`nav-link ${location.pathname === '/debt-payoff' ? 'active' : ''}`}
+          onClick={closeMenu}
+          aria-current={location.pathname === '/debt-payoff' ? 'page' : undefined}
+        >
+          <MaterialIcon name="credit_score" className="nav-icon" /> {NAVBAR_LABELS.debtPayoff}
         </Link>
         <Link
           to="/fire-calculator"
@@ -550,6 +559,7 @@ function App() {
             <Route path="/portfolio-breakdown" element={settings.experimentalFeatures?.portfolioBreakdown ? <PortfolioBreakdownPage /> : <NotFoundPage />} />
             <Route path="/expense-tracker" element={<ExpenseTrackerPage />} />
             <Route path="/net-worth-tracker" element={<NetWorthTrackerPage />} />
+            <Route path="/debt-payoff" element={<DebtPayoffPage />} />
             <Route path="/questionnaire" element={<QuestionnairePage />} />
             <Route path="/settings" element={<SettingsPage onSettingsChange={handleSettingsChange} />} />
             <Route path="/privacy-policy" element={<PolicyRouteRedirect policyType="privacy" />} />

@@ -161,6 +161,20 @@ export function HomePage() {
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.quiz.cta')}</span>
         </Link>
+
+        <Link to="/debt-payoff" className="feature-card" aria-labelledby="debt-payoff-title">
+          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="credit_score" size="large" /></div>
+          <h3 id="debt-payoff-title" className="feature-card-title">{t('home.cards.debtPayoff.title')}</h3>
+          <p>
+            {t('home.cards.debtPayoff.body')}
+          </p>
+          <div className="feature-highlights">
+            <span className="highlight-item"><MaterialIcon name="ac_unit" size="small" /> {t('home.cards.debtPayoff.h1')}</span>
+            <span className="highlight-item"><MaterialIcon name="schedule" size="small" /> {t('home.cards.debtPayoff.h2')}</span>
+            <span className="highlight-item"><MaterialIcon name="show_chart" size="small" /> {t('home.cards.debtPayoff.h3')}</span>
+          </div>
+          <span className="cta-link" aria-hidden="true">{t('home.cards.debtPayoff.cta')}</span>
+        </Link>
       </section>
     </main>
   );

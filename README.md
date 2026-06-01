@@ -25,6 +25,7 @@ This software is for **educational and planning purposes only** — not financia
 | 🍩 **Portfolio Breakdown** *(experimental)* | Multi-dimensional view (sector, region, currency, provider) — [details](docs/pdf-import.md) |
 | 📄 **PDF Import** *(experimental)* | Parse receipts/statements in-browser; optional LLM categorization — [details](docs/pdf-import.md) |
 | 💵 **DCA Helper** | Dollar-cost averaging planning |
+| 💳 **Debt Payoff Calculator** | Snowball/avalanche strategies, fixed-budget or fixed-timeline modes, repayment timeline chart |
 | 💰 **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis |
 | 📈 **Net Worth Tracker** | Monthly snapshots of assets, cash, pensions with historical charts |
 | 📥 **CSV Export / Import** | Full data backup and restore |

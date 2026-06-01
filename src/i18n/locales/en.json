@@ -116,6 +116,14 @@
         "h2": "Smart Recommendations",
         "h3": "FIRE Path Guidance",
         "cta": "Take the Quiz →"
+      },
+      "debtPayoff": {
+        "title": "Debt Payoff Calculator",
+        "body": "Plan how to eliminate your debts using the snowball or avalanche method, with a fixed monthly budget or a target payoff timeline.",
+        "h1": "Snowball & Avalanche",
+        "h2": "Budget or Timeline",
+        "h3": "Repayment Timeline Chart",
+        "cta": "Plan Debt Payoff →"
       }
     },
     "disclaimerAriaLabel": "Important disclaimer"

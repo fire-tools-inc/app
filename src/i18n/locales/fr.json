@@ -116,6 +116,14 @@
         "h2": "Recommandations intelligentes",
         "h3": "Guide vers le FIRE",
         "cta": "Faire le quiz →"
+      },
+      "debtPayoff": {
+        "title": "Calculateur de Remboursement de Dettes",
+        "body": "Planifiez comment éliminer vos dettes avec la méthode boule de neige ou avalanche, avec un budget mensuel fixe ou un délai cible.",
+        "h1": "Boule de neige & avalanche",
+        "h2": "Budget ou délai",
+        "h3": "Graphique de chronologie",
+        "cta": "Planifier le remboursement →"
       }
     },
     "disclaimerAriaLabel": "Avertissement important"

@@ -1,0 +1,162 @@
+.debt-payoff-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.debt-payoff-page h2 {
+  margin-top: 0;
+}
+
+.debt-payoff-section {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #ddd);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.debt-payoff-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.debt-payoff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.debt-payoff-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.debt-payoff-field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.debt-payoff-field input,
+.debt-payoff-field select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.debt-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.debt-table th,
+.debt-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-color, #eee);
+  font-size: 0.9rem;
+}
+
+.debt-table input,
+.debt-table select {
+  width: 100%;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.debt-table .debt-actions {
+  width: 60px;
+  text-align: center;
+}
+
+.debt-payoff-btn {
+  background: #ff7e00;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.debt-payoff-btn:hover {
+  background: #e56f00;
+}
+
+.debt-payoff-btn.secondary {
+  background: transparent;
+  color: var(--text-color, #333);
+  border: 1px solid var(--border-color, #ccc);
+}
+
+.debt-payoff-btn.danger {
+  background: #c0392b;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.debt-payoff-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.debt-payoff-summary-card {
+  background: var(--surface-bg, #f7f7f9);
+  border: 1px solid var(--border-color, #e5e5e5);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+}
+
+.debt-payoff-summary-card .label {
+  font-size: 0.8rem;
+  color: var(--muted-text, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.debt-payoff-summary-card .value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.debt-payoff-warning {
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  color: #664d03;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.debt-payoff-error {
+  background: #f8d7da;
+  border: 1px solid #f5c2c7;
+  color: #842029;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.debt-payoff-recommend {
+  background: #d1ecf1;
+  border: 1px solid #bee5eb;
+  color: #0c5460;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.debt-payoff-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}

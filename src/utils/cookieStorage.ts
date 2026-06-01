@@ -9,6 +9,7 @@ import { Asset, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { CalculatorInputs } from '../types/calculator';
 import { ExpenseTrackerData, YearData, MonthData, IncomeEntry, ExpenseEntry } from '../types/expenseTracker';
 import { NetWorthTrackerData, NetWorthYearData, MonthlySnapshot, AssetHolding, CashEntry, PensionEntry, FinancialOperation } from '../types/netWorthTracker';
+import { Debt, DebtRepaymentMethod, DebtRepaymentMode } from '../types/debt';
 import { DEFAULT_INPUTS } from './defaults';
 import { encryptData, decryptData } from './cookieEncryption';
 import {
@@ -26,6 +27,7 @@ const ASSET_CLASS_TARGETS_KEY = 'fire-calculator-asset-class-targets';
 const FIRE_CALCULATOR_INPUTS_KEY = 'fire-calculator-inputs';
 const EXPENSE_TRACKER_KEY = 'fire-tools-expense-tracker';
 const NET_WORTH_TRACKER_KEY = 'fire-tools-net-worth-tracker';
+const DEBT_PAYOFF_KEY = 'fire-tools-debt-payoff';
 
 // Cookie options - secure settings for production
 const COOKIE_OPTIONS: CookieAttributes = {
@@ -530,6 +532,77 @@ export function clearAllData(): void {
   clearFireCalculatorInputs();
   clearExpenseTrackerData();
   clearNetWorthTrackerData();
+  clearDebtPayoffData();
+}
+
+// --- Debt payoff calculator persistence ---
+
+export interface DebtPayoffStoredData {
+  debts: Debt[];
+  method: DebtRepaymentMethod;
+  mode: DebtRepaymentMode;
+  monthlyBudget: number;
+  targetMonths: number;
+}
+
+function isValidDebt(obj: any): obj is Debt {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.id === 'string' &&
+    typeof obj.name === 'string' &&
+    typeof obj.balance === 'number' &&
+    typeof obj.minPayment === 'number' &&
+    typeof obj.interestRate === 'number'
+  );
+}
+
+function isValidDebtPayoffData(obj: any): obj is DebtPayoffStoredData {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    Array.isArray(obj.debts) &&
+    obj.debts.every(isValidDebt) &&
+    (obj.method === 'snowball' || obj.method === 'avalanche') &&
+    (obj.mode === 'fixed-budget' || obj.mode === 'fixed-timeline') &&
+    typeof obj.monthlyBudget === 'number' &&
+    typeof obj.targetMonths === 'number'
+  );
+}
+
+export function saveDebtPayoffData(data: DebtPayoffStoredData): void {
+  if (IS_DEMO_MODE) return;
+  try {
+    const encrypted = encryptData(JSON.stringify(data));
+    SafeCookies.set(DEBT_PAYOFF_KEY, encrypted, COOKIE_OPTIONS);
+  } catch (error) {
+    logger.error('cookie-storage', 'save-failed', 'failed to save debt payoff data to cookies', { pii: { error: (error as Error)?.message } });
+    throw new Error('Failed to save data to cookies. Cookies may be disabled.');
+  }
+}
+
+export function loadDebtPayoffData(): DebtPayoffStoredData | null {
+  if (IS_DEMO_MODE) return null;
+  try {
+    const encrypted = SafeCookies.get(DEBT_PAYOFF_KEY);
+    if (!encrypted) return null;
+    const decrypted = decryptData(encrypted);
+    if (!decrypted) return null;
+    const parsed = JSON.parse(decrypted);
+    if (isValidDebtPayoffData(parsed)) return parsed;
+    return null;
+  } catch (error) {
+    logger.error('cookie-storage', 'load-failed', 'failed to load debt payoff data from cookies', { pii: { error: (error as Error)?.message } });
+    return null;
+  }
+}
+
+export function clearDebtPayoffData(): void {
+  try {
+    SafeCookies.remove(DEBT_PAYOFF_KEY, { path: '/' });
+  } catch (error) {
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear debt payoff data from cookies', { pii: { error: (error as Error)?.message } });
+  }
 }
 
 /**

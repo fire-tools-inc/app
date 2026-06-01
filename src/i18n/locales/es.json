@@ -116,6 +116,14 @@
         "h2": "Recomendaciones inteligentes",
         "h3": "Guía hacia FIRE",
         "cta": "Hacer el quiz →"
+      },
+      "debtPayoff": {
+        "title": "Calculadora de Pago de Deudas",
+        "body": "Planifica cómo eliminar tus deudas con el método bola de nieve o avalancha, con presupuesto mensual fijo o plazo objetivo.",
+        "h1": "Bola de nieve y avalancha",
+        "h2": "Presupuesto o plazo",
+        "h3": "Gráfico de cronograma de pagos",
+        "cta": "Planificar pago →"
       }
     },
     "disclaimerAriaLabel": "Aviso importante"

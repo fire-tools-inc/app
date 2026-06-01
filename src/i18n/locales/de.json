@@ -116,6 +116,14 @@
         "h2": "Intelligente Empfehlungen",
         "h3": "FIRE-Weg-Anleitung",
         "cta": "Quiz starten →"
+      },
+      "debtPayoff": {
+        "title": "Schuldentilgungsrechner",
+        "body": "Plane die Tilgung deiner Schulden mit der Schneeball- oder Lawinenmethode, mit festem Monatsbudget oder Zielzeitraum.",
+        "h1": "Schneeball & Lawine",
+        "h2": "Budget oder Zeitraum",
+        "h3": "Tilgungszeitachsen-Diagramm",
+        "cta": "Tilgung planen →"
       }
     },
     "disclaimerAriaLabel": "Wichtiger Hinweis"

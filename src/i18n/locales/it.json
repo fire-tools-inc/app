@@ -116,6 +116,14 @@
         "h2": "Consigli intelligenti",
         "h3": "Guida al percorso FIRE",
         "cta": "Fai il quiz →"
+      },
+      "debtPayoff": {
+        "title": "Calcolatore Estinzione Debiti",
+        "body": "Pianifica come eliminare i tuoi debiti con il metodo a valanga o a palla di neve, con un budget mensile fisso o un orizzonte temporale obiettivo.",
+        "h1": "Valanga e palla di neve",
+        "h2": "Budget o tempistica",
+        "h3": "Grafico cronologia rimborsi",
+        "cta": "Pianifica estinzione →"
       }
     },
     "disclaimerAriaLabel": "Avviso importante"
