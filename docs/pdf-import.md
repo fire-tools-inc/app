@@ -21,6 +21,24 @@ This feature is **experimental** and **off by default**. Enable it under **Setti
 
 The doc-type dropdown lets you override the auto-detected parser if it picks the wrong one.
 
+## Parsing engine (and the LiteParse experiment)
+
+Text extraction is deliberately decoupled from the heuristic parsers: any engine
+that produces the shared `ExtractedPdf` shape (line-grouped text) can feed them.
+
+- **Production (browser):** [`pdfjs-dist`](https://github.com/mozilla/pdf.js) in
+  `src/utils/pdfTextExtractor.ts`. Runs fully client-side with no native deps.
+- **Experimental (Node-only):** [LiteParse](https://github.com/run-llama/liteparse)
+  in `src/utils/liteParseExtractor.ts`. LiteParse uses a native PDFium binding, so
+  it cannot run in the browser bundle and is loaded dynamically — it is wired up
+  for benchmarking and potential desktop/server use, not the web build.
+
+A benchmark test (`tests/pages/expense-tracker/pdfParsingBenchmark.test.ts`) runs a
+sample **paystub** and **invoice** (fixtures under `tests/.../fixtures/`, regenerate
+with `node tests/pages/expense-tracker/fixtures/generate.mjs`) through *both* engines
+and the same heuristics. Both recover the correct doc type, amount and currency; on
+these text-layer PDFs LiteParse extracts noticeably faster than pdfjs.
+
 ## Optional AI categorization
 
 If a heuristic category is wrong (e.g. an obscure merchant), an **optional** LLM step can re-categorize the rows.

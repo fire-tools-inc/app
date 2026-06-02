@@ -1,0 +1,73 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 662 >>
+stream
+BT
+/F1 11 Tf
+16 TL
+72 760 Td
+(GLOBEX SOFTWARE LTD) Tj
+T*
+(Invoice) Tj
+T*
+() Tj
+T*
+(Invoice Number: INV-2024-0098) Tj
+T*
+(Invoice Date: 15/03/2024) Tj
+T*
+(Due Date: 14/04/2024) Tj
+T*
+() Tj
+T*
+(Bill To: Wayne Enterprises) Tj
+T*
+() Tj
+T*
+(Description                 Qty   Unit Price   Amount) Tj
+T*
+(Cloud Hosting \(monthly\)      1      200.00     200.00) Tj
+T*
+(Consulting Services         10      150.00   1,500.00) Tj
+T*
+(Support Plan                 1       99.00      99.00) Tj
+T*
+() Tj
+T*
+(Subtotal               1,799.00) Tj
+T*
+(VAT \(20%\)                359.80) Tj
+T*
+(Total Due            EUR 2,158.80) Tj
+T*
+() Tj
+T*
+(Payment terms: net 30 days.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000954 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1024
+%%EOF
