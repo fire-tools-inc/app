@@ -61,7 +61,8 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
     : Math.min(currentAge + zoomYears, projections[projections.length - 1]?.age || currentAge);
 
   const handleShare = async () => {
-    const url = window.location.href;
+    const SHARE_ROOT = 'https://mbianchidev.github.io/fire-tools/demo/fire-calculator';
+    const url = `${SHARE_ROOT}${window.location.search}${window.location.hash}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
