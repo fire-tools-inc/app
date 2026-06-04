@@ -873,7 +873,8 @@
       "expenses": "Ausgaben & Ersparnisse",
       "fireParams": "FIRE-Parameter",
       "expectedReturns": "Erwartete Renditen",
-      "options": "Optionen"
+      "options": "Optionen",
+      "fireStyle": "FIRE-Stil"
     },
     "labels": {
       "initialSavings": "Anfangsersparnisse / Portfoliowert ({{currency}})",
@@ -907,31 +908,43 @@
     "fireTypes": {
       "standard": {
         "label": "Standard-FIRE",
-        "description": "Klassische finanzielle Unabhängigkeit – das Portfolio finanziert die Zielausgaben zur gewünschten Entnahmerate."
+        "description": "Klassische finanzielle Unabhängigkeit – das Portfolio finanziert die Zielausgaben zur gewünschten Entnahmerate.",
+        "tooltip": "Klassisches FIRE: das Portfolio deckt die Zielausgaben zur gewählten Entnahmequote vollständig.",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Ausgabenjahre (z. B. 25× bei sicherer Entnahmerate von 4 %).\n\nNach FIRE: das Portfolio finanziert alle Ausgaben. Ist „Arbeit bei FIRE beenden\" aktiv, endet das Arbeitseinkommen; sonst laufen die Beiträge weiter.\n\nIdeal für: die klassische Definition gemäß Trinity Study."
       },
       "lean": {
         "label": "Lean FIRE",
-        "description": "Minimalistisches FIRE mit kleinerem Kapital und sparsamem Lebensstil (FIRE-Ausgaben werden durch den Lean-Multiplikator reduziert)."
+        "description": "Minimalistisches FIRE mit kleinerem Kapital und sparsamem Lebensstil (FIRE-Ausgaben werden durch den Lean-Multiplikator reduziert).",
+        "tooltip": "Minimalistisches FIRE: kleineres Vermögen, sparsamer Lebensstil. Schneller erreicht.",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Lean-Multiplikator × Ausgabenjahre (Standard 0,7).\n\nNach FIRE: gleiche Projektion wie Standard – nur das Ziel ist niedriger. Um wirklich sparsam zu leben, lasse einen Puffer oder reduziere die FIRE-Jahresausgaben direkt.\n\nIdeal für: günstige Regionen, Minimalisten, alle, die Jahre früher unabhängig sein wollen."
       },
       "fat": {
         "label": "Fat FIRE",
-        "description": "Größeres Kapital für einen komfortableren Lebensstil (FIRE-Ausgaben werden durch den Fat-Multiplikator erhöht)."
+        "description": "Größeres Kapital für einen komfortableren Lebensstil (FIRE-Ausgaben werden durch den Fat-Multiplikator erhöht).",
+        "tooltip": "Komfortables FIRE: größeres Vermögen für luxuriöseren Lebensstil.",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Fat-Multiplikator × Ausgabenjahre (Standard 2,0).\n\nNach FIRE: gleiche Logik wie Standard, aber mit deutlich höherem Ziel. Geeignet, wenn der erwartete Ruhestand teurer ist als der heutige Alltag.\n\nIdeal für: hohe Einkommen mit Wunsch nach luxuriösem Ruhestand oder großem Sicherheitspuffer."
       },
       "barista": {
         "label": "Barista FIRE",
-        "description": "Du behältst einen entspannten Teilzeitjob, der einen Teil der Ausgaben deckt; das Portfolio finanziert nur die Lücke."
+        "description": "Du behältst einen entspannten Teilzeitjob, der einen Teil der Ausgaben deckt; das Portfolio finanziert nur die Lücke.",
+        "tooltip": "Semi-Ruhestand: ein Teilzeitjob deckt einen Teil der Ausgaben, das Portfolio die Lücke.",
+        "howItWorks": "Formel: Ziel = max(0, FIRE-Jahresausgaben − Barista-Einkommen) × Ausgabenjahre.\n\nNach FIRE: das Arbeitseinkommen sinkt auf den Barista-Wert und wächst nicht mehr. Das Portfolio muss nur die Lücke decken, sodass das benötigte Vermögen deutlich kleiner ist als beim Standard-FIRE.\n\nIdeal für: alle, die weiter mit Flexibilität arbeiten möchten, Krankenversicherung brauchen oder früh aus einer stressigen Karriere aussteigen wollen."
       },
       "coast": {
         "label": "Coast FIRE",
-        "description": "Spare heute genug, damit das Portfolio ohne weitere Beiträge bis zum gewählten Zielalter das Standard-FIRE-Ziel erreicht."
-      }
+        "description": "Spare heute genug, damit das Portfolio ohne weitere Beiträge bis zum gewählten Zielalter das Standard-FIRE-Ziel erreicht.",
+        "tooltip": "Früh aggressiv sparen, dann coasten – keine Beiträge mehr, Zinseszins erledigt den Rest.",
+        "howItWorks": "Formel: Ziel = Standard-Ziel / (1 + erwarteteRendite)^(Coast-Zielalter − aktuellesAlter).\n\nNach FIRE: Job und Gehalt bleiben, aber keine neuen Beiträge. Allein der Zinseszins führt das Portfolio bis zum gewählten Alter zum vollen Standard-Ziel.\n\nIdeal für: alle, die in den 20ern/30ern viel sparen und später eine schlechter bezahlte oder sinnstiftendere Karriere wählen wollen."
+      },
+      "howItWorksTitle": "Wie diese Variante funktioniert"
     },
     "options": {
       "stopWorking": "Aufhören zu arbeiten, wenn die FIRE-Zahl erreicht ist",
       "useAssetAllocation": "Portfoliowert und Aufteilung aus der Vermögensaufteilung verwenden",
       "useExpenseTrackerExpenses": "Aktuelle Ausgaben aus den letzten 12 Monaten des Ausgaben-Trackers berechnen",
       "useExpenseTrackerIncome": "Arbeitseinkommen aus den letzten 12 Monaten des Ausgaben-Trackers berechnen"
-    }
+    },
+    "fireStyleInfo": "Wähle die FIRE-Variante, die am besten zu deinem gewünschten Lebensstil im Ruhestand passt. Jede Variante verändert die Berechnung des Zielvermögens und das Verhalten der Projektion nach Erreichen."
   },
   "fireMetrics": {
     "heading": "FIRE-Kennzahlen",
