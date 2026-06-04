@@ -120,7 +120,7 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
           onClick={closeMenu}
           aria-current={location.pathname === '/net-worth-tracker' ? 'page' : undefined}
         >
-          <MaterialIcon name="trending_up" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
+          <MaterialIcon name="paid" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
         </Link>
         <Link
           to="/fire-calculator"

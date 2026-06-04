@@ -107,7 +107,7 @@ export function HomePage() {
         </Link>
 
         <Link to="/net-worth-tracker" className="feature-card" aria-labelledby="net-worth-title">
-          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_up" size="large" /></div>
+          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="paid" size="large" /></div>
           <h3 id="net-worth-title" className="feature-card-title">{t('home.cards.netWorth.title')}</h3>
           <p>
             {t('home.cards.netWorth.body')}
