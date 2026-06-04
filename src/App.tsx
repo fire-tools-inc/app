@@ -20,6 +20,7 @@ import { NetWorthTrackerPage } from './components/NetWorthTrackerPage';
 import { HomePage } from './components/HomePage';
 import { DataManagement } from './components/DataManagement';
 import { ProfileMenu } from './components/ProfileMenu';
+import { ToolsMenu } from './components/ToolsMenu';
 import { NotificationBell } from './components/NotificationBell';
 import { SettingsPage } from './components/SettingsPage';
 import { CookieConsent } from './components/CookieConsent';
@@ -136,14 +137,7 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
         >
           <MaterialIcon name="casino" className="nav-icon" /> {NAVBAR_LABELS.monteCarlo}
         </Link>
-        <Link
-          to="/withdrawal-rate"
-          className={`nav-link ${location.pathname === '/withdrawal-rate' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/withdrawal-rate' ? 'page' : undefined}
-        >
-          <MaterialIcon name="trending_down" className="nav-icon" /> {NAVBAR_LABELS.withdrawalRate}
-        </Link>
+        <ToolsMenu onNavigate={closeMenu} />
       </div>
       <div className="nav-actions">
         <NotificationBell />

@@ -49,6 +49,7 @@ describe('navbar is English-only (#233)', () => {
       fireCalculator: 'FIRE Calculator',
       monteCarlo: 'Monte Carlo',
       withdrawalRate: 'Withdrawal Rate',
+      tools: 'Tools',
     });
   });
 

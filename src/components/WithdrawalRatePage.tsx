@@ -336,7 +336,7 @@ export const WithdrawalRatePage: React.FC = () => {
               rate. The dashed line marks your currently selected rate.
             </p>
             <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+              <BarChart data={chartData} margin={{ top: 30, right: 20, left: 0, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
                 <XAxis
                   dataKey="rate"
@@ -367,6 +367,9 @@ export const WithdrawalRatePage: React.FC = () => {
                     borderRadius: '8px',
                     color: '#F8FAFC',
                   }}
+                  itemStyle={{ color: '#F8FAFC' }}
+                  labelStyle={{ color: '#F8FAFC', fontWeight: 600 }}
+                  cursor={{ fill: 'rgba(45, 212, 191, 0.08)' }}
                   formatter={(value, name) =>
                     name === 'successRate'
                       ? [`${value}%`, 'Success rate']
@@ -394,8 +397,10 @@ export const WithdrawalRatePage: React.FC = () => {
                   strokeDasharray="5 5"
                   label={{
                     value: 'Selected',
-                    position: 'top',
+                    position: 'insideTopRight',
                     fill: '#F8FAFC',
+                    fontSize: 12,
+                    offset: 8,
                   }}
                 />
               </BarChart>
