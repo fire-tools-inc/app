@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalculatorInputs } from '../types/calculator';
+import { CalculatorInputs, FireType, FIRE_TYPES } from '../types/calculator';
 import { NumberInput } from './NumberInput';
 import { SliderInput } from './SliderInput';
 import { MaterialIcon } from './MaterialIcon';
@@ -34,6 +34,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
   const currencySymbol = getCurrencySymbol(settings.currencySettings.defaultCurrency);
 
   const [openSections, setOpenSections] = useState({
+    fireStyle: true,
     initialValues: !inputs.useAssetAllocationValue,
     assetAllocation: !inputs.useAssetAllocationValue,
     income: true,
@@ -59,7 +60,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleChange = (field: keyof CalculatorInputs, value: number | boolean) => {
+  const handleChange = (field: keyof CalculatorInputs, value: number | boolean | FireType) => {
     const newInputs = { ...inputs, [field]: value };
     
     // Auto-calculate savings rate when income or expenses change
@@ -128,7 +129,90 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
   return (
     <div className="inputs-form">
       <h2>{t('fireCalculator.title')}</h2>
-      
+
+      <div id="section-fire-style" className="form-section collapsible-section" data-tour="fire-style">
+        <button
+          className="collapsible-header"
+          onClick={() => toggleSection('fireStyle')}
+          aria-expanded={openSections.fireStyle}
+          aria-controls="fire-style-content"
+        >
+          <h3>
+            <MaterialIcon name="local_fire_department" /> {t('fireCalculator.sections.fireStyle')}{' '}
+            <span className="collapse-icon-small" aria-hidden="true">{openSections.fireStyle ? '▼' : '▶'}</span>
+          </h3>
+        </button>
+        {openSections.fireStyle && (
+          <div id="fire-style-content" className="form-section-content">
+            <div className="form-group">
+              <label htmlFor="fire-type">{t('fireCalculator.labels.fireType')}</label>
+              <select
+                id="fire-type"
+                value={inputs.fireType}
+                onChange={(e) => handleChange('fireType', e.target.value as FireType)}
+              >
+                {FIRE_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {t(`fireCalculator.fireTypes.${type}.label`)}
+                  </option>
+                ))}
+              </select>
+              <details className="fire-type-details" style={{ marginTop: '0.5rem' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
+                  {t('fireCalculator.fireTypes.howItWorksTitle')}
+                </summary>
+                <p style={{ whiteSpace: 'pre-wrap', marginTop: '0.5rem' }}>
+                  {t(`fireCalculator.fireTypes.${inputs.fireType}.howItWorks`)}
+                </p>
+              </details>
+            </div>
+            {inputs.fireType === 'lean' && (
+              <div className="form-group">
+                <label htmlFor="lean-multiplier">{t('fireCalculator.labels.leanExpenseMultiplier')}</label>
+                <NumberInput
+                  id="lean-multiplier"
+                  value={inputs.leanExpenseMultiplier}
+                  onChange={(value) => handleChange('leanExpenseMultiplier', value)}
+                />
+              </div>
+            )}
+            {inputs.fireType === 'fat' && (
+              <div className="form-group">
+                <label htmlFor="fat-multiplier">{t('fireCalculator.labels.fatExpenseMultiplier')}</label>
+                <NumberInput
+                  id="fat-multiplier"
+                  value={inputs.fatExpenseMultiplier}
+                  onChange={(value) => handleChange('fatExpenseMultiplier', value)}
+                />
+              </div>
+            )}
+            {inputs.fireType === 'barista' && (
+              <div className="form-group">
+                <label htmlFor="barista-income">{t('fireCalculator.labels.baristaAnnualIncome', { currency: currencySymbol })}</label>
+                <PrivacyBlur isPrivacyMode={isPrivacyMode}>
+                  <NumberInput
+                    id="barista-income"
+                    value={inputs.baristaAnnualIncome}
+                    onChange={(value) => handleChange('baristaAnnualIncome', value)}
+                  />
+                </PrivacyBlur>
+              </div>
+            )}
+            {inputs.fireType === 'coast' && (
+              <div className="form-group">
+                <label htmlFor="coast-target-age">{t('fireCalculator.labels.coastTargetAge')}</label>
+                <NumberInput
+                  id="coast-target-age"
+                  value={inputs.coastTargetAge}
+                  onChange={(value) => handleChange('coastTargetAge', value)}
+                  allowDecimals={false}
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div id="section-initial-values" className="form-section collapsible-section" data-tour="initial-savings">
         <button 
           className="collapsible-header" 

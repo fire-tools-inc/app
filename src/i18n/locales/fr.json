@@ -873,7 +873,8 @@
       "expenses": "Dépenses et épargne",
       "fireParams": "Paramètres FIRE",
       "expectedReturns": "Rendements attendus",
-      "options": "Options"
+      "options": "Options",
+      "fireStyle": "Style FIRE"
     },
     "labels": {
       "initialSavings": "Épargne initiale / Valeur du portefeuille ({{currency}})",
@@ -892,6 +893,11 @@
       "currentAge": "Âge actuel",
       "withdrawalRate": "Taux de retrait souhaité (%)",
       "yearsOfExpenses": "Années de dépenses nécessaires pour le FIRE",
+      "fireType": "Variante FIRE",
+      "leanExpenseMultiplier": "Multiplicateur de dépenses Lean FIRE (×)",
+      "fatExpenseMultiplier": "Multiplicateur de dépenses Fat FIRE (×)",
+      "baristaAnnualIncome": "Revenu annuel à temps partiel Barista ({{currency}})",
+      "coastTargetAge": "Âge cible Coast FIRE",
       "stockReturn": "Rendement attendu des actions (%)",
       "bondReturn": "Rendement attendu des obligations (%)",
       "cashReturn": "Liquidités / Taux d'inflation (%)"
@@ -899,6 +905,29 @@
     "allocationTotal": "Total : {{value}}%",
     "allocationWarning": "Doit être égal à 100%",
     "deflationWarning": "Une valeur positive indique de la déflation. Les longues périodes de déflation sont historiquement rares – à prendre en compte avec précaution dans vos projections.",
+    "fireTypes": {
+      "standard": {
+        "label": "FIRE Standard",
+        "howItWorks": "Formule : cible = dépensesAnnuellesFIRE × annéesDeDépenses (par ex. 25× au taux de retrait sûr de 4 %).\n\nAprès le FIRE : le portefeuille finance toutes les dépenses. Si « arrêter de travailler au FIRE » est activé, le revenu du travail s'arrête ; sinon les cotisations continuent.\n\nIdéal pour : la définition classique de la Trinity Study."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "howItWorks": "Formule : cible = dépensesAnnuellesFIRE × multiplicateurLean × annéesDeDépenses (par défaut 0,7).\n\nAprès le FIRE : projection identique à Standard, seule la cible est réduite. Pour vivre vraiment frugalement, gardez une marge ou réduisez dépensesAnnuellesFIRE.\n\nIdéal pour : régions à faible coût de la vie, minimalistes, ceux qui veulent l'indépendance des années plus tôt."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "howItWorks": "Formule : cible = dépensesAnnuellesFIRE × multiplicateurFat × annéesDeDépenses (par défaut 2,0).\n\nAprès le FIRE : même logique que Standard mais avec une cible bien plus élevée. À utiliser si le style de vie attendu à la retraite dépasse l'actuel.\n\nIdéal pour : hauts revenus visant une retraite luxueuse ou une grande marge de sécurité."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "howItWorks": "Formule : cible = max(0, dépensesAnnuellesFIRE − revenuBarista) × annéesDeDépenses.\n\nAprès le FIRE : le revenu du travail tombe au montant Barista et ne croît plus. Le portefeuille n'a qu'à combler l'écart, donc le patrimoine requis est bien moindre que le FIRE Standard.\n\nIdéal pour : ceux qui veulent continuer à travailler avec souplesse, conserver une couverture santé, ou quitter plus tôt une carrière stressante."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "howItWorks": "Formule : cible = cibleStandard / (1 + rendementAttendu)^(âgeCoast − âgeActuel).\n\nAprès le FIRE : vous conservez votre travail et salaire mais arrêtez les cotisations. Les intérêts composés seuls font croître le portefeuille jusqu'à la cible Standard à l'âge choisi.\n\nIdéal pour : ceux qui épargnent beaucoup tôt et veulent ensuite la liberté de changer de carrière."
+      },
+      "howItWorksTitle": "Comment fonctionne cette variante"
+    },
     "options": {
       "stopWorking": "Arrêter de travailler en atteignant le nombre FIRE",
       "useAssetAllocation": "Utiliser la valeur et l'allocation du portefeuille de l'Allocation d'actifs",

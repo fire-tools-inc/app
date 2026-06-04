@@ -43,6 +43,10 @@ if (!gotSingleInstanceLock) {
 let mainWindow = null;
 let embeddedServer = null;
 let embeddedServerError = null;
+// Optional override: when set (e.g. by `npm run electron:dev:full`), the
+// renderer points at a standalone backend instead of the in-process embedded
+// one. Empty string / unset disables the override.
+const externalBackendUrl = (process.env.FIRETOOLS_BACKEND_URL || '').trim() || null;
 
 // Path where we persist the safeStorage-encrypted passphrase blob. Kept in
 // the same userData dir as the DB so a single backup captures both.
@@ -135,6 +139,10 @@ function logError(...args) {
 }
 
 async function startEmbedded() {
+  if (externalBackendUrl) {
+    logInfo(`[fire-tools] using external backend at ${externalBackendUrl} — skipping embedded server`);
+    return;
+  }
   try {
     const dbPath = path.join(app.getPath('userData'), 'firetools.db');
     // Use __dirname-relative paths so resolution works whether we're launched
@@ -257,11 +265,16 @@ function focusMainWindow() {
   mainWindow.focus();
 }
 
-ipcMain.handle('fire-tools:embedded-backend-info', () => ({
-  url: embeddedServer ? embeddedServer.url : null,
-  dbPath: embeddedServer ? embeddedServer.dbPath : null,
-  error: embeddedServerError,
-}));
+ipcMain.handle('fire-tools:embedded-backend-info', () => {
+  if (externalBackendUrl) {
+    return { url: externalBackendUrl, dbPath: null, error: null };
+  }
+  return {
+    url: embeddedServer ? embeddedServer.url : null,
+    dbPath: embeddedServer ? embeddedServer.dbPath : null,
+    error: embeddedServerError,
+  };
+});
 
 ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
   encrypted: embeddedServer ? embeddedServer.encrypted : false,

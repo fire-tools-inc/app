@@ -1,4 +1,4 @@
-import { CalculatorInputs, YearProjection, CalculationResult } from '../types/calculator';
+import { CalculatorInputs, YearProjection, CalculationResult, FireType } from '../types/calculator';
 import { 
   calculateAnnualExpensesFromTracker, 
   calculateAnnualIncomeFromTracker 
@@ -55,10 +55,78 @@ export function calculateYearsOfExpenses(withdrawalRate: number): number {
 }
 
 /**
- * Calculate FIRE projection based on inputs
+ * Blended expected portfolio return (decimal, e.g. 0.05 for 5%) based on asset allocation.
+ */
+export function getExpectedPortfolioReturn(inputs: CalculatorInputs): number {
+  return (
+    (inputs.stocksPercent / 100) * (inputs.expectedStockReturn / 100) +
+    (inputs.bondsPercent / 100) * (inputs.expectedBondReturn / 100) +
+    (inputs.cashPercent / 100) * (inputs.expectedCashReturn / 100)
+  );
+}
+
+/**
+ * Returns the annual expenses used to derive the FIRE target, after applying
+ * the lean/fat multipliers. For barista FIRE the "effective expenses" are the
+ * gap left after subtracting the barista part-time income.
+ */
+export function getEffectiveFireExpenses(inputs: CalculatorInputs): number {
+  const fireType: FireType = inputs.fireType ?? 'standard';
+  switch (fireType) {
+    case 'lean':
+      return Math.max(0, inputs.fireAnnualExpenses * (inputs.leanExpenseMultiplier ?? 1));
+    case 'fat':
+      return Math.max(0, inputs.fireAnnualExpenses * (inputs.fatExpenseMultiplier ?? 1));
+    case 'barista':
+      return Math.max(0, inputs.fireAnnualExpenses - (inputs.baristaAnnualIncome ?? 0));
+    case 'coast':
+    case 'standard':
+    default:
+      return inputs.fireAnnualExpenses;
+  }
+}
+
+/**
+ * Calculate the FIRE target for the selected variant.
+ *
+ * - standard / lean / fat / barista: effectiveExpenses × yearsOfExpenses
+ * - coast: present value of the standard FIRE target discounted by the expected
+ *   portfolio return between currentAge and coastTargetAge.
+ *
+ * When desiredWithdrawalRate is 0 the target is also 0 (FIRE is trivially achieved).
+ */
+export function calculateFireTarget(inputs: CalculatorInputs, currentAge: number): number {
+  if (inputs.desiredWithdrawalRate === 0) return 0;
+  const fireType: FireType = inputs.fireType ?? 'standard';
+  if (fireType === 'coast') {
+    const standardTarget = inputs.fireAnnualExpenses * inputs.yearsOfExpenses;
+    const r = getExpectedPortfolioReturn(inputs);
+    const years = Math.max(0, (inputs.coastTargetAge ?? currentAge) - currentAge);
+    if (years === 0) return standardTarget;
+    // Avoid division by zero / extreme negatives that would explode the target.
+    const growth = Math.pow(1 + r, years);
+    if (!isFinite(growth) || growth <= 0) return standardTarget;
+    return standardTarget / growth;
+  }
+  return getEffectiveFireExpenses(inputs) * inputs.yearsOfExpenses;
+}
+
+/**
+ * Calculate FIRE projection based on inputs.
+ *
+ * Supports five FIRE variants via inputs.fireType — see {@link calculateFireTarget}
+ * for how each variant's target is derived. The projection loop also honors
+ * variant-specific behavior:
+ *
+ * - barista: once the barista number is reached, full labor income is replaced
+ *   by baristaAnnualIncome and additional savings stop (the part-time job
+ *   covers expenses while the portfolio compounds).
+ * - coast:   once the coast number is reached, additional savings stop while
+ *   labor income continues to cover current expenses; the portfolio coasts.
+ * - lean / fat / standard: when stopWorkingAtFIRE is true, behavior matches
+ *   classic FIRE (stop working, live off the portfolio).
  */
 export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
-  // Get effective inputs with expense tracker values if enabled
   const effectiveInputs = getEffectiveInputs(inputs);
   
   const currentYear = new Date().getFullYear();
@@ -107,6 +175,9 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
     validationErrors.push('Input values are too large for calculation');
   }
   
+  const fireType: FireType = effectiveInputs.fireType ?? 'standard';
+  const effectiveFireExpenses = getEffectiveFireExpenses(effectiveInputs);
+
   // If there are validation errors, return early with empty projections
   if (validationErrors.length > 0) {
     return {
@@ -114,20 +185,18 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
       yearsToFIRE: -1,
       fireTarget: 0,
       finalPortfolioValue: 0,
+      fireType,
+      effectiveFireExpenses,
       validationErrors,
     };
   }
-  
-  // Calculate FIRE target based on years of expenses parameter
-  // Special case: if withdrawal rate is 0, FIRE is achieved immediately (no savings needed)
-  // Otherwise, FIRE target = annual expenses × years of expenses needed
+
+  // Calculate FIRE target for the selected variant
   let fireTarget: number;
   if (effectiveInputs.desiredWithdrawalRate === 0) {
-    fireTarget = 0; // FIRE is achieved with any amount if withdrawal rate is 0
+    fireTarget = 0;
   } else {
-    // Use yearsOfExpenses directly to calculate FIRE target
-    fireTarget = effectiveInputs.fireAnnualExpenses * effectiveInputs.yearsOfExpenses;
-    // Check if fireTarget is reasonable
+    fireTarget = calculateFireTarget(effectiveInputs, currentAge);
     if (!isFinite(fireTarget) || fireTarget > MAX_SAFE_VALUE) {
       validationErrors.push('FIRE target calculation resulted in an invalid value');
       return {
@@ -135,6 +204,8 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
         yearsToFIRE: -1,
         fireTarget: 0,
         finalPortfolioValue: 0,
+        fireType,
+        effectiveFireExpenses,
         validationErrors,
       };
     }
@@ -159,20 +230,28 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
       yearsToFIRE = i;
     }
     
-    // If stopWorkingAtFIRE is enabled, stop working once FIRE is achieved.
-    // Otherwise, keep working regardless of FIRE status.
-    const isWorking = effectiveInputs.stopWorkingAtFIRE ? !isFIREAchieved : true;
+    // Determine working mode for this year based on FIRE variant.
+    // - barista: after the number is reached, switch to part-time labor income (still working).
+    // - coast:   after the number is reached, keep full labor income but stop adding savings.
+    // - standard / lean / fat: respect stopWorkingAtFIRE.
+    const isBaristaActive = fireType === 'barista' && isFIREAchieved;
+    const isCoastActive = fireType === 'coast' && isFIREAchieved;
+    const isFullyRetired =
+      isFIREAchieved &&
+      effectiveInputs.stopWorkingAtFIRE &&
+      !isBaristaActive &&
+      !isCoastActive;
+    const isWorking = !isFullyRetired;
     
     // Calculate investment yield based on asset allocation
-    const portfolioReturn = (
-      (effectiveInputs.stocksPercent / 100) * (effectiveInputs.expectedStockReturn / 100) +
-      (effectiveInputs.bondsPercent / 100) * (effectiveInputs.expectedBondReturn / 100) +
-      (effectiveInputs.cashPercent / 100) * (effectiveInputs.expectedCashReturn / 100)
-    );
+    const portfolioReturn = getExpectedPortfolioReturn(effectiveInputs);
     const investmentYield = portfolioValue * portfolioReturn;
     
-    // Calculate income
-    const currentLaborIncome = isWorking ? laborIncome : 0;
+    // Active labor income for this year (barista replaces it with part-time income)
+    const activeLaborIncome = isBaristaActive
+      ? Math.min(laborIncome, effectiveInputs.baristaAnnualIncome ?? 0)
+      : laborIncome;
+    const currentLaborIncome = isWorking ? activeLaborIncome : 0;
     // Pension income only starts at retirement age
     const currentStatePension = age >= effectiveInputs.retirementAge ? effectiveInputs.statePensionIncome : 0;
     const currentPrivatePension = age >= effectiveInputs.retirementAge ? effectiveInputs.privatePensionIncome : 0;
@@ -180,16 +259,24 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
     const otherIncomeTotal = pensionIncome + effectiveInputs.otherIncome;
     const totalIncome = currentLaborIncome + investmentYield + otherIncomeTotal;
     
-    // Calculate expenses
+    // Expenses: once FIRE is reached, use the FIRE budget (also for barista/coast post-target).
     const expenses = isFIREAchieved ? effectiveInputs.fireAnnualExpenses : effectiveInputs.currentAnnualExpenses;
     
     // Calculate net change in portfolio
     let portfolioChange: number;
     if (isWorking) {
-      // While working: save a percentage of labor income, plus all investment returns
-      // The savings rate already accounts for expenses (if you save 30%, you spend 70%)
-      const laborSavings = laborIncome * (effectiveInputs.savingsRate / 100);
-      portfolioChange = laborSavings + investmentYield;
+      if (isCoastActive) {
+        // Coast FIRE: stop contributing additional savings, let the portfolio compound.
+        portfolioChange = investmentYield;
+      } else if (isBaristaActive) {
+        // Barista FIRE: part-time income covers the post-FIRE expenses, the gap
+        // (if any) is drawn from the portfolio; investment yield compounds.
+        portfolioChange = currentLaborIncome + investmentYield + otherIncomeTotal - expenses;
+      } else {
+        // Standard accumulation: save a percentage of labor income, plus all investment returns.
+        const laborSavings = activeLaborIncome * (effectiveInputs.savingsRate / 100);
+        portfolioChange = laborSavings + investmentYield;
+      }
     } else {
       // Not working: live off portfolio (income - expenses, including investment returns)
       portfolioChange = totalIncome - expenses;
@@ -216,15 +303,13 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
     portfolioValue = portfolioValue + portfolioChange;
     
     // Safety check: if portfolio value becomes too large or invalid, stop calculation
-    const MAX_SAFE_VALUE = Number.MAX_SAFE_INTEGER / 1000;
     if (!isFinite(portfolioValue) || Math.abs(portfolioValue) > MAX_SAFE_VALUE) {
       break;
     }
     
-    // Grow labor income
-    if (isWorking) {
+    // Grow labor income (barista keeps part-time income flat — it's a lifestyle choice, not a career)
+    if (isWorking && !isBaristaActive) {
       laborIncome = laborIncome * (1 + effectiveInputs.laborIncomeGrowthRate / 100);
-      // Safety check for labor income growth
       if (!isFinite(laborIncome) || laborIncome > MAX_SAFE_VALUE) {
         laborIncome = MAX_SAFE_VALUE;
       }
@@ -241,5 +326,7 @@ export function calculateFIRE(inputs: CalculatorInputs): CalculationResult {
     yearsToFIRE: yearsToFIRE >= 0 ? yearsToFIRE : -1,
     fireTarget,
     finalPortfolioValue: projections[projections.length - 1]?.portfolioValue || 0,
+    fireType,
+    effectiveFireExpenses,
   };
 }

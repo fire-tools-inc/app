@@ -19,7 +19,7 @@ This software is for **educational and planning purposes only** — not financia
 
 | Feature | Description |
 |---------|-------------|
-| 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns |
+| 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns. Supports **Standard, Lean, Fat, Barista, and Coast** FIRE variants — see [docs/user/fire-calculator.md](docs/user/fire-calculator.md). |
 | 🎲 **Monte Carlo Simulations** | Probabilistic success analysis with volatility and black-swan modelling |
 | 📊 **Asset Allocation Manager** | Portfolio tracking with rebalancing recommendations |
 | 🍩 **Portfolio Breakdown** *(experimental)* | Multi-dimensional view (sector, region, currency, provider) — [details](docs/pdf-import.md) |
@@ -46,6 +46,16 @@ To preview the full site (landing page + docs + OpenAPI viewer):
 ```bash
 npm run dev:all      # mirrors GitHub Pages layout
 ```
+
+To run the Electron desktop app against the local backend (boots
+`server/` + Vite + Electron in one shot):
+
+```bash
+npm install --prefix server   # first time only
+npm run electron:dev:full     # backend on :8787 + Electron renderer
+```
+
+Use `npm run electron:dev` if you only want Vite + Electron without the backend.
 
 ---
 
