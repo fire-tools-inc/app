@@ -12,6 +12,7 @@ import { IncomeExpensesChart } from './components/IncomeExpensesChart';
 import { NetWorthChart } from './components/NetWorthChart';
 import { FIREMetrics } from './components/FIREMetrics';
 import { MonteCarloPage } from './components/MonteCarloPage';
+import { InvestmentGrowthPage } from './components/InvestmentGrowthPage';
 import { WithdrawalRatePage } from './components/WithdrawalRatePage';
 import { AssetAllocationPage } from './components/AssetAllocationPage';
 import { PortfolioBreakdownPage } from './components/PortfolioBreakdownPage';
@@ -119,7 +120,7 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
           onClick={closeMenu}
           aria-current={location.pathname === '/net-worth-tracker' ? 'page' : undefined}
         >
-          <MaterialIcon name="trending_up" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
+          <MaterialIcon name="paid" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
         </Link>
         <Link
           to="/fire-calculator"
@@ -541,6 +542,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/fire-calculator" element={<FIRECalculatorPage />} />
             <Route path="/monte-carlo" element={<MonteCarloPage />} />
+            <Route path="/investment-growth" element={<InvestmentGrowthPage />} />
             <Route path="/withdrawal-rate" element={<WithdrawalRatePage />} />
             <Route path="/asset-allocation" element={<AssetAllocationPage />} />
             <Route path="/portfolio-breakdown" element={settings.experimentalFeatures?.portfolioBreakdown ? <PortfolioBreakdownPage /> : <NotFoundPage />} />

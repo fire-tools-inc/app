@@ -109,6 +109,14 @@
         "h3": "Schwarzer-Schwan-Ereignisse",
         "cta": "Simulationen starten →"
       },
+      "investmentGrowth": {
+        "title": "Investitionswachstums-Rechner",
+        "body": "Projiziere den Endwert deines Portfolios über die Zeit mit Beiträgen, erwarteten Renditen und Inflation. Erhalte sofortiges Feedback zu realem Wachstum und Sparquote.",
+        "h1": "Inflationsbereinigte Renditen",
+        "h2": "Wiederkehrende Beiträge",
+        "h3": "Sparquoten-Feedback",
+        "cta": "Wachstum projizieren →"
+      },
       "withdrawalRate": {
         "title": "Entnahmeraten-Simulator",
         "body": "Belastungstest deines Ruhestandsportfolios bei verschiedenen Entnahmeraten mit einem Live-Schieberegler, basierend auf der 4-%-Regel der Trinity-Studie.",

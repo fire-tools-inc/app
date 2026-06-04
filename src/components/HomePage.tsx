@@ -107,7 +107,7 @@ export function HomePage() {
         </Link>
 
         <Link to="/net-worth-tracker" className="feature-card" aria-labelledby="net-worth-title">
-          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_up" size="large" /></div>
+          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="paid" size="large" /></div>
           <h3 id="net-worth-title" className="feature-card-title">{t('home.cards.netWorth.title')}</h3>
           <p>
             {t('home.cards.netWorth.body')}
@@ -146,6 +146,20 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="bolt" size="small" /> {t('home.cards.monteCarlo.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.monteCarlo.cta')}</span>
+        </Link>
+
+        <Link to="/investment-growth" className="feature-card" aria-labelledby="investment-growth-title">
+          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_up" size="large" /></div>
+          <h3 id="investment-growth-title" className="feature-card-title">{t('home.cards.investmentGrowth.title')}</h3>
+          <p>
+            {t('home.cards.investmentGrowth.body')}
+          </p>
+          <div className="feature-highlights">
+            <span className="highlight-item"><MaterialIcon name="show_chart" size="small" /> {t('home.cards.investmentGrowth.h1')}</span>
+            <span className="highlight-item"><MaterialIcon name="autorenew" size="small" /> {t('home.cards.investmentGrowth.h2')}</span>
+            <span className="highlight-item"><MaterialIcon name="savings" size="small" /> {t('home.cards.investmentGrowth.h3')}</span>
+          </div>
+          <span className="cta-link" aria-hidden="true">{t('home.cards.investmentGrowth.cta')}</span>
         </Link>
 
         <Link to="/withdrawal-rate" className="feature-card" aria-labelledby="withdrawal-rate-title">

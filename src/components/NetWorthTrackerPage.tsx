@@ -875,7 +875,7 @@ export function NetWorthTrackerPage() {
     <div className="net-worth-tracker-page">
       <header className="page-header">
         <div className="page-header-top">
-          <h1><MaterialIcon name="trending_up" className="page-header-icon" /> {t('netWorth.title')}</h1>
+          <h1><MaterialIcon name="paid" className="page-header-icon" /> {t('netWorth.title')}</h1>
         </div>
         <p>
           {t('netWorth.subtitle')}

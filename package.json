@@ -61,7 +61,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.8",
-    "electron": "^42.3.3",
+    "electron": "^41.7.1",
     "electron-builder": "^26.0.12",
     "jsdom": "^29.1.1",
     "marked": "^18.0.4",

@@ -109,6 +109,14 @@
         "h3": "Eventos cisne negro",
         "cta": "Ejecutar simulaciones →"
       },
+      "investmentGrowth": {
+        "title": "Calculadora de crecimiento de inversiones",
+        "body": "Proyecta el valor final de tu cartera a lo largo del tiempo con aportes, rendimientos esperados e inflación. Obtén feedback inmediato sobre crecimiento real y tasa de ahorro.",
+        "h1": "Rendimientos ajustados por inflación",
+        "h2": "Aportes recurrentes",
+        "h3": "Feedback sobre la tasa de ahorro",
+        "cta": "Proyectar crecimiento →"
+      },
       "withdrawalRate": {
         "title": "Simulador de tasa de retiro",
         "body": "Pon a prueba tu cartera de jubilación con distintas tasas de retiro mediante un control deslizante en vivo, basado en la regla del 4 % del Trinity Study.",

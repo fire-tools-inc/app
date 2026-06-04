@@ -48,6 +48,7 @@ describe('navbar is English-only (#233)', () => {
       netWorth: 'Net Worth',
       fireCalculator: 'FIRE Calculator',
       monteCarlo: 'Monte Carlo',
+      investmentGrowth: 'Investment Growth',
       withdrawalRate: 'Withdrawal Rate',
       tools: 'Tools',
     });

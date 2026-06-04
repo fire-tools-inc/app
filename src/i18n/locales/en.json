@@ -109,6 +109,14 @@
         "h3": "Black Swan Events",
         "cta": "Run Simulations →"
       },
+      "investmentGrowth": {
+        "title": "Investment Growth Calculator",
+        "body": "Project your portfolio's end value over time with contributions, expected returns and inflation. Get instant feedback on real growth and savings rate.",
+        "h1": "Inflation-Adjusted Returns",
+        "h2": "Recurring Contributions",
+        "h3": "Savings Rate Feedback",
+        "cta": "Project Growth →"
+      },
       "withdrawalRate": {
         "title": "Withdrawal Rate Simulator",
         "body": "Stress-test your retirement portfolio at different withdrawal rates with a live slider, grounded in the Trinity Study's 4% rule.",

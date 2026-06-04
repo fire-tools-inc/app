@@ -109,6 +109,14 @@
         "h3": "Eventi cigno nero",
         "cta": "Avvia le simulazioni →"
       },
+      "investmentGrowth": {
+        "title": "Calcolatore di crescita degli investimenti",
+        "body": "Proietta il valore finale del tuo portafoglio nel tempo con contributi, rendimenti attesi e inflazione. Ricevi feedback su crescita reale e tasso di risparmio.",
+        "h1": "Rendimenti reali (al netto dell'inflazione)",
+        "h2": "Contributi ricorrenti",
+        "h3": "Feedback sul tasso di risparmio",
+        "cta": "Proietta la crescita →"
+      },
       "withdrawalRate": {
         "title": "Simulatore del tasso di prelievo",
         "body": "Metti alla prova il tuo portafoglio pensionistico con diversi tassi di prelievo tramite uno slider in tempo reale, basato sulla regola del 4% del Trinity Study.",
