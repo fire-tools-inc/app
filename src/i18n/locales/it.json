@@ -109,6 +109,22 @@
         "h3": "Eventi cigno nero",
         "cta": "Avvia le simulazioni →"
       },
+      "investmentGrowth": {
+        "title": "Calcolatore di crescita degli investimenti",
+        "body": "Proietta il valore finale del tuo portafoglio nel tempo con contributi, rendimenti attesi e inflazione. Ricevi feedback su crescita reale e tasso di risparmio.",
+        "h1": "Rendimenti reali (al netto dell'inflazione)",
+        "h2": "Contributi ricorrenti",
+        "h3": "Feedback sul tasso di risparmio",
+        "cta": "Proietta la crescita →"
+      },
+      "withdrawalRate": {
+        "title": "Simulatore del tasso di prelievo",
+        "body": "Metti alla prova il tuo portafoglio pensionistico con diversi tassi di prelievo tramite uno slider in tempo reale, basato sulla regola del 4% del Trinity Study.",
+        "h1": "Trinity Study",
+        "h2": "Slider in tempo reale",
+        "h3": "Probabilità di successo",
+        "cta": "Prova il simulatore →"
+      },
       "quiz": {
         "title": "Quiz Persona FIRE",
         "body": "Scopri la tua persona FIRE e ricevi consigli personalizzati in base alla tua situazione finanziaria, agli obiettivi e alla tolleranza al rischio.",
@@ -873,7 +889,8 @@
       "expenses": "Spese e risparmi",
       "fireParams": "Parametri FIRE",
       "expectedReturns": "Rendimenti attesi",
-      "options": "Opzioni"
+      "options": "Opzioni",
+      "fireStyle": "Stile FIRE"
     },
     "labels": {
       "initialSavings": "Risparmi iniziali / Valore del portafoglio ({{currency}})",
@@ -892,6 +909,11 @@
       "currentAge": "Età attuale",
       "withdrawalRate": "Tasso di prelievo desiderato (%)",
       "yearsOfExpenses": "Anni di spese necessari per il FIRE",
+      "fireType": "Variante FIRE",
+      "leanExpenseMultiplier": "Moltiplicatore spese Lean FIRE (×)",
+      "fatExpenseMultiplier": "Moltiplicatore spese Fat FIRE (×)",
+      "baristaAnnualIncome": "Reddito part-time annuale Barista ({{currency}})",
+      "coastTargetAge": "Età obiettivo per Coast FIRE",
       "stockReturn": "Rendimento atteso delle azioni (%)",
       "bondReturn": "Rendimento atteso delle obbligazioni (%)",
       "cashReturn": "Liquidità / Tasso di inflazione (%)"
@@ -899,6 +921,29 @@
     "allocationTotal": "Totale: {{value}}%",
     "allocationWarning": "Dovrebbe essere pari al 100%",
     "deflationWarning": "Un valore positivo indica deflazione. Periodi prolungati di deflazione sono storicamente rari – considerare attentamente nelle proprie proiezioni.",
+    "fireTypes": {
+      "standard": {
+        "label": "FIRE Standard",
+        "howItWorks": "Formula: obiettivo = speseAnnueFIRE × anniDiSpese (es. 25× con un tasso di prelievo sicuro del 4%).\n\nDopo il FIRE: il portafoglio copre tutte le spese. Se \"smettere di lavorare al FIRE\" è attivo, il reddito da lavoro si ferma; altrimenti i contributi continuano.\n\nIdeale per: chi segue la definizione classica della Trinity Study."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "howItWorks": "Formula: obiettivo = speseAnnueFIRE × moltiplicatoreLean × anniDiSpese (moltiplicatore default 0,7).\n\nDopo il FIRE: la proiezione resta uguale a Standard — solo l'obiettivo viene ridotto. Per vivere davvero in modo frugale lascia un margine o abbassa direttamente speseAnnueFIRE.\n\nIdeale per: luoghi con basso costo della vita, minimalisti, chi vuole raggiungere l'indipendenza anni prima."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "howItWorks": "Formula: obiettivo = speseAnnueFIRE × moltiplicatoreFat × anniDiSpese (default 2,0).\n\nDopo il FIRE: stessa logica di Standard ma con un obiettivo molto più alto. Usalo quando lo stile di vita atteso in pensione è superiore a quello attuale.\n\nIdeale per: redditi alti che vogliono una pensione di lusso o un ampio margine di sicurezza."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "howItWorks": "Formula: obiettivo = max(0, speseAnnueFIRE − redditoBarista) × anniDiSpese.\n\nDopo il FIRE: il reddito da lavoro scende al valore Barista e non cresce più. Il portafoglio deve coprire solo il gap, quindi il patrimonio richiesto è molto più piccolo del FIRE Standard.\n\nIdeale per: chi vuole continuare a lavorare con flessibilità, copertura sanitaria, o lasciare prima una carriera stressante."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "howItWorks": "Formula: obiettivo = obiettivoStandard / (1 + rendimentoAtteso)^(etàCoast − etàAttuale).\n\nDopo il FIRE: mantieni stipendio e lavoro, ma fermi i contributi. Solo l'interesse composto porta il portafoglio al target Standard entro l'età scelta.\n\nIdeale per: chi risparmia molto nei 20-30 anni e poi vuole la libertà di scegliere una carriera meno pagata o più significativa."
+      },
+      "howItWorksTitle": "Come funziona questa variante"
+    },
     "options": {
       "stopWorking": "Smettere di lavorare al raggiungimento del numero FIRE",
       "useAssetAllocation": "Utilizzare il valore e l'allocazione del portafoglio dall'Allocazione Patrimoniale",

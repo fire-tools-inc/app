@@ -20,6 +20,37 @@ current savings rate, with adjustable expected return and inflation.
 
 Every change recalculates immediately and updates the projection chart.
 
+## FIRE variants
+
+The calculator supports five FIRE flavours. Pick one from the **FIRE Type** selector
+to change how the target number and post-FIRE behaviour are computed.
+
+- **Standard FIRE** — the classic: `target = annual_expenses × years_of_expenses`.
+  After FIRE, optionally stop working (`stopWorkingAtFIRE`) and let the portfolio
+  fund expenses.
+- **Lean FIRE** — minimalist lifestyle. The target is scaled down by
+  `leanExpenseMultiplier` (default `0.7`). Lower target ⇒ reach FIRE sooner.
+  Formula: `target = annual_expenses × leanExpenseMultiplier × years_of_expenses`.
+- **Fat FIRE** — more comfortable lifestyle. The target is scaled up by
+  `fatExpenseMultiplier` (default `2.0`). Higher target ⇒ takes longer.
+  Formula: `target = annual_expenses × fatExpenseMultiplier × years_of_expenses`.
+- **Barista FIRE** — partial retirement where a part-time job covers part of
+  expenses. Only the *gap* needs to be funded by the portfolio.
+  Formula: `target = max(0, annual_expenses − baristaAnnualIncome) × years_of_expenses`.
+  After FIRE, labor income is capped at `baristaAnnualIncome` and no longer grows.
+- **Coast FIRE** — save aggressively early, then stop contributing and let
+  compounding do the rest until a chosen retirement age.
+  Formula: `target = standard_target / (1 + expected_return)^(coastTargetAge − currentAge)`.
+  After Coast FIRE is reached the model keeps labor income but stops new
+  contributions; only investment yield grows the portfolio.
+
+Notes:
+- Post-FIRE *expenses* always use `fireAnnualExpenses` — the lean/fat multipliers
+  only affect the target, not what you actually spend in retirement.
+- All variants honour the existing inputs (returns, withdrawal rate, pensions,
+  other income). Switching variants never invalidates saved data — missing
+  fields fall back to defaults.
+
 ## Reading the chart
 
 - The line shows projected net worth year by year.

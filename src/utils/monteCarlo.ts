@@ -46,9 +46,11 @@ function calculateSimulationStats(simulations: SimulationRun[]): {
 }
 
 /**
- * Generate a random return based on expected return and volatility
+ * Generate a random return based on expected return and volatility.
+ * Exported so other simulators (e.g. withdrawal rate longevity) can reuse
+ * the same Box-Muller implementation and behave consistently.
  */
-function generateRandomReturn(expectedReturn: number, volatility: number): number {
+export function generateRandomReturn(expectedReturn: number, volatility: number): number {
   let z: number;
 
   if (cachedNormal !== null) {

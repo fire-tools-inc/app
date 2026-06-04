@@ -471,6 +471,7 @@ export function convertFireCalculatorInputsToNewCurrency(
     initialSavings: convertAmount(inputs.initialSavings, fromCurrency, toCurrency, rates),
     currentAnnualExpenses: convertAmount(inputs.currentAnnualExpenses, fromCurrency, toCurrency, rates),
     fireAnnualExpenses: convertAmount(inputs.fireAnnualExpenses, fromCurrency, toCurrency, rates),
+    baristaAnnualIncome: convertAmount(inputs.baristaAnnualIncome, fromCurrency, toCurrency, rates),
     annualLaborIncome: convertAmount(inputs.annualLaborIncome, fromCurrency, toCurrency, rates),
     statePensionIncome: convertAmount(inputs.statePensionIncome, fromCurrency, toCurrency, rates),
     privatePensionIncome: convertAmount(inputs.privatePensionIncome, fromCurrency, toCurrency, rates),

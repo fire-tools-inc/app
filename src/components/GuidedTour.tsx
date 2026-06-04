@@ -438,7 +438,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     },
     {
       title: t('guidedTour.overview.netWorth.title'),
-      icon: 'trending_up',
+      icon: 'paid',
       content: (
         <div className="tour-step-content">
           <p>
@@ -506,7 +506,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
               <span className="tour-integration-text">{t('guidedTour.overview.together.cashflowUpdates')}</span>
             </div>
             <div className="tour-integration-item">
-              <span className="tour-integration-icon"><MaterialIcon name="trending_up" size="small" /></span>
+              <span className="tour-integration-icon"><MaterialIcon name="paid" size="small" /></span>
               <span className="tour-integration-arrow">↔</span>
               <span className="tour-integration-icon"><MaterialIcon name="pie_chart" size="small" /></span>
               <span className="tour-integration-text">{t('guidedTour.overview.together.netWorthSync')}</span>

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { calculateFIRE, calculateYearsOfExpenses } from '../../../src/utils/fireCalculator';
+import {
+  calculateFIRE,
+  calculateYearsOfExpenses,
+  calculateFireTarget,
+  getEffectiveFireExpenses,
+  getExpectedPortfolioReturn,
+} from '../../../src/utils/fireCalculator';
 import { CalculatorInputs } from '../../../src/types/calculator';
 
 describe('calculateYearsOfExpenses', () => {
@@ -56,6 +62,11 @@ describe('FIRE Calculator', () => {
     useAssetAllocationValue: false,
     useExpenseTrackerExpenses: false,
     useExpenseTrackerIncome: false,
+    fireType: 'standard',
+    leanExpenseMultiplier: 0.7,
+    fatExpenseMultiplier: 2.0,
+    baristaAnnualIncome: 20000,
+    coastTargetAge: 65,
   };
 
   describe('Projection timeline', () => {
@@ -370,6 +381,154 @@ describe('FIRE Calculator', () => {
       expect(firstProjection.isFIRE).toBe(true);
       expect(firstProjection.totalIncome).toBeGreaterThan(0);
       expect(firstProjection.otherIncome).toBe(5000);
+    });
+  });
+
+  describe('FIRE variants', () => {
+    it('standard FIRE: result echoes fireType and effectiveFireExpenses', () => {
+      const result = calculateFIRE({ ...baseInputs, fireType: 'standard' });
+      expect(result.fireType).toBe('standard');
+      expect(result.effectiveFireExpenses).toBe(baseInputs.fireAnnualExpenses);
+      expect(result.fireTarget).toBeCloseTo(baseInputs.fireAnnualExpenses * baseInputs.yearsOfExpenses, 4);
+    });
+
+    it('lean FIRE: target is reduced by leanExpenseMultiplier', () => {
+      const inputs = { ...baseInputs, fireType: 'lean' as const, leanExpenseMultiplier: 0.7 };
+      const result = calculateFIRE(inputs);
+      expect(result.fireType).toBe('lean');
+      expect(result.effectiveFireExpenses).toBeCloseTo(40000 * 0.7, 4);
+      expect(result.fireTarget).toBeCloseTo(40000 * 0.7 * inputs.yearsOfExpenses, 4);
+      // Lean FIRE should be cheaper than standard FIRE, so years-to-FIRE is <= standard
+      const standard = calculateFIRE({ ...baseInputs, fireType: 'standard' });
+      expect(result.yearsToFIRE).toBeLessThanOrEqual(standard.yearsToFIRE);
+    });
+
+    it('fat FIRE: target is scaled up by fatExpenseMultiplier', () => {
+      const inputs = { ...baseInputs, fireType: 'fat' as const, fatExpenseMultiplier: 2.0 };
+      const result = calculateFIRE(inputs);
+      expect(result.fireType).toBe('fat');
+      expect(result.effectiveFireExpenses).toBeCloseTo(40000 * 2.0, 4);
+      expect(result.fireTarget).toBeCloseTo(40000 * 2.0 * inputs.yearsOfExpenses, 4);
+      // Fat FIRE should take longer than standard FIRE
+      const standard = calculateFIRE({ ...baseInputs, fireType: 'standard' });
+      if (standard.yearsToFIRE > 0) {
+        expect(result.yearsToFIRE === -1 || result.yearsToFIRE >= standard.yearsToFIRE).toBe(true);
+      }
+    });
+
+    it('barista FIRE: target only funds the gap between expenses and part-time income', () => {
+      const inputs = { ...baseInputs, fireType: 'barista' as const, baristaAnnualIncome: 20000 };
+      const result = calculateFIRE(inputs);
+      expect(result.fireType).toBe('barista');
+      expect(result.effectiveFireExpenses).toBe(40000 - 20000);
+      expect(result.fireTarget).toBeCloseTo((40000 - 20000) * inputs.yearsOfExpenses, 4);
+    });
+
+    it('barista FIRE: post-FIRE labor income drops to baristaAnnualIncome', () => {
+      const inputs: CalculatorInputs = {
+        ...baseInputs,
+        initialSavings: 1_000_000, // start already FIRE-ready for barista
+        fireType: 'barista',
+        baristaAnnualIncome: 20000,
+      };
+      const result = calculateFIRE(inputs);
+      // First projection should be FIRE-achieved and labor income capped at barista amount
+      const firstFire = result.projections.find((p) => p.isFIRE);
+      expect(firstFire).toBeDefined();
+      expect(firstFire!.laborIncome).toBe(20000);
+    });
+
+    it('barista FIRE: when part-time income covers all expenses, target is 0', () => {
+      const inputs = { ...baseInputs, fireType: 'barista' as const, baristaAnnualIncome: 50000 };
+      const result = calculateFIRE(inputs);
+      expect(result.effectiveFireExpenses).toBe(0);
+      expect(result.fireTarget).toBe(0);
+    });
+
+    it('coast FIRE: target is the discounted present value of standard target', () => {
+      const inputs = { ...baseInputs, fireType: 'coast' as const, coastTargetAge: 65 };
+      const currentAge = new Date().getFullYear() - baseInputs.yearOfBirth;
+      const standardTarget = baseInputs.fireAnnualExpenses * baseInputs.yearsOfExpenses;
+      const r = getExpectedPortfolioReturn(inputs);
+      const years = Math.max(0, 65 - currentAge);
+      const expected = standardTarget / Math.pow(1 + r, years);
+
+      const result = calculateFIRE(inputs);
+      expect(result.fireType).toBe('coast');
+      expect(result.fireTarget).toBeCloseTo(expected, 4);
+      // Coast FIRE target is always less than standard target (assuming positive return)
+      expect(result.fireTarget).toBeLessThan(standardTarget);
+    });
+
+    it('coast FIRE: contributions stop after the coast number is reached', () => {
+      const inputs: CalculatorInputs = {
+        ...baseInputs,
+        initialSavings: 500_000, // pre-loaded so coast is hit immediately
+        fireType: 'coast',
+        coastTargetAge: 65,
+      };
+      const result = calculateFIRE(inputs);
+      const firstFire = result.projections.find((p) => p.isFIRE);
+      expect(firstFire).toBeDefined();
+      // Coast FIRE keeps labor income but stops contributing; portfolio change == investment yield only
+      expect(firstFire!.laborIncome).toBe(inputs.annualLaborIncome);
+      expect(firstFire!.netSavings).toBeCloseTo(firstFire!.investmentYield, 4);
+    });
+  });
+
+  describe('calculateFireTarget helper', () => {
+    const currentAge = new Date().getFullYear() - baseInputs.yearOfBirth;
+
+    it('returns 0 when withdrawal rate is 0', () => {
+      expect(calculateFireTarget({ ...baseInputs, desiredWithdrawalRate: 0 }, currentAge)).toBe(0);
+    });
+
+    it('returns standardTarget for standard FIRE', () => {
+      const target = calculateFireTarget({ ...baseInputs, fireType: 'standard' }, currentAge);
+      expect(target).toBeCloseTo(baseInputs.fireAnnualExpenses * baseInputs.yearsOfExpenses, 4);
+    });
+
+    it('returns scaled target for fat FIRE', () => {
+      const target = calculateFireTarget(
+        { ...baseInputs, fireType: 'fat', fatExpenseMultiplier: 1.5 },
+        currentAge,
+      );
+      expect(target).toBeCloseTo(40000 * 1.5 * baseInputs.yearsOfExpenses, 4);
+    });
+
+    it('coast: returns standardTarget when years remaining is 0', () => {
+      const target = calculateFireTarget(
+        { ...baseInputs, fireType: 'coast', coastTargetAge: currentAge },
+        currentAge,
+      );
+      expect(target).toBeCloseTo(baseInputs.fireAnnualExpenses * baseInputs.yearsOfExpenses, 4);
+    });
+  });
+
+  describe('getEffectiveFireExpenses helper', () => {
+    it('standard: returns fireAnnualExpenses unchanged', () => {
+      expect(getEffectiveFireExpenses({ ...baseInputs, fireType: 'standard' })).toBe(40000);
+    });
+
+    it('lean: scales down', () => {
+      expect(
+        getEffectiveFireExpenses({ ...baseInputs, fireType: 'lean', leanExpenseMultiplier: 0.5 }),
+      ).toBe(20000);
+    });
+
+    it('fat: scales up', () => {
+      expect(
+        getEffectiveFireExpenses({ ...baseInputs, fireType: 'fat', fatExpenseMultiplier: 2.5 }),
+      ).toBe(100000);
+    });
+
+    it('barista: subtracts part-time income but never goes negative', () => {
+      expect(
+        getEffectiveFireExpenses({ ...baseInputs, fireType: 'barista', baristaAnnualIncome: 15000 }),
+      ).toBe(25000);
+      expect(
+        getEffectiveFireExpenses({ ...baseInputs, fireType: 'barista', baristaAnnualIncome: 50000 }),
+      ).toBe(0);
     });
   });
 });

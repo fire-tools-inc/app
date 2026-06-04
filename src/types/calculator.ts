@@ -2,6 +2,19 @@
  * FIRE Calculator Types
  */
 
+/**
+ * Supported FIRE variants.
+ *
+ * - standard: Classic FIRE — portfolio sustains fireAnnualExpenses at the desired withdrawal rate.
+ * - lean:     Frugal FIRE — fireAnnualExpenses scaled down by leanExpenseMultiplier (smaller nest egg).
+ * - fat:      Luxurious FIRE — fireAnnualExpenses scaled up by fatExpenseMultiplier (larger nest egg).
+ * - barista:  Part-time work covers the gap; portfolio only funds (expenses - baristaAnnualIncome).
+ * - coast:    Save enough today so the portfolio grows untouched to standard FIRE by coastTargetAge.
+ */
+export type FireType = 'standard' | 'lean' | 'barista' | 'coast' | 'fat';
+
+export const FIRE_TYPES: readonly FireType[] = ['standard', 'lean', 'barista', 'coast', 'fat'] as const;
+
 export interface CalculatorInputs {
   // Initial Values
   initialSavings: number;
@@ -25,6 +38,13 @@ export interface CalculatorInputs {
   // FIRE Target
   desiredWithdrawalRate: number;
   yearsOfExpenses: number; // Years of expenses needed for FIRE (default: ~33.33, equivalent to 3% withdrawal rate)
+
+  // FIRE Variant Selection
+  fireType: FireType;
+  leanExpenseMultiplier: number;   // Lean FIRE: scales fireAnnualExpenses (default 0.7 → 70% of expenses)
+  fatExpenseMultiplier: number;    // Fat FIRE:  scales fireAnnualExpenses (default 2.0 → 200% of expenses)
+  baristaAnnualIncome: number;     // Barista FIRE: part-time annual income covering part of expenses
+  coastTargetAge: number;          // Coast FIRE: age at which the portfolio should reach standard FIRE target
   
   // Expected Returns
   expectedStockReturn: number;
@@ -70,6 +90,8 @@ export interface CalculationResult {
   yearsToFIRE: number;
   fireTarget: number;
   finalPortfolioValue: number;
+  fireType: FireType;
+  effectiveFireExpenses: number; // Expenses used to derive fireTarget (after lean/fat scaling)
   validationErrors?: string[];
 }
 

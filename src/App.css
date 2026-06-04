@@ -219,7 +219,8 @@ body {
   display: flex;
   gap: 1rem;
   flex: 1;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-right: 7rem;
 }
 
 .nav-actions {
@@ -2324,6 +2325,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   /* Keep clear of the macOS hidden-inset traffic lights. Padding is harmless
      on Windows/Linux because the title bar still renders above the nav. */
   padding-top: 1.25rem;
+  padding-left: 5.5rem;
   -webkit-app-region: drag;
 }
 

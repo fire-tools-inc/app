@@ -109,6 +109,22 @@
         "h3": "Schwarzer-Schwan-Ereignisse",
         "cta": "Simulationen starten →"
       },
+      "investmentGrowth": {
+        "title": "Investitionswachstums-Rechner",
+        "body": "Projiziere den Endwert deines Portfolios über die Zeit mit Beiträgen, erwarteten Renditen und Inflation. Erhalte sofortiges Feedback zu realem Wachstum und Sparquote.",
+        "h1": "Inflationsbereinigte Renditen",
+        "h2": "Wiederkehrende Beiträge",
+        "h3": "Sparquoten-Feedback",
+        "cta": "Wachstum projizieren →"
+      },
+      "withdrawalRate": {
+        "title": "Entnahmeraten-Simulator",
+        "body": "Belastungstest deines Ruhestandsportfolios bei verschiedenen Entnahmeraten mit einem Live-Schieberegler, basierend auf der 4-%-Regel der Trinity-Studie.",
+        "h1": "Trinity-Studie",
+        "h2": "Live-Schieberegler",
+        "h3": "Erfolgswahrscheinlichkeit",
+        "cta": "Simulator ausprobieren →"
+      },
       "quiz": {
         "title": "FIRE-Persona-Quiz",
         "body": "Entdecke deine FIRE-Persona und erhalte personalisierte Empfehlungen basierend auf deiner finanziellen Situation, deinen Zielen und deiner Risikotoleranz.",
@@ -873,7 +889,8 @@
       "expenses": "Ausgaben & Ersparnisse",
       "fireParams": "FIRE-Parameter",
       "expectedReturns": "Erwartete Renditen",
-      "options": "Optionen"
+      "options": "Optionen",
+      "fireStyle": "FIRE-Stil"
     },
     "labels": {
       "initialSavings": "Anfangsersparnisse / Portfoliowert ({{currency}})",
@@ -892,6 +909,11 @@
       "currentAge": "Aktuelles Alter",
       "withdrawalRate": "Gewünschte Entnahmerate (%)",
       "yearsOfExpenses": "Benötigte Jahre der Ausgaben für FIRE",
+      "fireType": "FIRE-Variante",
+      "leanExpenseMultiplier": "Lean-FIRE-Ausgabenmultiplikator (×)",
+      "fatExpenseMultiplier": "Fat-FIRE-Ausgabenmultiplikator (×)",
+      "baristaAnnualIncome": "Barista-Teilzeit-Jahreseinkommen ({{currency}})",
+      "coastTargetAge": "Coast-FIRE-Zielalter",
       "stockReturn": "Erwartete Aktienrendite (%)",
       "bondReturn": "Erwartete Anleihenrendite (%)",
       "cashReturn": "Bargeld / Inflationsrate (%)"
@@ -899,6 +921,29 @@
     "allocationTotal": "Gesamt: {{value}}%",
     "allocationWarning": "Sollte 100% ergeben",
     "deflationWarning": "Ein positiver Wert deutet auf Deflation hin. Lange Deflationsphasen sind historisch selten – bitte sorgfältig in den Projektionen berücksichtigen.",
+    "fireTypes": {
+      "standard": {
+        "label": "Standard-FIRE",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Ausgabenjahre (z. B. 25× bei sicherer Entnahmerate von 4 %).\n\nNach FIRE: das Portfolio finanziert alle Ausgaben. Ist „Arbeit bei FIRE beenden\" aktiv, endet das Arbeitseinkommen; sonst laufen die Beiträge weiter.\n\nIdeal für: die klassische Definition gemäß Trinity Study."
+      },
+      "lean": {
+        "label": "Lean FIRE",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Lean-Multiplikator × Ausgabenjahre (Standard 0,7).\n\nNach FIRE: gleiche Projektion wie Standard – nur das Ziel ist niedriger. Um wirklich sparsam zu leben, lasse einen Puffer oder reduziere die FIRE-Jahresausgaben direkt.\n\nIdeal für: günstige Regionen, Minimalisten, alle, die Jahre früher unabhängig sein wollen."
+      },
+      "fat": {
+        "label": "Fat FIRE",
+        "howItWorks": "Formel: Ziel = FIRE-Jahresausgaben × Fat-Multiplikator × Ausgabenjahre (Standard 2,0).\n\nNach FIRE: gleiche Logik wie Standard, aber mit deutlich höherem Ziel. Geeignet, wenn der erwartete Ruhestand teurer ist als der heutige Alltag.\n\nIdeal für: hohe Einkommen mit Wunsch nach luxuriösem Ruhestand oder großem Sicherheitspuffer."
+      },
+      "barista": {
+        "label": "Barista FIRE",
+        "howItWorks": "Formel: Ziel = max(0, FIRE-Jahresausgaben − Barista-Einkommen) × Ausgabenjahre.\n\nNach FIRE: das Arbeitseinkommen sinkt auf den Barista-Wert und wächst nicht mehr. Das Portfolio muss nur die Lücke decken, sodass das benötigte Vermögen deutlich kleiner ist als beim Standard-FIRE.\n\nIdeal für: alle, die weiter mit Flexibilität arbeiten möchten, Krankenversicherung brauchen oder früh aus einer stressigen Karriere aussteigen wollen."
+      },
+      "coast": {
+        "label": "Coast FIRE",
+        "howItWorks": "Formel: Ziel = Standard-Ziel / (1 + erwarteteRendite)^(Coast-Zielalter − aktuellesAlter).\n\nNach FIRE: Job und Gehalt bleiben, aber keine neuen Beiträge. Allein der Zinseszins führt das Portfolio bis zum gewählten Alter zum vollen Standard-Ziel.\n\nIdeal für: alle, die in den 20ern/30ern viel sparen und später eine schlechter bezahlte oder sinnstiftendere Karriere wählen wollen."
+      },
+      "howItWorksTitle": "Wie diese Variante funktioniert"
+    },
     "options": {
       "stopWorking": "Aufhören zu arbeiten, wenn die FIRE-Zahl erreicht ist",
       "useAssetAllocation": "Portfoliowert und Aufteilung aus der Vermögensaufteilung verwenden",
