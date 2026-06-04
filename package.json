@@ -27,6 +27,7 @@
     "electron:rebuild": "node scripts/ensure-native-modules.mjs",
     "preelectron:dev": "node scripts/stop-dev.mjs && node scripts/ensure-electron.mjs && node scripts/ensure-native-modules.mjs",
     "electron:dev": "node scripts/electron-dev.mjs",
+    "electron:dev:full": "node scripts/dev-electron-stack.mjs",
     "electron:build": "npm run build:electron",
     "electron:dist": "npm run build:electron && electron-builder --config electron-builder.yml"
   },

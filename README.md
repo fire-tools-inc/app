@@ -47,6 +47,16 @@ To preview the full site (landing page + docs + OpenAPI viewer):
 npm run dev:all      # mirrors GitHub Pages layout
 ```
 
+To run the Electron desktop app against the local backend (boots
+`server/` + Vite + Electron in one shot):
+
+```bash
+npm install --prefix server   # first time only
+npm run electron:dev:full     # backend on :8787 + Electron renderer
+```
+
+Use `npm run electron:dev` if you only want Vite + Electron without the backend.
+
 ---
 
 ## Deployment Options
