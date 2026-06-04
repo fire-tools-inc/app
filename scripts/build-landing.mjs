@@ -35,6 +35,19 @@ try {
 }
 console.error(`[build-landing] copied ${src} -> ${dest}`);
 
+// SPA fallback for GitHub Pages: any deep link under /demo/* (e.g. shared
+// /demo/fire-calculator?... URLs) would otherwise 404 because no static file
+// exists at that path. GitHub Pages serves 404.html for unknown paths, so a
+// copy of index.html lets the SPA boot and React Router resolves the route.
+const spaIndex = resolve(outRoot, 'demo', 'index.html');
+const spa404 = resolve(outRoot, 'demo', '404.html');
+try {
+  await copyFile(spaIndex, spa404);
+  console.error(`[build-landing] wrote SPA fallback at ${spa404}`);
+} catch (err) {
+  console.error(`[build-landing] warning: could not write SPA 404 fallback: ${err.message}`);
+}
+
 await mkdir(apiDest, { recursive: true });
 await copyFile(openapiSrc, resolve(apiDest, 'openapi.yaml'));
 try {
