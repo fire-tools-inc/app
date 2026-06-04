@@ -908,32 +908,22 @@
     "fireTypes": {
       "standard": {
         "label": "FIRE Estándar",
-        "description": "Independencia financiera clásica: la cartera sostiene los gastos objetivo a la tasa de retiro deseada.",
-        "tooltip": "FIRE clásico: la cartera cubre íntegramente los gastos objetivo a la tasa de retiro elegida.",
         "howItWorks": "Fórmula: objetivo = gastosAnualesFIRE × añosDeGastos (p. ej. 25× con una tasa de retiro segura del 4 %).\n\nDespués del FIRE: la cartera cubre todos los gastos. Si \"dejar de trabajar al alcanzar FIRE\" está activo, el ingreso laboral se detiene; de lo contrario, las aportaciones continúan.\n\nIdeal para: la definición clásica del estudio Trinity."
       },
       "lean": {
         "label": "Lean FIRE",
-        "description": "FIRE minimalista con un capital más pequeño y un estilo de vida frugal (los gastos FIRE se reducen mediante el multiplicador lean).",
-        "tooltip": "FIRE minimalista: patrimonio más pequeño, vida frugal. Se alcanza antes.",
         "howItWorks": "Fórmula: objetivo = gastosAnualesFIRE × multiplicadorLean × añosDeGastos (por defecto 0,7).\n\nDespués del FIRE: misma proyección que Standard — solo el objetivo se reduce. Para vivir realmente frugal, deja margen o reduce directamente gastosAnualesFIRE.\n\nIdeal para: zonas de bajo coste de vida, minimalistas, quienes quieran independencia años antes."
       },
       "fat": {
         "label": "Fat FIRE",
-        "description": "Capital mayor para sostener un estilo de vida cómodo (los gastos FIRE se incrementan mediante el multiplicador fat).",
-        "tooltip": "FIRE cómodo: patrimonio mayor para un estilo de vida más lujoso.",
         "howItWorks": "Fórmula: objetivo = gastosAnualesFIRE × multiplicadorFat × añosDeGastos (por defecto 2,0).\n\nDespués del FIRE: misma lógica que Standard pero con un objetivo mucho mayor. Útil cuando el estilo de vida esperado supera al actual.\n\nIdeal para: rentas altas que quieren una jubilación lujosa o un amplio margen de seguridad."
       },
       "barista": {
         "label": "Barista FIRE",
-        "description": "Mantienes un trabajo a tiempo parcial poco estresante que cubre parte de los gastos; la cartera financia solo la diferencia.",
-        "tooltip": "Semi-jubilación: un trabajo a tiempo parcial cubre parte de los gastos, la cartera cubre el resto.",
         "howItWorks": "Fórmula: objetivo = max(0, gastosAnualesFIRE − ingresoBarista) × añosDeGastos.\n\nDespués del FIRE: el ingreso laboral baja al valor Barista y deja de crecer. La cartera solo cubre la diferencia, así el patrimonio necesario es mucho menor que el FIRE Standard.\n\nIdeal para: quienes quieren seguir trabajando con flexibilidad, mantener cobertura sanitaria o dejar antes una carrera estresante."
       },
       "coast": {
         "label": "Coast FIRE",
-        "description": "Ahorra hoy lo suficiente para que la cartera crezca sin más aportes hasta alcanzar el FIRE estándar a la edad objetivo.",
-        "tooltip": "Ahorra mucho pronto, luego deja que el interés compuesto termine el trabajo.",
         "howItWorks": "Fórmula: objetivo = objetivoStandard / (1 + rendimientoEsperado)^(edadCoast − edadActual).\n\nDespués del FIRE: mantienes empleo y salario, pero detienes aportaciones. Solo el interés compuesto lleva la cartera al objetivo Standard a la edad elegida.\n\nIdeal para: quienes ahorran mucho en los 20-30 y después quieren libertad para cambiar a una carrera peor pagada o más significativa."
       },
       "howItWorksTitle": "Cómo funciona esta variante"
@@ -943,8 +933,7 @@
       "useAssetAllocation": "Usar el valor y la asignación de cartera de Asignación de activos",
       "useExpenseTrackerExpenses": "Calcular los gastos actuales de los últimos 12 meses del Rastreador de gastos",
       "useExpenseTrackerIncome": "Calcular el ingreso laboral de los últimos 12 meses del Rastreador de gastos"
-    },
-    "fireStyleInfo": "Elige la variante de FIRE que mejor refleje el estilo de vida que quieres en la jubilación. Cada variante cambia cómo se calcula el patrimonio objetivo y cómo se comporta la proyección al alcanzarlo."
+    }
   },
   "fireMetrics": {
     "heading": "Métricas FIRE",

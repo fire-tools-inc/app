@@ -908,32 +908,22 @@
     "fireTypes": {
       "standard": {
         "label": "Standard FIRE",
-        "description": "Classic Financial Independence — portfolio sustains your target expenses at the desired withdrawal rate.",
-        "tooltip": "Classic FIRE: portfolio fully funds your target expenses at the chosen withdrawal rate.",
         "howItWorks": "Formula: target = fireAnnualExpenses × yearsOfExpenses (e.g. 25× at a 4% safe withdrawal rate).\n\nPost-FIRE: the portfolio funds your full target expenses. If \"stop working at FIRE\" is enabled, labor income stops; otherwise contributions continue.\n\nBest for: anyone using the Trinity-study definition of FIRE."
       },
       "lean": {
         "label": "Lean FIRE",
-        "description": "Minimalist FIRE with a smaller nest egg and a frugal post-retirement budget (FIRE expenses are scaled by the lean multiplier).",
-        "tooltip": "Minimalist FIRE: smaller nest egg, frugal lifestyle. Reach FIRE sooner.",
         "howItWorks": "Formula: target = fireAnnualExpenses × leanExpenseMultiplier × yearsOfExpenses (default multiplier 0.7).\n\nPost-FIRE: the same as Standard — only the target is scaled down. Real-world expenses still use fireAnnualExpenses, so leave a buffer or lower your fireAnnualExpenses to truly live lean.\n\nBest for: low cost-of-living locations, minimalists, anyone who wants to reach independence years earlier."
       },
       "fat": {
         "label": "Fat FIRE",
-        "description": "A larger nest egg supporting a more comfortable lifestyle (FIRE expenses are scaled up by the fat multiplier).",
-        "tooltip": "Comfortable FIRE: larger nest egg supporting a more luxurious lifestyle.",
         "howItWorks": "Formula: target = fireAnnualExpenses × fatExpenseMultiplier × yearsOfExpenses (default multiplier 2.0).\n\nPost-FIRE: same projection logic as Standard, but with a much larger target. Use this when your expected lifestyle in retirement is higher than today.\n\nBest for: high-income earners who want a luxury retirement, or to bake in a generous safety margin."
       },
       "barista": {
         "label": "Barista FIRE",
-        "description": "You keep a part-time, low-stress job that covers part of your expenses; the portfolio only needs to fund the gap.",
-        "tooltip": "Semi-retired: a part-time job covers part of expenses, the portfolio funds the gap.",
         "howItWorks": "Formula: target = max(0, fireAnnualExpenses − baristaAnnualIncome) × yearsOfExpenses.\n\nPost-FIRE: labor income drops to baristaAnnualIncome and stops growing. The portfolio only has to fund the gap between your expenses and that part-time income, so the nest egg can be much smaller than Standard FIRE.\n\nBest for: people who enjoy working but want flexibility, healthcare coverage, or to retire from a high-stress career earlier."
       },
       "coast": {
         "label": "Coast FIRE",
-        "description": "Save enough today so your portfolio compounds untouched to the standard FIRE target by your chosen target age.",
-        "tooltip": "Save aggressively early, then coast — stop contributing and let compounding finish the job.",
         "howItWorks": "Formula: target = standardTarget / (1 + expectedReturn)^(coastTargetAge − currentAge).\n\nPost-FIRE: you keep your job and salary, but stop new contributions. Compounding alone grows the portfolio to the full Standard FIRE target by your chosen target age.\n\nBest for: anyone who front-loads savings in their 20s/30s and then wants the freedom to switch to a lower-paying or more meaningful career."
       },
       "howItWorksTitle": "How this variant works"
@@ -943,8 +933,7 @@
       "useAssetAllocation": "Use Asset Allocation portfolio value and allocation",
       "useExpenseTrackerExpenses": "Calculate current expenses from last 12 months of Expense Tracker",
       "useExpenseTrackerIncome": "Calculate labor income from last 12 months of Expense Tracker"
-    },
-    "fireStyleInfo": "Pick the flavour of FIRE that best matches the lifestyle you want in retirement. Each variant changes how your target nest egg is calculated and how the projection behaves once you reach it."
+    }
   },
   "fireMetrics": {
     "heading": "FIRE Metrics",

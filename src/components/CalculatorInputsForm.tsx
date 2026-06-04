@@ -144,39 +144,19 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
         </button>
         {openSections.fireStyle && (
           <div id="fire-style-content" className="form-section-content">
-            <p className="field-hint" style={{ marginTop: 0 }}>
-              {t('fireCalculator.fireStyleInfo')}
-            </p>
             <div className="form-group">
-              <label htmlFor="fire-type">
-                {t('fireCalculator.labels.fireType')}{' '}
-                <span
-                  className="info-icon"
-                  title={t(`fireCalculator.fireTypes.${inputs.fireType}.tooltip`)}
-                  aria-label={t(`fireCalculator.fireTypes.${inputs.fireType}.tooltip`)}
-                  tabIndex={0}
-                  role="img"
-                  style={{ cursor: 'help', opacity: 0.7 }}
-                >
-                  <MaterialIcon name="info" />
-                </span>
-              </label>
+              <label htmlFor="fire-type">{t('fireCalculator.labels.fireType')}</label>
               <select
                 id="fire-type"
                 value={inputs.fireType}
                 onChange={(e) => handleChange('fireType', e.target.value as FireType)}
               >
                 {FIRE_TYPES.map((type) => (
-                  <option
-                    key={type}
-                    value={type}
-                    title={t(`fireCalculator.fireTypes.${type}.tooltip`)}
-                  >
+                  <option key={type} value={type}>
                     {t(`fireCalculator.fireTypes.${type}.label`)}
                   </option>
                 ))}
               </select>
-              <p className="field-hint">{t(`fireCalculator.fireTypes.${inputs.fireType}.description`)}</p>
               <details className="fire-type-details" style={{ marginTop: '0.5rem' }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 500 }}>
                   {t('fireCalculator.fireTypes.howItWorksTitle')}

@@ -908,32 +908,22 @@
     "fireTypes": {
       "standard": {
         "label": "FIRE Standard",
-        "description": "Indipendenza finanziaria classica: il portafoglio sostiene le spese target al tasso di prelievo desiderato.",
-        "tooltip": "FIRE classico: il portafoglio copre interamente le spese al tasso di prelievo scelto.",
         "howItWorks": "Formula: obiettivo = speseAnnueFIRE × anniDiSpese (es. 25× con un tasso di prelievo sicuro del 4%).\n\nDopo il FIRE: il portafoglio copre tutte le spese. Se \"smettere di lavorare al FIRE\" è attivo, il reddito da lavoro si ferma; altrimenti i contributi continuano.\n\nIdeale per: chi segue la definizione classica della Trinity Study."
       },
       "lean": {
         "label": "Lean FIRE",
-        "description": "FIRE minimalista con un capitale più piccolo e uno stile di vita frugale (le spese FIRE vengono ridotte dal moltiplicatore lean).",
-        "tooltip": "FIRE minimalista: patrimonio più piccolo, vita frugale. Si raggiunge prima.",
         "howItWorks": "Formula: obiettivo = speseAnnueFIRE × moltiplicatoreLean × anniDiSpese (moltiplicatore default 0,7).\n\nDopo il FIRE: la proiezione resta uguale a Standard — solo l'obiettivo viene ridotto. Per vivere davvero in modo frugale lascia un margine o abbassa direttamente speseAnnueFIRE.\n\nIdeale per: luoghi con basso costo della vita, minimalisti, chi vuole raggiungere l'indipendenza anni prima."
       },
       "fat": {
         "label": "Fat FIRE",
-        "description": "Capitale più ampio per sostenere uno stile di vita confortevole (le spese FIRE vengono aumentate dal moltiplicatore fat).",
-        "tooltip": "FIRE comodo: patrimonio più grande per uno stile di vita più lussuoso.",
         "howItWorks": "Formula: obiettivo = speseAnnueFIRE × moltiplicatoreFat × anniDiSpese (default 2,0).\n\nDopo il FIRE: stessa logica di Standard ma con un obiettivo molto più alto. Usalo quando lo stile di vita atteso in pensione è superiore a quello attuale.\n\nIdeale per: redditi alti che vogliono una pensione di lusso o un ampio margine di sicurezza."
       },
       "barista": {
         "label": "Barista FIRE",
-        "description": "Mantieni un lavoro part-time poco stressante che copre parte delle spese; il portafoglio finanzia solo la differenza.",
-        "tooltip": "Semi-pensionato: un lavoro part-time copre parte delle spese, il portafoglio colma il resto.",
         "howItWorks": "Formula: obiettivo = max(0, speseAnnueFIRE − redditoBarista) × anniDiSpese.\n\nDopo il FIRE: il reddito da lavoro scende al valore Barista e non cresce più. Il portafoglio deve coprire solo il gap, quindi il patrimonio richiesto è molto più piccolo del FIRE Standard.\n\nIdeale per: chi vuole continuare a lavorare con flessibilità, copertura sanitaria, o lasciare prima una carriera stressante."
       },
       "coast": {
         "label": "Coast FIRE",
-        "description": "Risparmia abbastanza oggi così che il portafoglio cresca senza ulteriori contributi fino al target FIRE all'età scelta.",
-        "tooltip": "Risparmia molto presto, poi lascia che l'interesse composto finisca il lavoro.",
         "howItWorks": "Formula: obiettivo = obiettivoStandard / (1 + rendimentoAtteso)^(etàCoast − etàAttuale).\n\nDopo il FIRE: mantieni stipendio e lavoro, ma fermi i contributi. Solo l'interesse composto porta il portafoglio al target Standard entro l'età scelta.\n\nIdeale per: chi risparmia molto nei 20-30 anni e poi vuole la libertà di scegliere una carriera meno pagata o più significativa."
       },
       "howItWorksTitle": "Come funziona questa variante"
@@ -943,8 +933,7 @@
       "useAssetAllocation": "Utilizzare il valore e l'allocazione del portafoglio dall'Allocazione Patrimoniale",
       "useExpenseTrackerExpenses": "Calcolare le spese correnti dagli ultimi 12 mesi del Tracker Spese",
       "useExpenseTrackerIncome": "Calcolare il reddito da lavoro dagli ultimi 12 mesi del Tracker Spese"
-    },
-    "fireStyleInfo": "Scegli la variante di FIRE che meglio rappresenta lo stile di vita che vuoi in pensione. Ogni variante cambia il modo in cui viene calcolato il patrimonio obiettivo e il comportamento della proiezione una volta raggiunto."
+    }
   },
   "fireMetrics": {
     "heading": "Metriche FIRE",
