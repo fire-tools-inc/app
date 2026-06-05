@@ -271,18 +271,22 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 
 ## Releasing
 
-Releases are fully automated via GitHub Actions. To create a new release:
+Releases are fully automated via GitHub Actions. To create a new release, use
+the one-tap release script:
 
-1. **Bump the version** in `package.json` (and `package-lock.json`) to match the tag you intend to push:
-   ```bash
-   npm version <major|minor|patch> --no-git-tag-version
-   ```
-2. **Commit and merge** the version bump to `main`.
-3. **Push a new tag** to the remote:
-   ```bash
-   git tag v<version>    # e.g. git tag v2.0.1
-   git push origin v<version>
-   ```
+```bash
+./scripts/release.sh
+```
+
+Need to bump first? Use:
+
+```bash
+./scripts/release.sh --bump          # next minor
+./scripts/release.sh --bump 2.1.3    # explicit version
+```
+
+`scripts/release.sh` prevents tag/version mismatches by enforcing that
+`package.json` and the generated tag stay aligned before the tag is pushed.
 
 Pushing the tag triggers the **Release** workflow (`.github/workflows/release.yml`), which:
 
