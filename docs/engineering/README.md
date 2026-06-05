@@ -12,6 +12,7 @@ instead.
 - [Database & schema](./database.md)
 - [Migrations & rollbacks](./migrations.md)
 - [Logging & PII handling](./logging.md)
+- [Cutting a release](./releasing.md)
 
 ## Architecture at a glance
 

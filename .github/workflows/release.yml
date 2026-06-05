@@ -216,26 +216,50 @@ jobs:
           echo "Staged release assets:"
           ls -la dist-assets
 
+      - name: Build release notes (changelog + installation)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Ask GitHub to generate the changelog for this tag (auto-detects the
+          # previous tag and lists merged PRs / commits since then).
+          CHANGELOG=$(gh api "repos/$REPO/releases/generate-notes" \
+            -f tag_name="$TAG" --jq '.body' || true)
+          if [ -z "$CHANGELOG" ]; then
+            echo "::warning::Could not generate changelog notes; falling back to a compare link."
+            CHANGELOG="**Full Changelog**: https://github.com/$REPO/commits/$TAG"
+          fi
+          {
+            echo "$CHANGELOG"
+            echo
+            cat <<'EOF'
+          ## Installation
+
+          ### macOS
+          1. Download the arm64 DMG for Apple Silicon Macs, or the x64 DMG for Intel Macs.
+          2. Open the DMG and drag **Fire Tools** to Applications.
+          3. If macOS blocks the app because it isn't notarized yet, run:
+             ```sh
+             xattr -cr "/Applications/Fire Tools.app"
+             ```
+
+          ### Windows
+          1. Download the `Fire Tools Setup` `.exe`.
+          2. Run the installer (Fire Tools installs per-user under `%LocalAppData%\Programs\fire-tools`).
+          3. If SmartScreen warns about an unsigned installer, click **More info → Run anyway**.
+          EOF
+          } > release-notes.md
+          echo "Release notes:"
+          cat release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
-          generate_release_notes: true
+          generate_release_notes: false
           draft: false
           make_latest: 'true'
           files: |
             dist-assets/*
-          body: |
-            ## Installation
-
-            ### macOS
-            1. Download the arm64 DMG for Apple Silicon Macs, or the x64 DMG for Intel Macs.
-            2. Open the DMG and drag **Fire Tools** to Applications.
-            3. If macOS blocks the app because it isn't notarized yet, run:
-               ```sh
-               xattr -cr "/Applications/Fire Tools.app"
-               ```
-
-            ### Windows
-            1. Download the `Fire Tools Setup` `.exe`.
-            2. Run the installer (Fire Tools installs per-user under `%LocalAppData%\Programs\fire-tools`).
-            3. If SmartScreen warns about an unsigned installer, click **More info → Run anyway**.
+          body_path: release-notes.md

@@ -61,23 +61,29 @@ function bumpTextVersion(filePath, pattern, replacement) {
 
 console.log(`Bumping version to ${newVersion}...\n`);
 
+/** Patch the top-level version inside an npm lockfile so it tracks package.json. */
+function bumpLockVersion(filePath) {
+  const label = filePath.replace(repoRoot + '/', '');
+  try {
+    const lockRaw = readFileSync(filePath, 'utf-8');
+    const lock = JSON.parse(lockRaw);
+    const oldLockVer = lock.version;
+    lock.version = newVersion;
+    if (lock.packages?.['']) lock.packages[''].version = newVersion;
+    const trailing = lockRaw.endsWith('\n') ? '\n' : '';
+    writeFileSync(filePath, JSON.stringify(lock, null, 2) + trailing, 'utf-8');
+    console.log(`  ${label}  ${oldLockVer} → ${newVersion}`);
+  } catch (err) {
+    console.warn(`  WARNING: could not update ${label}: ${err.message}`);
+  }
+}
+
 bumpJsonVersion(resolve(repoRoot, 'package.json'));
 bumpJsonVersion(resolve(repoRoot, 'server', 'package.json'));
 
-// Also patch the server lockfile so it stays consistent with package.json.
-const serverLockPath = resolve(repoRoot, 'server', 'package-lock.json');
-try {
-  const lockRaw = readFileSync(serverLockPath, 'utf-8');
-  const lock = JSON.parse(lockRaw);
-  const oldLockVer = lock.version;
-  lock.version = newVersion;
-  if (lock.packages?.['']) lock.packages[''].version = newVersion;
-  const trailing = lockRaw.endsWith('\n') ? '\n' : '';
-  writeFileSync(serverLockPath, JSON.stringify(lock, null, 2) + trailing, 'utf-8');
-  console.log(`  server/package-lock.json  ${oldLockVer} → ${newVersion}`);
-} catch (err) {
-  console.warn(`  WARNING: could not update server/package-lock.json: ${err.message}`);
-}
+// Keep both lockfiles consistent with their package.json.
+bumpLockVersion(resolve(repoRoot, 'package-lock.json'));
+bumpLockVersion(resolve(repoRoot, 'server', 'package-lock.json'));
 
 bumpTextVersion(
   resolve(repoRoot, 'tests', 'setup.ts'),
