@@ -87,8 +87,11 @@ async function loadPdfJs() {
 /**
  * Group pdfjs text items into visual lines. pdfjs returns items with a
  * transform matrix; we use the y component as the line grouping key.
+ *
+ * Exported so alternative extraction back-ends (and benchmarks) can reuse the
+ * exact same grouping logic the production extractor relies on.
  */
-function groupItemsIntoLines(
+export function groupItemsIntoLines(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[],
   pageNum: number,

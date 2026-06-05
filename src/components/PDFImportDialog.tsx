@@ -39,6 +39,8 @@ interface PDFImportDialogProps {
   onClose: () => void;
   onAddIncome: (income: Omit<IncomeEntry, 'id' | 'type'>) => void;
   onAddExpense: (expense: Omit<ExpenseEntry, 'id' | 'type'>) => void;
+  /** Called after a successful import so the page can navigate to the imported period. */
+  onImported?: (target: { year: number; month: number }) => void;
   defaultCurrency: SupportedCurrency;
   customCategories?: CustomCategory[];
   categoryOverrides?: CategoryOverride[];
@@ -65,6 +67,7 @@ export function PDFImportDialog({
   onClose,
   onAddIncome,
   onAddExpense,
+  onImported,
   defaultCurrency,
   customCategories = [],
   categoryOverrides = [],
@@ -177,6 +180,19 @@ export function PDFImportDialog({
       }
     }
     setStatus(t('dialogs.pdfImport.status.importedEntries', { incomeCount, expenseCount }));
+    // Navigate the page to the earliest imported transaction's period so the
+    // user can actually see the rows that were just added (they may belong to
+    // a different month than the one currently in view).
+    const earliest = toCommit.reduce<string | null>(
+      (min, d) => (min === null || d.date < min ? d.date : min),
+      null,
+    );
+    if (earliest && onImported) {
+      const [year, month] = earliest.split('-').map(Number);
+      if (Number.isFinite(year) && Number.isFinite(month)) {
+        onImported({ year, month });
+      }
+    }
     onClose();
   };
 

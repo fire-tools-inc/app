@@ -17,9 +17,27 @@ This feature is **experimental** and **off by default**. Enable it under **Setti
    - Toggle each row on/off.
    - Change the kind (income ↔ expense).
    - Edit the date, description, amount, category, expense type (need/want) or income source.
-5. Confirm to push the included rows into the current Expense Tracker.
+5. Confirm to push the included rows into the Expense Tracker. The view jumps to the month of the earliest imported transaction so you immediately see the added rows (a payslip dated in May lands in May, not whichever month you were viewing).
 
 The doc-type dropdown lets you override the auto-detected parser if it picks the wrong one.
+
+## Parsing engine (and the LiteParse experiment)
+
+Text extraction is deliberately decoupled from the heuristic parsers: any engine
+that produces the shared `ExtractedPdf` shape (line-grouped text) can feed them.
+
+- **Production (browser):** [`pdfjs-dist`](https://github.com/mozilla/pdf.js) in
+  `src/utils/pdfTextExtractor.ts`. Runs fully client-side with no native deps.
+- **Experimental (Node-only):** [LiteParse](https://github.com/run-llama/liteparse)
+  in `src/utils/liteParseExtractor.ts`. LiteParse uses a native PDFium binding, so
+  it cannot run in the browser bundle and is loaded dynamically — it is wired up
+  for benchmarking and potential desktop/server use, not the web build.
+
+A benchmark test (`tests/pages/expense-tracker/pdfParsingBenchmark.test.ts`) runs a
+sample **paystub** and **invoice** (fixtures under `tests/.../fixtures/`, regenerate
+with `node tests/pages/expense-tracker/fixtures/generate.mjs`) through *both* engines
+and the same heuristics. Both recover the correct doc type, amount and currency; on
+these text-layer PDFs LiteParse extracts noticeably faster than pdfjs.
 
 ## Optional AI categorization
 
@@ -64,5 +82,6 @@ Scanned PDFs (image-only, no text layer) are **not supported**. Run them through
 | --- | --- | --- |
 | "No transactions detected" | Wrong doc-type or unusual layout | Pick the correct doc type from the dropdown. |
 | All rows have wrong dates | Locale mismatch (DD/MM vs MM/DD) | Edit each row's date manually before confirming. |
+| Imported rows seem to vanish after confirming | They belong to a different month than the one you were viewing | The view now auto-jumps to the imported month; use the month/year selector to revisit other periods. |
 | LLM categorization does nothing | Endpoint/key not set, or model name wrong | Re-check the three fields in Settings. |
 | Build error about `?url` import | Vite version too old | This feature needs Vite 5+ (already pinned in the project). |

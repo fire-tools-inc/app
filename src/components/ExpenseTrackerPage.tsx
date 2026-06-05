@@ -1547,6 +1547,10 @@ export function ExpenseTrackerPage() {
             onClose={() => setShowPdfImport(false)}
             onAddIncome={handleAddIncome}
             onAddExpense={handleAddExpense}
+            onImported={({ year, month }) => {
+              setSelectedYear(year);
+              setSelectedMonth(month);
+            }}
             defaultCurrency={data.currency}
             customCategories={data.customCategories}
             categoryOverrides={data.categoryOverrides}

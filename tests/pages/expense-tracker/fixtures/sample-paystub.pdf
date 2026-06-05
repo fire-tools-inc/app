@@ -1,0 +1,75 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 611 >>
+stream
+BT
+/F1 11 Tf
+16 TL
+72 760 Td
+(ACME CORPORATION) Tj
+T*
+(123 Business Avenue, Springfield) Tj
+T*
+() Tj
+T*
+(EARNINGS STATEMENT / PAYSLIP) Tj
+T*
+(Pay Period: 01/03/2024 - 31/03/2024) Tj
+T*
+(Pay Date: 05/04/2024) Tj
+T*
+() Tj
+T*
+(Employee: Jane Doe) Tj
+T*
+(Employee ID: 00451) Tj
+T*
+() Tj
+T*
+(Description            Amount) Tj
+T*
+(Gross Pay             4,500.00) Tj
+T*
+(Federal Tax            -675.00) Tj
+T*
+(Social Security        -279.00) Tj
+T*
+(Medicare                -65.25) Tj
+T*
+(Health Insurance       -120.00) Tj
+T*
+() Tj
+T*
+(Net Pay              USD 3,360.75) Tj
+T*
+() Tj
+T*
+(Thank you for your work!) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000903 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+973
+%%EOF
