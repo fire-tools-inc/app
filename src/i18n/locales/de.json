@@ -2552,5 +2552,35 @@
     "backendUnreachable": "Backend nicht erreichbar. App läuft im Nur-Client-Modus.",
     "backendDepTag": "backend",
     "refresh": "Aktualisieren"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Ich gebe diese Rate ein als",
+      "help": "Wählen Sie aus, welches Entnahmeraten-Konzept Ihre Eingabe darstellt. Die anderen beiden werden daraus abgeleitet."
+    },
+    "types": {
+      "swr": "Sichere Entnahmerate (SWR)",
+      "ltwr": "Langfristige Entnahmerate (LTWR)",
+      "pwr": "Ewige Entnahmerate (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Maximale inflationsbereinigte Rate, die das Portfolio über Ihren Zeitraum von {{years}} Jahren nicht erschöpft.",
+      "ltwr": "Nachhaltiger Mittelweg über einen langen Zeitraum von {{years}} Jahren, in dem SWR und PWR konvergieren.",
+      "pwr": "Rate, die Ihr Kapital unbegrenzt erhält — typischerweise die konservativste."
+    },
+    "results": {
+      "heading": "Entnahmeraten-Optionen",
+      "description": "Sie geben eine Rate ein; die anderen beiden werden über die implizite Realrendite mit einem deterministischen Amortisationsmodell abgeleitet.",
+      "impliedRealReturn": "Implizite Realrendite",
+      "youEntered": "Eingegeben",
+      "derived": "Abgeleitet"
+    },
+    "principalWarning": "Ihre Eingabe impliziert eine nicht-positive Realrendite ({{rate}}), daher kann keine positive Rate das Kapital dauerhaft erhalten. Die ewige Rate wird als 0% angezeigt.",
+    "ltwrHorizonNote": "LTWR verwendet einen festen langfristigen Zeitraum von {{years}} Jahren."
   }
 }

@@ -2552,5 +2552,35 @@
     "backendUnreachable": "Backend injoignable. L'application fonctionne en mode client uniquement.",
     "backendDepTag": "backend",
     "refresh": "Actualiser"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Je saisis ce taux comme",
+      "help": "Choisissez le concept de taux de retrait que représente votre saisie. Les deux autres en sont déduits."
+    },
+    "types": {
+      "swr": "Taux de Retrait Sûr (SWR)",
+      "ltwr": "Taux de Retrait à Long Terme (LTWR)",
+      "pwr": "Taux de Retrait Perpétuel (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Taux maximal ajusté de l'inflation qui évite d'épuiser le portefeuille sur votre horizon de {{years}} ans.",
+      "ltwr": "Juste milieu durable sur un long horizon de {{years}} ans, où le SWR et le PWR convergent.",
+      "pwr": "Taux qui préserve votre capital indéfiniment — généralement le plus prudent."
+    },
+    "results": {
+      "heading": "Options de taux de retrait",
+      "description": "Vous saisissez un taux ; les deux autres sont déduits du rendement réel implicite à l'aide d'un modèle d'amortissement déterministe.",
+      "impliedRealReturn": "Rendement réel implicite",
+      "youEntered": "Saisi",
+      "derived": "Déduit"
+    },
+    "principalWarning": "Votre saisie implique un rendement réel non positif ({{rate}}), donc aucun taux positif ne peut préserver le capital indéfiniment. Le taux perpétuel est affiché à 0%.",
+    "ltwrHorizonNote": "Le LTWR utilise un horizon à long terme fixe de {{years}} ans."
   }
 }

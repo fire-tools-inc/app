@@ -2552,5 +2552,35 @@
     "backendUnreachable": "Backend no accesible. La app funciona en modo solo cliente.",
     "backendDepTag": "backend",
     "refresh": "Actualizar"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Introduzco esta tasa como",
+      "help": "Elija qué concepto de tasa de retiro representa su entrada. Las otras dos se derivan de ella."
+    },
+    "types": {
+      "swr": "Tasa de Retiro Segura (SWR)",
+      "ltwr": "Tasa de Retiro a Largo Plazo (LTWR)",
+      "pwr": "Tasa de Retiro Perpetua (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Tasa máxima ajustada por inflación que evita agotar la cartera durante su horizonte de {{years}} años.",
+      "ltwr": "Punto intermedio sostenible en un horizonte largo de {{years}} años, donde SWR y PWR convergen.",
+      "pwr": "Tasa que preserva su capital indefinidamente — normalmente la más conservadora."
+    },
+    "results": {
+      "heading": "Opciones de tasa de retiro",
+      "description": "Usted introduce una tasa; las otras dos se derivan del rendimiento real implícito mediante un modelo de amortización determinista.",
+      "impliedRealReturn": "Rendimiento real implícito",
+      "youEntered": "Introducida",
+      "derived": "Derivada"
+    },
+    "principalWarning": "Su entrada implica un rendimiento real no positivo ({{rate}}), por lo que ninguna tasa positiva puede preservar el capital para siempre. La tasa perpetua se muestra como 0%.",
+    "ltwrHorizonNote": "LTWR usa un horizonte a largo plazo fijo de {{years}} años."
   }
 }

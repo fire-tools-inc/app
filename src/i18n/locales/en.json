@@ -2552,5 +2552,35 @@
     "backendUnreachable": "Backend is not reachable. The app runs in client-only mode.",
     "backendDepTag": "backend",
     "refresh": "Refresh"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "I'm entering this rate as",
+      "help": "Pick which withdrawal-rate concept your input represents. The other two are derived from it."
+    },
+    "types": {
+      "swr": "Safe Withdrawal Rate (SWR)",
+      "ltwr": "Long-Term Withdrawal Rate (LTWR)",
+      "pwr": "Perpetual Withdrawal Rate (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Maximum inflation-adjusted rate that avoids depleting the portfolio over your {{years}}-year horizon.",
+      "ltwr": "Sustainable middle ground over a long {{years}}-year horizon, where SWR and PWR converge.",
+      "pwr": "Rate that preserves your principal indefinitely — typically the most conservative."
+    },
+    "results": {
+      "heading": "Withdrawal rate options",
+      "description": "You enter one rate; the other two are derived from the implied real return using a deterministic amortization model.",
+      "impliedRealReturn": "Implied real return",
+      "youEntered": "You entered",
+      "derived": "Derived"
+    },
+    "principalWarning": "Your input implies a non-positive real return ({{rate}}), so no positive rate can preserve principal forever. Perpetual rate is shown as 0%.",
+    "ltwrHorizonNote": "LTWR uses a fixed {{years}}-year long-term horizon."
   }
 }

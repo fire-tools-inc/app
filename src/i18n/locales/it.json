@@ -2552,5 +2552,35 @@
     "backendUnreachable": "Backend non raggiungibile. L'app è in modalità solo client.",
     "backendDepTag": "backend",
     "refresh": "Aggiorna"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Sto inserendo questo tasso come",
+      "help": "Scegli quale concetto di tasso di prelievo rappresenta il tuo input. Gli altri due vengono derivati da esso."
+    },
+    "types": {
+      "swr": "Tasso di Prelievo Sicuro (SWR)",
+      "ltwr": "Tasso di Prelievo a Lungo Termine (LTWR)",
+      "pwr": "Tasso di Prelievo Perpetuo (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Tasso massimo aggiustato per l'inflazione che evita di esaurire il portafoglio nel tuo orizzonte di {{years}} anni.",
+      "ltwr": "Via di mezzo sostenibile su un lungo orizzonte di {{years}} anni, dove SWR e PWR convergono.",
+      "pwr": "Tasso che preserva il capitale indefinitamente — in genere il più conservativo."
+    },
+    "results": {
+      "heading": "Opzioni del tasso di prelievo",
+      "description": "Inserisci un tasso; gli altri due vengono derivati dal rendimento reale implicito usando un modello di ammortamento deterministico.",
+      "impliedRealReturn": "Rendimento reale implicito",
+      "youEntered": "Inserito",
+      "derived": "Derivato"
+    },
+    "principalWarning": "Il tuo input implica un rendimento reale non positivo ({{rate}}), quindi nessun tasso positivo può preservare il capitale per sempre. Il tasso perpetuo è mostrato come 0%.",
+    "ltwrHorizonNote": "LTWR usa un orizzonte a lungo termine fisso di {{years}} anni."
   }
 }
