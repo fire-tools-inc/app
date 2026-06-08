@@ -801,7 +801,42 @@
     "value": "Wert",
     "year": "Jahr",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "YTD-Änderung"
+    "ytdChange": "YTD-Änderung",
+    "sankey": {
+      "title": "Vermögensfluss",
+      "subtitle": "Zusammensetzung Ihres Nettovermögens für diesen Monat",
+      "totalPortfolio": "Gesamtportfolio",
+      "investments": "Investitionen",
+      "cashLiquidity": "Barmittel & Liquidität",
+      "pension": "Rente",
+      "noData": "Keine Daten für diesen Monat. Fügen Sie Vermögenswerte, Kasseneinträge oder Renten hinzu.",
+      "assetClasses": {
+        "stocks": "Aktien",
+        "etf": "ETF",
+        "bonds": "Anleihen",
+        "crypto": "Krypto",
+        "realEstate": "Immobilien",
+        "privateEquity": "Private Equity",
+        "vehicle": "Fahrzeug",
+        "collectible": "Sammlerstück",
+        "art": "Kunst",
+        "commodities": "Rohstoffe",
+        "other": "Sonstige"
+      },
+      "accountTypes": {
+        "savings": "Sparkonto",
+        "checking": "Girokonto",
+        "brokerage": "Brokerkonto",
+        "creditCard": "Kreditkarte",
+        "other": "Sonstiges"
+      },
+      "pensionTypes": {
+        "state": "Staatliche Rente",
+        "private": "Private Rente",
+        "employer": "Betriebliche Rente",
+        "other": "Sonstige Rente"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",

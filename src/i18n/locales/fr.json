@@ -801,7 +801,42 @@
     "value": "Valeur",
     "year": "Année",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "Variation YTD"
+    "ytdChange": "Variation YTD",
+    "sankey": {
+      "title": "Flux de Patrimoine",
+      "subtitle": "Composition de votre patrimoine net pour ce mois",
+      "totalPortfolio": "Portefeuille Total",
+      "investments": "Investissements",
+      "cashLiquidity": "Trésorerie & Liquidités",
+      "pension": "Retraite",
+      "noData": "Aucune donnée pour ce mois. Ajoutez des actifs, des entrées de trésorerie ou des retraites pour voir le graphique.",
+      "assetClasses": {
+        "stocks": "Actions",
+        "etf": "ETF",
+        "bonds": "Obligations",
+        "crypto": "Crypto",
+        "realEstate": "Immobilier",
+        "privateEquity": "Capital Investissement",
+        "vehicle": "Véhicule",
+        "collectible": "Objet de Collection",
+        "art": "Art",
+        "commodities": "Matières Premières",
+        "other": "Autre"
+      },
+      "accountTypes": {
+        "savings": "Épargne",
+        "checking": "Compte Courant",
+        "brokerage": "Courtage",
+        "creditCard": "Carte de Crédit",
+        "other": "Autre Trésorerie"
+      },
+      "pensionTypes": {
+        "state": "Retraite de l'État",
+        "private": "Retraite Privée",
+        "employer": "Retraite Employeur",
+        "other": "Autre Retraite"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",

@@ -801,7 +801,42 @@
     "value": "Valor",
     "year": "Año",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "Cambio YTD"
+    "ytdChange": "Cambio YTD",
+    "sankey": {
+      "title": "Flujo de Riqueza",
+      "subtitle": "Composición de su patrimonio neto de este mes",
+      "totalPortfolio": "Cartera Total",
+      "investments": "Inversiones",
+      "cashLiquidity": "Efectivo y Liquidez",
+      "pension": "Pensión",
+      "noData": "No hay datos para este mes. Añada activos, entradas de efectivo o pensiones para ver el gráfico.",
+      "assetClasses": {
+        "stocks": "Acciones",
+        "etf": "ETF",
+        "bonds": "Bonos",
+        "crypto": "Cripto",
+        "realEstate": "Bienes Raíces",
+        "privateEquity": "Capital Privado",
+        "vehicle": "Vehículo",
+        "collectible": "Coleccionable",
+        "art": "Arte",
+        "commodities": "Materias Primas",
+        "other": "Otro"
+      },
+      "accountTypes": {
+        "savings": "Ahorros",
+        "checking": "Cuenta Corriente",
+        "brokerage": "Corretaje",
+        "creditCard": "Tarjeta de Crédito",
+        "other": "Otro Efectivo"
+      },
+      "pensionTypes": {
+        "state": "Pensión Estatal",
+        "private": "Pensión Privada",
+        "employer": "Pensión de Empresa",
+        "other": "Otra Pensión"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",

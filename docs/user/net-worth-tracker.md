@@ -25,3 +25,33 @@ above the trend.
 Snapshots round-trip via CSV so you can keep a backup outside the local store
 (SQLite on desktop, encrypted cookies in browser). Use the **Export CSV**
 button to grab a snapshot of all entries; use **Import CSV** to restore.
+
+## Wealth Flow diagram (Sankey)
+
+Below the historical chart you'll find a **Sankey / flow diagram** that shows
+how your total portfolio is composed at the current month's snapshot.
+
+```
+Total Portfolio
+  ├─ Investments ──► STOCKS, ETF, BONDS, REAL_ESTATE, COMMODITIES, …
+  ├─ Cash & Liquidity ──► CHECKING, SAVINGS, MONEY_MARKET, …
+  └─ Pension ──► STATE, OCCUPATIONAL, PRIVATE, …  (if pension tracking is on)
+```
+
+Each band's width is proportional to the euro value it represents. Hover a
+band or node to see the exact amount.
+
+**When it won't appear:**
+
+- No snapshot for the current month exists yet, **or**
+- The total portfolio value is below 1 (i.e. effectively empty data).
+
+In those cases a friendly placeholder message is shown instead of an empty
+chart.
+
+**Pension toggle**: If you have disabled pension tracking in the settings
+panel, the Pension branch is hidden from the diagram.
+
+**Negative balances** (e.g. credit-card debt) are excluded because Sankey
+diagrams cannot represent negative flows. They still count toward your overall
+net worth calculation.
