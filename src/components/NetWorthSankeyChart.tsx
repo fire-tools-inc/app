@@ -47,39 +47,39 @@ function CustomNode({ x, y, width, height, payload, currency, isPrivacyMode }: N
   const cy = y + height / 2;
 
   // Category nodes (middle column) carry many flows on both sides, so their
-  // labels go ABOVE the node — centered, with a dark halo for legibility.
+  // label sits in a color-coded chip ABOVE the node. The solid chip lifts the
+  // text cleanly out of the busy flow streams and ties it to the node colour.
   if (level === 1) {
     const labelX = x + width / 2;
-    const nameY = Math.max(12, y - 18);
+    const chipText = `${payload.name}  ${valueLabel}`;
+    const chipHeight = 22;
+    const chipWidth = chipText.length * 6.6 + 22;
+    const chipBottom = y - 5;
+    const chipTop = chipBottom - chipHeight;
+    const textY = chipTop + chipHeight / 2;
     return (
       <g>
         <rect x={x} y={y} width={width} height={height} fill={fill} rx={2} />
+        <rect
+          x={labelX - chipWidth / 2}
+          y={chipTop}
+          width={chipWidth}
+          height={chipHeight}
+          rx={6}
+          fill={LABEL_HALO}
+          stroke={fill}
+          strokeOpacity={0.6}
+          strokeWidth={1}
+        />
         <text
           x={labelX}
-          y={nameY}
+          y={textY}
           textAnchor="middle"
           dominantBaseline="middle"
-          fill="#F8FAFC"
           fontSize={11}
-          fontWeight={600}
-          stroke={LABEL_HALO}
-          strokeWidth={3}
-          style={{ paintOrder: 'stroke' }}
         >
-          {payload.name}
-        </text>
-        <text
-          x={labelX}
-          y={nameY + 13}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill="#CBD5E1"
-          fontSize={10}
-          stroke={LABEL_HALO}
-          strokeWidth={3}
-          style={{ paintOrder: 'stroke' }}
-        >
-          {valueLabel}
+          <tspan fill="#F8FAFC" fontWeight={600}>{payload.name}</tspan>
+          <tspan fill="#94A3B8" fontWeight={500}>{`  ${valueLabel}`}</tspan>
         </text>
       </g>
     );
@@ -196,11 +196,11 @@ export function NetWorthSankeyChart({
     <div className="sankey-chart-wrapper" aria-label={t('netWorth.sankey.title')}>
       <Sankey
         width={920}
-        height={420}
+        height={440}
         data={sankeyData}
         nodeWidth={18}
-        nodePadding={26}
-        margin={{ top: 36, right: 150, bottom: 18, left: 150 }}
+        nodePadding={30}
+        margin={{ top: 40, right: 150, bottom: 20, left: 150 }}
         sort={false}
         node={(nodeProps) => (
           <CustomNode
