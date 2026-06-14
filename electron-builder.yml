@@ -1,6 +1,17 @@
 appId: dev.mb-consulting.firetools
 productName: Fire Tools
 copyright: Copyright © 2026 Fire Tools Contributors
+
+# Artifact names MUST NOT contain spaces. `productName` ("Fire Tools") has one,
+# and the space is mangled inconsistently across the update pipeline:
+#   on-disk file -> "Fire Tools-..." (space)
+#   latest*.yml  -> "Fire-Tools-..." (electron-updater sanitizes space to hyphen)
+#   GitHub asset -> "Fire.Tools-..." (Releases rewrites space to a dot on upload)
+# The manifest url (hyphen) then never matches the uploaded asset (dot) and
+# electron-updater 404s. Pinning a space-free template keeps the on-disk file,
+# the manifest url, and the uploaded asset byte-for-byte identical.
+artifactName: "Fire-Tools-${version}-${arch}.${ext}"
+
 directories:
   output: release/${version}
   buildResources: electron/build
@@ -62,7 +73,8 @@ nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  artifactName: "${productName}-Setup-${version}-${arch}.${ext}"
+  # Space-free for the same reason as the top-level artifactName above.
+  artifactName: "Fire-Tools-Setup-${version}-${arch}.${ext}"
   shortcutName: Fire Tools
   uninstallDisplayName: Fire Tools ${version}
   createDesktopShortcut: true

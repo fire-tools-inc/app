@@ -216,6 +216,42 @@ jobs:
           echo "Staged release assets:"
           ls -la dist-assets
 
+      - name: Verify update manifests reference staged assets
+        run: |
+          set -euo pipefail
+          # Guard against the auto-updater 404 class of bug: every file the
+          # update manifests point at (latest*.yml `files[].url` and `path`)
+          # must actually be staged for upload under the exact same basename.
+          # If an artifact name ever reintroduces a space (or any character the
+          # manifest sanitizes but GitHub rewrites differently), this fails the
+          # release instead of shipping an updater that can't download itself.
+          python3 -c "import yaml" 2>/dev/null || pip install --quiet --break-system-packages pyyaml
+          python3 - <<'PY'
+          import glob, os, sys, yaml
+          missing = []
+          manifests = sorted(glob.glob('dist-assets/latest*.yml'))
+          if not manifests:
+              print('::error::No latest*.yml update manifests were staged.')
+              sys.exit(1)
+          for man in manifests:
+              with open(man) as fh:
+                  data = yaml.safe_load(fh) or {}
+              refs = {e.get('url') for e in data.get('files', []) if e.get('url')}
+              if data.get('path'):
+                  refs.add(data['path'])
+              for ref in sorted(refs):
+                  if not os.path.exists(os.path.join('dist-assets', ref)):
+                      missing.append((os.path.basename(man), ref))
+          if missing:
+              print('::error::Update manifest(s) reference assets that are not staged for upload:')
+              for man, ref in missing:
+                  print(f'  {man} -> {ref}')
+              print('This would make the auto-updater 404. Check electron-builder artifactName (no spaces).')
+              sys.exit(1)
+          for man in manifests:
+              print(f'OK: {os.path.basename(man)} references only staged assets')
+          PY
+
       - name: Build release notes (changelog + installation)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
