@@ -17,7 +17,7 @@ annual expenses (the number that drives the FIRE target) instead of guessing.
 
 Use **Import PDF** to upload a bank statement. Fire Tools includes lightweight
 extractors for a handful of common European bank PDF layouts (see
-[`docs/pdf-import.md`](https://github.com/mbianchidev/fire-tools/blob/main/docs/pdf-import.md) for the supported list and how to
+[`docs/pdf-import.md`](https://github.com/fire-tools-inc/app/blob/main/docs/pdf-import.md) for the supported list and how to
 contribute one). Imported rows land in a staging table where you can map them
 to categories before committing.
 

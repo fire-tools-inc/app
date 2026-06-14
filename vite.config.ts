@@ -216,7 +216,7 @@ export default defineConfig(({ mode, command }) => ({
         ? '/'
         : './'
       : mode === 'production'
-      ? '/fire-tools/demo/'
+      ? '/app/demo/'
       : '/demo/',
   build: {
     outDir: mode === 'electron' ? 'dist-electron' : 'dist/demo',

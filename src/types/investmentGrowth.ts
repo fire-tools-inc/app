@@ -1,6 +1,6 @@
 /**
  * Investment Growth Calculator Types
- * See: https://github.com/mbianchidev/fire-tools/issues/96
+ * See: https://github.com/fire-tools-inc/app/issues/96
  */
 
 export type ContributionFrequency = 'monthly' | 'quarterly' | 'yearly';

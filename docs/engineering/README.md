@@ -30,9 +30,9 @@ instead.
   any third-party client you build on top of the OpenAPI contract.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   default storage; Postgres is supported via a Docker Compose profile.
-- **Contract** — [OpenAPI 3.0.3](https://github.com/mbianchidev/fire-tools/blob/main/docs/api/openapi.yaml).
+- **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
   Source of truth for both server routes and any generated client. Also
-  published at [`/fire-tools/api/`](https://mbianchidev.github.io/fire-tools/api/).
+  published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).
 
 ## Why a local-first backend?
 
@@ -62,7 +62,7 @@ don't need to think about auth on day one.
 
 ## Related links
 
-- [Project README](https://github.com/mbianchidev/fire-tools)
-- [Issue tracker](https://github.com/mbianchidev/fire-tools/issues)
-- [Live OpenAPI viewer](https://mbianchidev.github.io/fire-tools/api/)
-- [Mobile repo plan](https://github.com/mbianchidev/fire-tools/blob/main/docs/mobile/README.md)
+- [Project README](https://github.com/fire-tools-inc/app)
+- [Issue tracker](https://github.com/fire-tools-inc/app/issues)
+- [Live OpenAPI viewer](https://fire-tools-inc.github.io/app/api/)
+- [Mobile repo plan](https://github.com/fire-tools-inc/app/blob/main/docs/mobile/README.md)

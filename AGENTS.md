@@ -27,10 +27,10 @@ This document provides comprehensive instructions for AI agents working on the F
 - Node.js ^20.19.0 || ^22.12.0 || >=24.0.0
 
 ### Backend (implemented — [`server/`](server/))
-Local-deployment / Electron path (issues [#133](https://github.com/mbianchidev/fire-tools/issues/133),
-[#189](https://github.com/mbianchidev/fire-tools/issues/189),
-[#195](https://github.com/mbianchidev/fire-tools/issues/195),
-[#222](https://github.com/mbianchidev/fire-tools/issues/222)):
+Local-deployment / Electron path (issues [#133](https://github.com/fire-tools-inc/app/issues/133),
+[#189](https://github.com/fire-tools-inc/app/issues/189),
+[#195](https://github.com/fire-tools-inc/app/issues/195),
+[#222](https://github.com/fire-tools-inc/app/issues/222)):
 - **Runtime**: Node.js + Express 4 + TypeScript (strict, ESM)
 - **REST API**: OpenAPI 3.0.3 contract at [`docs/api/openapi.yaml`](docs/api/openapi.yaml). See [`docs/api/README.md`](docs/api/README.md) for conventions, type mapping, and client generation.
 - **Database**: better-sqlite3 (SQLite as the **first-class** target), **PostgreSQL-compatible** schema. DDL at [`docs/database/schema.sql`](docs/database/schema.sql); design notes and ERD at [`docs/database/README.md`](docs/database/README.md).
@@ -308,7 +308,7 @@ Serves the production build locally for testing.
 ### Deployment
 - Automatic deployment to GitHub Pages via GitHub Actions
 - Triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed
-- Base path configured as `/fire-tools/` for GitHub Pages
+- Base path configured as `/app/` for GitHub Pages
 - Workflow file: `.github/workflows/deploy.yml`
 
 ## Common Tasks for AI Agents

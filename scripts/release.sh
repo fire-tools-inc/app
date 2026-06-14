@@ -20,7 +20,7 @@ cd "$(dirname "$0")/.."
 
 DEFAULT_BRANCH="main"
 REMOTE="origin"
-REPO_URL="https://github.com/mbianchidev/fire-tools"
+REPO_URL="https://github.com/fire-tools-inc/app"
 
 err()  { printf '\033[31merror:\033[0m %s\n' "$*" >&2; }
 info() { printf '\033[36m==>\033[0m %s\n' "$*"; }

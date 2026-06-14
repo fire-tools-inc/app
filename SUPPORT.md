@@ -8,10 +8,10 @@ Thank you for using Fire Tools! This document explains how to get help with the 
 
 Use our issue templates to get help quickly:
 
-- 🐛 **[Report a Bug](https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml)** - Something isn't working correctly
-- ✨ **[Request a Feature](https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml)** - Suggest a new feature or improvement
-- 🎨 **[UX/UI Suggestion](https://github.com/mbianchidev/fire-tools/issues/new?template=ux_ui_suggestion.yml)** - Improve the user experience or interface
-- 🔒 **[Security Issue](https://github.com/mbianchidev/fire-tools/security/advisories/new)** - Report security vulnerabilities privately
+- 🐛 **[Report a Bug](https://github.com/fire-tools-inc/app/issues/new?template=bug_report.yml)** - Something isn't working correctly
+- ✨ **[Request a Feature](https://github.com/fire-tools-inc/app/issues/new?template=feature_request.yml)** - Suggest a new feature or improvement
+- 🎨 **[UX/UI Suggestion](https://github.com/fire-tools-inc/app/issues/new?template=ux_ui_suggestion.yml)** - Improve the user experience or interface
+- 🔒 **[Security Issue](https://github.com/fire-tools-inc/app/security/advisories/new)** - Report security vulnerabilities privately
 
 ### Report from Within the App
 
@@ -26,7 +26,7 @@ You can also report bugs and request features directly from Fire Tools:
 
 The primary way to get support is by **opening an issue** on GitHub using our templates:
 
-👉 [View all issue options](https://github.com/mbianchidev/fire-tools/issues/new/choose)
+👉 [View all issue options](https://github.com/fire-tools-inc/app/issues/new/choose)
 
 This allows the community to:
 - See and benefit from questions and answers
@@ -52,7 +52,7 @@ Our issue templates guide you through providing the right information. In genera
 
 ### Bug Reports
 
-Found a bug? [Report it here!](https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml) Include:
+Found a bug? [Report it here!](https://github.com/fire-tools-inc/app/issues/new?template=bug_report.yml) Include:
 - Description of the bug
 - Bug category (UI, UX, calculation, data, performance)
 - Steps to reproduce
@@ -63,7 +63,7 @@ Found a bug? [Report it here!](https://github.com/mbianchidev/fire-tools/issues/
 
 ### Feature Requests
 
-Have an idea for a new feature? [Request it here!](https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml) Include:
+Have an idea for a new feature? [Request it here!](https://github.com/fire-tools-inc/app/issues/new?template=feature_request.yml) Include:
 - Description of the feature
 - Why it would be useful
 - How you envision it working
@@ -103,7 +103,7 @@ Please be patient - this is an open source project maintained by volunteers.
 
 ### Live Demo
 
-Try the live version: [https://mbianchidev.github.io/fire-tools/](https://mbianchidev.github.io/fire-tools/)
+Try the live version: [https://fire-tools-inc.github.io/app/](https://fire-tools-inc.github.io/app/)
 
 ## What We Don't Support
 

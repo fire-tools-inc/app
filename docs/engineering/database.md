@@ -3,8 +3,8 @@
 The backend treats SQLite as a **first-class** storage target and keeps the
 schema **Postgres-compatible** so the same DDL runs on both engines.
 
-- DDL: [`docs/database/schema.sql`](https://github.com/mbianchidev/fire-tools/blob/main/docs/database/schema.sql)
-- Design notes + ERD: [`docs/database/README.md`](https://github.com/mbianchidev/fire-tools/blob/main/docs/database/README.md)
+- DDL: [`docs/database/schema.sql`](https://github.com/fire-tools-inc/app/blob/main/docs/database/schema.sql)
+- Design notes + ERD: [`docs/database/README.md`](https://github.com/fire-tools-inc/app/blob/main/docs/database/README.md)
 
 ## Why SQLite first?
 
@@ -40,8 +40,8 @@ sqlite3 :memory: < docs/database/schema.sql
 
 Whenever you change `docs/database/schema.sql` you **must** update:
 
-1. The matching schema in [`docs/api/openapi.yaml`](https://github.com/mbianchidev/fire-tools/blob/main/docs/api/openapi.yaml).
-2. The matching TypeScript interface or union in [`src/types/*.ts`](https://github.com/mbianchidev/fire-tools/tree/main/src/types).
+1. The matching schema in [`docs/api/openapi.yaml`](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
+2. The matching TypeScript interface or union in [`src/types/*.ts`](https://github.com/fire-tools-inc/app/tree/main/src/types).
 3. A migration file with a **rollback** companion — see
    [migrations & rollbacks](./migrations.md).
 

@@ -2,7 +2,7 @@
 
 Wraps the existing React SPA so it ships as a signed binary on macOS,
 Windows and Linux. Tracks issue
-[#132](https://github.com/mbianchidev/fire-tools/issues/132).
+[#132](https://github.com/fire-tools-inc/app/issues/132).
 
 > **Scope of this scaffold.** Wraps the React SPA **and bundles the
 > Node + Express + SQLite backend in-process**: the main process starts the

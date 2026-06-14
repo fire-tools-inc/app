@@ -11,8 +11,8 @@ stack. You get the API on `:3000` and (optionally) Postgres on `:5432`.
 ## Quick start (SQLite)
 
 ```sh
-git clone https://github.com/mbianchidev/fire-tools.git
-cd fire-tools
+git clone https://github.com/fire-tools-inc/app.git
+cd app
 docker compose build --no-cache
 docker compose up -d backend
 curl http://localhost:3000/api/v1/health

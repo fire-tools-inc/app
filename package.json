@@ -41,15 +41,15 @@
   "author": {
     "name": "Fire Tools Contributors",
     "email": "noreply@mb-consulting.dev",
-    "url": "https://github.com/mbianchidev/fire-tools"
+    "url": "https://github.com/fire-tools-inc/app"
   },
-  "homepage": "https://github.com/mbianchidev/fire-tools",
+  "homepage": "https://github.com/fire-tools-inc/app",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mbianchidev/fire-tools.git"
+    "url": "git+https://github.com/fire-tools-inc/app.git"
   },
   "bugs": {
-    "url": "https://github.com/mbianchidev/fire-tools/issues"
+    "url": "https://github.com/fire-tools-inc/app/issues"
   },
   "license": "MIT",
   "devDependencies": {

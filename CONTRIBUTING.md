@@ -27,13 +27,13 @@ Before you begin, ensure you have the following installed:
 
 2. **Clone your fork** to your local machine:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/fire-tools.git
-   cd fire-tools
+   git clone https://github.com/YOUR-USERNAME/app.git
+   cd app
    ```
 
 3. **Add the upstream repository**:
    ```bash
-   git remote add upstream https://github.com/mbianchidev/fire-tools.git
+   git remote add upstream https://github.com/fire-tools-inc/app.git
    ```
 
 4. **Install dependencies**:
@@ -209,10 +209,10 @@ We use GitHub Issue Templates to help you report bugs and request features. This
 
 ### Quick Links
 
-- 🐛 **[Report a Bug](https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml)** - Something isn't working correctly
-- ✨ **[Request a Feature](https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml)** - Suggest a new feature or improvement
-- 🎨 **[UX/UI Suggestion](https://github.com/mbianchidev/fire-tools/issues/new?template=ux_ui_suggestion.yml)** - Improve the user experience or interface
-- 🔒 **[Security Issue](https://github.com/mbianchidev/fire-tools/security/advisories/new)** - Report security vulnerabilities privately
+- 🐛 **[Report a Bug](https://github.com/fire-tools-inc/app/issues/new?template=bug_report.yml)** - Something isn't working correctly
+- ✨ **[Request a Feature](https://github.com/fire-tools-inc/app/issues/new?template=feature_request.yml)** - Suggest a new feature or improvement
+- 🎨 **[UX/UI Suggestion](https://github.com/fire-tools-inc/app/issues/new?template=ux_ui_suggestion.yml)** - Improve the user experience or interface
+- 🔒 **[Security Issue](https://github.com/fire-tools-inc/app/security/advisories/new)** - Report security vulnerabilities privately
 
 You can also report bugs directly from the app via **Settings → Support & Feedback → Report a Bug**.
 

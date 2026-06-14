@@ -1,6 +1,6 @@
 # Mobile app — separate repo, Flutter
 
-Tracking issue: [#134](https://github.com/mbianchidev/fire-tools/issues/134).
+Tracking issue: [#134](https://github.com/fire-tools-inc/app/issues/134).
 
 ## Why a separate repo
 

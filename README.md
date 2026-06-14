@@ -5,7 +5,7 @@
 
 A privacy-first suite of **FIRE (Financial Independence Retire Early)** planning tools. Financial data is stored locally by default; optional integrations (Yahoo Finance prices, LLM categorization) contact external services only when explicitly enabled.
 
-**[Try the live demo →](https://mbianchidev.github.io/fire-tools/demo/)**
+**[Try the live demo →](https://fire-tools-inc.github.io/app/demo/)**
 
 ---
 
@@ -40,7 +40,7 @@ This software is for **educational and planning purposes only** — not financia
 ## Quick Start
 
 ```bash
-git clone https://github.com/mbianchidev/fire-tools.git && cd fire-tools
+git clone https://github.com/fire-tools-inc/app.git && cd app
 npm install
 npm run dev          # → http://localhost:5173
 ```
@@ -118,7 +118,7 @@ Full policy: [SECURITY.md](SECURITY.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Check [open issues](https://github.com/mbianchidev/fire-tools/issues), fork, branch, and submit a PR.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Check [open issues](https://github.com/fire-tools-inc/app/issues), fork, branch, and submit a PR.
 
 ---
 
@@ -130,9 +130,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Check [open issues](https://github.com/m
 
 ## Support
 
-- 🐛 [Report a bug](https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml)
-- ✨ [Request a feature](https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml)
-- 🎨 [UX/UI suggestion](https://github.com/mbianchidev/fire-tools/issues/new?template=ux_ui_suggestion.yml)
+- 🐛 [Report a bug](https://github.com/fire-tools-inc/app/issues/new?template=bug_report.yml)
+- ✨ [Request a feature](https://github.com/fire-tools-inc/app/issues/new?template=feature_request.yml)
+- 🎨 [UX/UI suggestion](https://github.com/fire-tools-inc/app/issues/new?template=ux_ui_suggestion.yml)
 - 💬 [SUPPORT.md](SUPPORT.md)
 
 You can also report bugs from the app: **Settings → Support & Feedback**.

@@ -1,9 +1,9 @@
 # Local Docker Compose deployment
 
 Covers issues
-[#129](https://github.com/mbianchidev/fire-tools/issues/129) (decouple +
+[#129](https://github.com/fire-tools-inc/app/issues/129) (decouple +
 containerize) and
-[#195](https://github.com/mbianchidev/fire-tools/issues/195) (local
+[#195](https://github.com/fire-tools-inc/app/issues/195) (local
 database).
 
 The backend implements the full OpenAPI contract against SQLite. Migrations

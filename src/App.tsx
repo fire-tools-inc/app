@@ -482,7 +482,7 @@ function NavigateBridge() {
 
 function App() {
   // SPA lives under /demo on the web so the landing page can sit at the root.
-  // Production = GitHub Pages under /fire-tools. Electron detection covers
+  // Production = GitHub Pages under /app. Electron detection covers
   // both packaged (file://) and unpackaged dev (http://) launches via the
   // preload bridge that only exists inside Electron.
   const isElectron =
@@ -491,7 +491,7 @@ function App() {
   const basename = isElectron
     ? '/'
     : import.meta.env.MODE === 'production'
-    ? '/fire-tools/demo'
+    ? '/app/demo'
     : '/demo';
   const { t } = useTranslation();
   
@@ -599,7 +599,7 @@ function App() {
                   {t('app.cookiePolicy')}
                 </button>
                 <span className="footer-separator">•</span>
-                <a href="https://github.com/mbianchidev/fire-tools" target="_blank" rel="noopener noreferrer">{t('app.github')}</a>
+                <a href="https://github.com/fire-tools-inc/app" target="_blank" rel="noopener noreferrer">{t('app.github')}</a>
               </div>
             </footer>
           )}

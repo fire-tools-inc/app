@@ -1,7 +1,7 @@
 /**
  * Navbar labels — English ONLY. Do NOT localize.
  *
- * Per issue mbianchidev/fire-tools#233, the app navbar must always render in
+ * Per issue fire-tools-inc/app#233, the app navbar must always render in
  * English regardless of the user's selected UI language. These strings are the
  * single source of truth for the top-level navigation and any navbar-styled
  * links that appear elsewhere (e.g. on the 404 page).
