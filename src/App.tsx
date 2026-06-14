@@ -482,7 +482,8 @@ function NavigateBridge() {
 
 function App() {
   // SPA lives under /demo on the web so the landing page can sit at the root.
-  // Production = GitHub Pages under /app. Electron detection covers
+  // The web basename mirrors Vite's BASE_URL (e.g. /<repo>/demo on GitHub
+  // Pages), so it tracks the repo automatically. Electron detection covers
   // both packaged (file://) and unpackaged dev (http://) launches via the
   // preload bridge that only exists inside Electron.
   const isElectron =
@@ -490,9 +491,7 @@ function App() {
     (window.location.protocol === 'file:' || Boolean(window.fireTools));
   const basename = isElectron
     ? '/'
-    : import.meta.env.MODE === 'production'
-    ? '/app/demo'
-    : '/demo';
+    : import.meta.env.BASE_URL.replace(/\/+$/, '') || '/';
   const { t } = useTranslation();
   
   // Load settings from localStorage
