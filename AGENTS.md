@@ -306,10 +306,10 @@ npm run preview
 Serves the production build locally for testing.
 
 ### Deployment
-- Automatic deployment to GitHub Pages via GitHub Actions
-- Triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed
-- Base path configured as `/app/` for GitHub Pages
-- Workflow file: `.github/workflows/deploy.yml`
+- The app ships as a desktop build (Electron) and a self-hosted Docker stack;
+  there is no public web deployment.
+- Desktop releases are built by `.github/workflows/release.yml`, triggered when
+  a version tag matching `v*` (e.g. `v1.2.3`) is pushed.
 
 ## Common Tasks for AI Agents
 

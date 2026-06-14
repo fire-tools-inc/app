@@ -4,14 +4,14 @@ Static landing page for `fire-tools`. Hand-rolled HTML + CSS — no build
 step, no framework. Tracks issue
 [#138](https://github.com/fire-tools-inc/app/issues/138).
 
-## Where it lives in production
+## Status
 
-`npm run build:landing` copies the contents of `website/` to `dist/`
-(the site root) so it ships at the GitHub Pages root. The SPA lives
-under `dist/demo/`. The live URLs are:
+The hosted GitHub Pages deployment has been retired — the browser demo
+persisted nothing server-side and was never a usable product surface, so the
+app now ships only as the desktop build and the self-hosted Docker stack.
 
-- `https://fire-tools-inc.github.io/app/` — this landing page
-- `https://fire-tools-inc.github.io/app/demo/` — the read-only demo app
+`npm run build:landing` still copies `website/` into `dist/` if you want to
+host the landing page yourself.
 
 ## Local preview
 
