@@ -65,9 +65,11 @@ exported off device.
 - **Desktop app** — data lives in a local SQLite database under the OS
   `userData` directory. Migrations run automatically on startup. Nothing is
   transmitted to a server unless you opt in.
-- **Browser** — sensitive data is AES-256-encrypted and stored in cookies
-  (with a localStorage fallback for environments where cookies are blocked).
-  Cookies are flagged `Secure` and `SameSite=Strict`.
+- **Self-hosted** — data lives in the volume-backed SQLite (or Postgres)
+  database on your own server. Nothing is transmitted elsewhere unless you opt in.
+
+The hosted web demo is read-only and stores nothing — it only loads sample data
+for evaluation.
 
 The only outbound calls are explicit opt-ins (e.g. the on-demand price refresh
 on the [Asset allocation page](./asset-allocation.md)).

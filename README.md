@@ -5,7 +5,7 @@
 
 A privacy-first suite of **FIRE (Financial Independence Retire Early)** planning tools. Financial data is stored locally by default; optional integrations (Yahoo Finance prices, LLM categorization) contact external services only when explicitly enabled.
 
-**[Download the desktop app →](https://github.com/fire-tools-inc/app/releases)**
+**[Download the desktop app →](https://github.com/fire-tools-inc/app/releases)** &nbsp;·&nbsp; **[Try the live demo →](https://fire-tools-inc.github.io/app/demo/)**
 
 ---
 
@@ -67,7 +67,7 @@ Use `npm run electron:dev` if you only want Vite + Electron without the backend.
 
 | Mode | Storage | How to run | Details |
 |------|---------|------------|---------|
-| **Browser** | AES-256-encrypted cookies + localStorage | `npm run dev` | Client-side only |
+| **Web demo** | None — read-only preview | [Live demo](https://fire-tools-inc.github.io/app/demo/) | Seeded sample data; nothing you enter is saved |
 | **Docker** | SQLite (volume-backed) | `docker compose up -d` → `localhost:8080` | [docs/deployment/](docs/deployment/) |
 | **Electron** | SQLite at OS userData path | `npm run electron:dist` | [electron/README.md](electron/README.md) |
 | **Mobile** | Via backend API | Separate Flutter repo | [docs/mobile/](docs/mobile/) |

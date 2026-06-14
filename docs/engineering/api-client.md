@@ -5,7 +5,8 @@ contract. The same contract drives the official client and any client you
 choose to build.
 
 - **Source**: [`docs/api/openapi.yaml`](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml)
-- **Raw spec**: <https://raw.githubusercontent.com/fire-tools-inc/app/main/docs/api/openapi.yaml>
+- **Live viewer**: <https://fire-tools-inc.github.io/app/api/>
+- **Raw spec**: <https://fire-tools-inc.github.io/app/api/openapi.yaml>
 
 ## Lint the spec
 

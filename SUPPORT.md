@@ -101,6 +101,12 @@ Please be patient - this is an open source project maintained by volunteers.
 - **[AGENTS.md](AGENTS.md)** - Technical documentation for developers
 - **[SECURITY.md](SECURITY.md)** - Security policy and vulnerability reporting
 
+### Live Demo
+
+Try the read-only demo (seeded sample data, nothing is saved):
+<https://fire-tools-inc.github.io/app/demo/>. For real use, download the
+[desktop app](https://github.com/fire-tools-inc/app/releases).
+
 ## What We Don't Support
 
 Fire Tools is a free, open source tool for educational purposes. Please note:

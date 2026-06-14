@@ -306,10 +306,18 @@ npm run preview
 Serves the production build locally for testing.
 
 ### Deployment
-- The app ships as a desktop build (Electron) and a self-hosted Docker stack;
-  there is no public web deployment.
-- Desktop releases are built by `.github/workflows/release.yml`, triggered when
-  a version tag matching `v*` (e.g. `v1.2.3`) is pushed.
+- **GitHub Pages** — the landing page, the read-only demo, the user and
+  engineering docs, and the OpenAPI viewer are published to GitHub Pages by
+  `.github/workflows/deploy.yml` on every push to `main` (also runnable manually
+  via `workflow_dispatch`). It runs `npm run build`, whose `postbuild` stages the
+  landing page (`/`), the demo SPA (`/demo/`), the docs
+  (`/docs/{user,engineering}/`) and the API viewer (`/api/`) into `dist/`. The
+  Pages base path is derived from the repo slug, so it survives repo renames /
+  org moves with no code edits.
+- **Desktop** — Electron releases are built by `.github/workflows/release.yml`,
+  triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed.
+- **Self-hosted** — a Docker Compose stack (`docker-compose.yml`) runs the
+  backend on your own machine.
 
 ## Common Tasks for AI Agents
 

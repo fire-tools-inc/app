@@ -26,15 +26,22 @@ walkthrough and a screenshot so you can see exactly what to expect.
   from the [releases page](https://github.com/fire-tools-inc/app/releases).
 - **Self-hosted** — see the
   [engineering docs](../engineering/README.md) for the Docker Compose stack.
+- **Web demo** — try it instantly at
+  <https://fire-tools-inc.github.io/app/demo/>. It's a read-only preview seeded
+  with sample data (nothing you type is saved) — install the desktop app or
+  self-host to keep your own data.
 
 ## Where your data lives
 
 - **Desktop app (Electron)** — your inputs are stored in a local SQLite database
   inside the OS-managed `userData` directory (e.g. `~/Library/Application
   Support/Fire Tools/firetools.db` on macOS). Nothing leaves the machine.
-- **Browser (running locally)** — your inputs are encrypted with AES-256 and stored
-  in cookies + localStorage on your device. Cookies are flagged `Secure` and
-  `SameSite=Strict` and the encryption key never leaves the browser.
+- **Self-hosted** — the Docker Compose stack keeps everything in a volume-backed
+  SQLite (or Postgres) database on your own server. Nothing leaves your hardware.
+
+The hosted [web demo](https://fire-tools-inc.github.io/app/demo/) is read-only:
+it loads sample data and doesn't persist anything you type. Use the desktop app
+or the self-hosted stack for real planning.
 
 You can wipe everything from the [Settings page](./settings.md) — clearing
 data is a single click.

@@ -31,7 +31,8 @@ instead.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   default storage; Postgres is supported via a Docker Compose profile.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
-  Source of truth for both server routes and any generated client.
+  Source of truth for both server routes and any generated client. Also
+  published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).
 
 ## Why a local-first backend?
 
@@ -63,5 +64,5 @@ don't need to think about auth on day one.
 
 - [Project README](https://github.com/fire-tools-inc/app)
 - [Issue tracker](https://github.com/fire-tools-inc/app/issues)
-- [OpenAPI contract](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml)
+- [Live OpenAPI viewer](https://fire-tools-inc.github.io/app/api/)
 - [Mobile repo plan](https://github.com/fire-tools-inc/app/blob/main/docs/mobile/README.md)
