@@ -60,7 +60,7 @@ jobs:
         with:
           name: test-results
           path: test-results.json
-          retention-days: 30
+          retention-days: 1
 
       - name: Upload coverage report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -68,7 +68,7 @@ jobs:
         with:
           name: coverage-report
           path: coverage/
-          retention-days: 30
+          retention-days: 1
 
   build:
     runs-on: ubuntu-latest
@@ -96,6 +96,7 @@ jobs:
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: './dist'
+          retention-days: 1
 
   deploy:
     environment:

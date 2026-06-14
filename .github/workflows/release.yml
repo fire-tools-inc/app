@@ -96,6 +96,7 @@ jobs:
             release/**/*.yml
             release/**/*.blockmap
           if-no-files-found: error
+          retention-days: 1
 
   build-windows:
     name: Build Windows Installer
@@ -143,6 +144,7 @@ jobs:
             release/**/*.yml
             release/**/*.blockmap
           if-no-files-found: error
+          retention-days: 1
 
   release:
     name: Publish GitHub Release
