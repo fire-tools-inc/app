@@ -189,7 +189,7 @@ latest version.
 ### Artifact naming (do not break the updater)
 
 Artifact file names **must not contain spaces**. `electron-builder.yml`
-pins a space-free `artifactName` (`Fire-Tools-...`) for exactly this
+pins a space-free `artifactName` (`Fire.Tools-...`) for exactly this
 reason. A space in `productName` ("Fire Tools") is otherwise mangled
 three different ways and the updater 404s:
 
@@ -200,10 +200,11 @@ three different ways and the updater 404s:
 | uploaded GitHub release asset (Releases rewrites) | `Fire.Tools-...` (dot) |
 
 `electron-updater` fetches the manifest `url` (hyphen) which never
-matches the uploaded asset (dot) → `404`. The release workflow has a
-**Verify update manifests reference staged assets** step that fails the
-build if any `latest*.yml` entry has no matching staged file, so this
-can't silently ship again.
+matches the uploaded asset (dot) -> `404`. Pinning dot-based artifact
+names makes the manifest URL and uploaded asset match. The release
+workflow's **Verify update manifests reference staged assets** step still
+fails the build if any `latest*.yml` entry has no matching staged file,
+so this can't silently ship again.
 
 ## Local testing
 
