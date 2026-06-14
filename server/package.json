@@ -1,6 +1,6 @@
 {
   "name": "fire-tools-server",
-  "version": "2.2.8",
+  "version": "2.2.9",
   "description": "Local-deployment backend for Fire Tools (SQLite-first, Postgres-compatible). Implements docs/api/openapi.yaml.",
   "private": true,
   "type": "module",
