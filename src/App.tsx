@@ -16,6 +16,7 @@ import { ReverseFIRECalculatorPage } from './components/ReverseFIRECalculatorPag
 import { InvestmentGrowthPage } from './components/InvestmentGrowthPage';
 import { WithdrawalRatePage } from './components/WithdrawalRatePage';
 import { AssetAllocationPage } from './components/AssetAllocationPage';
+import { PortfolioBacktestPage } from './components/PortfolioBacktestPage';
 import { PortfolioBreakdownPage } from './components/PortfolioBreakdownPage';
 import { ExpenseTrackerPage } from './components/ExpenseTrackerPage';
 import { NetWorthTrackerPage } from './components/NetWorthTrackerPage';
@@ -538,6 +539,7 @@ function App() {
             <Route path="/investment-growth" element={<InvestmentGrowthPage />} />
             <Route path="/withdrawal-rate" element={<WithdrawalRatePage />} />
             <Route path="/asset-allocation" element={<AssetAllocationPage />} />
+            <Route path="/portfolio-backtest" element={<PortfolioBacktestPage />} />
             <Route path="/portfolio-breakdown" element={settings.experimentalFeatures?.portfolioBreakdown ? <PortfolioBreakdownPage /> : <NotFoundPage />} />
             <Route path="/expense-tracker" element={<ExpenseTrackerPage />} />
             <Route path="/net-worth-tracker" element={<NetWorthTrackerPage />} />

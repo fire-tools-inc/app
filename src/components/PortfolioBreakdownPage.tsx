@@ -128,7 +128,7 @@ export const PortfolioBreakdownPage: React.FC = () => {
           {t('portfolioBreakdown.subtitle')}
         </p>
         <p className="page-header-link">
-          <Link to="/asset-allocation" className="inline-link">
+          <Link to="/asset-allocation" className="action-btn breakdown-page-link">
             <MaterialIcon name="pie_chart" size="small" /> {t('portfolioBreakdown.backToAssetAllocation')}
           </Link>
         </p>

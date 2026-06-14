@@ -117,6 +117,14 @@
         "h3": "Savings Rate Feedback",
         "cta": "Project Growth →"
       },
+      "portfolioBacktest": {
+        "title": "Portfolio Backtest",
+        "body": "Simulate your Asset Allocation portfolio against historical returns and inspect CAGR, volatility, drawdowns, and yearly results.",
+        "h1": "Historical Growth",
+        "h2": "Drawdown Analysis",
+        "h3": "Yearly Table",
+        "cta": "Run Backtest →"
+      },
       "withdrawalRate": {
         "title": "Withdrawal Rate Simulator",
         "body": "Stress-test your retirement portfolio at different withdrawal rates with a live slider, grounded in the Trinity Study's 4% rule.",
@@ -544,7 +552,8 @@
     "updatedAssets": "Updated {{count}} asset",
     "validationErrors": "Validation Errors",
     "viewAssetClassDetails": "View Asset Class Details:",
-    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown"
+    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown",
+    "viewPortfolioBacktest": "Open Portfolio Backtest"
   },
   "expenseTracker": {
     "actions": "Actions",
@@ -2572,6 +2581,68 @@
       "install": "Restart & install",
       "later": "Later",
       "dismiss": "Dismiss"
+    }
+  },
+  "backtest": {
+    "pageTitle": "Portfolio backtest",
+    "pageDescription": "Backtest the holdings saved in Asset Allocation. The tool uses current asset values as weights and defaults the initial investment to the current active allocation value.",
+    "title": "Portfolio backtest",
+    "description": "Run a deterministic historical simulation of your current allocation and inspect growth, drawdowns, and yearly returns.",
+    "model": {
+      "buyAndHold": "Model: buy-and-hold (no periodic rebalancing). Missing asset history uses deterministic asset-class assumptions."
+    },
+    "controls": {
+      "initialInvestment": "Initial investment",
+      "defaultInitialInvestmentNote": "Defaults to current Asset Allocation total: {{amount}}.",
+      "finalValueExplanation": "Final value is the simulated ending value of the initial investment entered here, not a separate live portfolio balance.",
+      "lookbackYears": "Lookback window",
+      "lookbackOption": "{{years}} years",
+      "run": "Run backtest",
+      "running": "Running backtest..."
+    },
+    "errors": {
+      "title": "Backtest error",
+      "noAssets": "Add at least one active asset with a positive value to run a backtest.",
+      "invalidInvestment": "Initial investment must be greater than 0.",
+      "calculationFailed": "Backtest failed: {{message}}"
+    },
+    "assumptions": {
+      "marketCoverage": "Market data coverage: {{requested}} ticker(s) requested, {{failed}} ticker(s) with no usable history.",
+      "failedTickers": "Fallback assumptions were applied for: {{tickers}}.",
+      "usedNotice": "{{count}} asset(s) required fallback assumptions.",
+      "source": "Assumption source: {{source}}"
+    },
+    "source": {
+      "currentAllocationValue": "Current Asset Allocation value:",
+      "usesAssetAllocation": "Weights and tickers come from Asset Allocation. Edit that page to change what gets backtested.",
+      "editAllocation": "Edit Asset Allocation"
+    },
+    "metrics": {
+      "title": "Backtest summary",
+      "cagr": "CAGR",
+      "totalReturn": "Total return",
+      "annualizedVolatility": "Annualized volatility",
+      "maxDrawdown": "Max drawdown",
+      "bestYear": "Best year",
+      "worstYear": "Worst year",
+      "finalValue": "Final value"
+    },
+    "charts": {
+      "growthTitle": "Growth over time",
+      "growthLegend": "Portfolio value",
+      "drawdownTitle": "Drawdown profile",
+      "drawdownLegend": "Drawdown"
+    },
+    "table": {
+      "title": "Year-by-year series",
+      "year": "Year",
+      "annualReturn": "Annual return",
+      "endValue": "End value",
+      "drawdown": "Drawdown",
+      "dataSource": "Data source",
+      "marketData": "Market data",
+      "assumptionData": "Assumptions",
+      "mixedData": "Mixed"
     }
   },
   "about": {

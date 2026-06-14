@@ -117,6 +117,14 @@
         "h3": "Sparquoten-Feedback",
         "cta": "Wachstum projizieren →"
       },
+      "portfolioBacktest": {
+        "title": "Portfolio-Backtest",
+        "body": "Simuliere dein Asset-Allocation-Portfolio mit historischen Renditen und analysiere CAGR, Volatilität, Drawdowns und Jahreswerte.",
+        "h1": "Historisches Wachstum",
+        "h2": "Drawdown-Analyse",
+        "h3": "Jahrestabelle",
+        "cta": "Backtest starten →"
+      },
       "withdrawalRate": {
         "title": "Entnahmeraten-Simulator",
         "body": "Belastungstest deines Ruhestandsportfolios bei verschiedenen Entnahmeraten mit einem Live-Schieberegler, basierend auf der 4-%-Regel der Trinity-Studie.",
@@ -544,7 +552,8 @@
     "updatedAssets": "{{count}} Vermögenswert aktualisiert",
     "validationErrors": "Validation Errors",
     "viewAssetClassDetails": "Anlageklassendetails anzeigen:",
-    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown"
+    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown",
+    "viewPortfolioBacktest": "Portfolio-Backtest öffnen"
   },
   "expenseTracker": {
     "actions": "Aktionen",
@@ -2572,6 +2581,68 @@
       "install": "Neustart & installieren",
       "later": "Später",
       "dismiss": "Verwerfen"
+    }
+  },
+  "backtest": {
+    "pageTitle": "Portfolio-Backtest",
+    "pageDescription": "Teste die in der Asset Allocation gespeicherten Bestände historisch. Das Tool nutzt aktuelle Asset-Werte als Gewichtung und setzt das Startinvestment standardmäßig auf den aktuellen aktiven Allokationswert.",
+    "title": "Portfolio-Backtest",
+    "description": "Führe eine deterministische historische Simulation deiner aktuellen Allokation aus und analysiere Wachstum, Drawdowns und Jahresrenditen.",
+    "model": {
+      "buyAndHold": "Modell: Buy-and-hold (kein periodisches Rebalancing). Fehlende Historie wird durch deterministische Asset-Klassen-Annahmen ersetzt."
+    },
+    "controls": {
+      "initialInvestment": "Startinvestment",
+      "defaultInitialInvestmentNote": "Standard ist die aktuelle Asset-Allocation-Summe: {{amount}}.",
+      "finalValueExplanation": "Der Endwert ist der simulierte Endwert des hier eingetragenen Startinvestments, kein separater Live-Portfoliostand.",
+      "lookbackYears": "Rückblickzeitraum",
+      "lookbackOption": "{{years}} Jahre",
+      "run": "Backtest starten",
+      "running": "Backtest läuft..."
+    },
+    "errors": {
+      "title": "Backtest-Fehler",
+      "noAssets": "Füge mindestens ein aktives Asset mit positivem Wert hinzu, um den Backtest auszuführen.",
+      "invalidInvestment": "Das Startinvestment muss größer als 0 sein.",
+      "calculationFailed": "Backtest fehlgeschlagen: {{message}}"
+    },
+    "assumptions": {
+      "marketCoverage": "Marktdatenabdeckung: {{requested}} Ticker angefragt, {{failed}} Ticker ohne nutzbare Historie.",
+      "failedTickers": "Für folgende Ticker wurden Annahmen verwendet: {{tickers}}.",
+      "usedNotice": "Für {{count}} Asset(s) waren Fallback-Annahmen erforderlich.",
+      "source": "Quelle der Annahmen: {{source}}"
+    },
+    "source": {
+      "currentAllocationValue": "Aktueller Asset-Allocation-Wert:",
+      "usesAssetAllocation": "Gewichtungen und Ticker kommen aus der Asset Allocation. Bearbeite diese Seite, um den Backtest zu ändern.",
+      "editAllocation": "Asset Allocation bearbeiten"
+    },
+    "metrics": {
+      "title": "Backtest-Zusammenfassung",
+      "cagr": "CAGR",
+      "totalReturn": "Gesamtrendite",
+      "annualizedVolatility": "Annualisierte Volatilität",
+      "maxDrawdown": "Maximaler Drawdown",
+      "bestYear": "Bestes Jahr",
+      "worstYear": "Schlechtestes Jahr",
+      "finalValue": "Endwert"
+    },
+    "charts": {
+      "growthTitle": "Wachstum im Zeitverlauf",
+      "growthLegend": "Portfoliowert",
+      "drawdownTitle": "Drawdown-Verlauf",
+      "drawdownLegend": "Drawdown"
+    },
+    "table": {
+      "title": "Jahresreihe",
+      "year": "Jahr",
+      "annualReturn": "Jahresrendite",
+      "endValue": "Endwert",
+      "drawdown": "Drawdown",
+      "dataSource": "Datenquelle",
+      "marketData": "Marktdaten",
+      "assumptionData": "Annahmen",
+      "mixedData": "Gemischt"
     }
   },
   "about": {

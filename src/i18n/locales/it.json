@@ -117,6 +117,14 @@
         "h3": "Feedback sul tasso di risparmio",
         "cta": "Proietta la crescita →"
       },
+      "portfolioBacktest": {
+        "title": "Backtest del portafoglio",
+        "body": "Simula il portafoglio di Asset Allocation con rendimenti storici e analizza CAGR, volatilità, drawdown e risultati annuali.",
+        "h1": "Crescita storica",
+        "h2": "Analisi drawdown",
+        "h3": "Tabella annuale",
+        "cta": "Esegui backtest →"
+      },
       "withdrawalRate": {
         "title": "Simulatore del tasso di prelievo",
         "body": "Metti alla prova il tuo portafoglio pensionistico con diversi tassi di prelievo tramite uno slider in tempo reale, basato sulla regola del 4% del Trinity Study.",
@@ -544,7 +552,8 @@
     "updatedAssets": "Aggiornato {{count}} asset",
     "validationErrors": "Validation Errors",
     "viewAssetClassDetails": "Visualizza i dettagli della classe di attivi:",
-    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown"
+    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown",
+    "viewPortfolioBacktest": "Apri backtest del portafoglio"
   },
   "expenseTracker": {
     "actions": "Azioni",
@@ -2572,6 +2581,68 @@
       "install": "Riavvia e installa",
       "later": "Più tardi",
       "dismiss": "Ignora"
+    }
+  },
+  "backtest": {
+    "pageTitle": "Backtest del portafoglio",
+    "pageDescription": "Esegui il backtest delle posizioni salvate in Asset Allocation. Lo strumento usa i valori correnti come pesi e imposta di default l'investimento iniziale al valore attuale dell'allocazione attiva.",
+    "title": "Backtest del portafoglio",
+    "description": "Esegui una simulazione storica deterministica dell'allocazione attuale e analizza crescita, drawdown e rendimenti annuali.",
+    "model": {
+      "buyAndHold": "Modello: buy-and-hold (senza ribilanciamento periodico). Se manca la serie storica di un asset, vengono usate ipotesi deterministiche per classe."
+    },
+    "controls": {
+      "initialInvestment": "Investimento iniziale",
+      "defaultInitialInvestmentNote": "Default: totale corrente di Asset Allocation: {{amount}}.",
+      "finalValueExplanation": "Il valore finale è il valore finale simulato dell'investimento iniziale inserito qui, non un saldo di portafoglio live separato.",
+      "lookbackYears": "Finestra storica",
+      "lookbackOption": "{{years}} anni",
+      "run": "Esegui backtest",
+      "running": "Backtest in esecuzione..."
+    },
+    "errors": {
+      "title": "Errore backtest",
+      "noAssets": "Aggiungi almeno un asset attivo con valore positivo per eseguire il backtest.",
+      "invalidInvestment": "L'investimento iniziale deve essere maggiore di 0.",
+      "calculationFailed": "Backtest non riuscito: {{message}}"
+    },
+    "assumptions": {
+      "marketCoverage": "Copertura dati di mercato: {{requested}} ticker richiesti, {{failed}} ticker senza storico utilizzabile.",
+      "failedTickers": "Sono state applicate ipotesi di fallback per: {{tickers}}.",
+      "usedNotice": "{{count}} asset hanno richiesto ipotesi di fallback.",
+      "source": "Fonte delle ipotesi: {{source}}"
+    },
+    "source": {
+      "currentAllocationValue": "Valore corrente di Asset Allocation:",
+      "usesAssetAllocation": "Pesi e ticker arrivano da Asset Allocation. Modifica quella pagina per cambiare il backtest.",
+      "editAllocation": "Modifica Asset Allocation"
+    },
+    "metrics": {
+      "title": "Riepilogo backtest",
+      "cagr": "CAGR",
+      "totalReturn": "Rendimento totale",
+      "annualizedVolatility": "Volatilità annualizzata",
+      "maxDrawdown": "Drawdown massimo",
+      "bestYear": "Anno migliore",
+      "worstYear": "Anno peggiore",
+      "finalValue": "Valore finale"
+    },
+    "charts": {
+      "growthTitle": "Crescita nel tempo",
+      "growthLegend": "Valore del portafoglio",
+      "drawdownTitle": "Profilo drawdown",
+      "drawdownLegend": "Drawdown"
+    },
+    "table": {
+      "title": "Serie anno per anno",
+      "year": "Anno",
+      "annualReturn": "Rendimento annuale",
+      "endValue": "Valore di fine anno",
+      "drawdown": "Drawdown",
+      "dataSource": "Fonte dati",
+      "marketData": "Dati di mercato",
+      "assumptionData": "Ipotesi",
+      "mixedData": "Misto"
     }
   },
   "about": {

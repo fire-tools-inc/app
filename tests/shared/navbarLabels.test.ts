@@ -44,6 +44,7 @@ describe('navbar is English-only (#233)', () => {
       home: 'Home',
       assetAllocation: 'Asset Allocation',
       portfolioBreakdown: 'Portfolio Breakdown',
+      portfolioBacktest: 'Portfolio Backtest',
       cashflow: 'Cashflow',
       netWorth: 'Net Worth',
       fireCalculator: 'FIRE Calculator',

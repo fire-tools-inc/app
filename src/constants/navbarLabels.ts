@@ -22,6 +22,7 @@ export const NAVBAR_LABELS = {
   home: 'Home',
   assetAllocation: 'Asset Allocation',
   portfolioBreakdown: 'Portfolio Breakdown',
+  portfolioBacktest: 'Portfolio Backtest',
   cashflow: 'Cashflow',
   netWorth: 'Net Worth',
   fireCalculator: 'FIRE Calculator',

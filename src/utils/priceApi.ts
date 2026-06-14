@@ -25,17 +25,22 @@ const priceCache = new Map<string, PriceCacheEntry>();
 // --- Cache Management ---
 
 /**
- * Generate cache key for a ticker
+ * Generate cache key for a ticker.
+ * For monthly history, key includes `months` to prevent short-range cache hits
+ * from being reused for long-range backtests.
  */
-function getCacheKey(ticker: string, type: 'current' | 'monthly'): string {
+function getCacheKey(ticker: string, type: 'current' | 'monthly', months?: number): string {
+  if (type === 'monthly') {
+    return `${type}:${ticker.toUpperCase()}:${months ?? 'default'}`;
+  }
   return `${type}:${ticker.toUpperCase()}`;
 }
 
 /**
  * Get cached price data if available and not expired
  */
-function getCachedPrice(ticker: string, type: 'current' | 'monthly'): PriceFetchResult | null {
-  const key = getCacheKey(ticker, type);
+function getCachedPrice(ticker: string, type: 'current' | 'monthly', months?: number): PriceFetchResult | null {
+  const key = getCacheKey(ticker, type, months);
   const entry = priceCache.get(key);
 
   if (!entry) return null;
@@ -54,8 +59,13 @@ function getCachedPrice(ticker: string, type: 'current' | 'monthly'): PriceFetch
 /**
  * Store price data in cache
  */
-function setCachedPrice(ticker: string, type: 'current' | 'monthly', result: PriceFetchResult): void {
-  const key = getCacheKey(ticker, type);
+function setCachedPrice(
+  ticker: string,
+  type: 'current' | 'monthly',
+  result: PriceFetchResult,
+  months?: number,
+): void {
+  const key = getCacheKey(ticker, type, months);
   const cacheDuration = type === 'current' ? CURRENT_PRICE_CACHE_MS : MONTHLY_PRICE_CACHE_MS;
   const expiresAt = new Date(Date.now() + cacheDuration).toISOString();
 
@@ -84,7 +94,7 @@ export async function fetchMonthlyClosingPrices(
   months: number = 12
 ): Promise<PriceFetchResult> {
   // Check cache first
-  const cached = getCachedPrice(ticker, 'monthly');
+  const cached = getCachedPrice(ticker, 'monthly', months);
   if (cached) return cached;
 
   const result: PriceFetchResult = {
@@ -148,7 +158,7 @@ export async function fetchMonthlyClosingPrices(
 
     // Cache successful results
     if (result.prices.length > 0) {
-      setCachedPrice(ticker, 'monthly', result);
+      setCachedPrice(ticker, 'monthly', result, months);
     }
   } catch (error) {
     if (error instanceof YahooRateLimitError) {

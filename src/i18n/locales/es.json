@@ -117,6 +117,14 @@
         "h3": "Feedback sobre la tasa de ahorro",
         "cta": "Proyectar crecimiento →"
       },
+      "portfolioBacktest": {
+        "title": "Backtest de cartera",
+        "body": "Simula tu cartera de Asignación de activos con rendimientos históricos y revisa CAGR, volatilidad, drawdowns y resultados anuales.",
+        "h1": "Crecimiento histórico",
+        "h2": "Análisis de drawdown",
+        "h3": "Tabla anual",
+        "cta": "Ejecutar backtest →"
+      },
       "withdrawalRate": {
         "title": "Simulador de tasa de retiro",
         "body": "Pon a prueba tu cartera de jubilación con distintas tasas de retiro mediante un control deslizante en vivo, basado en la regla del 4 % del Trinity Study.",
@@ -544,7 +552,8 @@
     "updatedAssets": "{{count}} activo actualizado",
     "validationErrors": "Validation Errors",
     "viewAssetClassDetails": "Ver detalles de la clase de activos:",
-    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown"
+    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown",
+    "viewPortfolioBacktest": "Abrir backtest de cartera"
   },
   "expenseTracker": {
     "actions": "Acciones",
@@ -2572,6 +2581,68 @@
       "install": "Reiniciar e instalar",
       "later": "Más tarde",
       "dismiss": "Descartar"
+    }
+  },
+  "backtest": {
+    "pageTitle": "Backtest de cartera",
+    "pageDescription": "Haz un backtest de las posiciones guardadas en Asignación de activos. La herramienta usa los valores actuales como pesos y por defecto toma como inversión inicial el valor actual activo de la asignación.",
+    "title": "Backtest de cartera",
+    "description": "Ejecuta una simulación histórica determinista de tu asignación actual y revisa crecimiento, drawdowns y rendimientos anuales.",
+    "model": {
+      "buyAndHold": "Modelo: buy-and-hold (sin rebalanceo periódico). Si falta historial de un activo, se usan supuestos deterministas por clase."
+    },
+    "controls": {
+      "initialInvestment": "Inversión inicial",
+      "defaultInitialInvestmentNote": "Por defecto usa el total actual de Asignación de activos: {{amount}}.",
+      "finalValueExplanation": "El valor final es el valor simulado al final de la inversión inicial indicada aquí, no un saldo de cartera en vivo separado.",
+      "lookbackYears": "Ventana histórica",
+      "lookbackOption": "{{years}} años",
+      "run": "Ejecutar backtest",
+      "running": "Ejecutando backtest..."
+    },
+    "errors": {
+      "title": "Error de backtest",
+      "noAssets": "Añade al menos un activo activo con valor positivo para ejecutar el backtest.",
+      "invalidInvestment": "La inversión inicial debe ser mayor que 0.",
+      "calculationFailed": "Falló el backtest: {{message}}"
+    },
+    "assumptions": {
+      "marketCoverage": "Cobertura de datos de mercado: {{requested}} ticker(s) solicitados, {{failed}} ticker(s) sin historial utilizable.",
+      "failedTickers": "Se aplicaron supuestos para: {{tickers}}.",
+      "usedNotice": "{{count}} activo(s) requirieron supuestos de respaldo.",
+      "source": "Fuente de supuestos: {{source}}"
+    },
+    "source": {
+      "currentAllocationValue": "Valor actual de Asignación de activos:",
+      "usesAssetAllocation": "Los pesos y tickers vienen de Asignación de activos. Edita esa página para cambiar lo que se prueba.",
+      "editAllocation": "Editar asignación de activos"
+    },
+    "metrics": {
+      "title": "Resumen del backtest",
+      "cagr": "CAGR",
+      "totalReturn": "Rentabilidad total",
+      "annualizedVolatility": "Volatilidad anualizada",
+      "maxDrawdown": "Drawdown máximo",
+      "bestYear": "Mejor año",
+      "worstYear": "Peor año",
+      "finalValue": "Valor final"
+    },
+    "charts": {
+      "growthTitle": "Crecimiento en el tiempo",
+      "growthLegend": "Valor de la cartera",
+      "drawdownTitle": "Perfil de drawdown",
+      "drawdownLegend": "Drawdown"
+    },
+    "table": {
+      "title": "Serie año por año",
+      "year": "Año",
+      "annualReturn": "Rentabilidad anual",
+      "endValue": "Valor al cierre",
+      "drawdown": "Drawdown",
+      "dataSource": "Fuente de datos",
+      "marketData": "Datos de mercado",
+      "assumptionData": "Supuestos",
+      "mixedData": "Mixto"
     }
   },
   "about": {

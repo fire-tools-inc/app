@@ -803,6 +803,11 @@ export const AssetAllocationPage: React.FC = () => {
               </Link>
             </div>
           )}
+          <div className="breakdown-link-row">
+            <Link to="/portfolio-backtest" className="action-btn breakdown-page-link">
+              <MaterialIcon name="analytics" /> {t('assetAllocation.viewPortfolioBacktest')}
+            </Link>
+          </div>
         </section>
 
         <section className="allocation-section" aria-labelledby="portfolio-details-heading" data-tour="asset-list">

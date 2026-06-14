@@ -162,6 +162,20 @@ export function HomePage() {
           <span className="cta-link" aria-hidden="true">{t('home.cards.investmentGrowth.cta')}</span>
         </Link>
 
+        <Link to="/portfolio-backtest" className="feature-card" aria-labelledby="portfolio-backtest-title">
+          <div className="feature-icon" aria-hidden="true"><MaterialIcon name="analytics" size="large" /></div>
+          <h3 id="portfolio-backtest-title" className="feature-card-title">{t('home.cards.portfolioBacktest.title')}</h3>
+          <p>
+            {t('home.cards.portfolioBacktest.body')}
+          </p>
+          <div className="feature-highlights">
+            <span className="highlight-item"><MaterialIcon name="show_chart" size="small" /> {t('home.cards.portfolioBacktest.h1')}</span>
+            <span className="highlight-item"><MaterialIcon name="ssid_chart" size="small" /> {t('home.cards.portfolioBacktest.h2')}</span>
+            <span className="highlight-item"><MaterialIcon name="table_chart" size="small" /> {t('home.cards.portfolioBacktest.h3')}</span>
+          </div>
+          <span className="cta-link" aria-hidden="true">{t('home.cards.portfolioBacktest.cta')}</span>
+        </Link>
+
         <Link to="/withdrawal-rate" className="feature-card" aria-labelledby="withdrawal-rate-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_down" size="large" /></div>
           <h3 id="withdrawal-rate-title" className="feature-card-title">{t('home.cards.withdrawalRate.title')}</h3>

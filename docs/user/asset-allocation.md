@@ -29,6 +29,12 @@ Prices are fetched directly from your browser to Yahoo Finance. No backend
 proxy, no third-party analytics — the request is opt-in and only fires when
 you press **Refresh prices**.
 
+## Portfolio backtesting
+
+Use the separate [Portfolio backtest](./backtesting.md) tool to simulate the
+holdings saved here. The backtest reads Asset Allocation values, tickers and
+asset classes; edit this page first to change what gets tested.
+
 ## Export / Import
 
 Use **Export CSV** to grab a snapshot. Use **Import CSV** to load it back, or

@@ -117,6 +117,14 @@
         "h3": "Feedback sur le taux d'épargne",
         "cta": "Projeter la croissance →"
       },
+      "portfolioBacktest": {
+        "title": "Backtest du portefeuille",
+        "body": "Simulez votre portefeuille d'allocation d'actifs avec des rendements historiques et analysez CAGR, volatilité, drawdowns et résultats annuels.",
+        "h1": "Croissance historique",
+        "h2": "Analyse des drawdowns",
+        "h3": "Table annuelle",
+        "cta": "Lancer le backtest →"
+      },
       "withdrawalRate": {
         "title": "Simulateur de taux de retrait",
         "body": "Testez la résistance de votre portefeuille de retraite à différents taux de retrait avec un curseur en temps réel, basé sur la règle des 4 % du Trinity Study.",
@@ -544,7 +552,8 @@
     "updatedAssets": "{{count}} actif mis à jour",
     "validationErrors": "Validation Errors",
     "viewAssetClassDetails": "Voir les détails de la classe d'actifs :",
-    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown"
+    "viewDetailedPortfolioBreakdown": "View Detailed Portfolio Breakdown",
+    "viewPortfolioBacktest": "Ouvrir le backtest du portefeuille"
   },
   "expenseTracker": {
     "actions": "Actions",
@@ -2572,6 +2581,68 @@
       "install": "Redémarrer et installer",
       "later": "Plus tard",
       "dismiss": "Ignorer"
+    }
+  },
+  "backtest": {
+    "pageTitle": "Backtest du portefeuille",
+    "pageDescription": "Backtestez les positions enregistrées dans l'allocation d'actifs. L'outil utilise les valeurs actuelles comme pondérations et prend par défaut la valeur actuelle active comme investissement initial.",
+    "title": "Backtest du portefeuille",
+    "description": "Lance une simulation historique déterministe de ton allocation actuelle et analyse la croissance, les drawdowns et les rendements annuels.",
+    "model": {
+      "buyAndHold": "Modèle : buy-and-hold (sans rééquilibrage périodique). Si l'historique d'un actif manque, des hypothèses déterministes par classe sont utilisées."
+    },
+    "controls": {
+      "initialInvestment": "Investissement initial",
+      "defaultInitialInvestmentNote": "Par défaut, total actuel de l'allocation d'actifs : {{amount}}.",
+      "finalValueExplanation": "La valeur finale est la valeur simulée en fin de période de l'investissement initial saisi ici, pas un solde de portefeuille en direct séparé.",
+      "lookbackYears": "Fenêtre historique",
+      "lookbackOption": "{{years}} ans",
+      "run": "Lancer le backtest",
+      "running": "Backtest en cours..."
+    },
+    "errors": {
+      "title": "Erreur de backtest",
+      "noAssets": "Ajoute au moins un actif actif avec une valeur positive pour lancer le backtest.",
+      "invalidInvestment": "L'investissement initial doit être supérieur à 0.",
+      "calculationFailed": "Échec du backtest : {{message}}"
+    },
+    "assumptions": {
+      "marketCoverage": "Couverture des données de marché : {{requested}} ticker(s) demandés, {{failed}} ticker(s) sans historique exploitable.",
+      "failedTickers": "Des hypothèses de remplacement ont été appliquées pour : {{tickers}}.",
+      "usedNotice": "{{count}} actif(s) ont nécessité des hypothèses de remplacement.",
+      "source": "Source des hypothèses : {{source}}"
+    },
+    "source": {
+      "currentAllocationValue": "Valeur actuelle de l'allocation d'actifs :",
+      "usesAssetAllocation": "Les pondérations et tickers viennent de l'allocation d'actifs. Modifiez cette page pour changer le backtest.",
+      "editAllocation": "Modifier l'allocation d'actifs"
+    },
+    "metrics": {
+      "title": "Résumé du backtest",
+      "cagr": "CAGR",
+      "totalReturn": "Rendement total",
+      "annualizedVolatility": "Volatilité annualisée",
+      "maxDrawdown": "Drawdown maximal",
+      "bestYear": "Meilleure année",
+      "worstYear": "Pire année",
+      "finalValue": "Valeur finale"
+    },
+    "charts": {
+      "growthTitle": "Croissance dans le temps",
+      "growthLegend": "Valeur du portefeuille",
+      "drawdownTitle": "Profil de drawdown",
+      "drawdownLegend": "Drawdown"
+    },
+    "table": {
+      "title": "Série année par année",
+      "year": "Année",
+      "annualReturn": "Rendement annuel",
+      "endValue": "Valeur de fin d'année",
+      "drawdown": "Drawdown",
+      "dataSource": "Source de données",
+      "marketData": "Données de marché",
+      "assumptionData": "Hypothèses",
+      "mixedData": "Mixte"
     }
   },
   "about": {
