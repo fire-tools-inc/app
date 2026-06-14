@@ -90,6 +90,36 @@ const APP_COMMIT_HASH = resolveCommitHash()
 const APP_BUILD_TIME = process.env.BUILD_TIME ?? new Date().toISOString()
 const APP_REPO_URL = resolveRepoUrl()
 
+// Resolve the GitHub owner/repo so the Pages base path and public site URL
+// track the repository automatically — surviving repo renames / org moves with
+// no code edits. CI provides GITHUB_REPOSITORY; local builds fall back to the
+// normalized repository URL from package.json / the git remote.
+const resolveGitHubSlug = (): { owner: string; repo: string } | null => {
+  const env = process.env.GITHUB_REPOSITORY
+  if (env && env.includes('/')) {
+    const [owner, repo] = env.split('/')
+    if (owner && repo) return { owner, repo }
+  }
+  const match = APP_REPO_URL.match(/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/i)
+  return match ? { owner: match[1], repo: match[2] } : null
+}
+
+const GITHUB_SLUG = resolveGitHubSlug()
+// GitHub Pages serves a project site under /<repo>/; the SPA lives at /demo.
+const PAGES_BASE = GITHUB_SLUG ? `/${GITHUB_SLUG.repo}/demo/` : '/demo/'
+// Absolute public URL of the deployed SPA, e.g. https://owner.github.io/repo/demo/
+const APP_PAGES_URL = GITHUB_SLUG
+  ? `https://${GITHUB_SLUG.owner}.github.io${PAGES_BASE}`
+  : ''
+
+if (!GITHUB_SLUG) {
+  console.warn(
+    '[vite] Could not resolve the GitHub owner/repo from $GITHUB_REPOSITORY or ' +
+      'package.json "repository". The GitHub Pages base path falls back to "/demo/", ' +
+      'which will 404 on a project site served under /<repo>/.',
+  )
+}
+
 // Lightweight static handler used in `npm run dev:all` to serve the pre-built
 // landing page (at /), OpenAPI viewer (at /api) and docs (at /docs) from a
 // sibling dir under their production paths. SPA stays at /demo. Only mounted
@@ -216,7 +246,7 @@ export default defineConfig(({ mode, command }) => ({
         ? '/'
         : './'
       : mode === 'production'
-      ? '/app/demo/'
+      ? PAGES_BASE
       : '/demo/',
   build: {
     outDir: mode === 'electron' ? 'dist-electron' : 'dist/demo',
@@ -227,6 +257,7 @@ export default defineConfig(({ mode, command }) => ({
     __APP_BUILD_TIME__: JSON.stringify(APP_BUILD_TIME),
     __APP_DEPENDENCIES__: JSON.stringify(featuredDependencies),
     __APP_REPO_URL__: JSON.stringify(APP_REPO_URL),
+    __APP_PAGES_URL__: JSON.stringify(APP_PAGES_URL),
   },
   server: {
     proxy: {

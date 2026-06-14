@@ -6,7 +6,13 @@
 const { app, Menu, shell, BrowserWindow, dialog } = require('electron');
 
 const REPO_URL = 'https://github.com/fire-tools-inc/app';
-const DOCS_URL = 'https://fire-tools-inc.github.io/app/';
+// Live docs on GitHub Pages, derived from the repo slug so the link survives
+// repo renames / org moves: github.com/<owner>/<repo> -> <owner>.github.io/<repo>
+const PAGES_URL = REPO_URL.replace(
+  /^https?:\/\/github\.com\/([^/]+)\/([^/]+?)\/?$/i,
+  'https://$1.github.io/$2',
+);
+const DOCS_URL = `${PAGES_URL}/docs/user/`;
 const ISSUES_URL = `${REPO_URL}/issues/new/choose`;
 const RELEASES_URL = `${REPO_URL}/releases`;
 

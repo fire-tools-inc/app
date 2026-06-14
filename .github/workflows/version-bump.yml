@@ -3,7 +3,7 @@ name: Auto bump patch version
 # Automatically bumps the PATCH version whenever a PR is merged to main
 # (e.g. 2.1.0 -> 2.1.1). It commits the bump back to main but NEVER creates a
 # git tag — release tags are minted by maintainers, which is what drives the
-# deploy.yml / release.yml pipelines.
+# release.yml pipeline.
 #
 # Recursion is prevented three ways:
 #   1. The job is skipped when the head commit is itself a version bump
