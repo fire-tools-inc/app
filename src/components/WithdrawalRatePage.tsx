@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -24,6 +25,13 @@ import {
   WithdrawalRateInputs,
   WithdrawalRateResult,
 } from '../utils/withdrawalRateSimulator';
+import {
+  convertWithdrawalRates,
+  WithdrawalRateType,
+  WITHDRAWAL_RATE_TYPES,
+  DEFAULT_LTWR_HORIZON_YEARS,
+} from '../utils/withdrawalRateConversion';
+import { logger } from '../utils/logger';
 import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberFormatter';
 import { MaterialIcon } from './MaterialIcon';
 import { SliderInput } from './SliderInput';
@@ -71,6 +79,7 @@ function successRateColor(rate: number): string {
 
 export const WithdrawalRatePage: React.FC = () => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Load inputs once per navigation, same pattern as MonteCarloPage.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,6 +118,7 @@ export const WithdrawalRatePage: React.FC = () => {
   const [withdrawalRate, setWithdrawalRate] = useState<number>(
     inputs.desiredWithdrawalRate || 4,
   );
+  const [inputRateType, setInputRateType] = useState<WithdrawalRateType>('swr');
   const [retirementYears, setRetirementYears] = useState<number>(DEFAULT_RETIREMENT_YEARS);
   const [numSimulations, setNumSimulations] = useState<number>(DEFAULT_NUM_SIMULATIONS);
 
@@ -186,6 +196,30 @@ export const WithdrawalRatePage: React.FC = () => {
 
   const currentAnnualWithdrawal = inputs.initialSavings * (withdrawalRate / 100);
 
+  // Derive the SWR/LTWR/PWR triple from the single entered rate + its type.
+  const rateTriple = useMemo(() => {
+    if (!(withdrawalRate > 0)) return null;
+    try {
+      return convertWithdrawalRates(withdrawalRate, inputRateType, {
+        swrHorizonYears: retirementYears,
+        ltwrHorizonYears: DEFAULT_LTWR_HORIZON_YEARS,
+      });
+    } catch (err) {
+      logger.error('withdrawal-rate', 'conversion-failed', 'withdrawal rate conversion failed', {
+        pii: { error: (err as Error)?.message },
+      });
+      return null;
+    }
+  }, [withdrawalRate, inputRateType, retirementYears]);
+
+  const rateCards: { type: WithdrawalRateType; value: number; horizon: number }[] = rateTriple
+    ? [
+        { type: 'swr', value: rateTriple.swr, horizon: retirementYears },
+        { type: 'ltwr', value: rateTriple.ltwr, horizon: DEFAULT_LTWR_HORIZON_YEARS },
+        { type: 'pwr', value: rateTriple.pwr, horizon: 0 },
+      ]
+    : [];
+
   return (
     <div className="app-container">
       <main className="main-content" id="main-content">
@@ -217,8 +251,36 @@ export const WithdrawalRatePage: React.FC = () => {
 
           <div className="mc-inputs">
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+              <label htmlFor="wr-input-type">{t('withdrawalRate.inputType.label')}</label>
+              <div
+                id="wr-input-type"
+                role="radiogroup"
+                aria-label={t('withdrawalRate.inputType.label')}
+                className="wr-type-selector"
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}
+              >
+                {WITHDRAWAL_RATE_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    role="radio"
+                    aria-checked={inputRateType === type}
+                    className={`wr-type-option${inputRateType === type ? ' wr-type-option-active' : ''}`}
+                    onClick={() => setInputRateType(type)}
+                    disabled={!canSimulate}
+                  >
+                    {t(`withdrawalRate.types.${type}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="section-description" style={{ margin: '0.4rem 0 0' }}>
+                {t('withdrawalRate.inputType.help')}
+              </p>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label htmlFor="wr-rate">
-                Withdrawal rate: <strong>{withdrawalRate.toFixed(1)}%</strong>{' '}
+                {t(`withdrawalRate.short.${inputRateType}`)}: <strong>{withdrawalRate.toFixed(1)}%</strong>{' '}
                 <span style={{ color: '#94A3B8', fontWeight: 'normal' }}>
                   (≈{' '}
                   <PrivacyBlur isPrivacyMode={isPrivacyMode}>
@@ -315,6 +377,71 @@ export const WithdrawalRatePage: React.FC = () => {
             </div>
           )}
         </section>
+
+        {rateTriple && (
+          <section
+            className="monte-carlo-section"
+            aria-labelledby="wr-options-heading"
+            style={{ marginTop: '1.5rem' }}
+          >
+            <h3 id="wr-options-heading" style={{ marginTop: 0 }}>
+              <MaterialIcon name="balance" /> {t('withdrawalRate.results.heading')}
+            </h3>
+            <p className="section-description">{t('withdrawalRate.results.description')}</p>
+
+            <div className="results-grid" role="list">
+              {rateCards.map((card) => {
+                const isEntered = card.type === inputRateType;
+                const horizonYears = card.type === 'ltwr' ? DEFAULT_LTWR_HORIZON_YEARS : retirementYears;
+                return (
+                  <div
+                    key={card.type}
+                    className={`result-card${isEntered ? ' wr-pill-good' : ''}`}
+                    role="listitem"
+                  >
+                    <div className="result-label">
+                      {t(`withdrawalRate.types.${card.type}`)}{' '}
+                      <span style={{ color: isEntered ? undefined : '#94A3B8', fontWeight: 600 }}>
+                        ·{' '}
+                        {isEntered
+                          ? t('withdrawalRate.results.youEntered')
+                          : t('withdrawalRate.results.derived')}
+                      </span>
+                    </div>
+                    <div className="result-value">{formatDisplayPercent(card.value)}</div>
+                    <div className="result-subtitle">
+                      {card.type === 'pwr'
+                        ? t('withdrawalRate.explanations.pwr')
+                        : t(`withdrawalRate.explanations.${card.type}`, { years: horizonYears })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="result-card" role="listitem">
+                <div className="result-label">{t('withdrawalRate.results.impliedRealReturn')}</div>
+                <div className="result-value">{formatDisplayPercent(rateTriple.impliedRealReturn)}</div>
+                <div className="result-subtitle">{t('withdrawalRate.ltwrHorizonNote', { years: DEFAULT_LTWR_HORIZON_YEARS })}</div>
+              </div>
+            </div>
+
+            {!rateTriple.principalPreserved && (
+              <div
+                className="validation-error-banner"
+                role="status"
+                aria-live="polite"
+                style={{ marginTop: '1rem' }}
+              >
+                <strong>
+                  <MaterialIcon name="info" />{' '}
+                  {t('withdrawalRate.principalWarning', {
+                    rate: formatDisplayPercent(rateTriple.impliedRealReturn),
+                  })}
+                </strong>
+              </div>
+            )}
+          </section>
+        )}
 
         {sweep.length > 0 && (
           <section
