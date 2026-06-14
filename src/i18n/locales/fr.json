@@ -61,13 +61,6 @@
     "disclaimer": "Avertissement :",
     "disclaimerBody": "Ces outils sont fournis à des fins éducatives et de planification uniquement. Consultez toujours un conseiller financier qualifié ou faites vos propres recherches avant toute décision d'investissement.",
     "toolsLabel": "Outils disponibles",
-    "securityTitle": "Avis de sécurité : déploiement sur GitHub Pages",
-    "securityWarning": "Attention :",
-    "securityWarningBody": "Cette application est hébergée sur GitHub Pages, qui ne prend en charge ni stockage côté serveur ni cookies HTTP-only. Bien que les données soient chiffrées en AES, elles restent vulnérables aux attaques XSS et autres exploits côté client pouvant exfiltrer vos données financières.",
-    "securityRecommend": "Pour plus de sécurité :",
-    "securityRecommendBody": "Nous vous recommandons vivement de déployer cette application localement sur votre machine. Le déploiement local offre une meilleure isolation et réduit la surface d'attaque.",
-    "securitySetupLink": "Voir les instructions d'installation locale",
-    "dismissSecurity": "Fermer l'avis de sécurité",
     "cards": {
       "assetAllocation": {
         "title": "Gestionnaire d'allocation",

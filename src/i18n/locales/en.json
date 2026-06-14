@@ -61,13 +61,6 @@
     "disclaimer": "Disclaimer:",
     "disclaimerBody": "These tools are for educational and planning purposes only. Always consult with a qualified financial advisor or do your own research before making investment decisions.",
     "toolsLabel": "Available tools",
-    "securityTitle": "Security Notice: GitHub Pages Deployment",
-    "securityWarning": "Warning:",
-    "securityWarningBody": "This application is deployed on GitHub Pages, which does not support server-side data storage or HTTP-only cookies. While data is encrypted using AES, it is still vulnerable to XSS attacks and other client-side exploits that could exfiltrate your financial data.",
-    "securityRecommend": "For better security:",
-    "securityRecommendBody": "We strongly recommend deploying this application locally on your own machine. Local deployment provides better isolation and reduces attack surface.",
-    "securitySetupLink": "View Local Setup Instructions",
-    "dismissSecurity": "Dismiss security notice",
     "cards": {
       "assetAllocation": {
         "title": "Asset Allocation Manager",

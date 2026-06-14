@@ -61,13 +61,6 @@
     "disclaimer": "Hinweis:",
     "disclaimerBody": "Diese Tools dienen ausschließlich Bildungs- und Planungszwecken. Konsultieren Sie immer eine qualifizierte Finanzberatung oder recherchieren Sie selbst, bevor Sie Investitionsentscheidungen treffen.",
     "toolsLabel": "Verfügbare Tools",
-    "securityTitle": "Sicherheitshinweis: GitHub-Pages-Deployment",
-    "securityWarning": "Warnung:",
-    "securityWarningBody": "Diese Anwendung wird auf GitHub Pages bereitgestellt, was keine serverseitige Datenspeicherung oder HTTP-only-Cookies unterstützt. Obwohl Daten mit AES verschlüsselt sind, bleiben sie anfällig für XSS-Angriffe und andere clientseitige Exploits, die Finanzdaten exfiltrieren könnten.",
-    "securityRecommend": "Für mehr Sicherheit:",
-    "securityRecommendBody": "Wir empfehlen dringend, diese Anwendung lokal auf deinem Rechner zu installieren. Lokale Bereitstellung bietet bessere Isolierung und reduziert die Angriffsfläche.",
-    "securitySetupLink": "Anleitung zur lokalen Installation",
-    "dismissSecurity": "Sicherheitshinweis schließen",
     "cards": {
       "assetAllocation": {
         "title": "Asset-Allokations-Manager",

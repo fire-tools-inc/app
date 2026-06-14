@@ -1,72 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  loadSecurityBannerDismissed,
-  saveSecurityBannerDismissed,
-} from '../utils/bannerPreferences';
-import { useState } from 'react';
 import { MaterialIcon } from './MaterialIcon';
 import './HomePage.css';
 
-// Check if running on GitHub Pages (computed once on module load)
-const isGitHubPages =
-  typeof window !== 'undefined' &&
-  (window.location.hostname === 'github.io' ||
-    window.location.hostname.endsWith('.github.io'));
-
-// Compute initial banner state synchronously to prevent CLS
-function getInitialBannerState(): boolean {
-  if (!isGitHubPages) {
-    return false;
-  }
-  return !loadSecurityBannerDismissed();
-}
-
 export function HomePage() {
   const { t } = useTranslation();
-  // Initialize state synchronously to prevent layout shift
-  const [showSecurityBanner, setShowSecurityBanner] = useState(getInitialBannerState);
-
-  const handleDismissSecurityBanner = () => {
-    saveSecurityBannerDismissed(true);
-    setShowSecurityBanner(false);
-  };
 
   return (
     <main className="homepage" id="main-content">
-      {isGitHubPages && showSecurityBanner && (
-        <div className="security-warning-banner">
-          <div className="warning-icon"><MaterialIcon name="lock" /><MaterialIcon name="warning" /></div>
-          <div className="warning-content">
-            <h2 className="warning-heading">{t('home.securityTitle')}</h2>
-            <p>
-              <strong>{t('home.securityWarning')}</strong> {t('home.securityWarningBody')}
-            </p>
-            <p>
-              <strong>{t('home.securityRecommend')}</strong> {t('home.securityRecommendBody')}
-            </p>
-            <div className="warning-actions">
-              <a 
-                href="https://github.com/fire-tools-inc/app#quick-start" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="warning-button"
-              >
-                <MaterialIcon name="menu_book" /> {t('home.securitySetupLink')}
-              </a>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="warning-close"
-            aria-label={t('home.dismissSecurity')}
-            onClick={handleDismissSecurityBanner}
-          >
-            ×
-          </button>
-        </div>
-      )}
-
       <section className="info-section" aria-labelledby="about-title">
         <h2 id="about-title" className="info-section-title">{t('home.aboutTitle')}</h2>
         <p>

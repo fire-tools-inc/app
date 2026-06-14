@@ -61,13 +61,6 @@
     "disclaimer": "Avvertenza:",
     "disclaimerBody": "Questi strumenti hanno solo scopo educativo e di pianificazione. Consulta sempre un consulente finanziario qualificato o fai le tue valutazioni prima di prendere decisioni di investimento.",
     "toolsLabel": "Strumenti disponibili",
-    "securityTitle": "Avviso di sicurezza: deployment su GitHub Pages",
-    "securityWarning": "Attenzione:",
-    "securityWarningBody": "Questa applicazione è ospitata su GitHub Pages, che non supporta archiviazione lato server né cookie HTTP-only. Sebbene i dati siano cifrati con AES, restano vulnerabili ad attacchi XSS e ad altri exploit lato client che potrebbero esfiltrare i tuoi dati finanziari.",
-    "securityRecommend": "Per maggiore sicurezza:",
-    "securityRecommendBody": "Ti consigliamo vivamente di installare l'applicazione localmente sul tuo computer. Il deployment locale offre maggiore isolamento e riduce la superficie d'attacco.",
-    "securitySetupLink": "Istruzioni per l'installazione locale",
-    "dismissSecurity": "Chiudi l'avviso di sicurezza",
     "cards": {
       "assetAllocation": {
         "title": "Gestore dell'allocazione",

@@ -61,13 +61,6 @@
     "disclaimer": "Aviso:",
     "disclaimerBody": "Estas herramientas tienen fines educativos y de planificación. Consulta siempre a un asesor financiero cualificado o realiza tu propia investigación antes de tomar decisiones de inversión.",
     "toolsLabel": "Herramientas disponibles",
-    "securityTitle": "Aviso de seguridad: despliegue en GitHub Pages",
-    "securityWarning": "Advertencia:",
-    "securityWarningBody": "Esta aplicación está desplegada en GitHub Pages, que no admite almacenamiento del lado del servidor ni cookies HTTP-only. Aunque los datos están cifrados con AES, siguen siendo vulnerables a ataques XSS y otros exploits del lado del cliente que podrían exfiltrar tus datos financieros.",
-    "securityRecommend": "Para mayor seguridad:",
-    "securityRecommendBody": "Te recomendamos encarecidamente desplegar esta aplicación localmente en tu equipo. El despliegue local ofrece mejor aislamiento y reduce la superficie de ataque.",
-    "securitySetupLink": "Ver instrucciones de instalación local",
-    "dismissSecurity": "Cerrar aviso de seguridad",
     "cards": {
       "assetAllocation": {
         "title": "Gestor de asignación",
