@@ -22,6 +22,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 
 ## How to install
 
+- **Web** — open <https://fire-tools-inc.github.io/app/demo/>. Nothing to install.
 - **Desktop** — grab the `.dmg` (macOS), `.exe` (Windows) or `.AppImage` (Linux)
   from the [releases page](https://github.com/fire-tools-inc/app/releases).
 - **Self-hosted** — see the
@@ -32,7 +33,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - **Desktop app (Electron)** — your inputs are stored in a local SQLite database
   inside the OS-managed `userData` directory (e.g. `~/Library/Application
   Support/Fire Tools/firetools.db` on macOS). Nothing leaves the machine.
-- **Browser (running locally)** — your inputs are encrypted with AES-256 and stored
+- **Browser / hosted demo** — your inputs are encrypted with AES-256 and stored
   in cookies + localStorage on your device. Cookies are flagged `Secure` and
   `SameSite=Strict` and the encryption key never leaves the browser.
 
