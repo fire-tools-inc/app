@@ -429,6 +429,8 @@ function FIRECalculatorPage() {
               result={result} 
               currentAge={currentAge} 
               zoomYears={zoomYears} 
+              inputs={inputs}
+              onLoadScenario={setInputs}
               isPrivacyMode={isPrivacyMode}
               onTogglePrivacyMode={togglePrivacyMode}
             />

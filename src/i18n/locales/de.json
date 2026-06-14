@@ -999,11 +999,6 @@
   },
   "fireMetrics": {
     "heading": "FIRE-Kennzahlen",
-    "share": "Teilen",
-    "copied": "Kopiert!",
-    "failed": "Fehlgeschlagen",
-    "ariaLinkCopied": "Link in die Zwischenablage kopiert",
-    "ariaCopyLink": "Link kopieren, um diese Berechnung zu teilen",
     "fireTarget": "FIRE-Ziel",
     "fireTargetSubtitle": "für Standard-FIRE",
     "yearsToFIRE": "Jahre bis FIRE",
@@ -1012,6 +1007,18 @@
     "currentAge": "Aktuelles Alter",
     "years": "Jahre",
     "notAvailable": "N/A"
+  },
+  "scenarios": {
+    "bookmark": "Lesezeichen",
+    "heading": "Gespeicherte Szenarien",
+    "ariaToggle": "Szenarien speichern und laden",
+    "empty": "Noch keine gespeicherten Szenarien.",
+    "namePlaceholder": "Szenarioname",
+    "save": "Speichern",
+    "load": "Szenario laden",
+    "delete": "Löschen",
+    "deleteNamed": "Szenario {{name}} löschen",
+    "limitReached": "Maximal {{max}} Szenarien erreicht. Löschen Sie eines, um ein weiteres zu speichern."
   },
   "monteCarlo": {
     "pageTitle": "Monte-Carlo-Simulationen",

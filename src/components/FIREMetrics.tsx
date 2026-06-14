@@ -1,16 +1,17 @@
-import { CalculationResult } from '../types/calculator';
-import { useState } from 'react';
+import { CalculationResult, CalculatorInputs } from '../types/calculator';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
-import { logger } from '../utils/logger';
 import { PrivacyBlur } from './PrivacyBlur';
 import { AbbreviatedValue } from './AbbreviatedValue';
+import { ScenarioManager } from './ScenarioManager';
 
 interface FIREMetricsProps {
   result: CalculationResult;
   currentAge: number;
   zoomYears: number | 'all';
+  inputs: CalculatorInputs;
+  onLoadScenario: (inputs: CalculatorInputs) => void;
   isPrivacyMode?: boolean;
   onTogglePrivacyMode?: () => void;
 }
@@ -19,13 +20,13 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
   result, 
   currentAge, 
   zoomYears,
+  inputs,
+  onLoadScenario,
   isPrivacyMode = false,
   onTogglePrivacyMode
 }) => {
   const { t } = useTranslation();
   const { yearsToFIRE, fireTarget, validationErrors, projections } = result;
-  const [copied, setCopied] = useState(false);
-  const [copyFailed, setCopyFailed] = useState(false);
   
   const hasErrors = validationErrors && validationErrors.length > 0;
 
@@ -60,25 +61,6 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
     ? projections[projections.length - 1]?.age 
     : Math.min(currentAge + zoomYears, projections[projections.length - 1]?.age || currentAge);
 
-  const handleShare = async () => {
-    const shareBase =
-      typeof __APP_PAGES_URL__ !== 'undefined' && __APP_PAGES_URL__
-        ? __APP_PAGES_URL__
-        : `${window.location.origin}${import.meta.env.BASE_URL}`;
-    const SHARE_ROOT = `${shareBase.replace(/\/+$/, '')}/fire-calculator`;
-    const url = `${SHARE_ROOT}${window.location.search}${window.location.hash}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setCopyFailed(false);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      logger.error('fire-metrics', 'copy-url-failed', 'failed to copy URL to clipboard', { pii: { error: (err as Error)?.message } });
-      setCopyFailed(true);
-      setTimeout(() => setCopyFailed(false), 3000);
-    }
-  };
-
   return (
     <section className="fire-metrics" aria-labelledby="fire-metrics-heading" data-tour="results-section">
       <div className="fire-metrics-header">
@@ -91,13 +73,7 @@ export const FIREMetrics: React.FC<FIREMetricsProps> = ({
           >
             <MaterialIcon name="undo" /> Reverse FIRE
           </Link>
-          <button 
-            className="share-button" 
-            onClick={handleShare}
-            aria-label={copied ? t('fireMetrics.ariaLinkCopied') : t('fireMetrics.ariaCopyLink')}
-          >
-            {copied ? <MaterialIcon name="check" /> : copyFailed ? <MaterialIcon name="close" /> : <MaterialIcon name="link" />} {copied ? t('fireMetrics.copied') : copyFailed ? t('fireMetrics.failed') : t('fireMetrics.share')}
-          </button>
+          <ScenarioManager inputs={inputs} onLoad={onLoadScenario} />
         </div>
       </div>
       <div className="metrics-grid" role="list">

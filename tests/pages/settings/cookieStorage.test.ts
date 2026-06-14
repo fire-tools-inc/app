@@ -6,6 +6,9 @@ import {
   saveFireCalculatorInputs,
   loadFireCalculatorInputs,
   clearFireCalculatorInputs,
+  saveScenarios,
+  loadScenarios,
+  clearScenarios,
   saveExpenseTrackerData,
   loadExpenseTrackerData,
   clearExpenseTrackerData,
@@ -82,6 +85,7 @@ describe('Cookie Storage utilities', () => {
     // Also explicitly clear via the library to ensure clean state
     clearAssetAllocation();
     clearFireCalculatorInputs();
+    clearScenarios();
     clearExpenseTrackerData();
   });
 
@@ -236,6 +240,82 @@ describe('Cookie Storage utilities', () => {
       // Cookie should not contain plaintext sensitive data
       expect(cookieValue).not.toContain('100000');
       expect(cookieValue).not.toContain('1985');
+    });
+  });
+
+  describe('FIRE Scenarios (bookmarks)', () => {
+    const makeScenario = (id: string, name: string, overrides: Partial<CalculatorInputs> = {}) => ({
+      id,
+      name,
+      createdAt: new Date('2024-01-01T00:00:00.000Z').toISOString(),
+      inputs: { ...DEFAULT_INPUTS, ...overrides },
+    });
+
+    it('should return an empty array when no scenarios are saved', () => {
+      expect(loadScenarios()).toEqual([]);
+    });
+
+    it('should save and load scenarios', () => {
+      const scenarios = [
+        makeScenario('s-1', 'Aggressive', { stocksPercent: 90 }),
+        makeScenario('s-2', 'Conservative', { stocksPercent: 40 }),
+      ];
+      saveScenarios(scenarios);
+
+      expect(loadScenarios()).toEqual(scenarios);
+    });
+
+    it('should cap stored scenarios at the maximum of five', () => {
+      const scenarios = Array.from({ length: 7 }, (_, i) =>
+        makeScenario(`s-${i}`, `Scenario ${i}`, { initialSavings: i * 1000 })
+      );
+      saveScenarios(scenarios);
+
+      const loaded = loadScenarios();
+      expect(loaded).toHaveLength(5);
+      expect(loaded.map((s) => s.id)).toEqual(['s-0', 's-1', 's-2', 's-3', 's-4']);
+    });
+
+    it('should clear scenarios', () => {
+      saveScenarios([makeScenario('s-1', 'One')]);
+      clearScenarios();
+
+      expect(loadScenarios()).toEqual([]);
+    });
+
+    it('should ignore invalid scenario entries', () => {
+      const invalid = JSON.stringify([
+        { id: 's-1', name: 'Broken' }, // missing inputs
+        makeScenario('s-2', 'Valid'),
+      ]);
+      document.cookie = `fire-tools-scenarios=${invalid}`;
+
+      // Plain (unencrypted) data cannot be decrypted, so it returns []
+      expect(loadScenarios()).toEqual([]);
+    });
+
+    it('should handle corrupted data gracefully', () => {
+      document.cookie = 'fire-tools-scenarios=invalid-encrypted-data';
+
+      expect(loadScenarios()).toEqual([]);
+    });
+
+    it('should merge scenario inputs with defaults', () => {
+      const scenario = makeScenario('s-1', 'Partial', { initialSavings: 12345 });
+      // Simulate a scenario stored before a newer optional field existed
+      delete (scenario.inputs as Partial<CalculatorInputs>).maxAge;
+      saveScenarios([scenario]);
+
+      const loaded = loadScenarios();
+      expect(loaded[0].inputs.initialSavings).toBe(12345);
+      expect(loaded[0].inputs.maxAge).toBe(DEFAULT_INPUTS.maxAge);
+    });
+
+    it('should encrypt scenario data in cookies', () => {
+      saveScenarios([makeScenario('s-1', 'Secret', { initialSavings: 987654 })]);
+
+      expect(document.cookie).not.toContain('987654');
+      expect(document.cookie).not.toContain('Secret');
     });
   });
 

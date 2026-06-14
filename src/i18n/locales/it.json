@@ -999,11 +999,6 @@
   },
   "fireMetrics": {
     "heading": "Metriche FIRE",
-    "share": "Condividi",
-    "copied": "Copiato!",
-    "failed": "Fallito",
-    "ariaLinkCopied": "Link copiato negli appunti",
-    "ariaCopyLink": "Copia il link per condividere questo calcolo",
     "fireTarget": "Obiettivo FIRE",
     "fireTargetSubtitle": "per FIRE standard",
     "yearsToFIRE": "Anni al FIRE",
@@ -1012,6 +1007,18 @@
     "currentAge": "Età attuale",
     "years": "anni",
     "notAvailable": "N/D"
+  },
+  "scenarios": {
+    "bookmark": "Segnalibro",
+    "heading": "Scenari salvati",
+    "ariaToggle": "Salva e carica scenari",
+    "empty": "Nessuno scenario salvato ancora.",
+    "namePlaceholder": "Nome scenario",
+    "save": "Salva",
+    "load": "Carica scenario",
+    "delete": "Elimina",
+    "deleteNamed": "Elimina scenario {{name}}",
+    "limitReached": "Raggiunto il massimo di {{max}} scenari. Eliminane uno per salvarne un altro."
   },
   "monteCarlo": {
     "pageTitle": "Simulazioni Monte Carlo",

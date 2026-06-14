@@ -10,6 +10,7 @@ import { CalculatorInputs } from '../types/calculator';
 import { ExpenseTrackerData, YearData, MonthData, IncomeEntry, ExpenseEntry } from '../types/expenseTracker';
 import { NetWorthTrackerData, NetWorthYearData, MonthlySnapshot, AssetHolding, CashEntry, PensionEntry, FinancialOperation } from '../types/netWorthTracker';
 import { Debt, DebtRepaymentMethod, DebtRepaymentMode } from '../types/debt';
+import { FireScenario, MAX_SCENARIOS } from '../types/scenario';
 import { AuditLogEntry, isAuditActionType } from '../types/auditLog';
 import { DEFAULT_INPUTS } from './defaults';
 import { encryptData, decryptData } from './cookieEncryption';
@@ -29,6 +30,7 @@ const FIRE_CALCULATOR_INPUTS_KEY = 'fire-calculator-inputs';
 const EXPENSE_TRACKER_KEY = 'fire-tools-expense-tracker';
 const NET_WORTH_TRACKER_KEY = 'fire-tools-net-worth-tracker';
 const DEBT_PAYOFF_KEY = 'fire-tools-debt-payoff';
+const FIRE_SCENARIOS_KEY = 'fire-tools-scenarios';
 const AUDIT_LOG_KEY = 'fire-tools-audit-log';
 
 // Audit log is intentionally bounded so it never grows the encrypted cookie
@@ -219,6 +221,75 @@ export function clearFireCalculatorInputs(): void {
     SafeCookies.remove(FIRE_CALCULATOR_INPUTS_KEY, { path: '/' });
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear FIRE calculator inputs from cookies', { pii: { error: (error as Error)?.message } });
+  }
+}
+
+function isValidScenario(obj: any): obj is FireScenario {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    typeof obj.id === 'string' &&
+    typeof obj.name === 'string' &&
+    typeof obj.createdAt === 'string' &&
+    isValidCalculatorInputs(obj.inputs)
+  );
+}
+
+/**
+ * Save FIRE Calculator scenarios (bookmarks) to encrypted cookies.
+ * Only the first MAX_SCENARIOS scenarios are persisted.
+ */
+export function saveScenarios(scenarios: FireScenario[]): void {
+  if (IS_DEMO_MODE) return;
+  try {
+    const bounded = scenarios.slice(0, MAX_SCENARIOS);
+    const json = JSON.stringify(bounded);
+    const encrypted = encryptData(json);
+    SafeCookies.set(FIRE_SCENARIOS_KEY, encrypted, COOKIE_OPTIONS);
+  } catch (error) {
+    logger.error('cookie-storage', 'save-failed', 'failed to save FIRE scenarios to cookies', { pii: { error: (error as Error)?.message } });
+    throw new Error('Failed to save data to cookies. Cookies may be disabled.');
+  }
+}
+
+/**
+ * Load FIRE Calculator scenarios (bookmarks) from encrypted cookies.
+ */
+export function loadScenarios(): FireScenario[] {
+  if (IS_DEMO_MODE) return [];
+  try {
+    const encrypted = SafeCookies.get(FIRE_SCENARIOS_KEY);
+    if (encrypted) {
+      const decrypted = decryptData(encrypted);
+      if (decrypted) {
+        const parsed = JSON.parse(decrypted);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .filter(isValidScenario)
+            .slice(0, MAX_SCENARIOS)
+            .map((scenario) => ({
+              ...scenario,
+              // Merge with defaults to ensure all input fields exist
+              inputs: { ...DEFAULT_INPUTS, ...scenario.inputs },
+            }));
+        }
+      }
+    }
+    return [];
+  } catch (error) {
+    logger.error('cookie-storage', 'load-failed', 'failed to load FIRE scenarios from cookies', { pii: { error: (error as Error)?.message } });
+    return [];
+  }
+}
+
+/**
+ * Clear all FIRE Calculator scenarios from cookies.
+ */
+export function clearScenarios(): void {
+  try {
+    SafeCookies.remove(FIRE_SCENARIOS_KEY, { path: '/' });
+  } catch (error) {
+    logger.error('cookie-storage', 'clear-failed', 'failed to clear FIRE scenarios from cookies', { pii: { error: (error as Error)?.message } });
   }
 }
 
@@ -538,6 +609,7 @@ export function clearNetWorthTrackerData(): void {
 export function clearAllData(): void {
   clearAssetAllocation();
   clearFireCalculatorInputs();
+  clearScenarios();
   clearExpenseTrackerData();
   clearNetWorthTrackerData();
   clearDebtPayoffData();
