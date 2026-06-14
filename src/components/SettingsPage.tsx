@@ -2850,7 +2850,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <p className="setting-help">{t('settings.reportBugHelp')}</p>
                 <a 
-                  href="https://github.com/mbianchidev/fire-tools/issues/new?template=bug_report.yml" 
+                  href="https://github.com/fire-tools-inc/app/issues/new?template=bug_report.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
@@ -2868,7 +2868,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <p className="setting-help">{t('settings.requestFeatureHelp')}</p>
                 <a 
-                  href="https://github.com/mbianchidev/fire-tools/issues/new?template=feature_request.yml" 
+                  href="https://github.com/fire-tools-inc/app/issues/new?template=feature_request.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
@@ -2886,7 +2886,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <p className="setting-help">{t('settings.uxUiSuggestionHelp')}</p>
                 <a 
-                  href="https://github.com/mbianchidev/fire-tools/issues/new?template=ux_ui_suggestion.yml" 
+                  href="https://github.com/fire-tools-inc/app/issues/new?template=ux_ui_suggestion.yml" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
@@ -2904,7 +2904,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <p className="setting-help">{t('settings.reportSecurityIssueHelp')}</p>
                 <a 
-                  href="https://github.com/mbianchidev/fire-tools/security/advisories/new" 
+                  href="https://github.com/fire-tools-inc/app/security/advisories/new" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="secondary-btn external-link-btn"
@@ -2923,7 +2923,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <p className="setting-help">{t('settings.documentationHelp')}</p>
                 <div className="export-buttons">
                   <a 
-                    href="https://github.com/mbianchidev/fire-tools/blob/main/README.md" 
+                    href="https://github.com/fire-tools-inc/app/blob/main/README.md" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="secondary-btn external-link-btn"
@@ -2931,7 +2931,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     <MaterialIcon name="open_in_new" /> README
                   </a>
                   <a 
-                    href="https://github.com/mbianchidev/fire-tools/blob/main/CONTRIBUTING.md" 
+                    href="https://github.com/fire-tools-inc/app/blob/main/CONTRIBUTING.md" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="secondary-btn external-link-btn"
@@ -2939,7 +2939,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     <MaterialIcon name="open_in_new" /> {t('settings.contributingGuide')}
                   </a>
                   <a 
-                    href="https://github.com/mbianchidev/fire-tools/blob/main/SUPPORT.md" 
+                    href="https://github.com/fire-tools-inc/app/blob/main/SUPPORT.md" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="secondary-btn external-link-btn"

@@ -47,7 +47,7 @@ export function HomePage() {
             </p>
             <div className="warning-actions">
               <a 
-                href="https://github.com/mbianchidev/fire-calculator#getting-started" 
+                href="https://github.com/fire-tools-inc/app#quick-start" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="warning-button"

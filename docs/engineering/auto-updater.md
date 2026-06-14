@@ -1,6 +1,6 @@
 # Auto-updater design
 
-Tracking issue: [#236](https://github.com/mbianchidev/fire-tools/issues/236).
+Tracking issue: [#236](https://github.com/fire-tools-inc/app/issues/236).
 Applies to the **Electron desktop build only**; the web build self-refreshes
 on reload and ignores `settings.updater.*`.
 
@@ -178,8 +178,8 @@ UI can disable Restore.
 ```yaml
 publish:
   - provider: github
-    owner: mbianchidev
-    repo: fire-tools
+    owner: fire-tools-inc
+    repo: app
 ```
 
 `.github/workflows/release.yml` uploads the `*.yml` and `*.blockmap`

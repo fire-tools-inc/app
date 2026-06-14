@@ -3,11 +3,11 @@
 Local-deployment backend for Fire Tools. Implements the OpenAPI contract at
 [`../docs/api/openapi.yaml`](../docs/api/openapi.yaml) end-to-end against
 SQLite. PostgreSQL profile is wired in compose but the driver itself isn't
-implemented yet — see issue [#195](https://github.com/mbianchidev/fire-tools/issues/195).
+implemented yet — see issue [#195](https://github.com/fire-tools-inc/app/issues/195).
 
 Covers issues
-[#129](https://github.com/mbianchidev/fire-tools/issues/129),
-[#195](https://github.com/mbianchidev/fire-tools/issues/195).
+[#129](https://github.com/fire-tools-inc/app/issues/129),
+[#195](https://github.com/fire-tools-inc/app/issues/195).
 
 ## Stack
 

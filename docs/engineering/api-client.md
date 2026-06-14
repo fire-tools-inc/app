@@ -4,9 +4,9 @@ The backend is described by an [OpenAPI 3.0.3](https://spec.openapis.org/oas/v3.
 contract. The same contract drives the official client and any client you
 choose to build.
 
-- **Source**: [`docs/api/openapi.yaml`](https://github.com/mbianchidev/fire-tools/blob/main/docs/api/openapi.yaml)
-- **Live viewer**: <https://mbianchidev.github.io/fire-tools/api/>
-- **Raw spec**: <https://mbianchidev.github.io/fire-tools/api/openapi.yaml>
+- **Source**: [`docs/api/openapi.yaml`](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml)
+- **Live viewer**: <https://fire-tools-inc.github.io/app/api/>
+- **Raw spec**: <https://fire-tools-inc.github.io/app/api/openapi.yaml>
 
 ## Lint the spec
 

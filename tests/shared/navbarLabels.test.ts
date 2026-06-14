@@ -1,5 +1,5 @@
 /**
- * Regression tests for issue mbianchidev/fire-tools#233.
+ * Regression tests for issue fire-tools-inc/app#233.
  *
  * The app navbar must always render in English, regardless of the user's
  * selected UI language. This is enforced by:

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { IS_DEMO_MODE } from '../utils/demoMode';
 import './DemoBanner.css';
 
-const RELEASES_URL = 'https://github.com/mbianchidev/fire-tools/releases/latest';
+const RELEASES_URL = 'https://github.com/fire-tools-inc/app/releases/latest';
 
 export function DemoBanner() {
   const { t } = useTranslation();

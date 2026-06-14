@@ -4,9 +4,9 @@ Fire Tools' planned local-deployment backend stores data in a relational
 database. This document describes the schema in [`schema.sql`](./schema.sql).
 
 > **Status — contract only.** The backend itself is not yet implemented
-> (tracked in issues [#189](https://github.com/mbianchidev/fire-tools/issues/189),
-> [#195](https://github.com/mbianchidev/fire-tools/issues/195),
-> [#222](https://github.com/mbianchidev/fire-tools/issues/222)). This schema
+> (tracked in issues [#189](https://github.com/fire-tools-inc/app/issues/189),
+> [#195](https://github.com/fire-tools-inc/app/issues/195),
+> [#222](https://github.com/fire-tools-inc/app/issues/222)). This schema
 > defines the persistence contract that the future backend will honour.
 
 ---
@@ -178,5 +178,5 @@ restricted by deployment policy, not by schema. To migrate:
   (e.g. `node-pg-migrate` for Postgres, `goose` or `dbmate` for either).
   Until then, `schema.sql` is the only DDL artifact.
 - **Audit log table.** Tracked separately in
-  [#188](https://github.com/mbianchidev/fire-tools/issues/188).
+  [#188](https://github.com/fire-tools-inc/app/issues/188).
 - **Backups, encryption-at-rest, role grants.** Deployer concern.

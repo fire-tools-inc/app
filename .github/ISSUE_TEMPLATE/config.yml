@@ -1,11 +1,11 @@
 blank_issues_enabled: true
 contact_links:
   - name: Security Vulnerability
-    url: https://github.com/mbianchidev/fire-tools/security/advisories/new
+    url: https://github.com/fire-tools-inc/app/security/advisories/new
     about: Report a security vulnerability privately. Please do not create a public issue for security concerns.
   - name: Documentation
-    url: https://github.com/mbianchidev/fire-tools/blob/main/README.md
+    url: https://github.com/fire-tools-inc/app/blob/main/README.md
     about: Check the documentation for help with common questions.
   - name: Support
-    url: https://github.com/mbianchidev/fire-tools/blob/main/SUPPORT.md
+    url: https://github.com/fire-tools-inc/app/blob/main/SUPPORT.md
     about: Get help and support information.

@@ -2,7 +2,7 @@
 
 Static landing page for `fire-tools`. Hand-rolled HTML + CSS — no build
 step, no framework. Tracks issue
-[#138](https://github.com/mbianchidev/fire-tools/issues/138).
+[#138](https://github.com/fire-tools-inc/app/issues/138).
 
 ## Where it lives in production
 
@@ -10,8 +10,8 @@ step, no framework. Tracks issue
 (the site root) so it ships at the GitHub Pages root. The SPA lives
 under `dist/demo/`. The live URLs are:
 
-- `https://mbianchidev.github.io/fire-tools/` — this landing page
-- `https://mbianchidev.github.io/fire-tools/demo/` — the read-only demo app
+- `https://fire-tools-inc.github.io/app/` — this landing page
+- `https://fire-tools-inc.github.io/app/demo/` — the read-only demo app
 
 ## Local preview
 

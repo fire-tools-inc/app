@@ -5,8 +5,8 @@
 
 const { app, Menu, shell, BrowserWindow, dialog } = require('electron');
 
-const REPO_URL = 'https://github.com/mbianchidev/fire-tools';
-const DOCS_URL = 'https://mbianchidev.github.io/fire-tools/';
+const REPO_URL = 'https://github.com/fire-tools-inc/app';
+const DOCS_URL = 'https://fire-tools-inc.github.io/app/';
 const ISSUES_URL = `${REPO_URL}/issues/new/choose`;
 const RELEASES_URL = `${REPO_URL}/releases`;
 

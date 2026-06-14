@@ -8,7 +8,7 @@ info:
     Fire Tools is currently a client-side React app that stores everything in
     encrypted cookies. This OpenAPI contract describes the **planned** backend
     that will power local deployments (Docker / Electron) — see
-    [issue #133](https://github.com/mbianchidev/fire-tools/issues/133).
+    [issue #133](https://github.com/fire-tools-inc/app/issues/133).
 
     **Status — contract only.** No server implementation exists yet.
 
@@ -26,10 +26,10 @@ info:
       scheme below is reserved for multi-tenant deployments and is opt-in.
   license:
     name: MIT
-    url: https://github.com/mbianchidev/fire-tools/blob/main/LICENSE
+    url: https://github.com/fire-tools-inc/app/blob/main/LICENSE
   contact:
     name: Fire Tools
-    url: https://github.com/mbianchidev/fire-tools
+    url: https://github.com/fire-tools-inc/app
 
 servers:
   - url: http://localhost:8080/api/v1

@@ -77,6 +77,6 @@ linux:
 
 publish:
   provider: github
-  owner: mbianchidev
-  repo: fire-tools
+  owner: fire-tools-inc
+  repo: app
   releaseType: release

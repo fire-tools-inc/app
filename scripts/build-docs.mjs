@@ -88,7 +88,7 @@ function pageHtml({ section, slug, html, pages, siblingSection }) {
         <a href="../user/">User docs</a>
         <a href="../engineering/">Engineering docs</a>
         <a href="../../api/">API reference</a>
-        <a href="https://github.com/mbianchidev/fire-tools" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/fire-tools-inc/app" target="_blank" rel="noopener">GitHub</a>
         <a class="cta" href="../../demo/">Open the demo</a>
       </nav>
     </header>
@@ -201,7 +201,7 @@ export async function buildDocs() {
         <a href="./user/">User docs</a>
         <a href="./engineering/">Engineering docs</a>
         <a href="../api/">API reference</a>
-        <a href="https://github.com/mbianchidev/fire-tools" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/fire-tools-inc/app" target="_blank" rel="noopener">GitHub</a>
         <a class="cta" href="../demo/">Open the demo</a>
       </nav>
     </header>
