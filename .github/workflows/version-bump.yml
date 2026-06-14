@@ -1,0 +1,75 @@
+name: Auto bump patch version
+
+# Automatically bumps the PATCH version whenever a PR is merged to main
+# (e.g. 2.1.0 -> 2.1.1). It commits the bump back to main but NEVER creates a
+# git tag — release tags are minted by maintainers, which is what drives the
+# deploy.yml / release.yml pipelines.
+#
+# Recursion is prevented three ways:
+#   1. The job is skipped when the head commit is itself a version bump
+#      (message contains "bump version to") or explicitly opts out ("[skip ci]").
+#   2. The bump commit it creates carries "[skip ci]", so GitHub skips all
+#      workflows for that push.
+#   3. Pushes made with the default GITHUB_TOKEN do not trigger new runs.
+#
+# A deliberate release bump merged as "chore: bump version to X.Y.Z" is also
+# skipped by guard (1), so the chosen version survives untouched for tagging.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: version-bump-main
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Bump patch version
+    runs-on: ubuntu-latest
+    if: >-
+      !contains(github.event.head_commit.message, 'bump version to') &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: '22'
+
+      - name: Compute next patch version
+        id: ver
+        run: |
+          set -euo pipefail
+          NEXT=$(node -e "const [a,b,c]=require('./package.json').version.split('.').map(Number); if([a,b,c].some(Number.isNaN)){process.exit(1)}; process.stdout.write(\`\${a}.\${b}.\${c+1}\`)")
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Bumping $CURRENT -> $NEXT"
+
+      - name: Apply version bump across files
+        run: node scripts/bump-version.mjs "${{ steps.ver.outputs.next }}"
+
+      - name: Commit and push bump (no tag)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No version changes to commit; nothing to do."
+            exit 0
+          fi
+          git add -u
+          git commit -m "chore: bump version to ${{ steps.ver.outputs.next }} [skip ci]"
+          # Rebase onto any concurrent main movement, then push. No tag is created.
+          git pull --rebase origin main
+          git push origin HEAD:main
