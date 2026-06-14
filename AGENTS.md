@@ -307,7 +307,7 @@ Serves the production build locally for testing.
 
 ### Deployment
 - Automatic deployment to GitHub Pages via GitHub Actions
-- Triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed
+- Triggered automatically on every push to `main` (continuous demo); also runnable manually via `workflow_dispatch`
 - Base path configured as `/app/` for GitHub Pages
 - Workflow file: `.github/workflows/deploy.yml`
 
