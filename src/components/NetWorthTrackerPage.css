@@ -238,7 +238,13 @@
 .chart-section h3 {
   font-size: 1.3rem;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.chart-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
 }
 
 .chart-container {

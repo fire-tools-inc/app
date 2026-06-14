@@ -42,6 +42,27 @@ export const DEFAULT_EXPERIMENTAL_FEATURES: ExperimentalFeatures = {
   pdfImport: false,
 };
 
+/**
+ * In the public web demo every experimental / preview feature is enabled by
+ * default so visitors can explore the full app without flipping toggles.
+ * Self-hosted (Electron) and test builds keep them opt-in (all false).
+ * Derived from the feature keys so any new flag is auto-enabled in the demo.
+ */
+const DEMO_EXPERIMENTAL_FEATURES: ExperimentalFeatures = (
+  Object.keys(DEFAULT_EXPERIMENTAL_FEATURES) as (keyof ExperimentalFeatures)[]
+).reduce(
+  (acc, key) => {
+    acc[key] = true;
+    return acc;
+  },
+  { ...DEFAULT_EXPERIMENTAL_FEATURES },
+);
+
+/** Effective experimental-feature defaults for the current runtime. */
+export const EFFECTIVE_EXPERIMENTAL_DEFAULTS: ExperimentalFeatures = IS_DEMO_MODE
+  ? DEMO_EXPERIMENTAL_FEATURES
+  : DEFAULT_EXPERIMENTAL_FEATURES;
+
 export type BackendMode = 'embedded' | 'custom';
 
 /** Local-deployment backend connection settings.
@@ -141,7 +162,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   fireAssetClassInclusion: DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
   includePrimaryResidenceInFIRE: true, // Default to including primary residence
   searchThreshold: 8,
-  experimentalFeatures: DEFAULT_EXPERIMENTAL_FEATURES,
+  experimentalFeatures: EFFECTIVE_EXPERIMENTAL_DEFAULTS,
   language: 'en',
   backend: DEFAULT_BACKEND_SETTINGS,
   updater: DEFAULT_UPDATER_SETTINGS,
@@ -221,10 +242,12 @@ export function loadSettings(): UserSettings {
             ...DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
             ...(parsed.fireAssetClassInclusion || {}),
           },
-          experimentalFeatures: {
-            ...DEFAULT_EXPERIMENTAL_FEATURES,
-            ...(parsed.experimentalFeatures || {}),
-          },
+          experimentalFeatures: IS_DEMO_MODE
+            ? EFFECTIVE_EXPERIMENTAL_DEFAULTS
+            : {
+                ...DEFAULT_EXPERIMENTAL_FEATURES,
+                ...(parsed.experimentalFeatures || {}),
+              },
           backend: {
             ...DEFAULT_BACKEND_SETTINGS,
             ...(parsed.backend || {}),

@@ -810,7 +810,42 @@
     "value": "Wert",
     "year": "Jahr",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "YTD-Änderung"
+    "ytdChange": "YTD-Änderung",
+    "sankey": {
+      "title": "Vermögensfluss",
+      "subtitle": "Zusammensetzung Ihres Nettovermögens für diesen Monat",
+      "totalPortfolio": "Gesamtportfolio",
+      "investments": "Investitionen",
+      "cashLiquidity": "Barmittel & Liquidität",
+      "pension": "Rente",
+      "noData": "Keine Daten für diesen Monat. Fügen Sie Vermögenswerte, Kasseneinträge oder Renten hinzu.",
+      "assetClasses": {
+        "stocks": "Aktien",
+        "etf": "ETF",
+        "bonds": "Anleihen",
+        "crypto": "Krypto",
+        "realEstate": "Immobilien",
+        "privateEquity": "Private Equity",
+        "vehicle": "Fahrzeug",
+        "collectible": "Sammlerstück",
+        "art": "Kunst",
+        "commodities": "Rohstoffe",
+        "other": "Sonstige"
+      },
+      "accountTypes": {
+        "savings": "Sparkonto",
+        "checking": "Girokonto",
+        "brokerage": "Brokerkonto",
+        "creditCard": "Kreditkarte",
+        "other": "Sonstiges"
+      },
+      "pensionTypes": {
+        "state": "Staatliche Rente",
+        "private": "Private Rente",
+        "employer": "Betriebliche Rente",
+        "other": "Sonstige Rente"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",
@@ -848,7 +883,7 @@
         "title": "Nach Region"
       },
       "sector": {
-        "description": "Individual stocks use their listed sector from Yahoo Finance. ETFs use a sector label inferred from their fund name (e.g. \"Technology\", \"Government Bonds\"), as Yahoo no longer exposes per-ETF holdings without authentication.",
+        "description": "Industry-sector mix (e.g. Technology, Financial Services, Consumer goods). Individual stocks use their listed sector from Yahoo Finance. Broad-market ETFs are expanded into industry sectors using approximate weightings for well-known indices (e.g. S&P 500, MSCI World, FTSE All-World), since Yahoo no longer exposes per-ETF holdings without authentication. Bond, commodity, and single-sector funds keep their own label.",
         "title": "Nach Sektor"
       }
     },
@@ -2623,5 +2658,35 @@
     "backendUnreachable": "Backend nicht erreichbar. App läuft im Nur-Client-Modus.",
     "backendDepTag": "backend",
     "refresh": "Aktualisieren"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Ich gebe diese Rate ein als",
+      "help": "Wählen Sie aus, welches Entnahmeraten-Konzept Ihre Eingabe darstellt. Die anderen beiden werden daraus abgeleitet."
+    },
+    "types": {
+      "swr": "Sichere Entnahmerate (SWR)",
+      "ltwr": "Langfristige Entnahmerate (LTWR)",
+      "pwr": "Ewige Entnahmerate (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Maximale inflationsbereinigte Rate, die das Portfolio über Ihren Zeitraum von {{years}} Jahren nicht erschöpft.",
+      "ltwr": "Nachhaltiger Mittelweg über einen langen Zeitraum von {{years}} Jahren, in dem SWR und PWR konvergieren.",
+      "pwr": "Rate, die Ihr Kapital unbegrenzt erhält — typischerweise die konservativste."
+    },
+    "results": {
+      "heading": "Entnahmeraten-Optionen",
+      "description": "Sie geben eine Rate ein; die anderen beiden werden über die implizite Realrendite mit einem deterministischen Amortisationsmodell abgeleitet.",
+      "impliedRealReturn": "Implizite Realrendite",
+      "youEntered": "Eingegeben",
+      "derived": "Abgeleitet"
+    },
+    "principalWarning": "Ihre Eingabe impliziert eine nicht-positive Realrendite ({{rate}}), daher kann keine positive Rate das Kapital dauerhaft erhalten. Die ewige Rate wird als 0% angezeigt.",
+    "ltwrHorizonNote": "LTWR verwendet einen festen langfristigen Zeitraum von {{years}} Jahren."
   }
 }

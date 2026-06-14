@@ -99,16 +99,6 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
         >
           <MaterialIcon name="pie_chart" className="nav-icon" /> {NAVBAR_LABELS.assetAllocation}
         </Link>
-        {showPortfolioBreakdown && (
-          <Link
-            to="/portfolio-breakdown"
-            className={`nav-link ${location.pathname === '/portfolio-breakdown' ? 'active' : ''}`}
-            onClick={closeMenu}
-            aria-current={location.pathname === '/portfolio-breakdown' ? 'page' : undefined}
-          >
-            <MaterialIcon name="donut_large" className="nav-icon" /> {NAVBAR_LABELS.portfolioBreakdown}
-          </Link>
-        )}
         <Link
           to="/expense-tracker"
           className={`nav-link ${location.pathname === '/expense-tracker' ? 'active' : ''}`}
@@ -133,7 +123,7 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
         >
           <MaterialIcon name="local_fire_department" className="nav-icon" /> {NAVBAR_LABELS.fireCalculator}
         </Link>
-        <ToolsMenu onNavigate={closeMenu} />
+        <ToolsMenu onNavigate={closeMenu} showPortfolioBreakdown={showPortfolioBreakdown} />
       </div>
       <div className="nav-actions">
         <NotificationBell />

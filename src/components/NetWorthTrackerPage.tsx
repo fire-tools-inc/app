@@ -40,6 +40,7 @@ import { fetchAssetPrices } from '../utils/dcaCalculator';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
 import { DataManagement } from './DataManagement';
 import { HistoricalNetWorthChart, ChartViewMode } from './HistoricalNetWorthChart';
+import { NetWorthSankeyChart } from './NetWorthSankeyChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { MaterialIcon } from './MaterialIcon';
 import { SearchableSelect } from './SearchableSelect';
@@ -1297,6 +1298,22 @@ export function NetWorthTrackerPage() {
             isPrivacyMode={isPrivacyMode}
           />
         </section>
+
+        {/* Wealth Flow Sankey Chart */}
+        {currentMonthData && (
+          <section className="chart-section" aria-labelledby="sankey-chart-heading">
+            <h3 id="sankey-chart-heading">
+              <MaterialIcon name="account_tree" /> {t('netWorth.sankey.title')}
+            </h3>
+            <p className="chart-subtitle">{t('netWorth.sankey.subtitle')}</p>
+            <NetWorthSankeyChart
+              snapshot={currentMonthData}
+              currency={data.defaultCurrency}
+              showPension={data.settings.showPensionInNetWorth}
+              isPrivacyMode={isPrivacyMode}
+            />
+          </section>
+        )}
 
         {/* YTD Summary - only show in YTD mode */}
         {chartViewMode === 'ytd' && ytdSummary.averageMonthlyNetWorth > 0 && (

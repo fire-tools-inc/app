@@ -1138,6 +1138,40 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: 0 12px 40px var(--error-glow);
 }
 
+/* Withdrawal-rate type selector (issue #193) */
+.wr-type-option {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border, #2a2d36);
+  background: var(--surface-2, #1a1d26);
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.wr-type-option:hover:not(:disabled) {
+  border-color: var(--accent, #2dd4bf);
+  color: var(--text, #f8fafc);
+}
+
+.wr-type-option-active {
+  border-color: var(--accent, #2dd4bf);
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--text, #f8fafc);
+}
+
+.wr-type-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-card.wr-pill-good {
+  border-color: var(--accent, #2dd4bf);
+  box-shadow: 0 0 0 1px var(--accent, #2dd4bf) inset;
+}
+
 .result-label {
   font-size: 0.9rem;
   opacity: 0.9;

@@ -167,10 +167,13 @@ export function inferEtfInfo(longName: string | undefined, shortName?: string): 
     }
   }
 
-  // If no sector theme matched but we did identify a region, default focus to Equity.
+  // If no specific asset/sector theme matched but we did identify a region, this
+  // is a broad equity basket. Mark the focus as Equity, but deliberately DON'T
+  // synthesize a "<Region> Equity" sector — that's a region label, not an
+  // industry sector. Broad baskets are expanded into real industry sectors
+  // (Technology, Financial Services, ...) via `inferIndexSectorWeights`.
   if (!result.sectorTheme && result.regionTheme) {
     result.assetFocus = 'Equity';
-    result.sectorTheme = `${result.regionTheme} Equity`;
   }
 
   return result;

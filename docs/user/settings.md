@@ -31,6 +31,10 @@ sessions.
 Beta features (e.g. the **Portfolio breakdown** view) live behind a toggle so
 they're opt-in until they stabilise.
 
+In the public **web demo** every experimental feature is enabled by default so
+visitors can explore the full app without flipping toggles. The desktop app and
+self-hosted builds keep them opt-in (all off until you enable them here).
+
 ## Data management
 
 - **Export all data** — bundles every tool's state into a single ZIP with one

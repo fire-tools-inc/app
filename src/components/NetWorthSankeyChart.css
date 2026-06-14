@@ -1,0 +1,37 @@
+.sankey-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.sankey-chart-wrapper svg {
+  max-width: 100%;
+}
+
+.sankey-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94A3B8;
+  background: #131520;
+  border-radius: 8px;
+  border: 1px dashed #2A2D36;
+  gap: 0.75rem;
+  min-height: 160px;
+}
+
+.sankey-empty-icon {
+  font-size: 2.5rem;
+  opacity: 0.6;
+}
+
+.sankey-empty p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 320px;
+  line-height: 1.5;
+}

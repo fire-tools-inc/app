@@ -810,7 +810,42 @@
     "value": "Value",
     "year": "Year",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "Ytd Change"
+    "ytdChange": "Ytd Change",
+    "sankey": {
+      "title": "Wealth Flow",
+      "subtitle": "Composition of your net worth for this month",
+      "totalPortfolio": "Total Portfolio",
+      "investments": "Investments",
+      "cashLiquidity": "Cash & Liquidity",
+      "pension": "Pension",
+      "noData": "No data available for this month. Add assets, cash entries, or pensions to see the wealth flow chart.",
+      "assetClasses": {
+        "stocks": "Stocks",
+        "etf": "ETF",
+        "bonds": "Bonds",
+        "crypto": "Crypto",
+        "realEstate": "Real Estate",
+        "privateEquity": "Private Equity",
+        "vehicle": "Vehicle",
+        "collectible": "Collectible",
+        "art": "Art",
+        "commodities": "Commodities",
+        "other": "Other"
+      },
+      "accountTypes": {
+        "savings": "Savings",
+        "checking": "Checking",
+        "brokerage": "Brokerage",
+        "creditCard": "Credit Card",
+        "other": "Other Cash"
+      },
+      "pensionTypes": {
+        "state": "State Pension",
+        "private": "Private Pension",
+        "employer": "Employer Pension",
+        "other": "Other Pension"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",
@@ -848,7 +883,7 @@
         "title": "By Region"
       },
       "sector": {
-        "description": "Individual stocks use their listed sector from Yahoo Finance. ETFs use a sector label inferred from their fund name (e.g. \"Technology\", \"Government Bonds\"), as Yahoo no longer exposes per-ETF holdings without authentication.",
+        "description": "Industry-sector mix (e.g. Technology, Financial Services, Consumer goods). Individual stocks use their listed sector from Yahoo Finance. Broad-market ETFs are expanded into industry sectors using approximate weightings for well-known indices (e.g. S&P 500, MSCI World, FTSE All-World), since Yahoo no longer exposes per-ETF holdings without authentication. Bond, commodity, and single-sector funds keep their own label.",
         "title": "By Sector"
       }
     },
@@ -2623,5 +2658,35 @@
     "backendUnreachable": "Backend is not reachable. The app runs in client-only mode.",
     "backendDepTag": "backend",
     "refresh": "Refresh"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "I'm entering this rate as",
+      "help": "Pick which withdrawal-rate concept your input represents. The other two are derived from it."
+    },
+    "types": {
+      "swr": "Safe Withdrawal Rate (SWR)",
+      "ltwr": "Long-Term Withdrawal Rate (LTWR)",
+      "pwr": "Perpetual Withdrawal Rate (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Maximum inflation-adjusted rate that avoids depleting the portfolio over your {{years}}-year horizon.",
+      "ltwr": "Sustainable middle ground over a long {{years}}-year horizon, where SWR and PWR converge.",
+      "pwr": "Rate that preserves your principal indefinitely — typically the most conservative."
+    },
+    "results": {
+      "heading": "Withdrawal rate options",
+      "description": "You enter one rate; the other two are derived from the implied real return using a deterministic amortization model.",
+      "impliedRealReturn": "Implied real return",
+      "youEntered": "You entered",
+      "derived": "Derived"
+    },
+    "principalWarning": "Your input implies a non-positive real return ({{rate}}), so no positive rate can preserve principal forever. Perpetual rate is shown as 0%.",
+    "ltwrHorizonNote": "LTWR uses a fixed {{years}}-year long-term horizon."
   }
 }

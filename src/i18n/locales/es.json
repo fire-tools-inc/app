@@ -810,7 +810,42 @@
     "value": "Valor",
     "year": "Año",
     "yearToDateProgress": "Year to Date Progress",
-    "ytdChange": "Cambio YTD"
+    "ytdChange": "Cambio YTD",
+    "sankey": {
+      "title": "Flujo de Riqueza",
+      "subtitle": "Composición de su patrimonio neto de este mes",
+      "totalPortfolio": "Cartera Total",
+      "investments": "Inversiones",
+      "cashLiquidity": "Efectivo y Liquidez",
+      "pension": "Pensión",
+      "noData": "No hay datos para este mes. Añada activos, entradas de efectivo o pensiones para ver el gráfico.",
+      "assetClasses": {
+        "stocks": "Acciones",
+        "etf": "ETF",
+        "bonds": "Bonos",
+        "crypto": "Cripto",
+        "realEstate": "Bienes Raíces",
+        "privateEquity": "Capital Privado",
+        "vehicle": "Vehículo",
+        "collectible": "Coleccionable",
+        "art": "Arte",
+        "commodities": "Materias Primas",
+        "other": "Otro"
+      },
+      "accountTypes": {
+        "savings": "Ahorros",
+        "checking": "Cuenta Corriente",
+        "brokerage": "Corretaje",
+        "creditCard": "Tarjeta de Crédito",
+        "other": "Otro Efectivo"
+      },
+      "pensionTypes": {
+        "state": "Pensión Estatal",
+        "private": "Pensión Privada",
+        "employer": "Pensión de Empresa",
+        "other": "Otra Pensión"
+      }
+    }
   },
   "notFound": {
     "backHome": "Back to Home",
@@ -848,7 +883,7 @@
         "title": "Por región"
       },
       "sector": {
-        "description": "Individual stocks use their listed sector from Yahoo Finance. ETFs use a sector label inferred from their fund name (e.g. \"Technology\", \"Government Bonds\"), as Yahoo no longer exposes per-ETF holdings without authentication.",
+        "description": "Industry-sector mix (e.g. Technology, Financial Services, Consumer goods). Individual stocks use their listed sector from Yahoo Finance. Broad-market ETFs are expanded into industry sectors using approximate weightings for well-known indices (e.g. S&P 500, MSCI World, FTSE All-World), since Yahoo no longer exposes per-ETF holdings without authentication. Bond, commodity, and single-sector funds keep their own label.",
         "title": "Por sector"
       }
     },
@@ -2623,5 +2658,35 @@
     "backendUnreachable": "Backend no accesible. La app funciona en modo solo cliente.",
     "backendDepTag": "backend",
     "refresh": "Actualizar"
+  },
+  "withdrawalRate": {
+    "inputType": {
+      "label": "Introduzco esta tasa como",
+      "help": "Elija qué concepto de tasa de retiro representa su entrada. Las otras dos se derivan de ella."
+    },
+    "types": {
+      "swr": "Tasa de Retiro Segura (SWR)",
+      "ltwr": "Tasa de Retiro a Largo Plazo (LTWR)",
+      "pwr": "Tasa de Retiro Perpetua (PWR)"
+    },
+    "short": {
+      "swr": "SWR",
+      "ltwr": "LTWR",
+      "pwr": "PWR"
+    },
+    "explanations": {
+      "swr": "Tasa máxima ajustada por inflación que evita agotar la cartera durante su horizonte de {{years}} años.",
+      "ltwr": "Punto intermedio sostenible en un horizonte largo de {{years}} años, donde SWR y PWR convergen.",
+      "pwr": "Tasa que preserva su capital indefinidamente — normalmente la más conservadora."
+    },
+    "results": {
+      "heading": "Opciones de tasa de retiro",
+      "description": "Usted introduce una tasa; las otras dos se derivan del rendimiento real implícito mediante un modelo de amortización determinista.",
+      "impliedRealReturn": "Rendimiento real implícito",
+      "youEntered": "Introducida",
+      "derived": "Derivada"
+    },
+    "principalWarning": "Su entrada implica un rendimiento real no positivo ({{rate}}), por lo que ninguna tasa positiva puede preservar el capital para siempre. La tasa perpetua se muestra como 0%.",
+    "ltwrHorizonNote": "LTWR usa un horizonte a largo plazo fijo de {{years}} años."
   }
 }

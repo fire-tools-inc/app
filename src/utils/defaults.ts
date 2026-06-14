@@ -81,9 +81,23 @@ const NET_WORTH_DEMO_BASE = {
   // BNDX: 181.936 shares @ €41.23 = €7,500 (25%)
   bndxShares: 181.936,
   bndxPrice: 41.23,
+  // REAL ESTATE - €18,000 (REIT ETF)
+  vnqShares: 180.0,
+  vnqPrice: 100.0,
+  // CRYPTO - €7,200 (Bitcoin)
+  btcShares: 0.12,
+  btcPrice: 60000,
+  // COMMODITIES - €4,000 (Gold ETF)
+  gldShares: 40.0,
+  gldPrice: 100.0,
   // Cash totals: €5,000 (€3,500 + €1,500)
   emergencyFund: 3500,
   checking: 1500,
+  // Brokerage settlement cash €6,000
+  brokerage: 6000,
+  // Pensions (accumulated wealth, not State Pension income)
+  employerPension: 22000,
+  privatePension: 11000,
 };
 
 // Seeded random for consistent demo data (using seed value)
@@ -122,9 +136,22 @@ export function generateDemoNetWorthDataForYear(targetYear: number, previousYear
     tipPrice: (previousYearEndData.assets.find(a => a.ticker === 'TIP')?.pricePerShare || NET_WORTH_DEMO_BASE.tipPrice) * 1.02,
     bndxShares: previousYearEndData.assets.find(a => a.ticker === 'BNDX')?.shares || NET_WORTH_DEMO_BASE.bndxShares,
     bndxPrice: (previousYearEndData.assets.find(a => a.ticker === 'BNDX')?.pricePerShare || NET_WORTH_DEMO_BASE.bndxPrice) * 1.02,
+    // Real estate grows ~4% annually
+    vnqShares: previousYearEndData.assets.find(a => a.ticker === 'VNQ')?.shares || NET_WORTH_DEMO_BASE.vnqShares,
+    vnqPrice: (previousYearEndData.assets.find(a => a.ticker === 'VNQ')?.pricePerShare || NET_WORTH_DEMO_BASE.vnqPrice) * 1.04,
+    // Crypto is volatile - strong year-over-year growth
+    btcShares: previousYearEndData.assets.find(a => a.ticker === 'BTC')?.shares || NET_WORTH_DEMO_BASE.btcShares,
+    btcPrice: (previousYearEndData.assets.find(a => a.ticker === 'BTC')?.pricePerShare || NET_WORTH_DEMO_BASE.btcPrice) * 1.20,
+    // Commodities (gold) grow ~6% annually
+    gldShares: previousYearEndData.assets.find(a => a.ticker === 'GLD')?.shares || NET_WORTH_DEMO_BASE.gldShares,
+    gldPrice: (previousYearEndData.assets.find(a => a.ticker === 'GLD')?.pricePerShare || NET_WORTH_DEMO_BASE.gldPrice) * 1.06,
     // Cash grows with savings
     emergencyFund: (previousYearEndData.cashEntries.find((c: CashEntry) => c.accountName === 'Emergency Fund')?.balance || NET_WORTH_DEMO_BASE.emergencyFund) + 2000,
     checking: previousYearEndData.cashEntries.find((c: CashEntry) => c.accountName === 'Main Checking')?.balance || NET_WORTH_DEMO_BASE.checking,
+    brokerage: (previousYearEndData.cashEntries.find((c: CashEntry) => c.accountName === 'Brokerage Cash')?.balance || NET_WORTH_DEMO_BASE.brokerage) + 1000,
+    // Pension pots grow with yearly contributions
+    employerPension: (previousYearEndData.pensions.find(p => p.name === 'Company Pension')?.currentValue || NET_WORTH_DEMO_BASE.employerPension) + 2500,
+    privatePension: (previousYearEndData.pensions.find(p => p.name === 'Private Pension')?.currentValue || NET_WORTH_DEMO_BASE.privatePension) + 1500,
   } : NET_WORTH_DEMO_BASE;
   
   const months: MonthlySnapshot[] = [];
@@ -163,10 +190,27 @@ export function generateDemoNetWorthDataForYear(targetYear: number, previousYear
     const bndxPriceVariation = seededRandom(monthSeed + 7, -0.03, 0.03);
     const bndxPrice = Math.round((baseData.bndxPrice * (1 + bndxPriceVariation)) * 100) / 100;
     
+    // VNQ (Real Estate REIT) - moderate volatility
+    const vnqPriceVariation = seededRandom(monthSeed + 12, -0.05, 0.06);
+    const vnqPrice = Math.round((baseData.vnqPrice * (1 + vnqPriceVariation + month * 0.004)) * 100) / 100;
+    
+    // BTC (Bitcoin) - highly volatile
+    const btcPriceVariation = seededRandom(monthSeed + 13, -0.20, 0.28);
+    const btcPrice = Math.round((baseData.btcPrice * (1 + btcPriceVariation + month * 0.008)) * 100) / 100;
+    
+    // GLD (Gold) - low-moderate volatility
+    const gldPriceVariation = seededRandom(monthSeed + 14, -0.05, 0.06);
+    const gldPrice = Math.round((baseData.gldPrice * (1 + gldPriceVariation + month * 0.003)) * 100) / 100;
+    
     // Cash grows with monthly savings, but fluctuates due to expenses
     const emergencyFundGrowth = (month - 1) * 200;
     const emergencyFundVariation = Math.round(seededRandom(monthSeed + 8, -300, 300));
     const checkingVariation = Math.round(seededRandom(monthSeed + 9, -500, 500));
+    const brokerageVariation = Math.round(seededRandom(monthSeed + 15, -400, 600));
+    
+    // Pension pots accumulate monthly contributions plus small market moves
+    const employerPensionValue = Math.round(baseData.employerPension + (month - 1) * 350 + seededRandom(monthSeed + 16, -200, 400));
+    const privatePensionValue = Math.round(baseData.privatePension + (month - 1) * 180 + seededRandom(monthSeed + 17, -150, 250));
     
     // Only freeze months if target year is current year and month is in the past
     const isFrozen = targetYear === currentYear && month < currentMonth;
@@ -246,6 +290,36 @@ export function generateDemoNetWorthDataForYear(targetYear: number, previousYear
         currency: 'EUR' as SupportedCurrency, 
         assetClass: 'BONDS' as const
       },
+      // REAL ESTATE (REIT)
+      { 
+        id: `demo-asset-${targetYear}-${month}-9`, 
+        ticker: 'VNQ', 
+        name: 'Real Estate REIT', 
+        shares: baseData.vnqShares, 
+        pricePerShare: vnqPrice, 
+        currency: 'EUR' as SupportedCurrency, 
+        assetClass: 'REAL_ESTATE' as const
+      },
+      // CRYPTO
+      { 
+        id: `demo-asset-${targetYear}-${month}-10`, 
+        ticker: 'BTC', 
+        name: 'Bitcoin', 
+        shares: baseData.btcShares, 
+        pricePerShare: btcPrice, 
+        currency: 'EUR' as SupportedCurrency, 
+        assetClass: 'CRYPTO' as const
+      },
+      // COMMODITIES (Gold)
+      { 
+        id: `demo-asset-${targetYear}-${month}-11`, 
+        ticker: 'GLD', 
+        name: 'Gold', 
+        shares: baseData.gldShares, 
+        pricePerShare: gldPrice, 
+        currency: 'EUR' as SupportedCurrency, 
+        assetClass: 'COMMODITIES' as const
+      },
     ];
     
     const cashEntries: CashEntry[] = [
@@ -263,9 +337,31 @@ export function generateDemoNetWorthDataForYear(targetYear: number, previousYear
         balance: Math.max(500, baseData.checking + checkingVariation), 
         currency: 'EUR' as SupportedCurrency 
       },
+      { 
+        id: `demo-cash-${targetYear}-${month}-3`, 
+        accountName: 'Brokerage Cash', 
+        accountType: 'BROKERAGE' as const, 
+        balance: Math.max(500, baseData.brokerage + brokerageVariation), 
+        currency: 'EUR' as SupportedCurrency 
+      },
     ];
     
-    const pensions: PensionEntry[] = [];
+    const pensions: PensionEntry[] = [
+      { 
+        id: `demo-pension-${targetYear}-${month}-1`, 
+        name: 'Company Pension', 
+        currentValue: employerPensionValue, 
+        currency: 'EUR' as SupportedCurrency, 
+        pensionType: 'EMPLOYER' as const 
+      },
+      { 
+        id: `demo-pension-${targetYear}-${month}-2`, 
+        name: 'Private Pension', 
+        currentValue: privatePensionValue, 
+        currency: 'EUR' as SupportedCurrency, 
+        pensionType: 'PRIVATE' as const 
+      },
+    ];
     
     const operations: FinancialOperation[] = month % 3 === 0 ? [
       { id: `demo-op-${targetYear}-${month}-1`, date: `${targetYear}-${String(month).padStart(2, '0')}-15`, type: 'PURCHASE' as const, description: 'Monthly DCA - Various ETFs', amount: 500, currency: 'EUR' as SupportedCurrency },

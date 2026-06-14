@@ -24,11 +24,12 @@
 import { AssetMetadata, RegionWeight } from '../types/portfolioBreakdown';
 import { yahooFetch, hasRateLimitCapacity, YahooRateLimitError } from './yahooProxy';
 import { inferEtfInfo, isinToCountryCode } from './etfHeuristics';
+import { inferIndexSectorWeights } from './indexSectorWeights';
 import { logger } from './logger';
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const CACHE_PREFIX = 'fire-tools:asset-metadata:';
-const CACHE_VERSION = 2; // bumped when fields/strategy change
+const CACHE_VERSION = 3; // bumped when fields/strategy change
 
 interface CachedEntry {
   v: number;
@@ -193,12 +194,28 @@ export async function fetchAssetMetadata(
       fetchedAt: new Date().toISOString(),
     };
 
-    // ETFs: fill in provider / region theme / sector theme from the long name.
+    // ETFs: fill in provider / region theme / sector exposure from the long name.
     if (quoteType === 'ETF' || quoteType === 'MUTUALFUND') {
       const etf = inferEtfInfo(match.longname, match.shortname);
       if (etf.provider) meta.fundFamily = etf.provider;
       if (etf.regionTheme) meta.country = etf.regionTheme; // used by continent/region
-      if (!meta.sector && etf.sectorTheme) meta.sector = etf.sectorTheme;
+
+      // Industry-sector exposure, in priority order:
+      //   1. A specific single-sector / bond / commodity / real-estate theme from
+      //      the fund name wins (e.g. "Technology", "Government Bonds", "Gold").
+      //   2. Otherwise a broad index (S&P 500, MSCI World, All-World, ...) is
+      //      expanded into real GICS industry sectors so the "By Sector" breakdown
+      //      is industry-based (Technology, Financial Services, ...) instead of a
+      //      single region bucket.
+      if (etf.sectorTheme) {
+        if (!meta.sector) meta.sector = etf.sectorTheme;
+      } else if (!meta.sector) {
+        const indexWeights = inferIndexSectorWeights(match.longname, match.shortname);
+        if (indexWeights && indexWeights.length > 0) {
+          meta.sectorWeightings = indexWeights;
+        }
+      }
+
       if (etf.regionTheme) {
         const regionWeightings: RegionWeight[] = [{ region: etf.regionTheme, weight: 1 }];
         meta.regionWeightings = regionWeightings;

@@ -76,7 +76,7 @@ describe('yahooMetadata', () => {
       expect(meta.country).toBe('US');
     });
 
-    it('applies ETF heuristics for an ETF', async () => {
+    it('applies ETF heuristics and expands broad indices into industry sectors', async () => {
       mockedFetch.mockResolvedValueOnce({
         quotes: [
           {
@@ -95,8 +95,34 @@ describe('yahooMetadata', () => {
       expect(meta.fundFamily).toBe('Vanguard');
       expect(meta.exchange).toBe('XETRA');
       expect(meta.country).toBe('Global');
-      expect(meta.sector).toBe('Global Equity');
+      // No fake "Global Equity" single-sector label anymore.
+      expect(meta.sector).toBeUndefined();
+      // Expanded into real industry sectors that sum to ~1.
+      expect(meta.sectorWeightings?.length).toBeGreaterThan(5);
+      const labels = meta.sectorWeightings?.map(w => w.sector) ?? [];
+      expect(labels).toContain('Technology');
+      expect(labels).toContain('Financial Services');
+      const total = (meta.sectorWeightings ?? []).reduce((s, w) => s + w.weight, 0);
+      expect(total).toBeCloseTo(1, 5);
       expect(meta.regionWeightings?.[0]).toEqual({ region: 'Global', weight: 1 });
+    });
+
+    it('keeps a specific single-sector label for sector-themed ETFs', async () => {
+      mockedFetch.mockResolvedValueOnce({
+        quotes: [
+          {
+            symbol: 'XGOV',
+            shortname: 'iShares Govt Bond',
+            longname: 'iShares Euro Government Bond 7-10yr UCITS ETF',
+            quoteType: 'ETF',
+            exchDisp: 'XETRA',
+          },
+        ],
+      });
+
+      const meta = await fetchAssetMetadata('XGOV');
+      expect(meta.sectorWeightings).toBeUndefined();
+      expect(meta.sector).toBe('Government Bonds');
     });
 
     it('caches successful results and reuses on second call', async () => {

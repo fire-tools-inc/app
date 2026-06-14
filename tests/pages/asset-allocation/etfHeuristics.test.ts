@@ -79,9 +79,11 @@ describe('etfHeuristics', () => {
       expect(inferEtfInfo('Financial Select Sector SPDR Fund').sectorTheme).toBe('Financial Services');
     });
 
-    it('falls back to "<Region> Equity" sectorTheme when only a region is matched', () => {
+    it('marks broad region-only equity baskets as Equity without a fake sector label', () => {
       const info = inferEtfInfo('Vanguard FTSE All-World UCITS ETF');
-      expect(info.sectorTheme).toBe('Global Equity');
+      // A region is a region, not an industry sector — broad baskets are expanded
+      // into real industry sectors via inferIndexSectorWeights instead.
+      expect(info.sectorTheme).toBeUndefined();
       expect(info.assetFocus).toBe('Equity');
     });
 
