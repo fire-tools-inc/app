@@ -2764,10 +2764,10 @@ select:disabled {
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 4px 14px rgba(85, 104, 212, 0.25);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.28);
 }
 
 .breakdown-page-link:visited,
@@ -2778,7 +2778,7 @@ select:disabled {
 
 .breakdown-page-link:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(45, 212, 191, 0.35);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.45);
   color: #fff;
   text-decoration: none;
 }
@@ -2788,10 +2788,10 @@ select:disabled {
 }
 
 .backtest-section .action-btn {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 4px 14px rgba(85, 104, 212, 0.25);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.28);
 }
 
 .backtest-section .action-btn:disabled {
