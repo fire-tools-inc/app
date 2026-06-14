@@ -147,6 +147,13 @@ function CustomLink({
   const targetFill = payload.target.fill ?? '#94A3B8';
   const gradientId = `lg-${index}`;
 
+  // Recharts passes sourceY/targetY as the CENTRE line of the band (it strokes
+  // the centreline with strokeWidth=linkWidth). We fill an explicit ribbon, so
+  // offset by half the width to keep the band centred and aligned with nodes.
+  const half = linkWidth / 2;
+  const sTop = sourceY - half;
+  const tTop = targetY - half;
+
   return (
     <g>
       <defs>
@@ -157,10 +164,10 @@ function CustomLink({
       </defs>
       <path
         d={`
-          M${sourceX},${sourceY}
-          C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
-          L${targetX},${targetY + linkWidth}
-          C${targetControlX},${targetY + linkWidth} ${sourceControlX},${sourceY + linkWidth} ${sourceX},${sourceY + linkWidth}
+          M${sourceX},${sTop}
+          C${sourceControlX},${sTop} ${targetControlX},${tTop} ${targetX},${tTop}
+          L${targetX},${tTop + linkWidth}
+          C${targetControlX},${tTop + linkWidth} ${sourceControlX},${sTop + linkWidth} ${sourceX},${sTop + linkWidth}
           Z
         `}
         fill={`url(#${gradientId})`}
