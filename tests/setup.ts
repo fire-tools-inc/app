@@ -3,7 +3,7 @@
 import { vi } from 'vitest';
 import '../src/i18n';
 
-vi.stubGlobal('__APP_VERSION__', '2.2.17');
+vi.stubGlobal('__APP_VERSION__', '2.2.18');
 vi.stubGlobal('__APP_COMMIT_HASH__', 'testcommit');
 vi.stubGlobal('__APP_BUILD_TIME__', '2024-01-01T00:00:00.000Z');
 vi.stubGlobal('__APP_DEPENDENCIES__', { react: '19.0.0' });
