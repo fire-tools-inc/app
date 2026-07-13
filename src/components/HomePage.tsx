@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { PreloadLink } from './PreloadLink';
 import './HomePage.css';
 
 export function HomePage() {
@@ -19,7 +19,7 @@ export function HomePage() {
       </section>
 
       <section className="features-grid" aria-label={t('home.toolsLabel')}>
-        <Link to="/asset-allocation" className="feature-card" aria-labelledby="asset-allocation-title">
+        <PreloadLink to="/asset-allocation" className="feature-card" aria-labelledby="asset-allocation-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="pie_chart" size="large" /></div>
           <h3 id="asset-allocation-title" className="feature-card-title">{t('home.cards.assetAllocation.title')}</h3>
           <p>
@@ -31,9 +31,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="show_chart" size="small" /> {t('home.cards.assetAllocation.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.assetAllocation.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/expense-tracker" className="feature-card" aria-labelledby="expense-tracker-title">
+        <PreloadLink to="/expense-tracker" className="feature-card" aria-labelledby="expense-tracker-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="account_balance_wallet" size="large" /></div>
           <h3 id="expense-tracker-title" className="feature-card-title">{t('home.cards.cashflow.title')}</h3>
           <p>
@@ -45,9 +45,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="analytics" size="small" /> {t('home.cards.cashflow.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.cashflow.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/net-worth-tracker" className="feature-card" aria-labelledby="net-worth-title">
+        <PreloadLink to="/net-worth-tracker" className="feature-card" aria-labelledby="net-worth-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="paid" size="large" /></div>
           <h3 id="net-worth-title" className="feature-card-title">{t('home.cards.netWorth.title')}</h3>
           <p>
@@ -59,9 +59,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="elderly" size="small" /> {t('home.cards.netWorth.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.netWorth.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/fire-calculator" className="feature-card" aria-labelledby="fire-calc-title">
+        <PreloadLink to="/fire-calculator" className="feature-card" aria-labelledby="fire-calc-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="local_fire_department" size="large" /></div>
           <h3 id="fire-calc-title" className="feature-card-title">{t('home.cards.fireCalculator.title')}</h3>
           <p>
@@ -73,9 +73,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="account_balance_wallet" size="small" /> {t('home.cards.fireCalculator.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.fireCalculator.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/monte-carlo" className="feature-card" aria-labelledby="monte-carlo-title">
+        <PreloadLink to="/monte-carlo" className="feature-card" aria-labelledby="monte-carlo-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="casino" size="large" /></div>
           <h3 id="monte-carlo-title" className="feature-card-title">{t('home.cards.monteCarlo.title')}</h3>
           <p>
@@ -87,9 +87,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="bolt" size="small" /> {t('home.cards.monteCarlo.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.monteCarlo.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/investment-growth" className="feature-card" aria-labelledby="investment-growth-title">
+        <PreloadLink to="/investment-growth" className="feature-card" aria-labelledby="investment-growth-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_up" size="large" /></div>
           <h3 id="investment-growth-title" className="feature-card-title">{t('home.cards.investmentGrowth.title')}</h3>
           <p>
@@ -101,9 +101,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="savings" size="small" /> {t('home.cards.investmentGrowth.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.investmentGrowth.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/portfolio-backtest" className="feature-card" aria-labelledby="portfolio-backtest-title">
+        <PreloadLink to="/portfolio-backtest" className="feature-card" aria-labelledby="portfolio-backtest-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="analytics" size="large" /></div>
           <h3 id="portfolio-backtest-title" className="feature-card-title">{t('home.cards.portfolioBacktest.title')}</h3>
           <p>
@@ -115,9 +115,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="table_chart" size="small" /> {t('home.cards.portfolioBacktest.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.portfolioBacktest.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/withdrawal-rate" className="feature-card" aria-labelledby="withdrawal-rate-title">
+        <PreloadLink to="/withdrawal-rate" className="feature-card" aria-labelledby="withdrawal-rate-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="trending_down" size="large" /></div>
           <h3 id="withdrawal-rate-title" className="feature-card-title">{t('home.cards.withdrawalRate.title')}</h3>
           <p>
@@ -129,9 +129,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="verified" size="small" /> {t('home.cards.withdrawalRate.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.withdrawalRate.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/questionnaire" className="feature-card" aria-labelledby="fire-quiz-title">
+        <PreloadLink to="/questionnaire" className="feature-card" aria-labelledby="fire-quiz-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="quiz" size="large" /></div>
           <h3 id="fire-quiz-title" className="feature-card-title">{t('home.cards.quiz.title')}</h3>
           <p>
@@ -143,9 +143,9 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="trending_up" size="small" /> {t('home.cards.quiz.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.quiz.cta')}</span>
-        </Link>
+        </PreloadLink>
 
-        <Link to="/debt-payoff" className="feature-card" aria-labelledby="debt-payoff-title">
+        <PreloadLink to="/debt-payoff" className="feature-card" aria-labelledby="debt-payoff-title">
           <div className="feature-icon" aria-hidden="true"><MaterialIcon name="credit_score" size="large" /></div>
           <h3 id="debt-payoff-title" className="feature-card-title">{t('home.cards.debtPayoff.title')}</h3>
           <p>
@@ -157,7 +157,7 @@ export function HomePage() {
             <span className="highlight-item"><MaterialIcon name="show_chart" size="small" /> {t('home.cards.debtPayoff.h3')}</span>
           </div>
           <span className="cta-link" aria-hidden="true">{t('home.cards.debtPayoff.cta')}</span>
-        </Link>
+        </PreloadLink>
       </section>
     </main>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { loadTourCompleted, saveTourCompleted } from '../utils/tourPreferences';
@@ -385,7 +385,7 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
     }
   }, [isDragging, handleDragMove, handleDragEnd]);
 
-  const tourSteps: TourStep[] = [
+  const tourSteps = useMemo<TourStep[]>(() => [
     {
       title: t('guidedTour.overview.welcome.title'),
       icon: 'waving_hand',
@@ -515,10 +515,10 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
         </div>
       ),
     },
-  ];
+  ], [t]);
 
   // Interactive tour steps for each page
-  const fireCalculatorSteps: InteractiveStep[] = [
+  const fireCalculatorSteps = useMemo<InteractiveStep[]>(() => [
     {
       page: '/fire-calculator',
       title: t('guidedTour.interactive.fireCalculator.initialSavings.title'),
@@ -577,9 +577,9 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       position: 'center',
       elementSelector: '[data-tour="charts-section"]',
     },
-  ];
+  ], [t]);
 
-  const assetAllocationSteps: InteractiveStep[] = [
+  const assetAllocationSteps = useMemo<InteractiveStep[]>(() => [
     {
       page: '/asset-allocation',
       title: t('guidedTour.interactive.assetAllocation.yourAssets.title'),
@@ -664,9 +664,9 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       isDialogStep: true,
       closeDialogAfter: true,
     },
-  ];
+  ], [t]);
 
-  const expenseTrackerSteps: InteractiveStep[] = [
+  const expenseTrackerSteps = useMemo<InteractiveStep[]>(() => [
     {
       page: '/expense-tracker',
       title: t('guidedTour.interactive.expenseTracker.addIncome.title'),
@@ -758,9 +758,9 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       position: 'center',
       elementSelector: '[data-tour="expense-tabs"], [data-tour="analytics-content"]',
     },
-  ];
+  ], [t]);
 
-  const netWorthSteps: InteractiveStep[] = [
+  const netWorthSteps = useMemo<InteractiveStep[]>(() => [
     {
       page: '/net-worth-tracker',
       title: t('guidedTour.interactive.netWorth.logAssets.title'),
@@ -809,10 +809,10 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       position: 'center',
       elementSelector: '[data-tour="sync-options"]',
     },
-  ];
+  ], [t]);
 
   // Monte Carlo Simulation steps
-  const monteCarloSteps: InteractiveStep[] = [
+  const monteCarloSteps = useMemo<InteractiveStep[]>(() => [
     {
       page: '/monte-carlo',
       title: t('guidedTour.interactive.monteCarlo.baseData.title'),
@@ -850,15 +850,15 @@ export function GuidedTour({ onTourComplete }: GuidedTourProps) {
       position: 'center',
       elementSelector: '[data-tour="monte-carlo-logs"]',
     },
-  ];
+  ], [t]);
 
-  const pageTours: Record<string, { steps: InteractiveStep[]; nextPage: string | null; previousPage: string | null; pageName: string }> = {
+  const pageTours = useMemo<Record<string, { steps: InteractiveStep[]; nextPage: string | null; previousPage: string | null; pageName: string }>>(() => ({
     '/fire-calculator': { steps: fireCalculatorSteps, nextPage: '/asset-allocation', previousPage: null, pageName: t('guidedTour.pageNames.assetAllocation') },
     '/asset-allocation': { steps: assetAllocationSteps, nextPage: '/expense-tracker', previousPage: '/fire-calculator', pageName: t('guidedTour.pageNames.cashflowTracker') },
     '/expense-tracker': { steps: expenseTrackerSteps, nextPage: '/net-worth-tracker', previousPage: '/asset-allocation', pageName: t('guidedTour.pageNames.netWorthTracker') },
     '/net-worth-tracker': { steps: netWorthSteps, nextPage: '/monte-carlo', previousPage: '/expense-tracker', pageName: t('guidedTour.pageNames.monteCarlo') },
     '/monte-carlo': { steps: monteCarloSteps, nextPage: null, previousPage: '/net-worth-tracker', pageName: '' },
-  };
+  }), [assetAllocationSteps, expenseTrackerSteps, fireCalculatorSteps, monteCarloSteps, netWorthSteps, t]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {

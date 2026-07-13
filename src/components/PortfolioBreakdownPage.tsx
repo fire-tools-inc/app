@@ -25,6 +25,7 @@ import { MaterialIcon } from './MaterialIcon';
 import { BreakdownChart } from './BreakdownChart';
 import { PrivacyBlur } from './PrivacyBlur';
 import { ScrollToTopButton } from './ScrollToTopButton';
+import './AssetAllocationManager.css';
 import './PortfolioBreakdownPage.css';
 
 interface DimensionConfig {

@@ -6,7 +6,10 @@
     "disclaimer": "Fire Tools - Disclaimer: This is for educational purposes only. Market data is provided as an indication only and may be delayed or inaccurate. Consult with a financial advisor for professional advice.",
     "privacyPolicy": "Privacy Policy",
     "cookiePolicy": "Cookie Policy",
-    "github": "GitHub"
+    "github": "GitHub",
+    "routeLoadErrorTitle": "This tool couldn't be loaded",
+    "routeLoadErrorBody": "The app may have been updated while it was open. Reload to use the latest files.",
+    "reload": "Reload app"
   },
   "common": {
     "save": "Save",

@@ -24,87 +24,6 @@
   flex-wrap: wrap;
 }
 
-.action-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.add-btn {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
-}
-
-/* Primary action button (Add Asset) - more prominent with teal color */
-.primary-btn {
-  background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
-  color: white;
-  font-weight: 700;
-  border: none;
-}
-
-.primary-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
-}
-
-/* Reset button styling - lighter grey for visibility */
-.reset-btn {
-  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
-  color: white;
-  border: 1px solid #9CA3AF;
-}
-
-.reset-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.5);
-  background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
-}
-
-/* Back button styling - blue */
-.back-btn {
-  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
-  color: white;
-}
-
-.back-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-}
-
-/* Start Over button styling - orange-ish */
-.start-over-btn {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
-  color: white;
-}
-
-.start-over-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
-}
-
-.export-btn {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
-  color: white;
-}
-
-.import-btn {
-  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
-  color: white;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .validation-errors {
   background: rgba(239, 68, 68, 0.2);
   border: 2px solid var(--error);
@@ -374,32 +293,6 @@
 .class-select:focus {
   outline: none;
   border-color: var(--accent-primary);
-}
-
-/* Info Section */
-.allocation-info {
-  background: var(--bg-tertiary);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-}
-
-.allocation-info h4 {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.allocation-info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.allocation-info li {
-  padding: 0.5rem 0;
-  line-height: 1.6;
-  color: var(--text-secondary);
 }
 
 .info-badge {
@@ -1080,40 +973,6 @@
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
-}
-
-/* Collapsible How to Use section */
-.collapsible-section {
-  background: var(--bg-elevated);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.collapsible-header {
-  cursor: pointer;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.collapsible-header h4 {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.collapse-icon-small {
-  font-size: 0.8rem;
-  margin-left: 0.5rem;
-}
-
-.how-to-use-content {
-  margin-top: 1rem;
-  padding-left: 1.5rem;
 }
 
 /* Section header with actions */
@@ -2330,21 +2189,6 @@ select:disabled {
   .asset-class-table th:first-child {
     background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
     z-index: 3;
-  }
-
-  /* Collapsible sections */
-  .collapsible-section {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .how-to-use-content {
-    font-size: 0.9rem;
-    padding-left: 1rem;
-  }
-
-  .how-to-use-content li {
-    margin-bottom: 0.5rem;
   }
 
   /* Class selector */

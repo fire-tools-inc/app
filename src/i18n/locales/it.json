@@ -6,7 +6,10 @@
     "disclaimer": "Fire Tools - Avvertenza: questo strumento ha scopo puramente educativo. I dati di mercato sono forniti a titolo indicativo e potrebbero essere ritardati o inesatti. Per consigli professionali rivolgiti a un consulente finanziario.",
     "privacyPolicy": "Informativa sulla privacy",
     "cookiePolicy": "Informativa sui cookie",
-    "github": "GitHub"
+    "github": "GitHub",
+    "routeLoadErrorTitle": "Impossibile caricare questo strumento",
+    "routeLoadErrorBody": "L'app potrebbe essere stata aggiornata mentre era aperta. Ricaricala per usare i file più recenti.",
+    "reload": "Ricarica l'app"
   },
   "common": {
     "save": "Salva",
