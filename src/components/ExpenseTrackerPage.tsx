@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchableSelect, SelectOption } from './SearchableSelect';
 import { useSearchParams } from 'react-router-dom';
@@ -45,19 +45,37 @@ import {
 import { loadSettings, saveSettings, type DateFormat } from '../utils/cookieSettings';
 import { formatDate } from '../utils/dateFormatter';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
+import { createLazyComponent } from '../utils/lazyComponent';
 import { useTableSort } from '../utils/useTableSort';
 import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberFormatter';
 import { DataManagement } from './DataManagement';
-import { ExpenseBreakdownChart } from './ExpenseBreakdownChart';
-import { SpendingTrendChart } from './SpendingTrendChart';
-import { MonthlyComparisonChart } from './MonthlyComparisonChart';
 import { ValidatedNumberInput } from './ValidatedNumberInput';
 import { MaterialIcon } from './MaterialIcon';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { PDFImportDialog } from './PDFImportDialog';
+import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
+import './PeriodSelector.css';
 import './ExpenseTrackerPage.css';
+
+const ExpenseBreakdownChart = createLazyComponent(
+  'expense-breakdown-chart',
+  () => import('./ExpenseBreakdownChart').then((module) => module.ExpenseBreakdownChart),
+  () => <ChartLoadFailure />,
+);
+
+const SpendingTrendChart = createLazyComponent(
+  'spending-trend-chart',
+  () => import('./SpendingTrendChart').then((module) => module.SpendingTrendChart),
+  () => <ChartLoadFailure />,
+);
+
+const MonthlyComparisonChart = createLazyComponent(
+  'monthly-comparison-chart',
+  () => import('./MonthlyComparisonChart').then((module) => module.MonthlyComparisonChart),
+  () => <ChartLoadFailure />,
+);
 
 // Month names for display
 const MONTH_NAMES = [
@@ -1415,32 +1433,38 @@ export function ExpenseTrackerPage() {
               <h4>
                 {t('expenseTracker.expenseBreakdown', { period: periodLabel })}
               </h4>
-              <ExpenseBreakdownChart 
-                data={categoryBreakdown}
-                currency={data.currency}
-                customCategories={data.customCategories}
-              />
+              <Suspense fallback={<ChartLoadingFallback />}>
+                <ExpenseBreakdownChart
+                  data={categoryBreakdown}
+                  currency={data.currency}
+                  customCategories={data.customCategories}
+                />
+              </Suspense>
             </div>
 
             {/* Monthly Comparison Chart */}
             <div className="chart-container">
               <h4>{t('expenseTracker.monthlySpendingComparison')}</h4>
               <PrivacyBlur isPrivacyMode={isPrivacyMode}>
-                <MonthlyComparisonChart 
-                  data={monthlyComparisonData}
-                  currency={data.currency}
-                />
+                <Suspense fallback={<ChartLoadingFallback />}>
+                  <MonthlyComparisonChart
+                    data={monthlyComparisonData}
+                    currency={data.currency}
+                  />
+                </Suspense>
               </PrivacyBlur>
             </div>
 
             {/* Category Trends Chart */}
             <div className="chart-container">
               <h4>{t('expenseTracker.categorySpendingTrends')}</h4>
-              <SpendingTrendChart 
-                data={categoryTrendsData}
-                currency={data.currency}
-                customCategories={data.customCategories}
-              />
+              <Suspense fallback={<ChartLoadingFallback />}>
+                <SpendingTrendChart
+                  data={categoryTrendsData}
+                  currency={data.currency}
+                  customCategories={data.customCategories}
+                />
+              </Suspense>
             </div>
 
             {/* Category Breakdown Table */}

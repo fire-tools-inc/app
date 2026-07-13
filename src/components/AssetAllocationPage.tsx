@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
@@ -15,12 +14,13 @@ import { exportAssetAllocationToCSV, importAssetAllocationFromCSV } from '../uti
 import { loadSettings, saveSettings } from '../utils/cookieSettings';
 import { getDemoAssetAllocationData } from '../utils/defaults';
 import { syncAssetAllocationToNetWorth } from '../utils/dataSync';
+import { createLazyComponent } from '../utils/lazyComponent';
 import { useAssetPrices } from '../hooks/useAssetPrices';
+import { useDeferredRender } from '../hooks/useDeferredRender';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { useAuditLog } from '../contexts/AuditLogContext';
 import { MaterialIcon } from './MaterialIcon';
 import { EditableAssetClassTable } from './EditableAssetClassTable';
-import { AllocationChart } from './AllocationChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { CollapsibleAllocationTable } from './CollapsibleAllocationTable';
 import { MassEditDialog } from './MassEditDialog';
@@ -28,6 +28,15 @@ import { DCAHelperDialog } from './DCAHelperDialog';
 import { DataManagement } from './DataManagement';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
+import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
+import { PreloadLink } from './PreloadLink';
+import './AssetAllocationManager.css';
+
+const AllocationChart = createLazyComponent(
+  'allocation-chart',
+  () => import('./AllocationChart').then((module) => module.AllocationChart),
+  () => <ChartLoadFailure />,
+);
 
 /**
  * Calculate cash delta from assets and targets.
@@ -113,6 +122,7 @@ export const AssetAllocationPage: React.FC = () => {
   const [isDCADialogOpen, setIsDCADialogOpen] = useState(false);
   // Charts collapse state
   const [isChartsCollapsed, setIsChartsCollapsed] = useState(false);
+  const renderCharts = useDeferredRender(!isChartsCollapsed);
   // Privacy mode state (loaded from settings, toggleable on page)
   const [isPrivacyMode, setIsPrivacyMode] = useState<boolean>(() => {
     const settings = loadSettings();
@@ -809,32 +819,38 @@ export const AssetAllocationPage: React.FC = () => {
           </button>
           {!isChartsCollapsed && (
             <div id="charts-content" className="charts-row">
-              <AllocationChart
-                data={assetClassChartData}
-                title={t('assetAllocation.charts.byAssetClassLower')}
-                currency={currency}
-              />
+              {renderCharts ? (
+                <Suspense fallback={<ChartLoadingFallback />}>
+                  <AllocationChart
+                    data={assetClassChartData}
+                    title={t('assetAllocation.charts.byAssetClassLower')}
+                    currency={currency}
+                  />
 
-              {selectedAssetClass && (
-                <AllocationChart
-                  data={assetChartData}
-                  title={t('assetAllocation.charts.breakdown', { assetClass: formatAssetName(selectedAssetClass.assetClass) })}
-                  currency={currency}
-                />
+                  {selectedAssetClass && (
+                    <AllocationChart
+                      data={assetChartData}
+                      title={t('assetAllocation.charts.breakdown', { assetClass: formatAssetName(selectedAssetClass.assetClass) })}
+                      currency={currency}
+                    />
+                  )}
+                </Suspense>
+              ) : (
+                <ChartLoadingFallback />
               )}
             </div>
           )}
           {showPortfolioBreakdown && (
             <div className="breakdown-link-row">
-              <Link to="/portfolio-breakdown" className="action-btn breakdown-page-link">
+              <PreloadLink to="/portfolio-breakdown" className="action-btn breakdown-page-link">
                 <MaterialIcon name="donut_large" /> {t('assetAllocation.viewDetailedPortfolioBreakdown')}
-              </Link>
+              </PreloadLink>
             </div>
           )}
           <div className="breakdown-link-row">
-            <Link to="/portfolio-backtest" className="action-btn breakdown-page-link">
+            <PreloadLink to="/portfolio-backtest" className="action-btn breakdown-page-link">
               <MaterialIcon name="analytics" /> {t('assetAllocation.viewPortfolioBacktest')}
-            </Link>
+            </PreloadLink>
           </div>
         </section>
 

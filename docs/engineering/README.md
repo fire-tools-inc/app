@@ -26,9 +26,11 @@ instead.
 +----------------+        +----------------+        +----------------+
 ```
 
-- **Client** — the React app under `src/`. Built with Vite. Identical bundle
-  ships to the web (`dist/`), the desktop apps (Electron loads `dist/`), and
-  any third-party client you build on top of the OpenAPI contract.
+- **Client** — the React app under `src/`. Built with Vite. Tool pages are
+  emitted as route-level chunks, preloaded when navigation intent is detected,
+  chart-heavy views render progressively after the page shell, and language
+  packs load on demand with English kept as the fallback. The same client ships
+  to the web (`dist/`) and Electron.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   default storage; Postgres is supported via a Docker Compose profile.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
@@ -52,6 +54,8 @@ don't need to think about auth on day one.
 | Path | Purpose |
 | ---- | ------- |
 | `src/` | React + TypeScript frontend (Vite) |
+| `src/i18n/` | On-demand translation resources and language setup |
+| `src/routes/` | Lazy route registry and navigation preloading |
 | `server/` | Node.js + Express + better-sqlite3 backend |
 | `electron/` | Electron main + preload (desktop wrapper) |
 | `website/` | Marketing landing page |

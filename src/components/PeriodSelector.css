@@ -1,0 +1,83 @@
+.period-selector {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+}
+
+.selector-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.selector-group label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.selector-group select {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.selector-group select:focus {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-color: var(--accent-primary);
+}
+
+.btn-add-month,
+.btn-current-period {
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-add-month {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+}
+
+.btn-add-month:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-current-period {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+}
+
+.btn-current-period:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  .selector-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .selector-group,
+  .selector-group select,
+  .btn-add-month {
+    width: 100%;
+  }
+}

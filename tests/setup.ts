@@ -1,7 +1,9 @@
 // Global vitest setup. Ensures i18next is initialised with English resources
 // before any component that calls `useTranslation()` is rendered.
 import { vi } from 'vitest';
-import '../src/i18n';
+import { i18nReady } from '../src/i18n';
+
+await i18nReady;
 
 vi.stubGlobal('__APP_VERSION__', '2.2.20');
 vi.stubGlobal('__APP_COMMIT_HASH__', 'testcommit');

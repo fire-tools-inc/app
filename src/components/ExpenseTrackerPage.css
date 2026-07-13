@@ -27,65 +27,6 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Period Selector */
-.period-selector {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: var(--bg-tertiary);
-  border-radius: 8px;
-}
-
-.selector-row {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.selector-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.selector-group label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.selector-group select {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border-subtle);
-  border-radius: 6px;
-  font-size: 1rem;
-  background: var(--bg-secondary);
-  cursor: pointer;
-  min-width: 120px;
-}
-
-.selector-group select:focus {
-  outline: 3px solid var(--accent-primary);
-  outline-offset: 2px;
-  border-color: var(--accent-primary);
-}
-
-.btn-add-month {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-add-month:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
 /* Summary Cards */
 .summary-section {
   margin-bottom: 2rem;
@@ -1109,19 +1050,6 @@
   opacity: 0.9;
 }
 
-/* Visually Hidden (Accessibility) */
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .expense-tracker-page {
@@ -1130,23 +1058,6 @@
 
   .expense-tracker-main {
     padding: 1rem;
-  }
-
-  .selector-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .selector-group {
-    width: 100%;
-  }
-
-  .selector-group select {
-    width: 100%;
-  }
-
-  .btn-add-month {
-    width: 100%;
   }
 
   .summary-cards {
@@ -1212,23 +1123,6 @@
   .transactions-table td {
     padding: 0.5rem;
   }
-}
-
-/* Back to Current Period Button */
-.btn-current-period {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.btn-current-period:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
 }
 
 /* Analytics View Selector */

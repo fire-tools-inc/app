@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import i18n, { DEFAULT_LANGUAGE, setLanguage } from '../../../src/i18n';
 import { LanguageSelector } from '../../../src/components/LanguageSelector';
 import { loadSettings } from '../../../src/utils/cookieSettings';
@@ -58,11 +58,10 @@ describe('LanguageSelector', () => {
 
     fireEvent.change(select, { target: { value: 'de' } });
 
-    // Let the async setLanguage promise resolve.
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(i18n.language).toBe('de');
-    expect(loadSettings().language).toBe('de');
+    await waitFor(() => {
+      expect(i18n.language).toBe('de');
+      expect(loadSettings().language).toBe('de');
+    });
   });
 
   it('falls back to English when i18n is in an unsupported language', async () => {

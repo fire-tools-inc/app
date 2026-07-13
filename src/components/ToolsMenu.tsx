@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { MaterialIcon } from './MaterialIcon';
+import { PreloadLink } from './PreloadLink';
 import { NAVBAR_LABELS } from '../constants/navbarLabels';
 import './ToolsMenu.css';
 
@@ -80,7 +81,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onNavigate, showPortfolioB
       {isOpen && (
         <div className="tools-menu-dropdown" role="menu">
           {tools.map((tool) => (
-            <Link
+            <PreloadLink
               key={tool.to}
               to={tool.to}
               className={`tools-menu-item ${location.pathname === tool.to ? 'active' : ''}`}
@@ -92,7 +93,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({ onNavigate, showPortfolioB
                 <MaterialIcon name={tool.icon} size="small" />
               </span>
               {tool.label}
-            </Link>
+            </PreloadLink>
           ))}
         </div>
       )}

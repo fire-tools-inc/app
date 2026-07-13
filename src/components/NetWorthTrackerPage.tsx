@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -37,16 +37,31 @@ import { generateDemoNetWorthDataForYear } from '../utils/defaults';
 import { syncAssetAllocationToNetWorth, syncNetWorthToAssetAllocation, DEFAULT_ASSET_CLASS_TARGETS } from '../utils/dataSync';
 import { fetchMultipleClosingPricesForMonth } from '../utils/priceApi';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
+import { createLazyComponent } from '../utils/lazyComponent';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
+import { useDeferredRender } from '../hooks/useDeferredRender';
 import { DataManagement } from './DataManagement';
-import { HistoricalNetWorthChart, ChartViewMode } from './HistoricalNetWorthChart';
-import { NetWorthSankeyChart } from './NetWorthSankeyChart';
+import type { ChartViewMode } from './HistoricalNetWorthChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { MaterialIcon } from './MaterialIcon';
 import { SearchableSelect } from './SearchableSelect';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
+import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
+import './PeriodSelector.css';
 import './NetWorthTrackerPage.css';
+
+const HistoricalNetWorthChart = createLazyComponent(
+  'historical-net-worth-chart',
+  () => import('./HistoricalNetWorthChart').then((module) => module.HistoricalNetWorthChart),
+  () => <ChartLoadFailure />,
+);
+
+const NetWorthSankeyChart = createLazyComponent(
+  'net-worth-sankey-chart',
+  () => import('./NetWorthSankeyChart').then((module) => module.NetWorthSankeyChart),
+  () => <ChartLoadFailure />,
+);
 
 // Month names for display
 const MONTH_NAMES = [
@@ -160,6 +175,7 @@ export function NetWorthTrackerPage() {
   
   // Chart view mode (YTD or All historical data)
   const [chartViewMode, setChartViewMode] = useState<ChartViewMode>('ytd');
+  const renderCharts = useDeferredRender(true);
   
   // Privacy mode state (loaded from settings, toggleable on page)
   const [isPrivacyMode, setIsPrivacyMode] = useState<boolean>(() => {
@@ -1288,15 +1304,21 @@ export function NetWorthTrackerPage() {
         {/* Historical Net Worth Chart */}
         <section className="chart-section" data-tour="historical-chart">
           <h3><MaterialIcon name="trending_up" /> {t('netWorth.historicalNetWorth')}</h3>
-          <HistoricalNetWorthChart
-            variations={monthlyVariations}
-            forecast={forecast}
-            currency={data.defaultCurrency}
-            previousYearEnd={previousYearEndValue}
-            viewMode={chartViewMode}
-            onViewModeChange={setChartViewMode}
-            isPrivacyMode={isPrivacyMode}
-          />
+          {renderCharts ? (
+            <Suspense fallback={<ChartLoadingFallback />}>
+              <HistoricalNetWorthChart
+                variations={monthlyVariations}
+                forecast={forecast}
+                currency={data.defaultCurrency}
+                previousYearEnd={previousYearEndValue}
+                viewMode={chartViewMode}
+                onViewModeChange={setChartViewMode}
+                isPrivacyMode={isPrivacyMode}
+              />
+            </Suspense>
+          ) : (
+            <ChartLoadingFallback />
+          )}
         </section>
 
         {/* Wealth Flow Sankey Chart */}
@@ -1306,12 +1328,18 @@ export function NetWorthTrackerPage() {
               <MaterialIcon name="account_tree" /> {t('netWorth.sankey.title')}
             </h3>
             <p className="chart-subtitle">{t('netWorth.sankey.subtitle')}</p>
-            <NetWorthSankeyChart
-              snapshot={currentMonthData}
-              currency={data.defaultCurrency}
-              showPension={data.settings.showPensionInNetWorth}
-              isPrivacyMode={isPrivacyMode}
-            />
+            {renderCharts ? (
+              <Suspense fallback={<ChartLoadingFallback />}>
+                <NetWorthSankeyChart
+                  snapshot={currentMonthData}
+                  currency={data.defaultCurrency}
+                  showPension={data.settings.showPensionInNetWorth}
+                  isPrivacyMode={isPrivacyMode}
+                />
+              </Suspense>
+            ) : (
+              <ChartLoadingFallback />
+            )}
           </section>
         )}
 

@@ -9,6 +9,7 @@ import { formatDisplayCurrency } from '../utils/numberFormatter';
 import { MaterialIcon } from './MaterialIcon';
 import { BacktestSection } from './BacktestSection';
 import { PrivacyBlur } from './PrivacyBlur';
+import './AssetAllocationManager.css';
 
 const calculateActivePortfolioValue = (assets: Asset[]): number =>
   assets

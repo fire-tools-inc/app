@@ -132,6 +132,63 @@ body {
   flex-direction: column;
 }
 
+.route-loading,
+.route-load-error {
+  flex: 1;
+  min-height: 18rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.route-loading .material-symbols-outlined {
+  color: var(--accent-primary);
+  animation: route-loading-spin 900ms linear infinite;
+}
+
+.route-load-error {
+  max-width: 42rem;
+  margin: 0 auto;
+}
+
+.route-load-error > .material-symbols-outlined {
+  color: var(--error);
+}
+
+.route-load-error p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.chart-loading-placeholder,
+.chart-load-error {
+  grid-column: 1 / -1;
+  min-height: 22rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.chart-loading-placeholder .material-symbols-outlined {
+  color: var(--accent-primary);
+  animation: route-loading-spin 900ms linear infinite;
+}
+
+.chart-load-error {
+  color: var(--error);
+}
+
+@keyframes route-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .app-header {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
   backdrop-filter: blur(20px);
@@ -433,6 +490,116 @@ body {
   border-bottom: none;
 }
 
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-btn {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  color: white;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+  color: white;
+  font-weight: 700;
+  border: none;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 150, 136, 0.4);
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  border: 1px solid #9ca3af;
+}
+
+.reset-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.5);
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+}
+
+.back-btn {
+  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
+  color: white;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.start-over-btn {
+  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+  color: white;
+}
+
+.start-over-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.export-btn {
+  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+  color: white;
+}
+
+.import-btn {
+  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
+  color: white;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.allocation-info {
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.allocation-info h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.allocation-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.allocation-info li {
+  padding: 0.5rem 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.collapsible-section {
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-sm);
+}
+
 .collapsible-header {
   width: 100%;
   background: none;
@@ -441,13 +608,18 @@ body {
   text-align: left;
   cursor: pointer;
   transition: opacity var(--transition-fast);
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .collapsible-header h4 {
   color: var(--text-primary);
   font-family: var(--font-heading);
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .collapsible-header:hover {
@@ -457,6 +629,44 @@ body {
 .collapsible-header:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+.collapse-icon-small {
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.how-to-use-content {
+  margin-top: 1rem;
+  padding-left: 1.5rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 767px) {
+  .collapsible-section {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .how-to-use-content {
+    font-size: 0.9rem;
+    padding-left: 1rem;
+  }
+
+  .how-to-use-content li {
+    margin-bottom: 0.5rem;
+  }
 }
 
 .form-section h3 {

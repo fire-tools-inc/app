@@ -6,7 +6,10 @@
     "disclaimer": "Fire Tools – Hinweis: Diese Tools dienen ausschließlich Bildungszwecken. Marktdaten sind nur indikativ und können verzögert oder ungenau sein. Wenden Sie sich für professionelle Beratung an eine Finanzberatung.",
     "privacyPolicy": "Datenschutzerklärung",
     "cookiePolicy": "Cookie-Richtlinie",
-    "github": "GitHub"
+    "github": "GitHub",
+    "routeLoadErrorTitle": "Dieses Tool konnte nicht geladen werden",
+    "routeLoadErrorBody": "Die App wurde möglicherweise aktualisiert, während sie geöffnet war. Lade sie neu, um die neuesten Dateien zu verwenden.",
+    "reload": "App neu laden"
   },
   "common": {
     "save": "Speichern",
