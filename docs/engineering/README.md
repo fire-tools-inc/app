@@ -29,8 +29,9 @@ instead.
 - **Client** — the React app under `src/`. Built with Vite. Tool pages are
   emitted as route-level chunks, preloaded when navigation intent is detected,
   chart-heavy views render progressively after the page shell, and language
-  packs load on demand with English kept as the fallback. The same client ships
-  to the web (`dist/`) and Electron.
+  packs load on demand with English kept as the fallback. Desktop preference
+  sync also runs behind the application shell, so backend startup does not
+  delay routes. The same client ships to the web (`dist/`) and Electron.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   default storage; Postgres is supported via a Docker Compose profile.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).

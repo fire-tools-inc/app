@@ -1,7 +1,7 @@
 import { BrowserRouter, HashRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 // Use HashRouter under file:// (Electron) so deep links work without a server.
 const Router = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
-import { createContext, lazy, startTransition, Suspense, useContext, useEffect, useState } from 'react';
+import { createContext, lazy, startTransition, Suspense, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './components/HomePage';
 import { ProfileMenu } from './components/ProfileMenu';
@@ -199,26 +199,34 @@ function App() {
   
   // Load settings from localStorage
   const [settings, setSettings] = useState<UserSettings>(() => loadSettings());
-  const [shouldLoadTour] = useState(() => !loadTourCompleted());
+  const [uiPreferencesRevision, setUiPreferencesRevision] = useState(0);
+  const shouldLoadTour = useMemo(
+    () => uiPreferencesRevision > 0 && !loadTourCompleted(),
+    [uiPreferencesRevision],
+  );
   
   // Policy modal state
   const [policyModalType, setPolicyModalType] = useState<PolicyType | null>(null);
 
-  // Mirror persisted UI prefs (tour, banner, questionnaire prompt) from the
-  // backend into local cookies before children mount, so synchronous
-  // load*() helpers see DB-backed values on first render.
-  // In pure-web mode getApiBaseUrl() resolves null and this is a no-op.
-  const [prefsReady, setPrefsReady] = useState(false);
+  // Sync optional UI prefs in the background so backend startup never blocks
+  // the application shell. The tour and questionnaire prompt wait for the
+  // sync, with local cookies used after the timeout.
   useEffect(() => {
     let cancelled = false;
     const TIMEOUT_MS = 800;
+    const refreshPreferenceUi = () => {
+      if (cancelled) return;
+      startTransition(() => {
+        setUiPreferencesRevision((revision) => revision + 1);
+      });
+    };
     const timer = setTimeout(() => {
-      if (!cancelled) setPrefsReady(true);
+      refreshPreferenceUi();
     }, TIMEOUT_MS);
     syncPreferencesFromBackend().finally(() => {
       if (cancelled) return;
       clearTimeout(timer);
-      setPrefsReady(true);
+      refreshPreferenceUi();
     });
     return () => {
       cancelled = true;
@@ -237,10 +245,6 @@ function App() {
   const closePolicy = () => {
     setPolicyModalType(null);
   };
-
-  if (!prefsReady) {
-    return null;
-  }
 
   return (
     <Router basename={basename}>
@@ -332,7 +336,9 @@ function App() {
               <GuidedTour />
             </Suspense>
           )}
-          <QuestionnairePrompt />
+          {uiPreferencesRevision > 0 && (
+            <QuestionnairePrompt preferencesRevision={uiPreferencesRevision} />
+          )}
         </div>
       </PolicyModalContext.Provider>
       </AuditLogProvider>

@@ -141,6 +141,7 @@ declare global {
 const API_VERSION_PREFIX = '/api/v1';
 
 let cachedEmbedded: EmbeddedBackendInfo | null = null;
+let embeddedBackendRequest: Promise<EmbeddedBackendInfo | null> | null = null;
 
 const stripTrailingSlash = (url: string): string => url.replace(/\/+$/, '');
 
@@ -150,14 +151,23 @@ const withVersion = (origin: string): string =>
 export const getEmbeddedBackendInfo = async (): Promise<EmbeddedBackendInfo | null> => {
   if (cachedEmbedded && cachedEmbedded.url) return cachedEmbedded;
   const bridge = window.fireTools;
-  if (!bridge?.getEmbeddedBackend) return null;
-  try {
-    cachedEmbedded = await bridge.getEmbeddedBackend();
-    return cachedEmbedded;
-  } catch (err) {
-    logger.error('api-base', 'backend-resolution-failed', 'failed to resolve embedded backend URL', { pii: { error: (err as Error)?.message } });
-    return null;
-  }
+  const getEmbeddedBackend = bridge?.getEmbeddedBackend;
+  if (!getEmbeddedBackend) return null;
+  if (embeddedBackendRequest) return embeddedBackendRequest;
+
+  embeddedBackendRequest = (async () => {
+    try {
+      cachedEmbedded = await getEmbeddedBackend();
+      return cachedEmbedded;
+    } catch (err) {
+      logger.error('api-base', 'backend-resolution-failed', 'failed to resolve embedded backend URL', { pii: { error: (err as Error)?.message } });
+      return null;
+    } finally {
+      embeddedBackendRequest = null;
+    }
+  })();
+
+  return embeddedBackendRequest;
 };
 
 /**
