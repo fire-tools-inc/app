@@ -3,7 +3,7 @@
  * Shows a prompt to users who completed the tour but haven't taken the questionnaire
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { loadTourCompleted } from '../utils/tourPreferences';
@@ -15,12 +15,21 @@ import {
 import { MaterialIcon } from './MaterialIcon';
 import './QuestionnairePrompt.css';
 
-export function QuestionnairePrompt() {
+interface QuestionnairePromptProps {
+  preferencesRevision?: number;
+}
+
+export function QuestionnairePrompt({
+  preferencesRevision = 0,
+}: QuestionnairePromptProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
+  const sessionSuppressedRef = useRef(false);
 
   useEffect(() => {
+    if (sessionSuppressedRef.current) return;
+
     // Check if user should see the questionnaire prompt:
     // 1. Tour is completed
     // 2. Questionnaire is NOT completed
@@ -32,24 +41,29 @@ export function QuestionnairePrompt() {
     if (tourCompleted && !questionnaireCompleted && !promptDismissed) {
       // Delay showing to avoid overwhelming user with multiple prompts
       const timer = setTimeout(() => {
-        setVisible(true);
+        if (!sessionSuppressedRef.current) setVisible(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+
+    setVisible(false);
+  }, [preferencesRevision]);
 
   const handleStartQuestionnaire = () => {
+    sessionSuppressedRef.current = true;
     setVisible(false);
     navigate('/questionnaire');
   };
 
   const handleDismiss = () => {
+    sessionSuppressedRef.current = true;
     saveQuestionnairePromptDismissed(true);
     setVisible(false);
   };
 
   const handleRemindLater = () => {
     // Just hide for this session without permanently dismissing
+    sessionSuppressedRef.current = true;
     setVisible(false);
   };
 
