@@ -41,20 +41,46 @@ Artifacts land in `release/<version>/`. Defaults: `.dmg` (macOS),
 
 ## Signing & notarization
 
-Env vars (set in CI secrets — never commit):
+Tagged macOS releases must use a **Developer ID Application** certificate and
+Apple notarization. The release workflow fails before building if any required
+secret is missing, then extracts the updater ZIP and verifies its signature,
+Team ID, designated requirement, stapled notarization ticket, and Gatekeeper
+assessment before upload.
 
-| Var                          | Purpose                                    |
-|------------------------------|--------------------------------------------|
-| `CSC_LINK`                   | Path/URL to `.p12` macOS signing cert      |
-| `CSC_KEY_PASSWORD`           | Password for the `.p12`                    |
-| `APPLE_ID`                   | Apple ID for notarization                  |
-| `APPLE_APP_SPECIFIC_PASSWORD`| App-specific password                      |
-| `APPLE_TEAM_ID`              | Apple Developer team id                    |
-| `WINDOWS_CERTIFICATE_LINK`   | Path/URL to Windows code-signing cert      |
-| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows cert            |
+Configure these repository Actions secrets (never commit their values):
 
-Set `notarize: true` in [`../electron-builder.yml`](../electron-builder.yml)
-once macOS notarization credentials are wired into CI.
+| Secret | Purpose |
+|--------|---------|
+| `CSC_LINK` | Base64-encoded Developer ID Application `.p12` |
+| `CSC_KEY_PASSWORD` | Password for the `.p12` |
+| `APPLE_API_KEY_BASE64` | Base64-encoded App Store Connect API key `.p8` |
+| `APPLE_API_KEY_ID` | App Store Connect API key ID |
+| `APPLE_API_ISSUER` | App Store Connect issuer UUID |
+| `APPLE_TEAM_ID` | Apple Developer Team ID; also checked against the signed app |
+| `WINDOWS_CERTIFICATE_LINK` | Path/URL to the Windows code-signing certificate |
+| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows certificate |
+
+Create single-line base64 values on macOS with:
+
+```sh
+base64 -i DeveloperIDApplication.p12 | pbcopy
+base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
+```
+
+Local `npm run electron:dist` builds can still use the ad-hoc `afterSign`
+fallback when no certificate is configured. Those builds are for development
+only and cannot safely self-update.
+
+### Existing unsigned installs
+
+Published macOS builds through v2.3.2 were not Developer ID-signed; recent
+versions, including v2.2.1 and v2.3.2, were ad-hoc signed. macOS assigns each
+ad-hoc build a designated requirement tied to its exact code hash, so ShipIt
+rejects the next version with
+`code failed to satisfy specified code requirement(s)`. Users must download
+and install the **first Developer ID-signed release** manually once.
+Auto-update works normally after that; future certificate renewals under the
+same Apple Team ID do not require another manual migration.
 
 ## Security posture
 
@@ -171,5 +197,3 @@ SHA-256 verification). Clicking **Restore** runs
 
 See [`docs/engineering/auto-updater.md`](../docs/engineering/auto-updater.md)
 for the full design including manifest schema and rollback flow.
-
-
