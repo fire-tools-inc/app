@@ -53,7 +53,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@llamaindex/liteparse": "^2.5.1",
+    "@llamaindex/liteparse": "^2.8.0",
     "@playwright/test": "^1.61.1",
     "@testing-library/react": "^16.3.2",
     "@types/crypto-js": "^4.2.2",
@@ -62,12 +62,12 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
-    "electron": "^43.1.0",
+    "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
     "jsdom": "^29.1.1",
-    "marked": "^18.0.6",
+    "marked": "^18.0.7",
     "typescript": "^7.0.2",
-    "vite": "^8.1.4",
+    "vite": "^8.1.5",
     "vitest": "^4.0.18"
   },
   "dependencies": {
@@ -77,16 +77,16 @@
     "crypto-js": "^4.2.0",
     "electron-updater": "^6.8.9",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.5.2",
+    "express-rate-limit": "^8.6.0",
     "i18next": "^26.3.6",
     "js-cookie": "^3.0.7",
     "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-i18next": "^17.0.9",
+    "react-i18next": "^17.0.10",
     "react-is": "^19.2.7",
     "react-router-dom": "^7.18.1",
-    "recharts": "^3.9.2",
+    "recharts": "^3.10.0",
     "zod": "^4.4.3"
   }
 }
