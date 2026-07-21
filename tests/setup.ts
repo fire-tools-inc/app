@@ -5,7 +5,7 @@ import { i18nReady } from '../src/i18n';
 
 await i18nReady;
 
-vi.stubGlobal('__APP_VERSION__', '2.3.8');
+vi.stubGlobal('__APP_VERSION__', '2.3.9');
 vi.stubGlobal('__APP_COMMIT_HASH__', 'testcommit');
 vi.stubGlobal('__APP_BUILD_TIME__', '2024-01-01T00:00:00.000Z');
 vi.stubGlobal('__APP_DEPENDENCIES__', { react: '19.0.0' });
