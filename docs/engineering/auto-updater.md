@@ -186,6 +186,30 @@ publish:
 files alongside the installer so `electron-updater` can resolve the
 latest version.
 
+### macOS signing requirement
+
+Squirrel.Mac validates an update against the installed app's code-signing
+designated requirement. Ad-hoc signatures use a build-specific `cdhash`, so a
+new build can never satisfy the previous build's requirement even when both
+bundles use the same identifier. Production macOS auto-update therefore
+requires every release to be signed with a Developer ID Application
+certificate from the same Apple Team and notarized.
+
+The macOS release jobs:
+
+1. Require the Developer ID certificate and App Store Connect API-key secrets.
+2. Force electron-builder to fail instead of silently emitting an unsigned app.
+3. Extract the actual updater ZIP and reject unsigned/ad-hoc signatures,
+   unexpected signing authorities or Team IDs, `cdhash`-only designated
+   requirements, missing notarization tickets, and failed Gatekeeper checks.
+
+Published macOS builds through v2.3.2 were not Developer ID-signed; recent
+versions were ad-hoc signed and cannot authenticate the first properly signed
+update. Those users must manually replace the app with the first Developer
+ID-signed release once. Later updates work normally, and Developer ID
+certificate renewal within the same Team ID does not require another manual
+migration.
+
 ### Artifact naming (do not break the updater)
 
 Artifact file names **must not contain spaces**. `electron-builder.yml`
