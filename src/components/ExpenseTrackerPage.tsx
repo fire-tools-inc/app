@@ -1,7 +1,7 @@
 import { Suspense, useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchableSelect, SelectOption } from './SearchableSelect';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import {
   ExpenseTrackerData,
   IncomeEntry,

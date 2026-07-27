@@ -69,7 +69,7 @@ const allDeps: Record<string, string> = {
 }
 const FEATURED_DEPS = [
   'react',
-  'react-router-dom',
+  'react-router',
   'recharts',
   'vite',
   'typescript',

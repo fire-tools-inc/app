@@ -17,7 +17,7 @@ Thank you for your interest in contributing to Fire Tools! This document provide
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js**: Version 20.19.0 or higher (or 22.12.0+, or 24.0.0+)
+- **Node.js**: Version 22.22.0 or higher
 - **npm**: Comes with Node.js
 - **Git**: For version control
 
