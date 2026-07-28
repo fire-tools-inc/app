@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { loadSettings, saveSettings, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, DEFAULT_UPDATER_SETTINGS, MIN_KEEP_BACKUPS, MAX_KEEP_BACKUPS, type UserSettings, type BackendSettings, type UpdaterSettings } from '../utils/cookieSettings';
 import { SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES, type SupportedCurrency } from '../types/currency';
 import { ALL_COUNTRIES, isEUCountry } from '../types/country';

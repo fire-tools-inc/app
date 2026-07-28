@@ -1,6 +1,6 @@
 import { Suspense, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import {
   NetWorthTrackerData,
   MonthlySnapshot,

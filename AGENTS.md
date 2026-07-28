@@ -6,7 +6,7 @@ This document provides comprehensive instructions for AI agents working on the F
 
 ### Frontend Framework
 - **React 19** with TypeScript
-- **React Router DOM v7** for client-side routing
+- **React Router v8** for client-side routing
 - **Vite** as the build tool and development server
 
 ### Visualization & UI
@@ -24,7 +24,7 @@ This document provides comprehensive instructions for AI agents working on the F
 - **jsdom** for DOM simulation in tests
 
 ### Node.js Version Requirements
-- Node.js ^20.19.0 || ^22.12.0 || >=24.0.0
+- Node.js >=22.22.0
 
 ### Backend (implemented — [`server/`](server/))
 Local-deployment / Electron path (issues [#133](https://github.com/fire-tools-inc/app/issues/133),

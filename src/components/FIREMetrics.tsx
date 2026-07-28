@@ -1,5 +1,5 @@
 import { CalculationResult, CalculatorInputs } from '../types/calculator';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import { PrivacyBlur } from './PrivacyBlur';

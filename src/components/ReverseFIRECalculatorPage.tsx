@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router';
 import { CalculatorInputs } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
 import {

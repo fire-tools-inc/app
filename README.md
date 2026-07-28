@@ -1,7 +1,7 @@
 # Fire Tools
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.19.0-brightgreen)](package.json)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.22.0-brightgreen)](package.json)
 
 A privacy-first suite of **FIRE (Financial Independence Retire Early)** planning tools. Financial data is stored locally by default; optional integrations (Yahoo Finance prices, LLM categorization) contact external services only when explicitly enabled.
 

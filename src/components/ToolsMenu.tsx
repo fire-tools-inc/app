@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { MaterialIcon } from './MaterialIcon';
 import { PreloadLink } from './PreloadLink';
 import { NAVBAR_LABELS } from '../constants/navbarLabels';

@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import type { CalculatorInputs, CalculationResult } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
 import { calculateFIRE } from '../utils/fireCalculator';
