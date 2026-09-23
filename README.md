@@ -69,7 +69,7 @@ Use `npm run electron:dev` if you only want Vite + Electron without the backend.
 |------|---------|------------|---------|
 | **Web demo** | None — read-only preview | [Live demo](https://fire-tools-inc.github.io/app/demo/) | Seeded sample data; nothing you enter is saved |
 | **Docker** | SQLite (volume-backed) | `docker compose up -d` → `localhost:8080` | [docs/deployment/](docs/deployment/) |
-| **Electron** | SQLite at OS userData path | `npm run electron:dist` | [electron/README.md](electron/README.md) |
+| **Electron** | SQLite at OS userData path | `npm run electron:dist` | Tagged releases require Developer ID signing and notarization; [desktop docs](electron/README.md) |
 | **Mobile** | Via backend API | Separate Flutter repo | [docs/mobile/](docs/mobile/) |
 
 ---

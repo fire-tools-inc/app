@@ -58,8 +58,10 @@ mac:
         - arm64
   # Code-signing & notarization driven via env:
   #   CSC_LINK, CSC_KEY_PASSWORD (signing cert)
-  #   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID (notarization)
-  notarize: false
+  #   APPLE_API_KEY, APPLE_API_KEY_ID, APPLE_API_ISSUER (notarization)
+  # Tagged releases force code signing in release.yml; local unsigned builds
+  # retain the afterSign ad-hoc fallback for development only.
+  notarize: true
 
 win:
   legalTrademarks: ""
