@@ -13,7 +13,8 @@
 // on the .app bundle so the signature carries the right identifier. This
 // is a no-op on non-macOS platforms or when a real signing identity was
 // already used (CSC_LINK / CSC_NAME set), which already supplies a proper
-// identifier.
+// identifier. Ad-hoc output is for local development only: its designated
+// requirement is build-specific, so Squirrel.Mac cannot use it for updates.
 
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');

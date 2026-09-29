@@ -41,20 +41,93 @@ Artifacts land in `release/<version>/`. Defaults: `.dmg` (macOS),
 
 ## Signing & notarization
 
-Env vars (set in CI secrets — never commit):
+Tagged macOS releases must use a **Developer ID Application** certificate and
+Apple notarization. The release workflow fails before building if any required
+secret is missing, then extracts the updater ZIP and verifies its signature,
+Team ID, designated requirement, stapled notarization ticket, and Gatekeeper
+assessment before upload.
 
-| Var                          | Purpose                                    |
-|------------------------------|--------------------------------------------|
-| `CSC_LINK`                   | Path/URL to `.p12` macOS signing cert      |
-| `CSC_KEY_PASSWORD`           | Password for the `.p12`                    |
-| `APPLE_ID`                   | Apple ID for notarization                  |
-| `APPLE_APP_SPECIFIC_PASSWORD`| App-specific password                      |
-| `APPLE_TEAM_ID`              | Apple Developer team id                    |
-| `WINDOWS_CERTIFICATE_LINK`   | Path/URL to Windows code-signing cert      |
-| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows cert            |
+CI does **not** need an `APPLE_ID`, Apple Account password, or app-specific
+password. It authenticates notarization with an App Store Connect API key.
+However, this is not Apple-account-free: obtaining the certificate and API key
+requires an Apple Account enrolled in the paid Apple Developer Program
+(99 USD per membership year, or local equivalent).
 
-Set `notarize: true` in [`../electron-builder.yml`](../electron-builder.yml)
-once macOS notarization credentials are wired into CI.
+Configure these repository Actions secrets (never commit their values):
+
+| Secret | Purpose |
+|--------|---------|
+| `CSC_LINK` | Base64-encoded Developer ID Application `.p12` |
+| `CSC_KEY_PASSWORD` | Password for the `.p12` |
+| `APPLE_API_KEY_BASE64` | Base64-encoded App Store Connect API key `.p8` |
+| `APPLE_API_KEY_ID` | App Store Connect API key ID |
+| `APPLE_API_ISSUER` | App Store Connect issuer UUID |
+| `APPLE_TEAM_ID` | Apple Developer Team ID; also checked against the signed app |
+| `WINDOWS_CERTIFICATE_LINK` | Path/URL to the Windows code-signing certificate |
+| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows certificate |
+
+### Create the macOS release secrets
+
+1. Enroll the Apple Account that owns the release identity in the
+   [Apple Developer Program](https://developer.apple.com/programs/enroll/).
+2. In **Keychain Access**, choose **Certificate Assistant → Request a
+   Certificate From a Certificate Authority**, enter the account email and a
+   common name, select **Saved to disk**, and save the CSR.
+3. Open
+   [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/certificates/list),
+   add a certificate, choose **Developer ID Application**, upload the CSR, and
+   download the generated `.cer`.
+4. Open the `.cer` so macOS installs it in the login keychain. Under
+   **My Certificates**, confirm the certificate expands to show its private
+   key.
+5. Select the certificate and private key, export them as a password-protected
+   `.p12`, and retain that export password.
+6. Create the signing secrets:
+
+   - `CSC_LINK`: run `base64 -i DeveloperIDApplication.p12 | pbcopy` and use
+     the clipboard contents.
+   - `CSC_KEY_PASSWORD`: use the `.p12` export password.
+   - `APPLE_TEAM_ID`: use the 10-character Team ID shown in the Apple Developer
+     membership details or in the certificate name's final parentheses.
+
+7. In [App Store Connect](https://appstoreconnect.apple.com/), the Account
+   Holder must first open **Users and Access → Integrations** and request App
+   Store Connect API access if it has not already been enabled.
+8. As an Account Holder or Admin, open **Users and Access → Integrations →
+   Team Keys**, generate a Team Key with **App Manager** access, and download
+   the `.p8` file immediately. Apple allows each private key to be downloaded
+   only once.
+9. Create the notarization secrets:
+
+   - `APPLE_API_KEY_BASE64`: run
+     `base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy` and use the clipboard contents.
+   - `APPLE_API_KEY_ID`: copy the Key ID displayed for that Team Key.
+   - `APPLE_API_ISSUER`: copy the Issuer ID displayed on the Team Keys page.
+
+10. In the GitHub repository, open **Settings → Secrets and variables →
+    Actions**, choose **New repository secret**, and add all six values exactly
+    as named above.
+
+The App Store Connect API key replaces Apple ID/password authentication only
+for automation. Without paid Apple Developer Program membership there is no
+supported way to issue a Developer ID Application certificate or notarize the
+app; macOS distribution must then remain manual and the Squirrel auto-updater
+must stay disabled.
+
+Local `npm run electron:dist` builds can still use the ad-hoc `afterSign`
+fallback when no certificate is configured. Those builds are for development
+only and cannot safely self-update.
+
+### Existing unsigned installs
+
+Published macOS builds through v2.3.2 were not Developer ID-signed; recent
+versions, including v2.2.1 and v2.3.2, were ad-hoc signed. macOS assigns each
+ad-hoc build a designated requirement tied to its exact code hash, so ShipIt
+rejects the next version with
+`code failed to satisfy specified code requirement(s)`. Users must download
+and install the **first Developer ID-signed release** manually once.
+Auto-update works normally after that; future certificate renewals under the
+same Apple Team ID do not require another manual migration.
 
 ## Security posture
 
@@ -171,5 +244,3 @@ SHA-256 verification). Clicking **Restore** runs
 
 See [`docs/engineering/auto-updater.md`](../docs/engineering/auto-updater.md)
 for the full design including manifest schema and rollback flow.
-
-
