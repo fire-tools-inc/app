@@ -1,6 +1,6 @@
 {
   "name": "fire-tools",
-  "version": "2.3.39",
+  "version": "2.3.40",
   "description": "FIRE tools including calculator with Monte Carlo simulations and asset allocation manager",
   "type": "module",
   "engines": {
