@@ -51,6 +51,24 @@ describe('CORS handling', () => {
 });
 
 describe('Route mounting', () => {
+  it('returns a validation error for malformed JSON', async () => {
+    const { app, db } = makeApp();
+    const res = await request(app).put('/api/v1/settings')
+      .set('Content-Type', 'application/json').send('{"broken":');
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
+    db.close();
+  });
+
+  it('returns a clear payload limit error instead of an internal error', async () => {
+    const { app, db } = makeApp();
+    const res = await request(app).put('/api/v1/settings')
+      .send({ data: 'x'.repeat(2 * 1024 * 1024) });
+    expect(res.status).toBe(413);
+    expect(res.body.error.code).toBe('payload_too_large');
+    db.close();
+  });
+
   it('all routers mounted under /api/v1', async () => {
     const { app } = makeApp();
     const paths = [

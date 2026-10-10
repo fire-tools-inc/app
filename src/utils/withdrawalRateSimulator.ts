@@ -44,13 +44,20 @@ export interface WithdrawalRateSweepPoint extends WithdrawalRateResult {}
 const DEFAULT_BLACK_SWAN_BOND_DAMPER = 2; // bonds get half the impact
 
 function validateAllocation(inputs: WithdrawalRateInputs): string | null {
+  for (const [field, value] of Object.entries(inputs)) {
+    if (!Number.isFinite(value)) return `${field} must be finite`;
+  }
   const sum = inputs.stocksPercent + inputs.bondsPercent + inputs.cashPercent;
   if (Math.abs(sum - 100) > 0.01) {
     return `Asset allocation must sum to 100% (got ${sum.toFixed(2)}%)`;
   }
   if (inputs.initialPortfolio <= 0) return 'initialPortfolio must be greater than 0';
-  if (inputs.retirementYears <= 0) return 'retirementYears must be greater than 0';
-  if (inputs.numSimulations <= 0) return 'numSimulations must be greater than 0';
+  if (!Number.isInteger(inputs.retirementYears) || inputs.retirementYears <= 0 || inputs.retirementYears > 150) {
+    return 'retirementYears must be an integer between 1 and 150';
+  }
+  if (!Number.isInteger(inputs.numSimulations) || inputs.numSimulations <= 0 || inputs.numSimulations > 100_000) {
+    return 'numSimulations must be an integer between 1 and 100000';
+  }
   return null;
 }
 
@@ -136,7 +143,7 @@ export function runWithdrawalRateSimulation(
 ): WithdrawalRateResult {
   const err = validateAllocation(inputs);
   if (err) throw new Error(err);
-  if (withdrawalRate <= 0) throw new Error('withdrawalRate must be greater than 0');
+  if (!Number.isFinite(withdrawalRate) || withdrawalRate <= 0) throw new Error('withdrawalRate must be greater than 0');
 
   const years: number[] = [];
   const finals: number[] = [];
@@ -149,8 +156,8 @@ export function runWithdrawalRateSimulation(
     if (r.survived) successCount++;
   }
 
-  const yearsSorted = [...years].sort((a, b) => a - b);
-  const finalsSorted = [...finals].sort((a, b) => a - b);
+  const yearsSorted = years.sort((a, b) => a - b);
+  const finalsSorted = finals.sort((a, b) => a - b);
 
   return {
     withdrawalRate,
@@ -178,8 +185,16 @@ export function runWithdrawalRateSweep(
  * with the given step. E.g. (2, 7, 0.5) -> [2, 2.5, 3, ..., 7].
  */
 export function defaultWithdrawalRateRange(min = 2, max = 7, step = 0.5): number[] {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step) || min <= 0 || max < min || step <= 0) {
+    throw new Error('Withdrawal rate range requires finite positive bounds and step, with max >= min');
+  }
+  const steps = Math.floor((max - min) / step + 1e-9);
+  if (!Number.isFinite(steps) || steps > 10_000) {
+    throw new Error('Withdrawal rate range cannot exceed 10001 points');
+  }
   const out: number[] = [];
-  for (let r = min; r <= max + 1e-9; r += step) {
+  for (let index = 0; index <= steps; index++) {
+    const r = min + index * step;
     out.push(Math.round(r * 100) / 100);
   }
   return out;

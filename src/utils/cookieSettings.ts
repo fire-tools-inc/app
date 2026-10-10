@@ -169,6 +169,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
 };
 
 const SETTINGS_KEY = 'fire-calculator-settings';
+let cachedCiphertext: string | undefined;
+let cachedPayload: Partial<UserSettings> | undefined;
 
 // Cookie options
 const COOKIE_OPTIONS: CookieAttributes = {
@@ -223,9 +225,22 @@ export function loadSettings(): UserSettings {
   try {
     const encryptedSettings = SafeCookies.get(SETTINGS_KEY);
     if (encryptedSettings) {
-      const decryptedSettings = decryptData(encryptedSettings);
-      if (decryptedSettings) {
-        const parsed = JSON.parse(decryptedSettings);
+      if (encryptedSettings !== cachedCiphertext) {
+        cachedCiphertext = undefined;
+        cachedPayload = undefined;
+        const decryptedSettings = decryptData(encryptedSettings);
+        if (decryptedSettings) {
+          const payload: unknown = JSON.parse(decryptedSettings);
+          if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+            throw new Error('Saved settings must be an object.');
+          }
+          cachedPayload = payload as Partial<UserSettings>;
+          cachedCiphertext = encryptedSettings;
+        }
+      }
+      if (cachedPayload) {
+        // Clone the cached payload so callers cannot mutate future reads.
+        const parsed = structuredClone(cachedPayload);
         // Merge with defaults to ensure all fields exist
         return {
           ...DEFAULT_SETTINGS,
@@ -256,6 +271,8 @@ export function loadSettings(): UserSettings {
         };
       }
     }
+    cachedCiphertext = undefined;
+    cachedPayload = undefined;
     return DEFAULT_SETTINGS;
   } catch (error) {
     logger.error('cookie-settings', 'load-failed', 'failed to load settings from cookies', { pii: { error: (error as Error)?.message } });
@@ -267,6 +284,8 @@ export function loadSettings(): UserSettings {
  * Clear user settings from storage
  */
 export function clearSettings(): void {
+  cachedCiphertext = undefined;
+  cachedPayload = undefined;
   try {
     SafeCookies.remove(SETTINGS_KEY, { path: '/' });
   } catch (error) {

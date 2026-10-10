@@ -317,16 +317,18 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     body.externalId = req.params.externalId;
     validateExpense(body);
     const m = ensureMonthByDate(db, userId, String(body.date));
-    db.prepare('DELETE FROM expense_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-    db.prepare(
-      `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
-          currency, category, sub_category, expense_type, is_recurring)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-      body.currency != null ? String(body.currency) : null, String(body.category),
-      body.subCategory != null ? String(body.subCategory) : null, String(body.expenseType), bool01(body.isRecurring),
-    );
+    db.transaction(() => {
+      db.prepare('DELETE FROM expense_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
+      db.prepare(
+        `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
+            currency, category, sub_category, expense_type, is_recurring)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
+        body.currency != null ? String(body.currency) : null, String(body.category),
+        body.subCategory != null ? String(body.subCategory) : null, String(body.expenseType), bool01(body.isRecurring),
+      );
+    })();
     const row = db.prepare('SELECT * FROM expense_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as ExpenseRow;
     res.json(mapExpense(row));
@@ -386,15 +388,17 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     body.externalId = req.params.externalId;
     validateIncome(body);
     const m = ensureMonthByDate(db, userId, String(body.date));
-    db.prepare('DELETE FROM income_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-    db.prepare(
-      `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-          currency, source, is_recurring)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-      body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
-    );
+    db.transaction(() => {
+      db.prepare('DELETE FROM income_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
+      db.prepare(
+        `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
+            currency, source, is_recurring)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
+        body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
+      );
+    })();
     const row = db.prepare('SELECT * FROM income_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as IncomeRow;
     res.json(mapIncome(row));
@@ -492,12 +496,14 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     if (!EXPENSE_TYPES.has(String(body.defaultExpenseType))) {
       throw apiError(400, 'invalid_body', `Invalid defaultExpenseType`);
     }
-    db.prepare('DELETE FROM custom_categories WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-    db.prepare(
-      `INSERT INTO custom_categories (user_id, external_id, name, icon, color, default_expense_type)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    ).run(userId, req.params.externalId, String(body.name), String(body.icon),
-      String(body.color), String(body.defaultExpenseType));
+    db.transaction(() => {
+      db.prepare('DELETE FROM custom_categories WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
+      db.prepare(
+        `INSERT INTO custom_categories (user_id, external_id, name, icon, color, default_expense_type)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      ).run(userId, req.params.externalId, String(body.name), String(body.icon),
+        String(body.color), String(body.defaultExpenseType));
+    })();
     const row = db.prepare('SELECT * FROM custom_categories WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as CustomCatRow;
     res.json(mapCustomCat(row));

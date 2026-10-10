@@ -22,15 +22,17 @@ function calculateSimulationStats(simulations: SimulationRun[]): {
   successRate: number;
   medianYearsToFIRE: number;
 } {
-  const successCount = simulations.filter(s => s.success).length;
+  let successCount = 0;
+  const successfulYears: number[] = [];
+  for (const simulation of simulations) {
+    if (simulation.success) successCount++;
+    if (simulation.yearsToFIRE !== null) successfulYears.push(simulation.yearsToFIRE);
+  }
   const failureCount = simulations.length - successCount;
   const successRate = (successCount / simulations.length) * 100;
   
   // Calculate median years to FIRE for successful simulations
-  const successfulYears = simulations
-    .filter(s => s.yearsToFIRE !== null)
-    .map(s => s.yearsToFIRE as number)
-    .sort((a, b) => a - b);
+  successfulYears.sort((a, b) => a - b);
   
   let medianYearsToFIRE = 0;
   if (successfulYears.length > 0) {
@@ -85,20 +87,10 @@ function runSingleSimulation(
   inputs: CalculatorInputs,
   mcInputs: MonteCarloInputs,
   simulationId: number,
-  captureLog: boolean = false
+  captureLog: boolean,
+  currentYear: number,
 ): SimulationRun & { logEntry?: SimulationLogEntry } {
-  const currentYear = new Date().getFullYear();
   const currentAge = currentYear - inputs.yearOfBirth;
-  
-  // Validate asset allocation
-  const allocationSum = inputs.stocksPercent + inputs.bondsPercent + inputs.cashPercent;
-  if (Math.abs(allocationSum - 100) > 0.01) {
-    throw new Error(`Asset allocation must sum to 100%, currently ${allocationSum.toFixed(2)}%`);
-  }
-  
-  if (inputs.desiredWithdrawalRate <= 0) {
-    throw new Error('desiredWithdrawalRate must be greater than 0');
-  }
   
   const fireTarget = inputs.fireAnnualExpenses / (inputs.desiredWithdrawalRate / 100);
   
@@ -110,8 +102,6 @@ function runSingleSimulation(
   let ageFIREAchieved: number | null = null;
   
   // Track for failure criteria
-  let fireLost = false;
-  let fireRecovered = false;
   let sequenceOfReturnsRisk = false;
   let withdrawalRateBreach = false;
   let forcedReturnToWork = false;
@@ -133,7 +123,7 @@ function runSingleSimulation(
   // Collect yearly data for logging
   const yearlyData: SimulationYearData[] = [];
   
-  const maxYears = Math.min(50, 100 - currentAge);
+  const maxYears = Math.min(50, inputs.maxAge - currentAge);
   
   for (let i = 0; i < maxYears; i++) {
     const year = currentYear + i;
@@ -171,14 +161,6 @@ function runSingleSimulation(
       yearFIREAchieved = year;
       ageFIREAchieved = age;
       portfolioAtFIRE = portfolioValue;
-    }
-    
-    // Track if FIRE was lost and recovered
-    if (isFIREAchieved && !fireLost && portfolioValue < fireTarget) {
-      fireLost = true;
-    }
-    if (fireLost && portfolioValue >= fireTarget) {
-      fireRecovered = true;
     }
     
     // If stopWorkingAtFIRE is enabled, stop working once FIRE is achieved.
@@ -325,7 +307,7 @@ function runSingleSimulation(
   }
   
   // Check if FIRE was lost and never recovered
-  if (fireLost && !fireRecovered) {
+  if (isFIREAchieved && portfolioValue < fireTarget) {
     failureReasons.push('fire_lost');
   }
   
@@ -386,6 +368,45 @@ function runSingleSimulation(
   return result;
 }
 
+function validateSimulationInputs(inputs: CalculatorInputs, mcInputs: MonteCarloInputs): void {
+  if (!Number.isInteger(mcInputs.numSimulations) || mcInputs.numSimulations <= 0 || mcInputs.numSimulations > 100_000) {
+    throw new Error('numSimulations must be an integer between 1 and 100000');
+  }
+  const allocationSum = inputs.stocksPercent + inputs.bondsPercent + inputs.cashPercent;
+  if (!Number.isFinite(allocationSum) || Math.abs(allocationSum - 100) > 0.01) {
+    throw new Error(`Asset allocation must sum to 100%, currently ${allocationSum.toFixed(2)}%`);
+  }
+  if (!Number.isFinite(inputs.desiredWithdrawalRate) || inputs.desiredWithdrawalRate <= 0) {
+    throw new Error('desiredWithdrawalRate must be greater than 0');
+  }
+  const currentAge = new Date().getFullYear() - inputs.yearOfBirth;
+  if (!Number.isFinite(currentAge) || !Number.isFinite(inputs.maxAge) || inputs.maxAge <= currentAge) {
+    throw new Error('maxAge must be greater than the current age');
+  }
+}
+
+interface SimulationOptions {
+  captureLogs?: boolean;
+  onProgress?: (completed: number, total: number) => void;
+}
+
+function runSimulations(inputs: CalculatorInputs, mcInputs: MonteCarloInputs, options: SimulationOptions = {}) {
+  validateSimulationInputs(inputs, mcInputs);
+  const currentYear = new Date().getFullYear();
+  const simulations: SimulationRun[] = [];
+  const logs: SimulationLogEntry[] = [];
+  const progressInterval = Math.max(1, Math.ceil(mcInputs.numSimulations / 100));
+  for (let i = 0; i < mcInputs.numSimulations; i++) {
+    const { logEntry, ...simulation } = runSingleSimulation(inputs, mcInputs, i + 1, options.captureLogs ?? false, currentYear);
+    simulations.push(simulation);
+    if (logEntry) logs.push(logEntry);
+    if ((i + 1) % progressInterval === 0 || i + 1 === mcInputs.numSimulations) {
+      options.onProgress?.(i + 1, mcInputs.numSimulations);
+    }
+  }
+  return { ...calculateSimulationStats(simulations), simulations, logs };
+}
+
 /**
  * Run Monte Carlo simulations
  */
@@ -393,19 +414,8 @@ export function runMonteCarloSimulation(
   inputs: CalculatorInputs,
   mcInputs: MonteCarloInputs
 ): MonteCarloResult {
-  const simulations: SimulationRun[] = [];
-  
-  for (let i = 0; i < mcInputs.numSimulations; i++) {
-    const result = runSingleSimulation(inputs, mcInputs, i + 1);
-    simulations.push(result);
-  }
-  
-  const stats = calculateSimulationStats(simulations);
-  
-  return {
-    ...stats,
-    simulations,
-  };
+  const { simulations, successCount, failureCount, successRate, medianYearsToFIRE } = runSimulations(inputs, mcInputs);
+  return { simulations, successCount, failureCount, successRate, medianYearsToFIRE };
 }
 
 /**
@@ -413,26 +423,10 @@ export function runMonteCarloSimulation(
  */
 export function runMonteCarloSimulationWithLogs(
   inputs: CalculatorInputs,
-  mcInputs: MonteCarloInputs
+  mcInputs: MonteCarloInputs,
+  options: SimulationOptions = {},
 ): MonteCarloResultWithLogs {
-  const simulations: SimulationRun[] = [];
-  const logs: SimulationLogEntry[] = [];
-  
-  for (let i = 0; i < mcInputs.numSimulations; i++) {
-    const result = runSingleSimulation(inputs, mcInputs, i + 1, true);
-    simulations.push({
-      simulationId: result.simulationId,
-      success: result.success,
-      yearsToFIRE: result.yearsToFIRE,
-      finalPortfolio: result.finalPortfolio,
-    });
-    
-    if (result.logEntry) {
-      logs.push(result.logEntry);
-    }
-  }
-  
-  const stats = calculateSimulationStats(simulations);
+  const result = runSimulations(inputs, mcInputs, { ...options, captureLogs: options.captureLogs ?? true });
   
   // Fixed parameters to include in exports
   const fixedParameters: MonteCarloFixedParameters = {
@@ -457,9 +451,7 @@ export function runMonteCarloSimulationWithLogs(
   };
   
   return {
-    ...stats,
-    simulations,
-    logs,
+    ...result,
     fixedParameters,
   };
 }

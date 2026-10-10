@@ -121,9 +121,17 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: Buil
       res.status(403).json({ error: { code: 'cors_denied', message: err.message } });
       return;
     }
+    if ('type' in err && err.type === 'entity.parse.failed') {
+      res.status(400).json({ error: { code: 'invalid_body', message: 'Request body must be valid JSON.' } });
+      return;
+    }
+    if ('type' in err && err.type === 'entity.too.large') {
+      res.status(413).json({ error: { code: 'payload_too_large', message: 'Request body exceeds the 2 MB limit.' } });
+      return;
+    }
     logger.error('express', 'unhandled-error', err.message, { pii: { stack: err.stack } });
     res.status(500).json({
-      error: { code: 'internal_error', message: err.message },
+      error: { code: 'internal_error', message: 'An unexpected server error occurred. Check the server logs for details.' },
     });
   });
 
