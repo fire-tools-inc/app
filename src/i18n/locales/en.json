@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Fire Tools",
-    "tagline": "Rocket fuel for your financial planning",
+    "tagline": "Financial planning, on your terms",
     "skipToContent": "Skip to main content",
     "disclaimer": "Fire Tools - Disclaimer: This is for educational purposes only. Market data is provided as an indication only and may be delayed or inaccurate. Consult with a financial advisor for professional advice.",
     "privacyPolicy": "Privacy Policy",
@@ -59,8 +59,11 @@
     }
   },
   "home": {
-    "aboutTitle": "About FIRE Tools",
-    "aboutBody": "FIRE Tools is designed to help you plan and achieve Financial Independence Retire Early. Our suite of calculators and tools provides data-driven insights to make informed decisions about your financial future.",
+    "aboutTitle": "Your financial workspace",
+    "aboutBody": "Track your portfolio, cashflow and net worth. Then put your financial independence plan to the test.",
+    "trackingTitle": "Track your finances",
+    "planningTitle": "Plan and stress-test",
+    "localFirst": "Local-first by design",
     "disclaimer": "Disclaimer:",
     "disclaimerBody": "These tools are for educational and planning purposes only. Always consult with a qualified financial advisor or do your own research before making investment decisions.",
     "toolsLabel": "Available tools",
@@ -1065,6 +1068,7 @@
       "fixErrors": "Please fix validation errors before running simulations",
       "numSimulationsMin": "Minimum 1,000 simulations required for statistical significance",
       "numSimulationsMax": "Maximum 100,000 simulations allowed for performance",
+      "logsMax": "Detailed logs support up to 10,000 runs. Lower the count or disable detailed logs.",
       "stockVolatilityMin": "Stock volatility must be greater than 0%",
       "bondVolatilityMin": "Bond volatility must be greater than 0%",
       "bondVolatilityMax": "Bond volatility must be less than stock volatility ({{value}}%)",
@@ -1074,6 +1078,9 @@
     },
     "runSimulation": "Run Simulations",
     "runningSimulation": "Running Simulations...",
+    "captureLogs": "Capture detailed simulation logs",
+    "captureLogsHelp": "Optional yearly records for every run. Large simulations use more memory when enabled. Only the latest run is kept.",
+    "simulationFailed": "Simulation could not complete",
     "runSimulationAria": "Run Monte Carlo simulations",
     "runningSimulationAria": "Running simulations, please wait",
     "fixErrorsAria": "Fix validation errors to run simulations",

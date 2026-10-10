@@ -19,12 +19,11 @@ import { loadFireCalculatorInputs, loadAssetAllocation } from '../utils/cookieSt
 import { calculateFIREPortfolioData } from '../utils/allocationCalculator';
 import { loadSettings } from '../utils/cookieSettings';
 import {
-  runWithdrawalRateSimulation,
-  runWithdrawalRateSweep,
   defaultWithdrawalRateRange,
   WithdrawalRateInputs,
   WithdrawalRateResult,
 } from '../utils/withdrawalRateSimulator';
+import { useSimulationWorker } from '../hooks/useSimulationWorker';
 import {
   convertWithdrawalRates,
   WithdrawalRateType,
@@ -124,45 +123,35 @@ export const WithdrawalRatePage: React.FC = () => {
   const [retirementYears, setRetirementYears] = useState<number>(DEFAULT_RETIREMENT_YEARS);
   const [numSimulations, setNumSimulations] = useState<number>(DEFAULT_NUM_SIMULATIONS);
 
-  const [sweep, setSweep] = useState<WithdrawalRateResult[]>([]);
-  const [current, setCurrent] = useState<WithdrawalRateResult | null>(null);
-  const [isComputing, setIsComputing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const sweepDebounce = useRef<number | null>(null);
-  const currentDebounce = useRef<number | null>(null);
+  const { result: sweepResult, isRunning: isComputing, error: sweepError, run: runSweep, cancel: cancelSweep } = useSimulationWorker('withdrawalRate');
+  const { result: currentResults, error: currentError, run: runCurrent, cancel: cancelCurrent } = useSimulationWorker('withdrawalRate');
   const calcAuditInitialised = useRef(false);
 
   const portfolioValid = inputs.initialSavings > 0;
   const allocationSum = inputs.stocksPercent + inputs.bondsPercent + inputs.cashPercent;
   const allocationValid = Math.abs(allocationSum - 100) < 0.01;
   const canSimulate = portfolioValid && allocationValid;
+  const sweep = useMemo<WithdrawalRateResult[]>(() => canSimulate ? sweepResult ?? [] : [], [canSimulate, sweepResult]);
+  const current = canSimulate ? currentResults?.[0] ?? null : null;
+  const error = !canSimulate
+    ? !portfolioValid
+      ? 'Set an initial portfolio value in the FIRE Calculator to run the simulator.'
+      : `Asset allocation must sum to 100% (currently ${allocationSum.toFixed(2)}%).`
+    : sweepError ?? currentError;
 
   // Recompute the full sweep when underlying inputs / horizon change.
   useEffect(() => {
-    if (!canSimulate) {
-      setSweep([]);
-      setError(
-        !portfolioValid
-          ? 'Set an initial portfolio value in the FIRE Calculator to run the simulator.'
-          : `Asset allocation must sum to 100% (currently ${allocationSum.toFixed(2)}%).`,
-      );
-      return;
-    }
-    setError(null);
-    if (sweepDebounce.current) window.clearTimeout(sweepDebounce.current);
-    sweepDebounce.current = window.setTimeout(() => {
-      setIsComputing(true);
+    if (!canSimulate) return;
+    const timer = window.setTimeout(() => {
       const sim = buildSimInputs(inputs, retirementYears, numSimulations);
       const rates = defaultWithdrawalRateRange(2, 7, 0.5);
-      const out = runWithdrawalRateSweep(sim, rates);
-      setSweep(out);
-      setIsComputing(false);
+      runSweep({ inputs: sim, rates });
     }, 150);
     return () => {
-      if (sweepDebounce.current) window.clearTimeout(sweepDebounce.current);
+      window.clearTimeout(timer);
+      cancelSweep();
     };
-  }, [inputs, retirementYears, numSimulations, canSimulate, portfolioValid, allocationSum]);
+  }, [inputs, retirementYears, numSimulations, canSimulate, runSweep, cancelSweep]);
 
   // Audit a withdrawal-rate run once results settle. Debounced and skipping the
   // initial render so dragging sliders / page load don't flood the log.
@@ -186,24 +175,16 @@ export const WithdrawalRatePage: React.FC = () => {
   // Recompute the focused (slider) result live, with a short debounce so the
   // chart updates smoothly while the user drags.
   useEffect(() => {
-    if (!canSimulate) {
-      setCurrent(null);
-      return;
-    }
-    if (currentDebounce.current) window.clearTimeout(currentDebounce.current);
-    currentDebounce.current = window.setTimeout(() => {
+    if (!canSimulate) return;
+    const timer = window.setTimeout(() => {
       const sim = buildSimInputs(inputs, retirementYears, numSimulations);
-      try {
-        const r = runWithdrawalRateSimulation(sim, withdrawalRate);
-        setCurrent(r);
-      } catch {
-        setCurrent(null);
-      }
+      runCurrent({ inputs: sim, rates: [withdrawalRate] });
     }, 80);
     return () => {
-      if (currentDebounce.current) window.clearTimeout(currentDebounce.current);
+      window.clearTimeout(timer);
+      cancelCurrent();
     };
-  }, [inputs, retirementYears, numSimulations, withdrawalRate, canSimulate]);
+  }, [inputs, retirementYears, numSimulations, withdrawalRate, canSimulate, runCurrent, cancelCurrent]);
 
   const chartData = useMemo(
     () =>

@@ -1,13 +1,13 @@
 .demo-banner {
-  background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
-  border-bottom: 1px solid #f59e0b;
-  color: #78350f;
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 0.55rem 1.5rem;
 }
 
 .demo-banner__inner {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -16,42 +16,24 @@
 }
 
 .demo-banner__icon {
-  font-size: 1.1rem;
+  display: flex;
+  color: var(--accent-primary);
 }
 
 .demo-banner__text {
   flex: 1;
   min-width: 200px;
+  line-height: 1.5;
 }
 
 .demo-banner__cta {
-  background: #b45309;
-  color: white;
-  text-decoration: none;
-  padding: 0.35rem 0.75rem;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: background 0.15s ease;
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0.35rem;
+  font-weight: 500;
 }
 
-.demo-banner__cta:hover,
-.demo-banner__cta:focus {
-  background: #92400e;
-  outline: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  .demo-banner {
-    background: linear-gradient(90deg, #78350f 0%, #92400e 100%);
-    color: #fef3c7;
-    border-bottom-color: #b45309;
-  }
-  .demo-banner__cta {
-    background: #fbbf24;
-    color: #451a03;
-  }
-  .demo-banner__cta:hover,
-  .demo-banner__cta:focus {
-    background: #f59e0b;
-  }
+.demo-banner__cta:hover {
+  color: var(--accent-primary-light);
 }

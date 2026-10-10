@@ -178,6 +178,16 @@ describe('Cookie Settings utilities', () => {
       }
     });
 
+    it('does not share nested LLM configuration between settings reads', () => {
+      saveSettings({
+        ...DEFAULT_SETTINGS,
+        llmCategorization: { baseUrl: 'http://localhost:11434/v1', model: 'test-model', apiKey: '' },
+      });
+      const first = loadSettings();
+      first.llmCategorization!.model = 'changed-model';
+      expect(loadSettings().llmCategorization?.model).toBe('test-model');
+    });
+
     it('should return DEFAULT_SETTINGS when no settings saved', () => {
       const loaded = loadSettings();
       

@@ -272,7 +272,7 @@ export function FIRECalculatorPage() {
         )}
       </aside>
 
-      <main className="main-content">
+      <main className="main-content" id="main-content" tabIndex={-1}>
         {hasValidationErrors && (
           <div className="validation-error-banner" role="alert" aria-live="polite">
             <strong><MaterialIcon name="warning" /> Validation Error</strong>

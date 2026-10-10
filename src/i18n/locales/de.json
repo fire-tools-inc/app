@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Fire Tools",
-    "tagline": "Treibstoff für deine Finanzplanung",
+    "tagline": "Finanzplanung nach deinen Vorstellungen",
     "skipToContent": "Zum Hauptinhalt springen",
     "disclaimer": "Fire Tools – Hinweis: Diese Tools dienen ausschließlich Bildungszwecken. Marktdaten sind nur indikativ und können verzögert oder ungenau sein. Wenden Sie sich für professionelle Beratung an eine Finanzberatung.",
     "privacyPolicy": "Datenschutzerklärung",
@@ -59,8 +59,11 @@
     }
   },
   "home": {
-    "aboutTitle": "Über FIRE Tools",
-    "aboutBody": "FIRE Tools hilft dir, finanzielle Unabhängigkeit und frühzeitigen Ruhestand zu planen und zu erreichen. Unsere Rechner und Tools liefern datenbasierte Einblicke für fundierte Finanzentscheidungen.",
+    "aboutTitle": "Dein Finanzarbeitsbereich",
+    "aboutBody": "Behalte Portfolio, Cashflow und Vermögen im Blick. Prüfe anschließend deinen Plan für finanzielle Unabhängigkeit.",
+    "trackingTitle": "Finanzen im Blick",
+    "planningTitle": "Planen und prüfen",
+    "localFirst": "Für lokale Daten entwickelt",
     "disclaimer": "Hinweis:",
     "disclaimerBody": "Diese Tools dienen ausschließlich Bildungs- und Planungszwecken. Konsultieren Sie immer eine qualifizierte Finanzberatung oder recherchieren Sie selbst, bevor Sie Investitionsentscheidungen treffen.",
     "toolsLabel": "Verfügbare Tools",
@@ -1065,6 +1068,7 @@
       "fixErrors": "Bitte beheben Sie Validierungsfehler, bevor Sie Simulationen ausführen",
       "numSimulationsMin": "Mindestens 1.000 Simulationen für statistische Signifikanz erforderlich",
       "numSimulationsMax": "Maximal 100.000 Simulationen für die Performance erlaubt",
+      "logsMax": "Detaillierte Protokolle unterstützen bis zu 10.000 Läufe. Reduziere die Anzahl oder deaktiviere die Protokolle.",
       "stockVolatilityMin": "Aktienvolatilität muss größer als 0% sein",
       "bondVolatilityMin": "Anleihenvolatilität muss größer als 0% sein",
       "bondVolatilityMax": "Anleihenvolatilität muss kleiner als Aktienvolatilität ({{value}}%) sein",
@@ -1074,6 +1078,9 @@
     },
     "runSimulation": "Simulationen ausführen",
     "runningSimulation": "Simulationen werden ausgeführt...",
+    "captureLogs": "Detaillierte Simulationsprotokolle speichern",
+    "captureLogsHelp": "Optionale Jahresdaten für jeden Lauf. Große Simulationen benötigen damit mehr Speicher. Nur der letzte Lauf wird behalten.",
+    "simulationFailed": "Die Simulation konnte nicht abgeschlossen werden",
     "runSimulationAria": "Monte-Carlo-Simulationen ausführen",
     "runningSimulationAria": "Simulationen werden ausgeführt, bitte warten",
     "fixErrorsAria": "Validierungsfehler beheben, um Simulationen auszuführen",

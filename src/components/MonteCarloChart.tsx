@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   BarChart, 
@@ -11,121 +10,29 @@ import {
   ReferenceLine,
   Legend
 } from 'recharts';
-import { MonteCarloResult } from '../types/calculator';
 import { loadSettings } from '../utils/cookieSettings';
 import { getCurrencySymbol } from '../utils/currencyConverter';
 import { AbbreviatedValue } from './AbbreviatedValue';
 import { PrivacyBlur } from './PrivacyBlur';
+import type { MonteCarloDisplayResult } from '../utils/simulationWorker';
 
 interface MonteCarloChartProps {
-  result: MonteCarloResult;
+  yearsDistribution: MonteCarloDisplayResult['yearsDistribution'];
+  portfolioDistribution: MonteCarloDisplayResult['portfolioDistribution'];
   isPrivacyMode?: boolean;
 }
 
-interface DistributionBin {
-  range: string;
-  count: number;
-  isMedian: boolean;
-}
-
-export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ result, isPrivacyMode = false }) => {
+export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ yearsDistribution: distributionData, portfolioDistribution, isPrivacyMode = false }) => {
   const { t } = useTranslation();
-  // Calculate distribution data for histogram
-  const distributionData = useMemo(() => {
-    const successfulYears = result.simulations
-      .filter(s => s.yearsToFIRE !== null)
-      .map(s => s.yearsToFIRE as number)
-      .sort((a, b) => a - b);
-
-    if (successfulYears.length === 0) {
-      return { bins: [], stats: null };
-    }
-
-    // Use reduce instead of spread to avoid stack overflow with large arrays
-    const minYears = successfulYears.reduce((min, y) => y < min ? y : min, successfulYears[0]);
-    const maxYears = successfulYears.reduce((max, y) => y > max ? y : max, successfulYears[0]);
-    const range = maxYears - minYears;
-    
-    // Create bins for histogram (aim for about 10-15 bins)
-    const binCount = Math.min(Math.max(Math.ceil(range / 2), 5), 20);
-    const binSize = Math.ceil(range / binCount) || 1;
-    
-    const bins: DistributionBin[] = [];
-    for (let i = 0; i < binCount; i++) {
-      const binStart = minYears + (i * binSize);
-      const binEnd = binStart + binSize - 1;
-      const count = successfulYears.filter(y => y >= binStart && y <= binEnd).length;
-      
-      bins.push({
-        range: binSize === 1 ? `${binStart}` : `${binStart}-${binEnd}`,
-        count,
-        isMedian: result.medianYearsToFIRE >= binStart && result.medianYearsToFIRE <= binEnd,
-      });
-    }
-
-    // Calculate statistics
-    const sortedYears = [...successfulYears].sort((a, b) => a - b);
-    const percentile10Index = Math.floor(sortedYears.length * 0.1);
-    const percentile25Index = Math.floor(sortedYears.length * 0.25);
-    const percentile75Index = Math.floor(sortedYears.length * 0.75);
-    const percentile90Index = Math.floor(sortedYears.length * 0.9);
-
-    return {
-      bins,
-      stats: {
-        min: minYears,
-        max: maxYears,
-        median: result.medianYearsToFIRE,
-        percentile10: sortedYears[percentile10Index] || minYears,
-        percentile25: sortedYears[percentile25Index] || minYears,
-        percentile75: sortedYears[percentile75Index] || maxYears,
-        percentile90: sortedYears[percentile90Index] || maxYears,
-        mean: successfulYears.reduce((a, b) => a + b, 0) / successfulYears.length,
-      },
-    };
-  }, [result]);
-
-  // Calculate final portfolio distribution
-  const portfolioDistribution = useMemo(() => {
-    const portfolios = result.simulations
-      .map(s => s.finalPortfolio)
-      .filter(p => p > 0)
-      .sort((a, b) => a - b);
-
-    if (portfolios.length === 0) {
-      return null;
-    }
-
-    // Use reduce instead of spread to avoid stack overflow with large arrays
-    const minPortfolio = portfolios.reduce((min, p) => p < min ? p : min, portfolios[0]);
-    const maxPortfolio = portfolios.reduce((max, p) => p > max ? p : max, portfolios[0]);
-    const medianIndex = Math.floor(portfolios.length / 2);
-    const percentile10Index = Math.floor(portfolios.length * 0.1);
-    const percentile90Index = Math.floor(portfolios.length * 0.9);
-
-    return {
-      min: minPortfolio,
-      max: maxPortfolio,
-      median: portfolios[medianIndex],
-      percentile10: portfolios[percentile10Index],
-      percentile90: portfolios[percentile90Index],
-    };
-  }, [result]);
 
   // Get currency symbol from settings - recalculated on each render to pick up changes
   const settings = loadSettings();
   const currencySymbol = getCurrencySymbol(settings.currencySettings.defaultCurrency);
 
-  if (!distributionData.stats || distributionData.bins.length === 0) {
-    return (
-      <div className="monte-carlo-chart-placeholder">
-        <p>{t('monteCarlo.chart.noData')}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="monte-carlo-charts">
+      {!distributionData.stats && <p className="monte-carlo-chart-placeholder">{t('monteCarlo.chart.noData')}</p>}
+      {distributionData.stats && (
       <section className="chart-section" aria-labelledby="years-distribution-heading">
         <h4 id="years-distribution-heading">{t('monteCarlo.chart.yearsDistribution')}</h4>
         <ResponsiveContainer width="100%" height={250}>
@@ -152,7 +59,8 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ result, isPriv
             <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
             <Bar 
               dataKey="count" 
-              fill="#2DD4BF" 
+              fill="var(--accent-primary)"
+              isAnimationActive={false}
               name={t('monteCarlo.chart.simulationsAxisLabel')}
             />
             {distributionData.stats && (() => {
@@ -197,6 +105,7 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ result, isPriv
           </div>
         </div>
       </section>
+      )}
 
       {portfolioDistribution && (
         <section className="chart-section" aria-labelledby="portfolio-stats-heading">

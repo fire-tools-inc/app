@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import type { Database } from 'better-sqlite3';
+import { z } from 'zod';
 import {
   handler, resolveUserId, apiError, bool01, fromBool01, nowIso,
-  parsePagination, nextCursor, parseYearMonth,
+  parsePagination, nextCursor, parseYearMonth, parseBody,
 } from '../http.js';
 
 const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
@@ -11,6 +12,10 @@ const INCOME_SOURCES = new Set([
   'SALARY', 'FREELANCE', 'BUSINESS', 'INVESTMENTS', 'RENTAL',
   'PENSION', 'SOCIAL_SECURITY', 'BONUS', 'GIFT', 'OTHER',
 ]);
+const transactionValues = z.object({
+  date: z.iso.date(),
+  amount: z.number().finite().nonnegative(),
+});
 
 interface CfgRow {
   user_id: number;
@@ -132,6 +137,7 @@ const validateExpense = (body: Record<string, unknown>) => {
   for (const k of ['externalId', 'date', 'amount', 'description', 'category', 'expenseType']) {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
+  parseBody(transactionValues, body);
   if (!EXPENSE_TYPES.has(String(body.expenseType))) {
     throw apiError(400, 'invalid_body', `Invalid expenseType: ${body.expenseType}`);
   }
@@ -143,6 +149,7 @@ const validateIncome = (body: Record<string, unknown>) => {
   for (const k of ['externalId', 'date', 'amount', 'description', 'source']) {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
+  parseBody(transactionValues, body);
   if (!INCOME_SOURCES.has(String(body.source))) {
     throw apiError(400, 'invalid_body', `Invalid source: ${body.source}`);
   }

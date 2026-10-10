@@ -31,9 +31,21 @@ instead.
   chart-heavy views render progressively after the page shell, and language
   packs load on demand with English kept as the fallback. Desktop preference
   sync also runs behind the application shell, so backend startup does not
-  delay routes. The same client ships to the web (`dist/`) and Electron.
+  delay routes. Monte Carlo and withdrawal-rate calculations run in cancellable
+  module workers. Monte Carlo histograms and percentiles are computed there
+  too, so the UI receives a compact summary rather than the full simulation
+  array. Detailed logs are explicitly opt-in.
+  The same client ships to the web (`dist/`) and Electron.
+- **Interface** — a dark-default liquid-glass token system in `src/App.css`.
+  Backdrop blur is reserved for floating chrome rather than every data card.
+  System typefaces and a bundled, Apache-licensed Material Symbols font keep
+  interface rendering independent of external font services.
+- **Settings reads** — the decrypted payload is cached by its encrypted
+  storage value. Callers receive independent values, so formatting many cells
+  does not repeatedly decrypt settings or leak mutations between readers.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
-  default storage; Postgres is supported via a Docker Compose profile.
+  supported storage driver; the schema is Postgres-compatible, but the
+  Postgres driver remains deferred.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
   Source of truth for both server routes and any generated client. Also
   published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).
@@ -57,6 +69,8 @@ don't need to think about auth on day one.
 | `src/` | React + TypeScript frontend (Vite) |
 | `src/i18n/` | On-demand translation resources and language setup |
 | `src/routes/` | Lazy route registry and navigation preloading |
+| `src/workers/` | Monte Carlo and withdrawal-rate simulation execution |
+| `src/assets/fonts/` | Bundled icon font; its license is distributed from `public/` |
 | `server/` | Node.js + Express + better-sqlite3 backend |
 | `electron/` | Electron main + preload (desktop wrapper) |
 | `website/` | Marketing landing page |

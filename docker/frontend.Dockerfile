@@ -16,7 +16,7 @@ RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install 
 
 # Then the rest of the source.
 COPY . .
-RUN npm run build && npm run build:landing
+RUN npm run build:self-hosted
 
 FROM nginx:1.27-alpine AS runtime
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf

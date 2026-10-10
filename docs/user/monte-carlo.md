@@ -1,34 +1,52 @@
 # Monte Carlo simulation
 
-Where the [FIRE calculator](./fire-calculator.md) plots a single deterministic
-line, Monte Carlo runs your plan thousands of times with randomised annual
-returns to give you a *probability* of success.
+The [FIRE calculator](./fire-calculator.md) projects a single expected path.
+Monte Carlo runs the plan repeatedly with randomized annual returns to explore
+the range of possible outcomes.
 
 ![Monte Carlo](./screenshots/monte-carlo.png)
 
 ## How to use it
 
-1. Pick up the inputs from the FIRE calculator (or set them here).
-2. Set the **volatility** (standard deviation of annual returns). 15% is a
-   reasonable default for a global equity portfolio.
-3. Optionally enable **black-swan events** — sporadic large drawdowns sampled
-   from a fat-tail distribution. Use this if you want to stress-test the plan
-   against a 2008-style year.
-4. Set the **number of runs**. More runs = smoother distribution. 1000 is a
-   good starting point; the math runs in the browser so feel free to push to
-   10,000+.
+1. Set your financial inputs in the FIRE calculator, then open Monte Carlo.
+   **Simulation Base Data** shows the inputs used; these are read-only here.
+2. Set stock and bond **volatility**, the standard deviation of annual returns.
+   Defaults are 15% for stocks and 5% for bonds.
+3. Set the annual **black-swan probability** and loss impact. The defaults are
+   2% and a 40% stock loss; bonds receive half that loss during the event.
+4. Choose **1,000–100,000 runs**. The simulation runs in a background worker,
+   with progress shown while the interface remains usable. **Cancel** stops it.
+5. Enable **Capture detailed simulation logs** only when you need yearly records.
+   Logs are off by default and limited to **10,000 runs** to control memory use.
+   Results still include every run when logs are disabled.
 
-## Reading the chart
+The horizon ends at the maximum age selected in the FIRE calculator, capped at
+50 simulated years. Select a maximum age greater than your current age.
 
-- The shaded band is the spread between the 5th and 95th percentile outcomes.
-- The center line is the median.
-- The percentage at the top is the share of runs that ended at or above your
-  FIRE target — your **success rate**.
+## Reading the results
 
-## What to look for
+- **Success rate** is the share of runs that reach FIRE, or finish above the
+  inflation-adjusted target, without a critical failure. Depletion, an
+  unrecovered loss of FIRE, insufficient ending capital or a forced return to
+  work can make a run fail.
+- **Median years to FIRE** uses successful runs. Zero means FIRE was already
+  reached at the start; N/A means there were no successful runs.
+- The **years histogram** counts successful runs by time to FIRE, including
+  the upper boundary of the distribution.
+- **Final portfolio statistics** include depleted portfolios at zero, not
+  just surviving portfolios. The median and 10th/90th percentiles summarize
+  the full set of outcomes.
 
-- A success rate below ~80% means your plan is fragile to bad sequences of
-  returns. Lower your withdrawal rate, save more, or extend the horizon.
-- A very wide band means your plan is highly sensitive to luck. Diversifying
-  across asset classes (see the [Asset allocation manager](./asset-allocation.md))
-  is one way to narrow it.
+The histogram and statistics are prepared in the worker. Increasing the run
+count does not send a large list of individual results to the interface.
+
+## Detailed logs
+
+When enabled, yearly records and failure reasons can be downloaded as CSV or
+JSON. Only the **latest completed run** is kept, so the records match its
+parameters. Logs are temporary and disappear when you leave or refresh the
+page; download them if you need a record.
+
+These results are a planning model, not a forecast or a guarantee. A low success
+rate or a wide spread of outcomes is a reason to revisit the assumptions,
+savings rate, allocation or retirement horizon.

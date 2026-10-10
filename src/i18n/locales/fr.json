@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Fire Tools",
-    "tagline": "Le pleins de carburant pour votre planification financière",
+    "tagline": "La planification financière, selon vos choix",
     "skipToContent": "Aller au contenu principal",
     "disclaimer": "Fire Tools - Avertissement : ces outils sont fournis à titre éducatif uniquement. Les données de marché sont indicatives et peuvent être retardées ou inexactes. Consultez un conseiller financier pour des conseils professionnels.",
     "privacyPolicy": "Politique de confidentialité",
@@ -59,8 +59,11 @@
     }
   },
   "home": {
-    "aboutTitle": "À propos de FIRE Tools",
-    "aboutBody": "FIRE Tools vous aide à planifier et atteindre l'indépendance financière et la retraite anticipée. Notre suite de calculateurs vous offre des analyses basées sur les données pour des décisions financières éclairées.",
+    "aboutTitle": "Votre espace financier",
+    "aboutBody": "Suivez votre portefeuille, votre trésorerie et votre patrimoine. Puis mettez votre plan d'indépendance financière à l'épreuve.",
+    "trackingTitle": "Suivez vos finances",
+    "planningTitle": "Planifiez et testez",
+    "localFirst": "Conçu pour les données locales",
     "disclaimer": "Avertissement :",
     "disclaimerBody": "Ces outils sont fournis à des fins éducatives et de planification uniquement. Consultez toujours un conseiller financier qualifié ou faites vos propres recherches avant toute décision d'investissement.",
     "toolsLabel": "Outils disponibles",
@@ -1065,6 +1068,7 @@
       "fixErrors": "Veuillez corriger les erreurs de validation avant d'exécuter les simulations",
       "numSimulationsMin": "Minimum 1 000 simulations requises pour la signification statistique",
       "numSimulationsMax": "Maximum 100 000 simulations autorisées pour les performances",
+      "logsMax": "Les détails sont limités à 10 000 simulations. Réduisez le nombre ou désactivez les détails.",
       "stockVolatilityMin": "La volatilité des actions doit être supérieure à 0%",
       "bondVolatilityMin": "La volatilité des obligations doit être supérieure à 0%",
       "bondVolatilityMax": "La volatilité des obligations doit être inférieure à la volatilité des actions ({{value}}%)",
@@ -1074,6 +1078,9 @@
     },
     "runSimulation": "Lancer les simulations",
     "runningSimulation": "Simulations en cours...",
+    "captureLogs": "Enregistrer les détails des simulations",
+    "captureLogsHelp": "Données annuelles facultatives pour chaque simulation. Les grandes simulations utilisent plus de mémoire si cette option est activée. Seule la dernière exécution est conservée.",
+    "simulationFailed": "La simulation n'a pas pu se terminer",
     "runSimulationAria": "Lancer les simulations Monte Carlo",
     "runningSimulationAria": "Simulations en cours, veuillez patienter",
     "fixErrorsAria": "Corriger les erreurs de validation pour lancer les simulations",

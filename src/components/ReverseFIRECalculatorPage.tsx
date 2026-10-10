@@ -118,7 +118,7 @@ export function ReverseFIRECalculatorPage() {
 
   return (
     <div className="app-container">
-      <main className="main-content" aria-labelledby="reverse-fire-heading">
+      <main className="main-content" id="main-content" tabIndex={-1} aria-labelledby="reverse-fire-heading">
         <section className="fire-metrics" style={{ marginBottom: '1.5rem' }}>
           <div className="fire-metrics-header">
             <h3 id="reverse-fire-heading">

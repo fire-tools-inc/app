@@ -1,4 +1,6 @@
 .debt-payoff-page {
+  width: 100%;
+  min-width: 0;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
@@ -25,11 +27,13 @@
 }
 
 .debt-payoff-section {
-  background: var(--bg-secondary);
+  min-width: 0;
+  overflow-x: auto;
+  background: var(--glass-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   padding: 1.25rem 1.25rem 1.5rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow);
 }
 
 .debt-payoff-section h3 {

@@ -239,8 +239,7 @@ export function loadSettings(): UserSettings {
         }
       }
       if (cachedPayload) {
-        // Clone the cached payload so callers cannot mutate future reads.
-        const parsed = structuredClone(cachedPayload);
+        const parsed = cachedPayload;
         // Merge with defaults to ensure all fields exist
         return {
           ...DEFAULT_SETTINGS,
@@ -268,6 +267,7 @@ export function loadSettings(): UserSettings {
             ...(parsed.backend || {}),
           },
           updater: mergeUpdaterSettings(parsed.updater),
+          llmCategorization: parsed.llmCategorization ? { ...parsed.llmCategorization } : undefined,
         };
       }
     }

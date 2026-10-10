@@ -13,6 +13,7 @@
     "dev:all": "node scripts/dev-all.mjs",
     "stop": "node scripts/stop-dev.mjs",
     "build": "rm -rf dist && tsc && vite build",
+    "build:self-hosted": "npm run build -- --mode self-hosted",
     "postbuild": "node scripts/build-landing.mjs && node scripts/build-docs.mjs",
     "build:electron": "tsc && vite build --mode electron && npm install --prefix server && npm --prefix server run build && node scripts/gen-build-meta.mjs",
     "build:landing": "node scripts/build-landing.mjs",

@@ -121,6 +121,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
   return (
     <section className="mc-logs-section" aria-labelledby="mc-logs-heading" data-tour="monte-carlo-logs">
       <button
+        id="mc-logs-heading"
         type="button"
         className="mc-logs-toggle"
         onClick={() => setIsExpanded(!isExpanded)}

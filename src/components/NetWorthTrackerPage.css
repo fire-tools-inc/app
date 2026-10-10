@@ -1,11 +1,13 @@
 .net-worth-tracker-page {
+  width: 100%;
+  min-width: 0;
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
 
 .net-worth-tracker-page .page-header {
-  text-align: center;
+  text-align: left;
   margin-bottom: 2rem;
 }
 
@@ -21,10 +23,12 @@
 }
 
 .net-worth-tracker-main {
-  background: var(--bg-elevated);
+  min-width: 0;
+  background: var(--glass-surface);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--border-subtle);
 }
 
 /* Net Worth Summary Cards */
@@ -40,7 +44,7 @@
 
 .net-worth-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -50,23 +54,27 @@
   gap: 1rem;
   padding: 1.25rem;
   border-radius: 12px;
-  color: white;
+  color: var(--text-primary);
+  background: var(--glass-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--glass-shadow);
 }
 
-.net-worth-card.assets {
-  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
+.net-worth-card.assets .card-icon {
+  color: var(--info);
 }
 
-.net-worth-card.cash {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+.net-worth-card.cash .card-icon {
+  color: var(--success);
 }
 
-.net-worth-card.pension {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+.net-worth-card.pension .card-icon {
+  color: var(--warning);
 }
 
 .net-worth-card.total {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-surface);
+  border-color: var(--border-accent-strong);
 }
 
 .net-worth-card .card-icon {
@@ -80,12 +88,14 @@
 
 .net-worth-card .card-label {
   font-size: 0.85rem;
-  opacity: 0.9;
+  color: var(--text-secondary);
 }
 
 .net-worth-card .card-value {
   font-size: 1.5rem;
   font-weight: bold;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
 }
 
 .net-worth-card .card-change {
@@ -128,43 +138,45 @@
 
 .btn-entry {
   padding: 0.5rem 1rem;
-  border: none;
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  min-height: 44px;
+  transition: background-color var(--transition-fast);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .btn-entry:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  background: var(--bg-elevated);
 }
 
 .btn-entry.asset {
-  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
+  color: var(--info);
 }
 
 .btn-entry.cash {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+  color: var(--success);
 }
 
 .btn-entry.pension {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+  color: var(--warning);
 }
 
 .btn-entry.operation {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  color: var(--accent-primary);
 }
 
 /* Data Tables */
 .data-tables {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
 .data-table-section {
+  overflow-x: auto;
   background: var(--bg-tertiary);
   border-radius: 12px;
   padding: 1rem;
@@ -429,17 +441,18 @@
 }
 
 .currency-btn.active {
-  color: white;
+  color: var(--text-inverse);
   border-color: transparent;
 }
 
 /* FIRE Progress Section */
 .fire-progress-section {
   margin-top: 2rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-surface);
   border-radius: 12px;
   padding: 1.5rem;
-  color: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border-accent);
 }
 
 .fire-progress-section h3 {

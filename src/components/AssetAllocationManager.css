@@ -75,8 +75,8 @@
 
 .allocation-table th,
 .asset-class-table th {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
   font-weight: 600;
   position: sticky;
   top: 0;
@@ -100,13 +100,13 @@
 
 .currency-value {
   text-align: right;
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
 }
 
 .currency-value.positive {
-  color: #4ADE80;
+  color: var(--success);
   font-weight: 700;
-  text-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
 }
 
 .currency-value.negative {
@@ -125,35 +125,35 @@
 }
 
 .asset-class-badge.stocks {
-  background: #3B82F6;
-  color: #FFFFFF;
+  background: var(--accent-surface);
+  color: var(--info);
 }
 
 .asset-class-badge.bonds {
-  background: #A855F7;
-  color: #FFFFFF;
+  background: rgba(158, 171, 208, 0.12);
+  color: var(--accent-gold);
 }
 
 .asset-class-badge.cash {
-  background: #22C55E;
-  color: #FFFFFF;
+  background: rgba(139, 208, 175, 0.12);
+  color: var(--success);
 }
 
 .asset-class-badge.crypto {
-  background: #F59E0B;
-  color: #0A0B0E;
+  background: rgba(237, 181, 138, 0.12);
+  color: var(--warning);
 }
 
 .asset-class-badge.other {
-  background: #64748B;
-  color: #FFFFFF;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
 }
 
 .action-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
-  color: white;
+  color: var(--text-inverse);
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -612,8 +612,8 @@
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--accent-primary);
+  color: var(--text-inverse);
 }
 
 .btn-submit:hover {
@@ -730,8 +730,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--glass-surface);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: all 0.3s;
   flex-wrap: wrap;
@@ -739,7 +740,7 @@
 }
 
 .asset-class-header:hover {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--bg-tertiary);
 }
 
 .class-header-left {
@@ -756,7 +757,7 @@
 }
 
 .asset-count {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -855,7 +856,7 @@
 
 .btn-edit {
   background: var(--info);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .btn-edit:hover {
@@ -864,7 +865,7 @@
 
 .btn-save {
   background: var(--success);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .btn-save:hover {
@@ -873,7 +874,7 @@
 
 .btn-cancel-edit {
   background: var(--error);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .btn-cancel-edit:hover {
@@ -892,29 +893,9 @@
   font-size: 0.9em;
 }
 
-/* Navigation styles are owned by App.css (.app-nav, .nav-toggle, .nav-links).
-   Component-scoped overrides removed to prevent breaking the global sticky nav. */
-
-.nav-link {
-  text-decoration: none;
-  color: white;
-  font-weight: 600;
-  font-size: 1.1rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  transition: all 0.3s;
-}
-
-.nav-link:hover {
-  background: rgba(102, 126, 234, 0.1);
-}
-
-.nav-link.active {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
-}
-
 .asset-allocation-page {
+  width: 100%;
+  min-width: 0;
   max-width: 1800px;
   margin: 2rem auto;
   padding: 0 2rem;
@@ -922,16 +903,12 @@
 }
 
 .page-header {
-  background: var(--bg-elevated);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
   margin-bottom: 2rem;
-  text-align: center;
+  text-align: left;
 }
 
 .page-header h1 {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
   word-wrap: break-word;
@@ -940,7 +917,7 @@
 
 .page-header p {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
@@ -1107,34 +1084,19 @@
 /* Mass Edit Button - orange-ish style for consistency with palette */
 .btn-mass-edit {
   padding: 0.4rem 0.8rem;
-  border: none;
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   transition: all 0.3s;
   margin-left: 0.5rem;
-  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
 }
 
 .btn-mass-edit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.4);
-}
-
-/* For Asset Classes header - same orange style on light background */
-.section-header-with-actions .btn-mass-edit {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
-  color: white;
-  border: none;
-  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
-}
-
-.section-header-with-actions .btn-mass-edit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.4);
+  background: var(--bg-elevated);
 }
 
 /* Mass Edit Dialog */

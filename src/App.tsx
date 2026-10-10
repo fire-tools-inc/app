@@ -1,7 +1,7 @@
 import { BrowserRouter, HashRouter, Routes, Route, useLocation, useNavigate } from 'react-router';
 // Use HashRouter under file:// (Electron) so deep links work without a server.
 const Router = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
-import { createContext, lazy, startTransition, Suspense, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, lazy, startTransition, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './components/HomePage';
 import { ProfileMenu } from './components/ProfileMenu';
@@ -78,24 +78,50 @@ export const usePolicyModal = () => useContext(PolicyModalContext);
 
 function Navigation({ accountName, showPortfolioBreakdown }: { accountName: string; showPortfolioBreakdown: boolean }) {
   const location = useLocation();
+  const { t } = useTranslation();
   // Navbar labels are intentionally NOT routed through useTranslation — they
   // must always render in English. See src/constants/navbarLabels.ts (#233).
   const [isOpen, setIsOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  const toggleMenu = () => setIsOpen(open => !open);
   const closeMenu = () => setIsOpen(false);
 
+  useEffect(() => {
+    closeMenu();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeMenu();
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen]);
+
   return (
+    <header className="app-header">
+      <PreloadLink to="/" className="app-brand" onClick={closeMenu}>
+        <span className="app-brand-mark"><FireIcon size={28} /></span>
+        <h1>{t('app.title')}</h1>
+      </PreloadLink>
     <nav className="app-nav" aria-label={NAVBAR_LABELS.ariaLabel}>
       <button
+        ref={toggleRef}
+        type="button"
         className="nav-toggle"
         onClick={toggleMenu}
         aria-label={NAVBAR_LABELS.toggle}
         aria-expanded={isOpen}
+        aria-controls="app-navigation-links"
       >
         {isOpen ? <MaterialIcon name="close" /> : <MaterialIcon name="menu" />}
       </button>
-      <div className={`nav-links ${isOpen ? 'open' : ''}`}>
+      <div id="app-navigation-links" className={`nav-links ${isOpen ? 'open' : ''}`}>
         <PreloadLink
           to="/"
           className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
@@ -143,6 +169,7 @@ function Navigation({ accountName, showPortfolioBreakdown }: { accountName: stri
         <ProfileMenu accountName={accountName} />
       </div>
     </nav>
+    </header>
   );
 }
 
@@ -234,22 +261,23 @@ function App() {
     };
   }, []);
   
-  const handleSettingsChange = (newSettings: UserSettings) => {
+  const handleSettingsChange = useCallback((newSettings: UserSettings) => {
     setSettings(newSettings);
-  };
+  }, []);
   
-  const openPolicy = (type: PolicyType) => {
+  const openPolicy = useCallback((type: PolicyType) => {
     setPolicyModalType(type);
-  };
+  }, []);
   
-  const closePolicy = () => {
+  const closePolicy = useCallback(() => {
     setPolicyModalType(null);
-  };
+  }, []);
+  const policyContext = useMemo(() => ({ openPolicy, closePolicy }), [openPolicy, closePolicy]);
 
   return (
     <Router basename={basename}>
       <AuditLogProvider>
-        <PolicyModalContext.Provider value={{ openPolicy, closePolicy }}>
+        <PolicyModalContext.Provider value={policyContext}>
         <div className={isElectron ? 'app app--electron' : 'app'}>
           <NavigateBridge />
           <DemoBanner />
@@ -258,13 +286,14 @@ function App() {
               <UpdateNotification />
             </Suspense>
           )}
-          <a href="#main-content" className="skip-link">{t('app.skipToContent')}</a>
-          
-          <header className="app-header">
-            <FireIcon size={96} className="header-fire-icon" />
-            <h1>{t('app.title')}</h1>
-            <p>{t('app.tagline')}</p>
-          </header>
+          <a href="#main-content" className="skip-link" onClick={event => {
+            event.preventDefault();
+            const main = document.getElementById('main-content');
+            if (main) {
+              main.tabIndex = -1;
+              main.focus();
+            }
+          }}>{t('app.skipToContent')}</a>
 
           <Navigation accountName={settings.accountName} showPortfolioBreakdown={settings.experimentalFeatures?.portfolioBreakdown ?? false} />
 

@@ -38,8 +38,11 @@ npm run test:watch                # watch mode
 npm test -- tests/pages/settings/ # run just one page's tests
 ```
 
+The runner also includes co-located `src/**/*.test.ts` and `.test.tsx` files.
+New tests should still follow the feature-based layout above.
+
 ## CI
 
-`.github/workflows/tests-per-page.yml` runs scoped tests per page directory
+`.github/workflows/tests.yml` runs scoped tests per page directory
 when source or test files for that page change, and runs the full suite on
 shared/, types/, or config changes. See that workflow for the path filters.

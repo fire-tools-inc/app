@@ -112,6 +112,22 @@ describe('expense-tracker months', () => {
 });
 
 describe('expense-tracker expenses', () => {
+  it.each([-1, null, '12.5'])('rejects an invalid expense amount %s with a validation error', async (amount) => {
+    const { app, db } = makeApp();
+    const res = await request(app).post(`${base}/expenses`).send(exp({ amount }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
+    db.close();
+  });
+
+  it('rejects a nonexistent calendar date', async () => {
+    const { app, db } = makeApp();
+    const res = await request(app).post(`${base}/expenses`).send(exp({ date: '2026-02-30' }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
+    db.close();
+  });
+
   it('preserves the saved expense when replacing it fails', async () => {
     const { app, db } = makeApp();
     await request(app).post(`${base}/expenses`).send(exp());
@@ -235,6 +251,16 @@ describe('expense-tracker expenses', () => {
 });
 
 describe('expense-tracker incomes', () => {
+  it('rejects invalid income values before modifying the saved record', async () => {
+    const { app, db } = makeApp();
+    await request(app).post(`${base}/incomes`).send(inc());
+    const res = await request(app).put(`${base}/incomes/i-1`).send(inc({ amount: -10 }));
+    expect(res.status).toBe(400);
+    const saved = await request(app).get(`${base}/incomes`);
+    expect(saved.body.items[0].amount).toBe(3000);
+    db.close();
+  });
+
   it('preserves the saved income when replacing it fails', async () => {
     const { app, db } = makeApp();
     await request(app).post(`${base}/incomes`).send(inc());

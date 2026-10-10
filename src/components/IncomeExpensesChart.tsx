@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { YearProjection } from '../types/calculator';
 import { formatCurrency } from '../utils/allocationCalculator';
 import { calculateXAxisInterval, calculateBarSize } from '../utils/chartHelper';
+import { ChartZoomControls } from './ChartZoomControls';
 
 // Privacy placeholder for blurred values
 const PRIVACY_PLACEHOLDER = '***';
@@ -60,92 +61,11 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
     return value.toString();
   };
 
-  const handleCustomZoomSubmit = () => {
-    const years = parseInt(customZoomInput);
-    if (!isNaN(years) && years > 0) {
-      onZoomChange(years);
-    }
-  };
-
-  const handleCustomZoomKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleCustomZoomSubmit();
-    }
-  };
-
-  const buttonStyle = (isActive: boolean) => ({
-    padding: '5px 10px',
-    border: '1px solid #3A3D46',
-    borderRadius: '4px',
-    background: isActive ? '#2DD4BF' : '#1A1D26',
-    color: isActive ? 'white' : '#94A3B8',
-    cursor: 'pointer',
-    fontSize: '12px',
-  });
-
   return (
     <section className="chart-container" aria-labelledby="income-expenses-chart-heading">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+      <div className="chart-header">
         <h3 id="income-expenses-chart-heading">{t('charts.incomeVsExpenses')}</h3>
-        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }} role="group" aria-label={t('charts.zoomControls')}>
-          <button
-            onClick={() => onZoomChange(20)}
-            className={`zoom-button ${zoomYears === 20 ? 'active' : ''}`}
-            style={buttonStyle(zoomYears === 20)}
-            aria-pressed={zoomYears === 20}
-            aria-label={t('charts.zoomTo20AriaLabel')}
-          >
-            {t('charts.zoom20Years')}
-          </button>
-          <button
-            onClick={() => onZoomChange(30)}
-            className={`zoom-button ${zoomYears === 30 ? 'active' : ''}`}
-            style={buttonStyle(zoomYears === 30)}
-            aria-pressed={zoomYears === 30}
-            aria-label={t('charts.zoomTo30AriaLabel')}
-          >
-            {t('charts.zoom30Years')}
-          </button>
-          <button
-            onClick={() => onZoomChange(40)}
-            className={`zoom-button ${zoomYears === 40 ? 'active' : ''}`}
-            style={buttonStyle(zoomYears === 40)}
-            aria-pressed={zoomYears === 40}
-            aria-label={t('charts.zoomTo40AriaLabel')}
-          >
-            {t('charts.zoom40Years')}
-          </button>
-          <button
-            onClick={() => onZoomChange('all')}
-            className={`zoom-button ${zoomYears === 'all' ? 'active' : ''}`}
-            style={buttonStyle(zoomYears === 'all')}
-            aria-pressed={zoomYears === 'all'}
-            aria-label={t('charts.showAllYearsAriaLabel')}
-          >
-            {t('charts.zoomAllYears')}
-          </button>
-          <input
-            type="number"
-            inputMode="numeric"
-            placeholder={t('charts.customZoomPlaceholder')}
-            value={customZoomInput}
-            onChange={(e) => onCustomZoomInputChange(e.target.value)}
-            onKeyPress={handleCustomZoomKeyPress}
-            onBlur={handleCustomZoomSubmit}
-            style={{
-              width: '70px',
-              padding: '5px',
-              border: '1px solid #3A3D46',
-              borderRadius: '4px',
-              fontSize: '12px',
-              background: '#1A1D26',
-              color: '#F8FAFC',
-            }}
-            min="1"
-            step="1"
-            aria-label={t('charts.customZoomAriaLabel')}
-          />
-        </div>
+        <ChartZoomControls zoomYears={zoomYears} onZoomChange={onZoomChange} customZoomInput={customZoomInput} onCustomZoomInputChange={onCustomZoomInputChange} />
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} aria-label={t('charts.incomeExpensesChartAriaLabel')} barSize={calculateBarSize(data.length)}>
@@ -172,12 +92,12 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
             itemStyle={{ color: '#F8FAFC' }}
           />
           <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
-          <Bar dataKey="Labor Income" name={t('charts.laborIncome')} fill="#22C55E" />
-          <Bar dataKey="Investment Yield" name={t('charts.investmentYield')} fill="#3B82F6" />
-          <Bar dataKey="State Pension" name={t('charts.statePension')} fill="#A855F7" />
-          <Bar dataKey="Private Pension" name={t('charts.privatePension')} fill="#F59E0B" />
-          <Bar dataKey="Other Income" name={t('charts.otherIncome')} fill="#06B6D4" />
-          <Bar dataKey="Expenses" name={t('charts.expenses')} fill="#EF4444" />
+          <Bar dataKey="Labor Income" name={t('charts.laborIncome')} fill="var(--success)" isAnimationActive={false} />
+          <Bar dataKey="Investment Yield" name={t('charts.investmentYield')} fill="var(--accent-primary)" isAnimationActive={false} />
+          <Bar dataKey="State Pension" name={t('charts.statePension')} fill="var(--accent-gold)" isAnimationActive={false} />
+          <Bar dataKey="Private Pension" name={t('charts.privatePension')} fill="var(--warning)" isAnimationActive={false} />
+          <Bar dataKey="Other Income" name={t('charts.otherIncome')} fill="#88CDD5" isAnimationActive={false} />
+          <Bar dataKey="Expenses" name={t('charts.expenses')} fill="var(--error)" isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </section>

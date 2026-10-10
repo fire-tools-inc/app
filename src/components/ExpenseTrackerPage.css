@@ -1,11 +1,13 @@
 .expense-tracker-page {
+  width: 100%;
+  min-width: 0;
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
 
 .expense-tracker-page .page-header {
-  text-align: center;
+  text-align: left;
   margin-bottom: 2rem;
 }
 
@@ -21,10 +23,12 @@
 }
 
 .expense-tracker-main {
-  background: var(--bg-elevated);
+  min-width: 0;
+  background: var(--glass-surface);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--glass-shadow);
+  border: 1px solid var(--border-subtle);
 }
 
 /* Summary Cards */
@@ -40,7 +44,7 @@
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -50,8 +54,11 @@
   gap: 1rem;
   padding: 1.25rem;
   border-radius: 12px;
-  color: white;
+  color: var(--text-primary);
   position: relative;
+  background: var(--glass-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--glass-shadow);
 }
 
 .card-privacy-btn {
@@ -63,24 +70,24 @@
   padding: 0.25rem;
 }
 
-.summary-card.income {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
+.summary-card.income .card-icon {
+  color: var(--success);
 }
 
-.summary-card.expenses {
-  background: linear-gradient(135deg, var(--error) 0%, var(--error) 100%);
+.summary-card.expenses .card-icon {
+  color: var(--error);
 }
 
-.summary-card.balance.positive {
-  background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%);
+.summary-card.balance.positive .card-icon {
+  color: var(--info);
 }
 
-.summary-card.balance.negative {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+.summary-card.balance.negative .card-icon {
+  color: var(--warning);
 }
 
-.summary-card.savings {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+.summary-card.savings .card-icon {
+  color: var(--accent-primary);
 }
 
 .card-icon {
@@ -94,12 +101,15 @@
 
 .card-label {
   font-size: 0.85rem;
-  opacity: 0.9;
+  color: var(--text-secondary);
 }
 
 .card-value {
   font-size: 1.5rem;
   font-weight: bold;
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
 }
 
 /* Budget Rule Section */
@@ -159,7 +169,7 @@
 
 .rule-bar-label span:last-child {
   font-weight: 700;
-  color: var(--text-tertiary);
+  color: var(--text-primary);
 }
 
 .rule-bar-track {
@@ -210,7 +220,7 @@
 
 .rule-bar-amount {
   font-size: 0.85rem;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   text-align: right;
 }
 
@@ -240,8 +250,8 @@
 }
 
 .tab.active {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--accent-surface);
+  color: var(--accent-primary);
 }
 
 /* Transactions Section */
@@ -275,13 +285,15 @@
 }
 
 .btn-add.income {
-  background: linear-gradient(135deg, var(--success) 0%, var(--success) 100%);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--success);
+  border: 1px solid var(--border-subtle);
 }
 
 .btn-add.expense {
-  background: linear-gradient(135deg, var(--error) 0%, var(--error) 100%);
-  color: white;
+  background: var(--bg-tertiary);
+  color: var(--error);
+  border: 1px solid var(--border-subtle);
 }
 
 .btn-add:hover {
@@ -329,8 +341,8 @@
 }
 
 .sort-direction-btn {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--accent-primary);
+  color: var(--text-inverse);
   border: none;
   width: 32px;
   height: 32px;

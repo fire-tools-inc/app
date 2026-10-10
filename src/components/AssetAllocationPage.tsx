@@ -133,8 +133,6 @@ export const AssetAllocationPage: React.FC = () => {
     () => loadSettings().experimentalFeatures?.portfolioBreakdown ?? false,
   );
 
-  // Track if we're currently syncing to prevent infinite loops
-  const isSyncingRef = useRef(false);
   // Track whether initial price fetch has been done
   const hasFetchedPricesRef = useRef(false);
 
@@ -173,11 +171,6 @@ export const AssetAllocationPage: React.FC = () => {
 
   // Auto-save to localStorage when assets or targets change
   useEffect(() => {
-    // Prevent sync loop - don't sync if we're already syncing
-    if (isSyncingRef.current) {
-      return;
-    }
-
     saveAssetAllocation(assets, assetClassTargets);
 
     // If Net Worth Tracker has sync enabled, sync Asset Allocation → Net Worth
@@ -189,13 +182,8 @@ export const AssetAllocationPage: React.FC = () => {
 
       // Only sync if Net Worth Tracker is viewing the current month
       if (netWorthData.currentYear === currentYear && netWorthData.currentMonth === currentMonth) {
-        isSyncingRef.current = true;
         const synced = syncAssetAllocationToNetWorth(assets, netWorthData);
         saveNetWorthTrackerData(synced);
-        // Reset flag after a brief delay to allow other component to process
-        setTimeout(() => {
-          isSyncingRef.current = false;
-        }, 100);
       }
     }
   }, [assets, assetClassTargets]);
@@ -862,7 +850,6 @@ export const AssetAllocationPage: React.FC = () => {
                 <button
                   onClick={() => setIsDCADialogOpen(true)}
                   className="action-btn"
-                  style={{ background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)', color: 'white' }}
                   aria-label={t('assetAllocation.openDcaHelperAria')}
                 >
                   <MaterialIcon name="savings" /> {t('assetAllocation.dcaHelper')}

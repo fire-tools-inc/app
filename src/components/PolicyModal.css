@@ -68,10 +68,7 @@
 .policy-modal-header h1 {
   margin: 0;
   font-size: 1.75rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .policy-modal-close {
