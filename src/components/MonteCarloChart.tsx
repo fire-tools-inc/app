@@ -1,15 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  ReferenceLine,
-  Legend
-} from 'recharts';
 import { loadSettings } from '../utils/cookieSettings';
 import { getCurrencySymbol } from '../utils/currencyConverter';
 import { AbbreviatedValue } from './AbbreviatedValue';
@@ -28,6 +17,7 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ yearsDistribut
   // Get currency symbol from settings - recalculated on each render to pick up changes
   const settings = loadSettings();
   const currencySymbol = getCurrencySymbol(settings.currencySettings.defaultCurrency);
+  const maxCount = Math.max(1, ...distributionData.bins.map(bin => bin.count));
 
   return (
     <div className="monte-carlo-charts">
@@ -35,48 +25,26 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ yearsDistribut
       {distributionData.stats && (
       <section className="chart-section" aria-labelledby="years-distribution-heading">
         <h4 id="years-distribution-heading">{t('monteCarlo.chart.yearsDistribution')}</h4>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={distributionData.bins} aria-label={t('monteCarlo.chart.yearsDistributionAria')}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
-            <XAxis 
-              dataKey="range" 
-              label={{ value: t('monteCarlo.chart.yearsAxisLabel'), position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
-              tick={{ fontSize: 11, fill: '#94A3B8' }}
-              stroke="#3A3D46"
-            />
-            <YAxis 
-              label={{ value: t('monteCarlo.chart.simulationsAxisLabel'), angle: -90, position: 'insideLeft', fill: '#94A3B8' }}
-              tick={{ fill: '#94A3B8' }}
-              stroke="#3A3D46"
-            />
-            <Tooltip 
-              formatter={(value) => [t('monteCarlo.chart.tooltipSimulations', { value }), t('monteCarlo.chart.tooltipCount')]}
-              labelFormatter={(label) => t('monteCarlo.chart.tooltipYears', { label })}
-              contentStyle={{ background: '#1A1D26', border: '1px solid #2DD4BF', borderRadius: '8px', color: '#F8FAFC' }}
-              labelStyle={{ color: '#F8FAFC' }}
-              itemStyle={{ color: '#F8FAFC' }}
-            />
-            <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
-            <Bar 
-              dataKey="count" 
-              fill="var(--accent-primary)"
-              isAnimationActive={false}
-              name={t('monteCarlo.chart.simulationsAxisLabel')}
-            />
-            {distributionData.stats && (() => {
-              const medianBinIndex = distributionData.bins.findIndex(b => b.isMedian);
-              return medianBinIndex >= 0 ? (
-                <ReferenceLine 
-                  x={distributionData.bins[medianBinIndex].range}
-                  stroke="#4B5563" 
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  label={{ value: t('monteCarlo.chart.median'), position: 'top', fill: '#4B5563' }}
-                />
-              ) : null;
-            })()}
-          </BarChart>
-        </ResponsiveContainer>
+        <figure className="simulation-histogram" aria-label={t('monteCarlo.chart.yearsDistributionAria')}>
+          <div className="histogram-columns" role="list" aria-label={t('monteCarlo.chart.simulationsAxisLabel')}>
+            {distributionData.bins.map(bin => (
+              <div
+                key={bin.range}
+                className={`histogram-bin${bin.isMedian ? ' histogram-bin--median' : ''}`}
+                role="listitem"
+                title={`${t('monteCarlo.chart.tooltipYears', { label: bin.range })}: ${t('monteCarlo.chart.tooltipSimulations', { value: bin.count })}`}
+              >
+                <span className="histogram-count">{bin.count}</span>
+                <span className="histogram-bar" style={{ height: `${bin.count / maxCount * 180}px` }} aria-hidden="true" />
+                <span className="histogram-range">{bin.range}</span>
+              </div>
+            ))}
+          </div>
+          <figcaption className="histogram-caption">
+            <span>{t('monteCarlo.chart.yearsAxisLabel')}</span>
+            <span className="histogram-median-key">{t('monteCarlo.chart.median')}</span>
+          </figcaption>
+        </figure>
 
         <div className="distribution-stats" role="table" aria-label={t('monteCarlo.chart.statsAria')}>
           <div className="stat-row" role="row">
