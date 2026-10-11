@@ -141,8 +141,8 @@ export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onO
         aria-label={isCompact && isOpen ? NAVBAR_LABELS.ariaLabel : undefined}
       >
         <div className="app-navigation-header">
+          <ProfileMenu accountName={accountName} showAccountName />
           <PreloadLink to="/" className="app-navigation-brand" onClick={closeMenu}>
-            <span className="app-brand-mark"><FireIcon size={28} /></span>
             <h1>{t('app.title')}</h1>
           </PreloadLink>
           <button type="button" className="app-navigation-close" aria-label={NAVBAR_LABELS.close} onClick={closeMenu}>
@@ -164,7 +164,6 @@ export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onO
         <div className="app-navigation-footer">
           {renderItem({ path: '/settings', label: 'settings', icon: 'settings' })}
           <NotificationBell showLabel />
-          <ProfileMenu accountName={accountName} showAccountName />
         </div>
       </aside>
     </>

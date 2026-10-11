@@ -8,9 +8,10 @@ calculator, the asset allocation manager or any of the trackers.
 ## What you see
 
 - **Sidebar navigation** — labelled links to every tool stay on the left in
-  desktop-sized windows. Tracking and planning tools are grouped separately,
-  with Settings, notifications and your portfolio menu at the bottom.
-  The current page is highlighted; the page itself no longer has a top navigation bar.
+  desktop-sized windows, in a narrow rounded rail. Your portfolio menu is at
+  the top; Settings and notifications sit below a divider at the bottom.
+  Tracking and planning tools are grouped separately, with compact rows and a
+  subtle highlight for the current page.
 - **Track your finances** — shortcuts to Asset Allocation, Cashflow and Net Worth.
 - **Plan and stress-test** — the FIRE calculator, Monte Carlo, Investment Growth,
   Backtest, Withdrawal Rate, Debt Payoff and Questionnaire tools.

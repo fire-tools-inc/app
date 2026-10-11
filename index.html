@@ -20,16 +20,18 @@
         -webkit-font-smoothing: antialiased;
       }
       #root, .app { min-height: 100vh; }
-      .app { display: grid; grid-template-columns: 216px minmax(0, 1fr); }
+      .app { display: grid; grid-template-columns: 204px minmax(0, 1fr); }
       .app-workspace { display: flex; flex-direction: column; min-width: 0; }
       .app-navigation {
         position: sticky;
-        top: 0;
-        height: 100dvh;
+        top: 12px;
+        height: calc(100dvh - 24px);
+        margin: 12px 0 12px 12px;
         display: flex;
         flex-direction: column;
         background: rgba(19, 28, 40, 0.92);
-        border-right: 1px solid #344355;
+        border: 1px solid #344355;
+        border-radius: 20px;
       }
       .app-mobile-header { display: none; }
       @media (max-width: 999px) {

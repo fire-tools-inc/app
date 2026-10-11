@@ -9,7 +9,7 @@ vi.mock('../../src/components/NotificationBell', () => ({
   NotificationBell: () => <button>Notifications</button>,
 }));
 vi.mock('../../src/components/ProfileMenu', () => ({
-  ProfileMenu: ({ accountName }: { accountName: string }) => <button>{accountName}</button>,
+  ProfileMenu: ({ accountName }: { accountName: string }) => <button className="profile-icon-button">{accountName}</button>,
 }));
 
 function Harness({ showPortfolioBreakdown = false }: { showPortfolioBreakdown?: boolean }) {
@@ -61,6 +61,17 @@ describe('App sidebar navigation', () => {
     expect(screen.getByRole('link', { name: NAVBAR_LABELS.portfolioBreakdown })).toBeTruthy();
   });
 
+  it('places the profile above the menu and utilities below the divider', () => {
+    setCompact(false);
+    render(<Harness />);
+    const profile = screen.getByRole('button', { name: 'Test portfolio' });
+    expect(document.querySelector('.app-navigation-header')?.contains(profile)).toBe(true);
+    const footer = document.querySelector('.app-navigation-footer')!;
+    expect(footer.contains(screen.getByRole('link', { name: NAVBAR_LABELS.settings }))).toBe(true);
+    expect(footer.contains(screen.getByRole('button', { name: 'Notifications' }))).toBe(true);
+    expect(footer.contains(profile)).toBe(false);
+  });
+
   it('opens a keyboard-accessible drawer and restores focus on Escape', () => {
     setCompact(true);
     render(<Harness />);
@@ -87,8 +98,8 @@ describe('App sidebar navigation', () => {
     setCompact(true);
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: NAVBAR_LABELS.toggle }));
-    const first = document.querySelector<HTMLElement>('.app-navigation-brand')!;
-    const last = screen.getByRole('button', { name: 'Test portfolio' });
+    const first = screen.getByRole('button', { name: 'Test portfolio' });
+    const last = screen.getByRole('button', { name: 'Notifications' });
     last.focus();
     fireEvent.keyDown(document, { key: 'Tab' });
     expect(document.activeElement).toBe(first);

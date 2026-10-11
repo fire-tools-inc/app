@@ -199,7 +199,7 @@ body {
 .app {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 216px minmax(0, 1fr);
+  grid-template-columns: 204px minmax(0, 1fr);
 }
 
 .app-workspace {
