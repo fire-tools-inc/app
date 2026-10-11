@@ -24,6 +24,8 @@ page.
 The **Expense statistics** panel covers the complete saved history, including
 archived years:
 
+![Expense statistics with year-to-date totals and averages](./screenshots/expense-statistics.png)
+
 - **Expenses year to date** totals actual expense dates from January 1 through
   today. Its monthly average divides by the elapsed calendar months, including
   empty months, not just months with entries.

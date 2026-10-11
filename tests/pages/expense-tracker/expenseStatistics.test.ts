@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ExpenseEntry, ExpenseTrackerData } from '../../../src/types/expenseTracker';
 import { calculateExpenseStatistics } from '../../../src/utils/expenseStatistics';
-import { calculateYearToDateBreakdown } from '../../../src/utils/expenseCalculator';
+import { calculateMonthlyComparison, calculateYearToDateBreakdown } from '../../../src/utils/expenseCalculator';
 
 function expense(date: string, amount: number, currency: ExpenseEntry['currency'] = 'EUR'): ExpenseEntry {
   return { id: date, type: 'expense', date, amount, currency, description: 'Synthetic expense', category: 'OTHER', expenseType: 'WANT' };
@@ -15,6 +15,14 @@ function tracker(expenses: ExpenseEntry[]): ExpenseTrackerData {
 }
 
 describe('calculateExpenseStatistics', () => {
+  it('keeps the existing monthly comparison average consistent with elapsed YTD months', () => {
+    const result = calculateMonthlyComparison([
+      { year: 2026, month: 1, incomes: [], budgets: [], expenses: [expense('2026-01-01', 100)] },
+      { year: 2026, month: 3, incomes: [], budgets: [], expenses: [expense('2026-03-01', 50)] },
+    ], 3);
+    expect(result.every(point => point.average === 50)).toBe(true);
+  });
+
   it('keeps the existing category YTD view consistent with elapsed-month averages', () => {
     const result = calculateYearToDateBreakdown([
       { year: 2026, month: 1, incomes: [], budgets: [], expenses: [expense('2026-01-01', 100)] },

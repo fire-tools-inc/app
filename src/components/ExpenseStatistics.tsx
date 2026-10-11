@@ -2,6 +2,8 @@ import { Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '../types/currency';
 import type { ExpenseTrackerData } from '../types/expenseTracker';
+import { loadSettings } from '../utils/cookieSettings';
+import { formatDate } from '../utils/dateFormatter';
 import { formatDashboardMonth } from '../utils/dashboard';
 import { isValidCalendarDate } from '../utils/dateValidation';
 import { calculateExpenseStatistics } from '../utils/expenseStatistics';
@@ -27,6 +29,7 @@ type StatisticsView = 'ytd' | 'yearly' | 'custom';
 
 export function ExpenseStatistics({ data, isPrivacyMode, now = new Date() }: ExpenseStatisticsProps) {
   const { t, i18n } = useTranslation();
+  const dateFormat = loadSettings().dateFormat;
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const yearStart = `${now.getFullYear()}-01-01`;
   const [view, setView] = useState<StatisticsView>('ytd');
@@ -85,7 +88,9 @@ export function ExpenseStatistics({ data, isPrivacyMode, now = new Date() }: Exp
       <p className="expense-statistics-help">{t('expenseStatistics.currencyHelp')}</p>
       {!validRange && <p role="alert">{t('expenseStatistics.invalidRange')}</p>}
       {result && <>
-        <p className="expense-statistics-help">{t('expenseStatistics.selectedRange', { start, end })}</p>
+        <p className="expense-statistics-help">{t('expenseStatistics.selectedRange', {
+          start: formatDate(start, dateFormat), end: formatDate(end, dateFormat),
+        })}</p>
         <div className="expense-statistics-metrics">
           {metrics.map(([key, amount]) => (
             <dl key={key} role="group" aria-label={t(`expenseStatistics.${key}`)}>
@@ -99,7 +104,9 @@ export function ExpenseStatistics({ data, isPrivacyMode, now = new Date() }: Exp
           {t('expenseStatistics.historyHelp', { count: result.historyMonthCount })}
         </p>
         {result.historyStartDate && result.historyEndDate && <p className="expense-statistics-help">
-          {t('expenseStatistics.historyRange', { start: result.historyStartDate, end: result.historyEndDate })}
+          {t('expenseStatistics.historyRange', {
+            start: formatDate(result.historyStartDate, dateFormat), end: formatDate(result.historyEndDate, dateFormat),
+          })}
         </p>}
         {result.invalidTransactionCount > 0 && <p role="alert">
           {t('expenseStatistics.invalidRecords', { count: result.invalidTransactionCount })}

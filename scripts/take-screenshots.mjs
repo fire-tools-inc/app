@@ -37,6 +37,7 @@ const routes = [
   { slug: 'monte-carlo',        path: '/demo/monte-carlo' },
   { slug: 'asset-allocation',   path: '/demo/asset-allocation' },
   { slug: 'expense-tracker',    path: '/demo/expense-tracker' },
+  { slug: 'expense-statistics', path: '/demo/expense-tracker', selector: '.expense-statistics' },
   { slug: 'net-worth-tracker',  path: '/demo/net-worth-tracker' },
   { slug: 'questionnaire',      path: '/demo/questionnaire' },
   { slug: 'settings',           path: '/demo/settings' },
@@ -152,7 +153,15 @@ async function main() {
         if (btn) { await btn.click(); await sleep(300); }
       } catch { /* ignore */ }
       const file = resolve(outDir, `${r.slug}.png`);
-      await page.screenshot({ path: file, fullPage: false });
+      if (r.slug === 'expense-statistics') {
+        await page.getByRole('tab', { name: 'Analytics', exact: true }).click();
+        await page.locator(r.selector).locator('.recharts-surface').waitFor({ state: 'visible' });
+        await page.locator(r.selector).getByRole('heading', { name: 'Expense statistics' }).hover();
+        await page.mouse.move(0, 0);
+        await page.locator(r.selector).screenshot({ path: file });
+      } else {
+        await page.screenshot({ path: file, fullPage: false });
+      }
       console.error(`[take-screenshots]    saved ${file}`);
     }
 

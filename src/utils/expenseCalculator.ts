@@ -340,7 +340,7 @@ export function sortTransactions<T extends Transaction>(
 /**
  * Calculate monthly comparison data for charts
  */
-export function calculateMonthlyComparison(monthsData: MonthData[]): MonthlyComparisonData[] {
+export function calculateMonthlyComparison(monthsData: MonthData[], elapsedMonths = monthsData.length): MonthlyComparisonData[] {
   if (monthsData.length === 0) {
     return [];
   }
@@ -349,7 +349,8 @@ export function calculateMonthlyComparison(monthsData: MonthData[]): MonthlyComp
   const totalExpenses = monthsData.reduce((sum, month) => {
     return sum + month.expenses.reduce((expSum, exp) => expSum + exp.amount, 0);
   }, 0);
-  const averageExpense = totalExpenses / monthsData.length;
+  if (!Number.isInteger(elapsedMonths) || elapsedMonths < 1) throw new RangeError('Elapsed months must be a positive integer.');
+  const averageExpense = totalExpenses / elapsedMonths;
 
   return monthsData.map(month => {
     const expenses = month.expenses.reduce((sum, exp) => sum + exp.amount, 0);

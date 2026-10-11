@@ -470,8 +470,8 @@ export function ExpenseTrackerPage() {
 
   // Monthly comparison data - uses filtered months based on analytics view
   const monthlyComparisonData = useMemo(() => {
-    return calculateMonthlyComparison(filteredMonthsData);
-  }, [filteredMonthsData]);
+    return calculateMonthlyComparison(filteredMonthsData, analyticsView === 'ytd' ? selectedMonth : filteredMonthsData.length);
+  }, [filteredMonthsData, analyticsView, selectedMonth]);
 
   // Category trends data - uses filtered months based on analytics view
   const categoryTrendsData = useMemo(() => {

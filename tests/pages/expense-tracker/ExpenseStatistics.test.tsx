@@ -27,6 +27,7 @@ describe('ExpenseStatistics', () => {
     expect(within(screen.getByRole('group', { name: 'Total expenses' })).getByText(/150/)).toBeTruthy();
     expect(within(screen.getByRole('group', { name: 'Monthly average' })).getByText(/50/)).toBeTruthy();
     expect(screen.getByText('Historical monthly average')).toBeTruthy();
+    expect(screen.getByText('Selected period: 01/01/2026 to 15/03/2026 (inclusive).')).toBeTruthy();
     fireEvent.click(screen.getByText('View statistics data'));
     expect(screen.getByRole('table', { name: 'Expense statistics data' })).toBeTruthy();
     await screen.findByText('Statistics chart');

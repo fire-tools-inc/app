@@ -65,6 +65,7 @@ jobs:
             server:
               - 'server/**'
               - 'scripts/**'
+              - 'src/utils/{liteParseResult,pdfHeuristics,dateValidation}.ts'
               - 'tests/shared/diagnostics.ts'
             browser:
               - 'tests/browser/**'
