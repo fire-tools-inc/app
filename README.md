@@ -101,6 +101,13 @@ geometry across desktop/mobile routes without contacting market services.
 
 ## Deployment Options
 
+For a desktop release, run `./scripts/release.sh vX.Y.Z` from a clean `main`
+checkout synchronized with `origin/main`. It bumps the version, restores
+dependencies, audits/tests/builds locally, then atomically pushes the version
+commit and tag. GitHub Actions builds and publishes the installers afterward;
+the script prints the workflow link without waiting. See the
+[release guide](docs/engineering/releasing.md).
+
 | Mode | Storage | How to run | Details |
 |------|---------|------------|---------|
 | **Web demo** | None — read-only preview | [Live demo](https://fire-tools-inc.github.io/app/demo/) | Seeded sample data; nothing you enter is saved |
