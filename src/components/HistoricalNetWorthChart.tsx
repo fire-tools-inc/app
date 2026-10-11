@@ -58,13 +58,13 @@ function getCurrencySymbol(currency: SupportedCurrency): string {
 
 // Colors for additional currency lines
 const ADDITIONAL_CURRENCY_COLORS: Record<SupportedCurrency, string> = {
-  EUR: '#4CAF50',
-  USD: '#2196F3',
-  GBP: '#9C27B0',
-  CHF: '#FF5722',
-  JPY: '#E91E63',
-  AUD: '#00BCD4',
-  CAD: '#795548',
+  EUR: '#8BD0AF',
+  USD: '#8CBCF3',
+  GBP: '#A8B9D1',
+  CHF: '#EDB58A',
+  JPY: '#CFA7AD',
+  AUD: '#91C8CC',
+  CAD: '#C5AF96',
 };
 
 export function HistoricalNetWorthChart({
@@ -519,12 +519,12 @@ export function HistoricalNetWorthChart({
           {previousYearEnd !== null && (
             <ReferenceLine
               y={previousYearEnd}
-              stroke="#A855F7"
+              stroke="var(--warning)"
               strokeDasharray="5 5"
               label={{
                 value: isPrivacyMode ? t('charts.prevYear', { value: PRIVACY_PLACEHOLDER }) : t('charts.prevYear', { value: `${symbol}${formatChartCurrency(previousYearEnd)}` }),
                 position: 'right',
-                fill: '#A855F7',
+                fill: 'var(--warning)',
                 fontSize: 11,
               }}
             />
@@ -534,10 +534,11 @@ export function HistoricalNetWorthChart({
           <Line
             type="monotone"
             dataKey="netWorth"
-            stroke="#2DD4BF"
+            stroke="var(--accent-primary)"
             strokeWidth={3}
-            dot={{ fill: '#2DD4BF', strokeWidth: 2, r: 4 }}
-            activeDot={{ r: 6, fill: '#2DD4BF' }}
+            dot={false}
+            activeDot={{ r: 5, fill: 'var(--accent-primary)' }}
+            isAnimationActive={false}
             name="netWorth"
             connectNulls={false}
           />
@@ -547,11 +548,12 @@ export function HistoricalNetWorthChart({
             <Line
               type="monotone"
               dataKey="forecast"
-              stroke="#4B5563"
+              stroke="var(--chart-bonds)"
               strokeWidth={2}
               strokeDasharray="5 5"
-              dot={{ fill: '#4B5563', strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, fill: '#4B5563' }}
+              dot={false}
+              activeDot={{ r: 5, fill: 'var(--chart-bonds)' }}
+              isAnimationActive={false}
               name="forecast"
               connectNulls={true}
             />
@@ -565,7 +567,8 @@ export function HistoricalNetWorthChart({
               dataKey={`netWorth_${curr}`}
               stroke={ADDITIONAL_CURRENCY_COLORS[curr]}
               strokeWidth={2}
-              dot={{ fill: ADDITIONAL_CURRENCY_COLORS[curr], strokeWidth: 2, r: 3 }}
+              dot={false}
+              isAnimationActive={false}
               activeDot={{ r: 5, fill: ADDITIONAL_CURRENCY_COLORS[curr] }}
               name={`netWorth_${curr}`}
               connectNulls={false}

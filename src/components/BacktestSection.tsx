@@ -364,7 +364,7 @@ export const BacktestSection: React.FC<BacktestSectionProps> = ({
                     type="monotone"
                     dataKey="portfolioValue"
                     name={t('backtest.charts.growthLegend')}
-                    stroke="#5568d4"
+                    stroke="var(--accent-primary)"
                     strokeWidth={2}
                     dot={false}
                   />
@@ -388,8 +388,8 @@ export const BacktestSection: React.FC<BacktestSectionProps> = ({
                     type="monotone"
                     dataKey="drawdownPercent"
                     name={t('backtest.charts.drawdownLegend')}
-                    stroke="#e53935"
-                    fill="#ef9a9a"
+                    stroke="var(--error)"
+                    fill="var(--error)"
                   />
                 </AreaChart>
               </ResponsiveContainer>

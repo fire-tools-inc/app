@@ -38,6 +38,11 @@ instead.
   The same client ships to the web (`dist/`) and Electron.
 - **Interface** — a dark-default liquid-glass token system in `src/App.css`.
   Backdrop blur is reserved for floating chrome rather than every data card.
+  `AppNavigation` owns a fixed-width desktop sidebar and a keyboard-contained
+  mobile drawer; route content uses the remaining workspace. Portfolio charts
+  share `src/utils/chartColors.ts` so a class has the same readable color in
+  allocation, breakdown and net-worth flow views. The allocation donut uses a
+  compact plot with an opaque-text legend, rather than colored floating labels.
   System typefaces and a bundled, Apache-licensed Material Symbols font keep
   interface rendering independent of external font services.
 - **Settings reads** — the decrypted payload is cached by its encrypted

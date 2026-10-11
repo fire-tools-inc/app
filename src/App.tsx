@@ -1,19 +1,16 @@
-import { BrowserRouter, HashRouter, Routes, Route, useLocation, useNavigate } from 'react-router';
+import { BrowserRouter, HashRouter, Routes, Route, useNavigate } from 'react-router';
 // Use HashRouter under file:// (Electron) so deep links work without a server.
 const Router = typeof window !== 'undefined' && window.location.protocol === 'file:' ? HashRouter : BrowserRouter;
-import { createContext, lazy, startTransition, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, lazy, startTransition, Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomePage } from './components/HomePage';
-import { ProfileMenu } from './components/ProfileMenu';
-import { ToolsMenu } from './components/ToolsMenu';
-import { NotificationBell } from './components/NotificationBell';
+import { AppNavigation } from './components/AppNavigation';
 import { CookieConsent } from './components/CookieConsent';
 import { DemoBanner } from './components/DemoBanner';
 import { NotFoundPage } from './components/NotFoundPage';
 import { QuestionnairePrompt } from './components/QuestionnairePrompt';
 import { PolicyModal } from './components/PolicyModal';
 import type { PolicyType } from './components/PolicyModal';
-import { PreloadLink } from './components/PreloadLink';
 import { AuditLogProvider } from './contexts/AuditLogContext';
 import { loadSettings, type UserSettings } from './utils/cookieSettings';
 import { loadTourCompleted } from './utils/tourPreferences';
@@ -37,8 +34,6 @@ import {
 } from './routes/lazyPages';
 import './App.css';
 import { MaterialIcon } from './components/MaterialIcon';
-import { FireIcon } from './components/FireIcon';
-import { NAVBAR_LABELS } from './constants/navbarLabels';
 
 const GuidedTour = lazy(async () => {
   try {
@@ -75,103 +70,6 @@ export const PolicyModalContext = createContext<PolicyModalContextType>({
 });
 
 export const usePolicyModal = () => useContext(PolicyModalContext);
-
-function Navigation({ accountName, showPortfolioBreakdown }: { accountName: string; showPortfolioBreakdown: boolean }) {
-  const location = useLocation();
-  const { t } = useTranslation();
-  // Navbar labels are intentionally NOT routed through useTranslation — they
-  // must always render in English. See src/constants/navbarLabels.ts (#233).
-  const [isOpen, setIsOpen] = useState(false);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-
-  const toggleMenu = () => setIsOpen(open => !open);
-  const closeMenu = () => setIsOpen(false);
-
-  useEffect(() => {
-    closeMenu();
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeMenu();
-        toggleRef.current?.focus();
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen]);
-
-  return (
-    <header className="app-header">
-      <PreloadLink to="/" className="app-brand" onClick={closeMenu}>
-        <span className="app-brand-mark"><FireIcon size={28} /></span>
-        <h1>{t('app.title')}</h1>
-      </PreloadLink>
-    <nav className="app-nav" aria-label={NAVBAR_LABELS.ariaLabel}>
-      <button
-        ref={toggleRef}
-        type="button"
-        className="nav-toggle"
-        onClick={toggleMenu}
-        aria-label={NAVBAR_LABELS.toggle}
-        aria-expanded={isOpen}
-        aria-controls="app-navigation-links"
-      >
-        {isOpen ? <MaterialIcon name="close" /> : <MaterialIcon name="menu" />}
-      </button>
-      <div id="app-navigation-links" className={`nav-links ${isOpen ? 'open' : ''}`}>
-        <PreloadLink
-          to="/"
-          className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/' ? 'page' : undefined}
-        >
-          <MaterialIcon name="home" className="nav-icon" /> {NAVBAR_LABELS.home}
-        </PreloadLink>
-        <PreloadLink
-          to="/asset-allocation"
-          className={`nav-link ${location.pathname === '/asset-allocation' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/asset-allocation' ? 'page' : undefined}
-        >
-          <MaterialIcon name="pie_chart" className="nav-icon" /> {NAVBAR_LABELS.assetAllocation}
-        </PreloadLink>
-        <PreloadLink
-          to="/expense-tracker"
-          className={`nav-link ${location.pathname === '/expense-tracker' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/expense-tracker' ? 'page' : undefined}
-        >
-          <MaterialIcon name="account_balance_wallet" className="nav-icon" /> {NAVBAR_LABELS.cashflow}
-        </PreloadLink>
-        <PreloadLink
-          to="/net-worth-tracker"
-          className={`nav-link ${location.pathname === '/net-worth-tracker' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/net-worth-tracker' ? 'page' : undefined}
-        >
-          <MaterialIcon name="paid" className="nav-icon" /> {NAVBAR_LABELS.netWorth}
-        </PreloadLink>
-        <PreloadLink
-          to="/fire-calculator"
-          className={`nav-link ${location.pathname === '/fire-calculator' ? 'active' : ''}`}
-          onClick={closeMenu}
-          aria-current={location.pathname === '/fire-calculator' ? 'page' : undefined}
-        >
-          <MaterialIcon name="local_fire_department" className="nav-icon" /> {NAVBAR_LABELS.fireCalculator}
-        </PreloadLink>
-        <ToolsMenu onNavigate={closeMenu} showPortfolioBreakdown={showPortfolioBreakdown} />
-      </div>
-      <div className="nav-actions">
-        <NotificationBell />
-        <ProfileMenu accountName={accountName} />
-      </div>
-    </nav>
-    </header>
-  );
-}
 
 // Component to handle policy route and redirect to home while opening modal
 function PolicyRouteRedirect({ policyType }: { policyType: PolicyType }) {
@@ -226,6 +124,7 @@ function App() {
   
   // Load settings from localStorage
   const [settings, setSettings] = useState<UserSettings>(() => loadSettings());
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [uiPreferencesRevision, setUiPreferencesRevision] = useState(0);
   const shouldLoadTour = useMemo(
     () => uiPreferencesRevision > 0 && !loadTourCompleted(),
@@ -280,12 +179,6 @@ function App() {
         <PolicyModalContext.Provider value={policyContext}>
         <div className={isElectron ? 'app app--electron' : 'app'}>
           <NavigateBridge />
-          <DemoBanner />
-          {isElectron && (
-            <Suspense fallback={null}>
-              <UpdateNotification />
-            </Suspense>
-          )}
           <a href="#main-content" className="skip-link" onClick={event => {
             event.preventDefault();
             const main = document.getElementById('main-content');
@@ -295,8 +188,21 @@ function App() {
             }
           }}>{t('app.skipToContent')}</a>
 
-          <Navigation accountName={settings.accountName} showPortfolioBreakdown={settings.experimentalFeatures?.portfolioBreakdown ?? false} />
+          <AppNavigation
+            accountName={settings.accountName}
+            showPortfolioBreakdown={settings.experimentalFeatures?.portfolioBreakdown ?? false}
+            isOpen={isNavigationOpen}
+            onOpenChange={setIsNavigationOpen}
+          />
 
+          <div className="app-workspace" inert={isNavigationOpen}>
+          {isElectron && <div className="app-titlebar" aria-hidden="true" />}
+          <DemoBanner />
+          {isElectron && (
+            <Suspense fallback={null}>
+              <UpdateNotification />
+            </Suspense>
+          )}
           <Suspense
             fallback={(
               <main className="route-loading" id="main-content" role="status" aria-live="polite">
@@ -352,6 +258,7 @@ function App() {
               </div>
             </footer>
           )}
+          </div>
 
           <PolicyModal 
             isOpen={policyModalType !== null} 

@@ -225,10 +225,10 @@ export function NetWorthSankeyChart({
             isPrivacyMode ? '***' : formatAmount(Number(value ?? 0), currency, false)
           }
           contentStyle={{
-            background: '#1A1D26',
-            border: '1px solid #2DD4BF',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            color: '#F8FAFC',
+            color: 'var(--text-primary)',
           }}
           labelStyle={{ color: '#94A3B8' }}
           itemStyle={{ color: '#F8FAFC' }}

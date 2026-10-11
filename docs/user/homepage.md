@@ -7,9 +7,10 @@ calculator, the asset allocation manager or any of the trackers.
 
 ## What you see
 
-- **Compact glass navigation** — the primary trackers and FIRE calculator stay
-  in the top bar. **Tools** holds the additional calculators and simulations.
-  The current page is highlighted.
+- **Sidebar navigation** — labelled links to every tool stay on the left in
+  desktop-sized windows. Tracking and planning tools are grouped separately,
+  with Settings, notifications and your portfolio menu at the bottom.
+  The current page is highlighted; the page itself no longer has a top navigation bar.
 - **Track your finances** — shortcuts to Asset Allocation, Cashflow and Net Worth.
 - **Plan and stress-test** — the FIRE calculator, Monte Carlo, Investment Growth,
   Backtest, Withdrawal Rate, Debt Payoff and Questionnaire tools.
@@ -23,9 +24,10 @@ calculator, the asset allocation manager or any of the trackers.
 
 - The site is keyboard accessible. Use `Tab` to move between cards and `Enter`
   to open the highlighted tool.
-- On smaller windows, open the navigation menu with its menu button. `Escape`
-  closes it and returns focus to that button. **Skip to main content** works in
-  both the browser and the desktop app.
+- Below 1,000 pixels, **Menu** opens the sidebar as a drawer. Keyboard focus stays
+  inside until you navigate, press `Escape` or dismiss it. Closing returns focus
+  to the Menu button. The rest of the page is inactive while the drawer is open.
+- **Skip to main content** works in both the browser and desktop app.
 - Need to start fresh? Open [Settings](./settings.md) and use **Clear all
   data** — your local store is wiped (SQLite DB on desktop, encrypted cookies
   in browser) and the app reloads empty.

@@ -19,7 +19,7 @@ This software is for **educational and planning purposes only** — not financia
 
 | Feature | Description |
 |---------|-------------|
-| **Dark glass workspace** | Compact navigation, restrained liquid-glass panels and readable financial data. Dark mode stays the default, including when the system uses a light theme. |
+| **Dark glass workspace** | Labelled sidebar navigation, restrained glass panels and readable financial data. Dark mode stays the default, including when the system uses a light theme. |
 | 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns. Supports **Standard, Lean, Fat, Barista, and Coast** FIRE variants — see [docs/user/fire-calculator.md](docs/user/fire-calculator.md). |
 | ↩️ **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age — [docs](docs/user/fire-calculator.md) |
 | 🎲 **Monte Carlo Simulations** | Cancellable background-worker simulations, with volatility, black-swan modelling and opt-in detailed logs |

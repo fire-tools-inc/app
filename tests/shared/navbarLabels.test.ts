@@ -53,6 +53,13 @@ describe('navbar is English-only (#233)', () => {
       investmentGrowth: 'Investment Growth',
       withdrawalRate: 'Withdrawal Rate',
       tools: 'Tools',
+      tracking: 'Tracking',
+      planning: 'Planning',
+      reverseFireCalculator: 'Reverse FIRE',
+      questionnaire: 'Questionnaire',
+      settings: 'Settings',
+      menu: 'Menu',
+      close: 'Close navigation',
     });
   });
 

@@ -4,6 +4,7 @@
  */
 
 import { MonthlySnapshot, ASSET_CLASSES, ACCOUNT_TYPES, PENSION_TYPES } from '../types/netWorthTracker';
+import { ASSET_CLASS_CHART_COLORS } from './chartColors';
 
 export interface SankeyNodeEntry {
   name: string;
@@ -24,32 +25,25 @@ export interface SankeyGraphData {
 }
 
 export const ASSET_CLASS_COLORS: Record<string, string> = {
-  STOCKS: '#22C55E',
-  ETF: '#4ADE80',
-  BONDS: '#F59E0B',
-  CRYPTO: '#A78BFA',
-  REAL_ESTATE: '#F97316',
-  PRIVATE_EQUITY: '#06B6D4',
-  VEHICLE: '#64748B',
-  COLLECTIBLE: '#E879F9',
-  ART: '#FB923C',
-  COMMODITIES: '#FBBF24',
-  OTHER: '#94A3B8',
+  ...ASSET_CLASS_CHART_COLORS,
+  ETF: ASSET_CLASS_CHART_COLORS.STOCKS,
+  PRIVATE_EQUITY: '#91C8CC',
+  OTHER: '#9BAAC0',
 };
 
 export const CASH_TYPE_COLORS: Record<string, string> = {
-  SAVINGS: '#22D3EE',
-  CHECKING: '#0EA5E9',
-  BROKERAGE: '#3B82F6',
-  CREDIT_CARD: '#EF4444',
-  OTHER: '#94A3B8',
+  SAVINGS: '#8BD0AF',
+  CHECKING: '#91C8CC',
+  BROKERAGE: '#8CBCF3',
+  CREDIT_CARD: '#F3A5AD',
+  OTHER: '#9BAAC0',
 };
 
 export const PENSION_TYPE_COLORS: Record<string, string> = {
-  STATE: '#C084FC',
-  PRIVATE: '#A78BFA',
-  EMPLOYER: '#818CF8',
-  OTHER: '#94A3B8',
+  STATE: '#A8B9D1',
+  PRIVATE: '#C5AF96',
+  EMPLOYER: '#D4C392',
+  OTHER: '#9BAAC0',
 };
 
 export const ASSET_CLASS_I18N_KEYS: Record<string, string> = {
@@ -140,10 +134,10 @@ export function buildSankeyData(
 
   if (totalPortfolio < MIN_CHART_VALUE) return { nodes: [], links: [] };
 
-  const portfolioIdx = addNode(t('netWorth.sankey.totalPortfolio'), '#2DD4BF', 0);
+  const portfolioIdx = addNode(t('netWorth.sankey.totalPortfolio'), '#8CBCF3', 0);
 
   if (totalInvestments > 0) {
-    const investmentsIdx = addNode(t('netWorth.sankey.investments'), '#3B82F6', 1);
+    const investmentsIdx = addNode(t('netWorth.sankey.investments'), ASSET_CLASS_CHART_COLORS.STOCKS, 1);
     links.push({ source: portfolioIdx, target: investmentsIdx, value: totalInvestments });
 
     for (const [assetClass, value] of investmentsByClass.entries()) {
@@ -160,7 +154,7 @@ export function buildSankeyData(
   }
 
   if (totalCash > 0) {
-    const cashIdx = addNode(t('netWorth.sankey.cashLiquidity'), '#06B6D4', 1);
+    const cashIdx = addNode(t('netWorth.sankey.cashLiquidity'), ASSET_CLASS_CHART_COLORS.CASH, 1);
     links.push({ source: portfolioIdx, target: cashIdx, value: totalCash });
 
     for (const [accountType, balance] of cashByType.entries()) {
@@ -177,7 +171,7 @@ export function buildSankeyData(
   }
 
   if (totalPension > 0 && showPension) {
-    const pensionIdx = addNode(t('netWorth.sankey.pension'), '#A855F7', 1);
+    const pensionIdx = addNode(t('netWorth.sankey.pension'), '#A8B9D1', 1);
     links.push({ source: portfolioIdx, target: pensionIdx, value: totalPension });
 
     for (const [pensionType, value] of pensionByType.entries()) {

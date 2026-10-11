@@ -31,6 +31,13 @@ export const NAVBAR_LABELS = {
   investmentGrowth: 'Investment Growth',
   withdrawalRate: 'Withdrawal Rate',
   tools: 'Tools',
+  tracking: 'Tracking',
+  planning: 'Planning',
+  reverseFireCalculator: 'Reverse FIRE',
+  questionnaire: 'Questionnaire',
+  settings: 'Settings',
+  menu: 'Menu',
+  close: 'Close navigation',
 } as const;
 
 export type NavbarLabelKey = keyof typeof NAVBAR_LABELS;

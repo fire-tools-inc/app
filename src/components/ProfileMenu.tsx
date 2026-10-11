@@ -6,9 +6,10 @@ import './ProfileMenu.css';
 
 interface ProfileMenuProps {
   accountName: string;
+  showAccountName?: boolean;
 }
 
-export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName }) => {
+export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName, showAccountName = false }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -68,6 +69,7 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({ accountName }) => {
         <div className="profile-icon">
           {getInitials(accountName)}
         </div>
+        {showAccountName && <span className="profile-account-name">{accountName}</span>}
       </button>
 
       {isOpen && (

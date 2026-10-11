@@ -35,6 +35,9 @@ vi.mock('../../src/components/GuidedTour', () => ({
 describe('App startup', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    }));
     window.history.replaceState({}, '', '/');
     mocks.loadTourCompleted.mockReset().mockReturnValue(false);
     mocks.syncPreferencesFromBackend.mockReset().mockReturnValue(new Promise(() => {}));
@@ -43,6 +46,7 @@ describe('App startup', () => {
   afterEach(() => {
     act(() => cleanup());
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('renders the app immediately while backend preference sync is pending', () => {

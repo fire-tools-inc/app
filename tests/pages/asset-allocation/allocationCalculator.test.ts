@@ -21,6 +21,7 @@ import {
   AllocationMode,
   AssetClassSummary,
 } from '../../../src/types/assetAllocation';
+import { CHART_PALETTE } from '../../../src/utils/chartColors';
 
 // Helper to create test assets
 function createAsset(overrides: Partial<Asset> = {}): Asset {
@@ -654,7 +655,7 @@ describe('allocationCalculator', () => {
       expect(result.length).toBe(0);
     });
 
-    it('should use golden angle for color distribution', () => {
+    it('should use the shared readable palette for asset colors', () => {
       const assets: Asset[] = [
         createAsset({ id: '1', name: 'Asset1', currentValue: 1000 }),
         createAsset({ id: '2', name: 'Asset2', currentValue: 1000 }),
@@ -663,9 +664,8 @@ describe('allocationCalculator', () => {
       const result = prepareAssetChartData(assets, 3000);
 
       expect(result.length).toBe(3);
-      // Colors should be HSL format
-      result.forEach(r => {
-        expect(r.color).toMatch(/^hsl\(\d+(\.\d+)?, 70%, 60%\)$/);
+      result.forEach((r, index) => {
+        expect(r.color).toBe(CHART_PALETTE[index]);
       });
       // Colors should be different
       const colors = result.map(r => r.color);

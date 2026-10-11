@@ -16,6 +16,14 @@ buy / sell / hold rebalancing hints.
 Repeat for every position. The chart and the breakdown table update in
 real time.
 
+## Reading the allocation chart
+
+The compact donut shows the current split. Its legend lists full names and
+percentages in readable text; hover a slice for its value. Asset classes use the
+same muted colors in Allocation, Portfolio Breakdown and Net Worth flows.
+Section headers stay dark, with color reserved for class badges and buy/sell
+indicators rather than large background gradients.
+
 ## Setting a target allocation
 
 Open **Target allocation** and assign a target percentage to each asset

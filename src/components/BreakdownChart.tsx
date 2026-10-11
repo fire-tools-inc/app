@@ -123,12 +123,12 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
             paddingAngle={1}
           >
             {entries.map((entry, i) => (
-              <Cell key={`cell-${i}`} fill={entry.color || '#5568d4'} />
+              <Cell key={`cell-${i}`} fill={entry.color || 'var(--accent-primary)'} />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            formatter={renderLegend}
+            formatter={(value: string) => <span style={{ color: 'var(--text-primary)' }}>{renderLegend(value)}</span>}
             wrapperStyle={{ paddingTop: '8px', color: '#F8FAFC', fontSize: '12px' }}
           />
         </PieChart>
@@ -153,7 +153,7 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
                 <span
                   className="breakdown-color-dot"
                   aria-hidden="true"
-                  style={{ background: e.color || '#5568d4' }}
+                  style={{ background: e.color || 'var(--accent-primary)' }}
                 />
                 {e.label}
               </td>

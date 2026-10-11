@@ -13,6 +13,10 @@
   --glass-surface: linear-gradient(145deg, rgba(238, 245, 255, 0.065), rgba(238, 245, 255, 0.015)), rgba(19, 28, 40, 0.88);
   --glass-shadow: inset 0 1px 0 rgba(238, 245, 255, 0.06), 0 8px 28px rgba(3, 8, 16, 0.18);
   --accent-surface: rgba(140, 188, 243, 0.1);
+  --chart-stocks: #8CBCF3;
+  --chart-bonds: #A8B9D1;
+  --chart-cash: #8BD0AF;
+  --chart-real-estate: #C5AF96;
   
   /* Border Colors */
   --border-subtle: #344355;
@@ -194,12 +198,28 @@ body {
    ============================================================================ */
 .app {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+}
+
+.app-workspace {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+.app-titlebar {
+  height: 28px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 950;
+  background: var(--bg-primary);
+  -webkit-app-region: drag;
 }
 
 #main-content {
-  scroll-margin-top: 6rem;
+  scroll-margin-top: 1rem;
 }
 
 .route-loading,
@@ -259,52 +279,6 @@ body {
   }
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-  min-height: 76px;
-  padding: 0.75rem 2rem;
-  background: var(--bg-overlay);
-  border-bottom: 1px solid var(--border-subtle);
-  box-shadow: var(--glass-shadow);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(16px) saturate(150%);
-  -webkit-backdrop-filter: blur(16px) saturate(150%);
-}
-
-.app-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  color: var(--text-primary);
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.app-brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: var(--glass-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--glass-shadow);
-}
-
-.app-brand h1 {
-  font-family: var(--font-heading);
-  font-size: 1.05rem;
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
 .header-emoji {
   margin-right: 0.25rem;
 }
@@ -317,107 +291,6 @@ body {
   margin-right: 0.5rem;
 }
 
-.app-header p {
-  color: var(--text-primary);
-  font-size: 1.1rem;
-  opacity: 0.9;
-}
-
-/* ============================================================================
-   NAVIGATION
-   ============================================================================ */
-.app-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.25rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.nav-toggle {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.75rem;
-  cursor: pointer;
-  color: var(--accent-primary);
-  padding: 0.5rem;
-  min-width: 44px;
-  min-height: 44px;
-  line-height: 1;
-  transition: transform var(--transition-fast);
-  z-index: 10;
-}
-
-.nav-toggle:hover {
-  transform: scale(1.1);
-}
-
-.nav-toggle:focus {
-  outline: 3px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.nav-toggle:active {
-  transform: scale(0.95);
-}
-
-.nav-links {
-  display: flex;
-  gap: 0.25rem;
-  flex: 1;
-  justify-content: flex-start;
-  min-width: 0;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.profile-menu-container {
-  position: relative;
-  right: auto;
-}
-
-.nav-link {
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  white-space: nowrap;
-  font-weight: 500;
-  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
-  background: transparent;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border: 1px solid transparent;
-}
-
-.nav-link:hover {
-  background: var(--accent-surface);
-  color: var(--text-primary);
-}
-
-.nav-link:focus {
-  outline: 3px solid var(--accent-primary);
-  outline-offset: 2px;
-}
-
-.nav-link.active {
-  background: var(--glass-surface);
-  color: var(--accent-primary);
-  border-color: var(--border-accent);
-  box-shadow: inset 0 1px 0 rgba(238, 245, 255, 0.08);
-}
-
 /* ============================================================================
    MAIN CONTENT LAYOUT
    ============================================================================ */
@@ -425,15 +298,15 @@ body {
   display: flex;
   flex: 1 0 auto;
   max-width: 1800px;
-  margin: 2rem auto;
-  gap: 2rem;
-  padding: 0 2rem;
+  margin: 1.5rem auto;
+  gap: 1.5rem;
+  padding: 0 1.5rem;
   width: 100%;
   min-height: 0;
 }
 
 .sidebar {
-  flex: 0 0 400px;
+  flex: 0 0 320px;
   background: var(--glass-surface);
   border-radius: var(--radius-lg);
   padding: 2rem;
@@ -568,6 +441,8 @@ body {
 }
 
 .action-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   padding: 0.75rem 1.5rem;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -2254,114 +2129,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* ============================================================================
    RESPONSIVE DESIGN - Mobile Navigation
    ============================================================================ */
-@media (max-width: 1100px) {
-  .app-header {
-    gap: 1rem;
-    padding: 0.75rem 1.25rem;
-    min-height: 72px;
-  }
-
-  .app-nav {
-    justify-content: flex-end;
-    gap: 0.5rem;
-  }
-
-  .nav-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: var(--radius-md);
-    background: transparent;
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
-    position: relative;
-    z-index: 10;
-  }
-
-  .nav-toggle:hover {
-    background: rgba(0, 212, 170, 0.1);
-  }
-
-  .nav-toggle[aria-expanded="true"] {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
-    color: var(--text-inverse);
-  }
-
-  .nav-toggle[aria-expanded="true"]:hover {
-    background: linear-gradient(135deg, var(--accent-primary-dark), var(--accent-gold-dark));
-  }
-
-  .nav-links {
-    display: none;
-    flex-direction: column;
-    gap: 0.25rem;
-    position: absolute;
-    top: 100%;
-    left: 1rem;
-    right: 1rem;
-    padding: 0.5rem;
-    max-height: calc(100dvh - 6rem);
-    overflow-y: auto;
-    background: var(--bg-overlay);
-    border: 1px solid var(--border-subtle);
-    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .nav-links.open {
-    display: flex;
-  }
-
-  .nav-link {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .profile-menu-container {
-    position: relative;
-    margin-top: 0;
-  }
-}
-
-@media (min-width: 1101px) {
-  .nav-toggle {
-    display: none;
-  }
-
-  .nav-links {
-    display: flex !important;
-    flex-direction: row;
-  }
-
-  .profile-menu-container {
-    position: relative;
-    right: auto;
-  }
-}
-
 /* ============================================================================
    RESPONSIVE DESIGN - Mobile Sizes
    ============================================================================ */
-@media (max-width: 374px) {
-  .app-header {
-    padding: 0.65rem 0.75rem;
-    gap: 0.5rem;
+@media (max-width: 999px) {
+  .app {
+    display: flex;
+    flex-direction: column;
   }
 
-  .nav-link {
-    font-size: 1rem;
-    padding: 0.875rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .nav-link {
-    font-size: 0.9rem;
+  #main-content {
+    scroll-margin-top: 4rem;
   }
 }
 
@@ -2371,26 +2149,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 
   .sidebar {
-    flex: 0 0 450px;
+    flex: 0 0 340px;
   }
 
 }
 
 @media (min-width: 2560px) {
-  .app-header {
-    padding: 1rem 3rem;
-  }
-
-  .app-nav {
-    gap: 2rem;
-  }
-
-  .nav-link {
-    padding: 1rem 2rem;
-    font-size: 1.3rem;
-    min-height: 56px;
-  }
-
   .app-container {
     max-width: 2400px;
     padding: 0 3rem;
@@ -2429,10 +2193,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 @media (max-width: 768px) {
-  .app-header {
-    padding: 0.75rem 1rem;
-  }
-
   .app-container {
     padding: 0 1rem;
     margin: 1rem auto;
@@ -2663,26 +2423,4 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .privacy-eye-btn:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
-}
-
-/* ============================================================================
-   ELECTRON-ONLY OVERRIDES
-   The .app--electron class is applied when running inside Electron (file://).
-   The native menu bar replaces the decorative header, freeing the first
-   screen for actual content instead of branding chrome.
-   ============================================================================ */
-.app--electron .app-header {
-  /* Keep clear of the macOS hidden-inset traffic lights. Padding is harmless
-     on Windows/Linux because the title bar still renders above the nav. */
-  padding-top: 0.9rem;
-  padding-left: 5.5rem;
-  -webkit-app-region: drag;
-}
-
-.app--electron .app-header a,
-.app--electron .app-header button,
-.app--electron .app-header select,
-.app--electron .app-header input {
-  /* Clicks must reach interactive elements even though the bar is draggable. */
-  -webkit-app-region: no-drag;
 }
