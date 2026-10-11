@@ -70,6 +70,7 @@ describe('categorizeWithLlm', () => {
     const drafts = [expenseDraft('a', 'Synthetic merchant')];
     expect(await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl, onError })).toBe(drafts);
     expect(onError).toHaveBeenCalledOnce();
+    expectDiagnostic('error', '[categorization-failed]: Model categorization failed.');
   });
 
   it('does not contact the model after cancellation', async () => {
@@ -90,6 +91,7 @@ describe('categorizeWithLlm', () => {
     const drafts = [expenseDraft('a', 'Synthetic merchant')];
     const result = await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
     expect(result).toEqual(drafts);
+    expectDiagnostic('error', '[categorization-failed]: Model categorization failed.');
   });
 
   it('returns input drafts when list is empty', async () => {
@@ -159,7 +161,7 @@ describe('categorizeWithLlm', () => {
     const drafts = [expenseDraft('a', 'x')];
     const result = await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
     expect(result).toBe(drafts);
-    expectDiagnostic('error', '[http-error]: LLM categorization request failed');
+    expectDiagnostic('error', '[categorization-failed]: Model categorization failed.');
   });
 
   it('falls back when LLM returns non-JSON content', async () => {
@@ -170,6 +172,7 @@ describe('categorizeWithLlm', () => {
     const drafts = [expenseDraft('a', 'x')];
     const result = await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
     expect(result).toBe(drafts);
+    expectDiagnostic('error', '[categorization-failed]: Model categorization failed.');
   });
 
   it('strips code fences from LLM output', async () => {

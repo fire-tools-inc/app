@@ -8,6 +8,7 @@ import { extractDocumentText } from '../src/documentParser.js';
 import { makeApp } from './helpers.js';
 import { liteParseResultToExtractedPdf } from '../../src/utils/liteParseResult.js';
 import { parsePdf } from '../../src/utils/pdfHeuristics.js';
+import { expectDiagnostic } from '../../tests/shared/diagnostics.js';
 
 const fixture = new URL('../../tests/pages/expense-tracker/fixtures/sample-invoice.pdf', import.meta.url);
 const directories: string[] = [];
@@ -34,10 +35,11 @@ describe('local LiteParse runtime', () => {
     pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
     await expect(extractDocumentText(Buffer.from(pdf), 'synthetic-101-pages.pdf', 'application/pdf'))
       .rejects.toMatchObject({ status: 422, code: 'document_page_limit' });
+    expectDiagnostic('error', '[parse-failed]: The local document parser failed.');
   });
 
   it('parses a real PDF through the public API without creating financial entries', async () => {
-    const { app, db } = makeApp();
+    const { app, db, cleanup } = await makeApp();
     try {
       const response = await request(app).post('/api/v1/document-text?fileName=synthetic-invoice.pdf')
         .set('Content-Type', 'application/pdf').send(await readFile(fixture));
@@ -46,8 +48,7 @@ describe('local LiteParse runtime', () => {
       expect(response.body.text).toMatch(/2[.,]158|2158/i);
       expect(db.prepare('SELECT count(*) AS count FROM expense_entries').get()).toEqual({ count: 0 });
     } finally {
-      await app.closeReceiptUploads();
-      db.close();
+      await cleanup();
     }
   }, 20_000);
 
@@ -74,6 +75,7 @@ describe('local LiteParse runtime', () => {
       timeoutMs: 1, tempRoot: root,
     })).rejects.toMatchObject({ status: 408, code: 'parse_timeout' });
     expect(await readdir(root)).toEqual([]);
+    expectDiagnostic('error', '[parse-timeout]: Document parsing exceeded its deadline.');
   });
 
   it('does not create a worker or a temporary file for already-cancelled work', async () => {

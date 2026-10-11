@@ -73,16 +73,12 @@ describe('PUT /api/v1/settings', () => {
 
 describe('PATCH /api/v1/settings', () => {
   it('retains a local-model configuration with an empty optional API key', async () => {
-    const { app, db } = makeApp();
-    try {
-      const config = { baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'local-model' };
-      const saved = await request(app).patch('/api/v1/settings').send({ llmCategorization: config });
-      expect(saved.status).toBe(200);
-      expect(saved.body.llmCategorization).toEqual(config);
-      expect((await request(app).get('/api/v1/settings')).body.llmCategorization).toEqual(config);
-    } finally {
-      db.close();
-    }
+    const { app } = await makeApp();
+    const config = { baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'local-model' };
+    const saved = await request(app).patch('/api/v1/settings').send({ llmCategorization: config });
+    expect(saved.status).toBe(200);
+    expect(saved.body.llmCategorization).toEqual(config);
+    expect((await request(app).get('/api/v1/settings')).body.llmCategorization).toEqual(config);
   });
 
   it('applies partial updates', async () => {

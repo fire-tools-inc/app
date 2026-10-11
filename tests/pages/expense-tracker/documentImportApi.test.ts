@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearReceiptOriginals, extractDocumentTextWithLiteParse, getReceiptFile, saveReceipt, startReceiptPairing } from '../../../src/utils/documentImportApi';
 import { getApiBaseUrl } from '../../../src/utils/apiBase';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 vi.mock('../../../src/utils/apiBase', () => ({ getApiBaseUrl: vi.fn() }));
 const receipt = {
@@ -27,6 +28,7 @@ describe('documentImportApi', () => {
       error: { message: 'Synthetic receipt reset failure' },
     }), { status: 500 })));
     await expect(clearReceiptOriginals()).rejects.toThrow('Synthetic receipt reset failure');
+    expectDiagnostic('error', '[request-failed]: A local document request failed.');
   });
 
   it('sends a document to the configured local parser and adapts spatial text for the existing heuristics', async () => {
@@ -59,11 +61,13 @@ describe('documentImportApi', () => {
       error: { code: 'internal_error', message: 'Receipt could not be saved.' },
     }), { status: 500 })));
     await expect(saveReceipt(file)).rejects.toThrow('Receipt could not be saved');
+    expectDiagnostic('error', '[request-failed]: A local document request failed.', 2);
   });
 
   it('detects truncated original-image downloads', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('ab', { headers: { 'Content-Type': 'image/png' } })));
     await expect(getReceiptFile(receipt)).rejects.toThrow();
+    expectDiagnostic('error', '[request-failed]: A local document request failed.');
   });
 
   it('passes the optional user-configured tunnel origin to pairing without contacting a tunnel provider', async () => {

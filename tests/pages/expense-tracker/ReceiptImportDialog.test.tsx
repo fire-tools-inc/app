@@ -5,6 +5,7 @@ import * as api from '../../../src/utils/documentImportApi';
 import type { ExtractedPdf } from '../../../src/utils/pdfTextExtractor';
 import type { ReceiptDocument } from '../../../src/types/receiptImport';
 import type { ParsedTransactionDraft } from '../../../src/types/pdfImport';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 vi.mock('../../../src/utils/apiBase', () => ({ getApiBaseUrl: async () => 'http://localhost:8787/api/v1' }));
 vi.mock('../../../src/utils/documentImportApi', () => ({
@@ -24,7 +25,9 @@ const extracted = (name = 'synthetic.png'): ExtractedPdf => ({
 });
 
 beforeEach(() => {
-  vi.resetAllMocks();
+  for (const value of Object.values(api)) {
+    if (vi.isMockFunction(value)) value.mockReset();
+  }
   vi.mocked(api.listReceipts).mockResolvedValue({ items: [], nextCursor: null });
   vi.mocked(api.saveReceipt).mockResolvedValue(receipt);
   vi.mocked(api.getReceiptFile).mockResolvedValue(photo());
@@ -78,6 +81,7 @@ describe('receipt document review', () => {
     expect(api.markReceiptReviewed).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('spinbutton', { name: 'Amount 1' })).toBeTruthy();
+    expectDiagnostic('error', '[commit-failed]: The reviewed import could not be completed.');
   });
 
   it('preserves edits while adding another photo and keeps the same receipt draft from being duplicated', async () => {
@@ -132,6 +136,7 @@ describe('receipt document review', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish receipt review (1)' }));
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(commit).toHaveBeenCalledOnce();
+    expectDiagnostic('error', '[commit-failed]: The reviewed import could not be completed.');
   });
 
   it('does not confuse distinct originals when a deleted receipt numeric ID is reused', async () => {
