@@ -352,14 +352,15 @@ export const BacktestSection: React.FC<BacktestSectionProps> = ({
               <h4>{t('backtest.charts.growthTitle')}</h4>
               <ResponsiveContainer width="100%" height={320}>
                 <LineChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis tickFormatter={formatAxisCurrency} width={90} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+                  <XAxis dataKey="year" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} stroke="var(--border-subtle)" />
+                  <YAxis tickFormatter={formatAxisCurrency} width={90} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} stroke="var(--border-subtle)" />
                   <Tooltip
                     labelFormatter={label => `${t('backtest.table.year')}: ${label}`}
                     formatter={growthTooltipFormatter}
+                    contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
                   />
-                  <Legend />
+                  <Legend formatter={value => <span style={{ color: 'var(--text-primary)' }}>{value}</span>} />
                   <Line
                     type="monotone"
                     dataKey="portfolioValue"
@@ -367,6 +368,7 @@ export const BacktestSection: React.FC<BacktestSectionProps> = ({
                     stroke="var(--accent-primary)"
                     strokeWidth={2}
                     dot={false}
+                    isAnimationActive={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -376,20 +378,22 @@ export const BacktestSection: React.FC<BacktestSectionProps> = ({
               <h4>{t('backtest.charts.drawdownTitle')}</h4>
               <ResponsiveContainer width="100%" height={320}>
                 <AreaChart data={chartData} margin={{ top: 12, right: 20, left: 0, bottom: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis tickFormatter={formatAxisPercent} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+                  <XAxis dataKey="year" tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} stroke="var(--border-subtle)" />
+                  <YAxis tickFormatter={formatAxisPercent} width={80} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} stroke="var(--border-subtle)" />
                   <Tooltip
                     labelFormatter={label => `${t('backtest.table.year')}: ${label}`}
                     formatter={drawdownTooltipFormatter}
+                    contentStyle={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 8 }}
                   />
-                  <Legend />
+                  <Legend formatter={value => <span style={{ color: 'var(--text-primary)' }}>{value}</span>} />
                   <Area
                     type="monotone"
                     dataKey="drawdownPercent"
                     name={t('backtest.charts.drawdownLegend')}
                     stroke="var(--error)"
                     fill="var(--error)"
+                    isAnimationActive={false}
                   />
                 </AreaChart>
               </ResponsiveContainer>

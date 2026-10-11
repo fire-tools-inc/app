@@ -78,7 +78,8 @@ npx playwright install chromium  # once, if the browser binary is missing
 npm run test:browser
 ```
 
-The browser suite uses an isolated Vite server on port 5188, synthetic data and
+The browser suite builds the self-hosted app and uses an isolated Vite preview
+on port 5188, synthetic data and
 mock market responses. It checks sidebar collapse/focus and complete chart
 geometry across desktop/mobile routes without contacting market services.
 

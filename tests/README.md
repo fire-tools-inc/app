@@ -43,7 +43,8 @@ npm run test:browser             # isolated browser checks on port 5188
 The runner also includes co-located `src/**/*.test.ts` and `.test.tsx` files.
 New tests should still follow the feature-based layout above.
 
-The browser suite uses synthetic/demo data, mocks market endpoints and blocks
+The browser suite checks the compiled self-hosted build with synthetic/demo
+data, mocks market endpoints and blocks
 other external requests. It checks actual plot/label bounds, navigation state,
 local overflow and keyboard behavior rather than CSS source-text proxies.
 Install its browser once with `npx playwright install chromium` if missing.
