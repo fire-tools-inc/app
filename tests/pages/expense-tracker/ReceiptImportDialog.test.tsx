@@ -6,6 +6,7 @@ import type { ExtractedPdf } from '../../../src/utils/pdfTextExtractor';
 import type { ReceiptDocument } from '../../../src/types/receiptImport';
 import type { ParsedTransactionDraft } from '../../../src/types/pdfImport';
 import { expectDiagnostic } from '../../shared/diagnostics';
+import { clearSettings, DEFAULT_SETTINGS, saveSettings } from '../../../src/utils/cookieSettings';
 
 vi.mock('../../../src/utils/apiBase', () => ({ getApiBaseUrl: async () => 'http://localhost:8787/api/v1' }));
 vi.mock('../../../src/utils/documentImportApi', () => ({
@@ -25,6 +26,8 @@ const extracted = (name = 'synthetic.png'): ExtractedPdf => ({
 });
 
 beforeEach(() => {
+  localStorage.clear();
+  clearSettings();
   for (const value of Object.values(api)) {
     if (vi.isMockFunction(value)) value.mockReset();
   }
@@ -119,6 +122,48 @@ describe('receipt document review', () => {
       llmConfig={{ baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'local-model' }} />);
     expect((screen.getByLabelText(/Use AI categorization/) as HTMLInputElement).disabled).toBe(false);
     await screen.findByText('No stored receipts in this view.');
+  });
+
+  it('keeps receipt storage, OCR and financial imports working while all AI calls are disabled', async () => {
+    saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false });
+    const categorizer = vi.fn();
+    const native = vi.fn().mockResolvedValue(extracted());
+    const commit = vi.fn();
+    render(<PDFImportDialog onClose={vi.fn()} onAddIncome={vi.fn()} onAddExpense={vi.fn()} onCommitDrafts={commit}
+      defaultCurrency="EUR" liteParseExtractor={native} categorizer={categorizer}
+      llmConfig={{ baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'synthetic' }} />);
+    expect((screen.getByLabelText(/Use AI categorization/) as HTMLInputElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('Take a receipt photo'), { target: { files: [photo()] } });
+    await screen.findByRole('spinbutton', { name: 'Amount 1' });
+    expect(api.saveReceipt).toHaveBeenCalledOnce();
+    expect(native).toHaveBeenCalledOnce();
+    expect(categorizer).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Import (1)' }));
+    await waitFor(() => expect(commit).toHaveBeenCalledOnce());
+  });
+
+  it('clears live AI consent without aborting OCR, including a disable/re-enable during parsing', async () => {
+    let finish: ((result: ExtractedPdf) => void) | undefined;
+    const native = vi.fn().mockImplementation(() => new Promise<ExtractedPdf>(resolve => { finish = resolve; }));
+    const categorizer = vi.fn();
+    render(<PDFImportDialog onClose={vi.fn()} onAddIncome={vi.fn()} onAddExpense={vi.fn()}
+      defaultCurrency="EUR" liteParseExtractor={native} categorizer={categorizer}
+      llmConfig={{ baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'synthetic' }} />);
+    const optIn = screen.getByLabelText(/Use AI categorization/) as HTMLInputElement;
+    fireEvent.click(optIn);
+    fireEvent.change(screen.getByLabelText('Take a receipt photo'), { target: { files: [photo()] } });
+    await waitFor(() => expect(native).toHaveBeenCalledOnce());
+    const parsingSignal = native.mock.calls[0][1] as AbortSignal;
+    act(() => { saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false }); });
+    expect(optIn.checked).toBe(false);
+    expect(optIn.disabled).toBe(true);
+    expect(parsingSignal.aborted).toBe(false);
+    act(() => { saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: true }); });
+    await act(async () => { finish?.(extracted()); });
+    await screen.findByRole('spinbutton', { name: 'Amount 1' });
+    expect(categorizer).not.toHaveBeenCalled();
+    expect(optIn.disabled).toBe(false);
+    expect(optIn.checked).toBe(false);
   });
 
   it('retries a failed receipt status update without persisting again or allowing edits to saved entries', async () => {

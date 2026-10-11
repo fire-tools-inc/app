@@ -1,8 +1,16 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { categorizeWithLlm } from '../../../src/utils/llmCategorizer';
 import type { LlmCategorizationConfig, ParsedTransactionDraft } from '../../../src/types/pdfImport';
 import { EXPENSE_CATEGORIES } from '../../../src/types/expenseTracker';
+import { clearSettings, DEFAULT_SETTINGS, loadSettings, saveSettings } from '../../../src/utils/cookieSettings';
+import SafeCookies from '../../../src/utils/safeCookies';
+import { encryptData } from '../../../src/utils/cookieEncryption';
 import { expectDiagnostic } from '../../shared/diagnostics';
+
+beforeEach(() => {
+  localStorage.clear();
+  clearSettings();
+});
 
 const config: LlmCategorizationConfig = {
   baseUrl: 'https://api.openai.example/v1',
@@ -39,6 +47,96 @@ function incomeDraft(id: string, description: string): ParsedTransactionDraft {
 }
 
 describe('categorizeWithLlm', () => {
+  it('blocks all model calls when the Settings master AI control is disabled', async () => {
+    saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false, llmCategorization: config });
+    const fetchImpl = vi.fn();
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    expect(await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl })).toBe(drafts);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(loadSettings().llmCategorization).toEqual(config);
+  });
+
+  it('cancels an in-flight model call on disable and ignores its late response even after re-enabling', async () => {
+    let resolveResponse: ((response: Response) => void) | undefined;
+    const fetchImpl = vi.fn().mockImplementation(() => new Promise<Response>(resolve => { resolveResponse = resolve; }));
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    const result = categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    const signal: AbortSignal = fetchImpl.mock.calls[0][1].signal;
+    saveSettings({ ...loadSettings(), aiFeaturesEnabled: false });
+    expect(signal.aborted).toBe(true);
+    saveSettings({ ...loadSettings(), aiFeaturesEnabled: true });
+    resolveResponse?.(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[{"id":"a","category":"GROCERIES"}]}' } }],
+    })));
+    expect(await result).toBe(drafts);
+  });
+
+  it('allows opt-in model calls again after a bulk enable without changing the endpoint', async () => {
+    saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false });
+    saveSettings({ ...loadSettings(), aiFeaturesEnabled: true });
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[{"id":"a","category":"GROCERIES"}]}' } }],
+    })));
+    const result = await categorizeWithLlm([expenseDraft('a', 'Synthetic merchant')], config, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(result[0].suggestedCategory).toBe('GROCERIES');
+  });
+
+  it('aborts on a cross-window storage update and releases settings listeners afterwards', async () => {
+    const onError = vi.fn();
+    const fetchImpl = vi.fn((_url: string | URL | Request, options?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      options?.signal?.addEventListener('abort', () => reject(new DOMException('Synthetic cancellation', 'AbortError')), { once: true });
+    }));
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    const result = categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl, onError });
+    const requestSignal = fetchImpl.mock.calls[0][1]?.signal;
+    SafeCookies.set('fire-calculator-settings', encryptData(JSON.stringify({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false })));
+    window.dispatchEvent(new StorageEvent('storage', { key: 'fire-calculator-settings' }));
+    expect(requestSignal?.aborted).toBe(true);
+    expect(await result).toBe(drafts);
+    expect(onError).not.toHaveBeenCalled();
+    const read = vi.spyOn(SafeCookies, 'get');
+    try {
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('focus'));
+      expect(read).not.toHaveBeenCalled();
+    } finally {
+      read.mockRestore();
+    }
+  });
+
+  it('ignores a late response body when AI is disabled during JSON reading', async () => {
+    let finish: ((value: unknown) => void) | undefined;
+    const response = new Response('{}');
+    const readBody = vi.spyOn(response, 'json').mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    const result = categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl: vi.fn().mockResolvedValue(response) });
+    await Promise.resolve();
+    expect(readBody).toHaveBeenCalledOnce();
+    saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false });
+    finish?.({ choices: [{ message: { content: '{"results":[{"id":"a","category":"GROCERIES"}]}' } }] });
+    expect(await result).toBe(drafts);
+  });
+
+  it('still reports a timeout rather than silently accepting a late fetch response', async () => {
+    vi.useFakeTimers();
+    let finish: ((response: Response) => void) | undefined;
+    const fetchImpl = vi.fn().mockImplementation(() => new Promise<Response>(resolve => { finish = resolve; }));
+    const onError = vi.fn();
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    try {
+      const result = categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl, timeoutMs: 30, onError });
+      await vi.advanceTimersByTimeAsync(31);
+      finish?.(new Response('{}'));
+      expect(await result).toBe(drafts);
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: 'Model categorization timed out.' }));
+      expectDiagnostic('error', '[categorization-failed]: Model categorization timed out.');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('supports local OpenAI-compatible models without an API key or forced JSON response format', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
       choices: [{ message: { content: '{"results":[{"id":"a","category":"GROCERIES"}]}' } }],

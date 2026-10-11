@@ -1,4 +1,13 @@
 {
+  "aiSettings": {
+    "heading": "Fonctionnalités IA",
+    "enableAll": "Activer toutes les fonctionnalités IA",
+    "disableAll": "Désactiver toutes les fonctionnalités IA",
+    "help": "Autorisez ou bloquez tous les appels aux modèles IA, locaux ou hébergés. La désactivation annule les appels en cours et conserve les paramètres des modèles. L'OCR et les imports restent disponibles ; chaque import nécessite toujours votre consentement.",
+    "configuration": "Configuration du modèle",
+    "disabledHint": "Les fonctionnalités IA sont désactivées dans les Paramètres. L'OCR et les imports restent disponibles.",
+    "saveFailed": "Impossible d'enregistrer les paramètres. Vos paramètres précédents restent inchangés."
+  },
   "receiptImport": {
     "engine": "Moteur d’analyse",
     "pdfjs": "PDF.js (sur cet appareil)",
@@ -1615,7 +1624,7 @@
       "documentType": "Type de document",
       "pdfFiles": "Fichiers PDF et photos de reçus",
       "useAiCategorization": "Utiliser la catégorisation IA",
-      "configureAiHint": "Configure an OpenAI-compatible endpoint in Settings → Experimental Features to enable.",
+      "configureAiHint": "Configurez un endpoint compatible OpenAI dans Paramètres → Fonctionnalités IA → Configuration du modèle pour activer la catégorisation.",
       "summaryRows": "{{included}} of {{total}} rows will be imported.",
       "detectedTransactions": "Transactions détectées",
       "includeRow": "Inclure la ligne",

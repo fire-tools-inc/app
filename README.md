@@ -5,6 +5,9 @@
 
 A privacy-first suite of **FIRE (Financial Independence Retire Early)** planning tools. Financial data is stored locally by default; optional integrations (Yahoo Finance prices, LLM categorization) contact external services only when explicitly enabled.
 
+**Settings → AI features** can disable or enable all local/hosted model calls
+without clearing model configuration. OCR and document imports remain usable.
+
 **[Download the desktop app →](https://github.com/fire-tools-inc/app/releases)** &nbsp;·&nbsp; **[Try the live demo →](https://fire-tools-inc.github.io/app/demo/)**
 
 ---

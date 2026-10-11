@@ -1,4 +1,13 @@
 {
+  "aiSettings": {
+    "heading": "AI features",
+    "enableAll": "Enable all AI features",
+    "disableAll": "Disable all AI features",
+    "help": "Allow or block all AI model calls, local or hosted. Disabling cancels pending calls and keeps model settings. OCR and imports stay available; each import still requires opt-in.",
+    "configuration": "Model configuration",
+    "disabledHint": "AI features are disabled in Settings. OCR and imports remain available.",
+    "saveFailed": "Could not save settings. Your previous settings are unchanged."
+  },
   "receiptImport": {
     "engine": "Parsing engine",
     "pdfjs": "PDF.js (on this device)",
@@ -302,7 +311,7 @@
     "assetPricesDescription": "Current market prices for your portfolio assets. Prices may be delayed.",
     "available": "Available",
     "back": "← Back",
-    "baseUrl": "Base Url",
+    "baseUrl": "Base URL",
     "categoriesDescription": "Manage your expense categories. Create custom categories or customize the built-in ones.",
     "clearAllNotifications": "Clear All Notifications",
     "commaFormat": "Comma Format",
@@ -1615,7 +1624,7 @@
       "documentType": "Document type",
       "pdfFiles": "PDF files and receipt photos",
       "useAiCategorization": "Use AI categorization",
-      "configureAiHint": "Configure an OpenAI-compatible endpoint in Settings → Experimental Features to enable.",
+      "configureAiHint": "Configure an OpenAI-compatible endpoint in Settings → AI features → Model configuration to enable.",
       "summaryRows": "{{included}} of {{total}} rows will be imported.",
       "detectedTransactions": "Detected transactions",
       "includeRow": "Include row",

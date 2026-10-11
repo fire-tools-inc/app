@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { type CategoryInfo, INCOME_SOURCES } from '../types/expenseTracker';
 import type { LlmCategorizationConfig, ParsedTransactionDraft } from '../types/pdfImport';
 import { logger } from './logger';
+import { loadSettings, subscribeToSettingsChanges } from './cookieSettings';
+import { IS_DEMO_MODE } from './demoMode';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const resultItemSchema = z.object({
@@ -56,12 +58,20 @@ export async function categorizeWithLlm(
     onError?: (error: Error) => void;
   } = {},
 ): Promise<ParsedTransactionDraft[]> {
-  if (!drafts.length || !isLlmConfigured(config) || options.signal?.aborted) return drafts;
+  if (IS_DEMO_MODE || !loadSettings().aiFeaturesEnabled || !drafts.length
+    || !isLlmConfigured(config) || options.signal?.aborted) return drafts;
   const fetchImpl = options.fetchImpl ?? globalThis.fetch?.bind(globalThis);
   const controller = new AbortController();
   const abort = () => controller.abort();
   const timeout = setTimeout(abort, options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
   options.signal?.addEventListener('abort', abort, { once: true });
+  let disabledBySettings = false;
+  const unsubscribe = subscribeToSettingsChanges(() => {
+    if (!loadSettings().aiFeaturesEnabled) {
+      disabledBySettings = true;
+      controller.abort();
+    }
+  });
   let httpStatus: number | undefined;
 
   try {
@@ -84,9 +94,11 @@ export async function categorizeWithLlm(
         ],
       }),
     });
+    controller.signal.throwIfAborted();
     httpStatus = response.status;
     if (!response.ok) throw new Error(`Model request failed (HTTP ${response.status}).`);
     const completion = completionSchema.parse(await response.json());
+    controller.signal.throwIfAborted();
     const content = completion.choices[0].message?.content ?? completion.choices[0].text;
     if (!content) throw new Error('The model returned no classification.');
     const parsed = resultsSchema.parse(JSON.parse(content.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')));
@@ -114,7 +126,7 @@ export async function categorizeWithLlm(
       return next;
     });
   } catch (error) {
-    if (!options.signal?.aborted) {
+    if (!options.signal?.aborted && !disabledBySettings) {
       const failure = controller.signal.aborted
         ? new Error('Model categorization timed out.')
         : new Error('Model categorization failed. Check the endpoint and model; the original drafts are retained.');
@@ -127,5 +139,6 @@ export async function categorizeWithLlm(
   } finally {
     clearTimeout(timeout);
     options.signal?.removeEventListener('abort', abort);
+    unsubscribe();
   }
 }

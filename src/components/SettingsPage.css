@@ -326,6 +326,39 @@
   box-shadow: var(--glow-primary);
 }
 
+.settings-page .ai-features-settings h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-page .ai-features-settings .toggle-btn {
+  min-height: 44px;
+  min-width: 0;
+}
+
+.settings-page .ai-features-settings .toggle-btn.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  box-shadow: none;
+}
+
+.settings-page .ai-model-settings {
+  margin-top: 1rem;
+}
+
+.settings-page .ai-model-settings summary {
+  min-height: 44px;
+  padding: 0.75rem 0;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.settings-page .ai-features-settings :is(button, summary, input):focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}
+
 .fallback-rates-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

@@ -1941,6 +1941,7 @@ components:
         includePrimaryResidenceInFIRE: { type: boolean }
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        aiFeaturesEnabled:      { type: boolean, default: true, description: 'Master permission for hosted/local AI model calls. Per-action opt-in is still required; local OCR and document imports are unaffected.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     UserSettingsPatch:
@@ -1958,6 +1959,7 @@ components:
         includePrimaryResidenceInFIRE: { type: boolean }
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        aiFeaturesEnabled:      { type: boolean, description: 'Enable or disable all AI model calls without clearing endpoint/model configuration. Does not disable local OCR or imports.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     # -- Notifications -------------------------------------------------------

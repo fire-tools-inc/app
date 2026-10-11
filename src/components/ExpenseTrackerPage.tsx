@@ -42,7 +42,7 @@ import {
   exportExpenseTrackerToCSV,
   importExpenseTrackerFromCSV,
 } from '../utils/csvExport';
-import { loadSettings, saveSettings, type DateFormat } from '../utils/cookieSettings';
+import { loadSettings, saveSettings, subscribeToSettingsChanges, type DateFormat } from '../utils/cookieSettings';
 import { formatDate } from '../utils/dateFormatter';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
 import { createLazyComponent } from '../utils/lazyComponent';
@@ -224,13 +224,7 @@ export function ExpenseTrackerPage() {
       setLlmConfig(settings.llmCategorization);
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
-    };
+    return subscribeToSettingsChanges(handleStorageChange);
   }, []);
   
   // Toggle privacy mode and save to settings

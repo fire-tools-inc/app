@@ -1,4 +1,13 @@
 {
+  "aiSettings": {
+    "heading": "KI-Funktionen",
+    "enableAll": "Alle KI-Funktionen aktivieren",
+    "disableAll": "Alle KI-Funktionen deaktivieren",
+    "help": "Alle Aufrufe lokaler oder gehosteter KI-Modelle erlauben oder blockieren. Beim Deaktivieren werden laufende Aufrufe abgebrochen und die Modelleinstellungen beibehalten. OCR und Importe bleiben verfügbar; jeder Import erfordert weiterhin Ihre Zustimmung.",
+    "configuration": "Modellkonfiguration",
+    "disabledHint": "KI-Funktionen sind in den Einstellungen deaktiviert. OCR und Importe bleiben verfügbar.",
+    "saveFailed": "Die Einstellungen konnten nicht gespeichert werden. Ihre bisherigen Einstellungen bleiben unverändert."
+  },
   "receiptImport": {
     "engine": "Analyse-Engine",
     "pdfjs": "PDF.js (auf diesem Gerät)",
@@ -1615,7 +1624,7 @@
       "documentType": "Dokumenttyp",
       "pdfFiles": "PDF-Dateien und Belegfotos",
       "useAiCategorization": "KI-Kategorisierung verwenden",
-      "configureAiHint": "Configure an OpenAI-compatible endpoint in Settings → Experimental Features to enable.",
+      "configureAiHint": "Zum Aktivieren einen OpenAI-kompatiblen Endpunkt unter Einstellungen → KI-Funktionen → Modellkonfiguration einrichten.",
       "summaryRows": "{{included}} of {{total}} rows will be imported.",
       "detectedTransactions": "Erkannte Transaktionen",
       "includeRow": "Zeile einschließen",

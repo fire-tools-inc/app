@@ -126,6 +126,8 @@ export interface UserSettings {
   includePrimaryResidenceInFIRE: boolean;
   searchThreshold: number;
   experimentalFeatures: ExperimentalFeatures;
+  /** Master permission for AI model calls. Each action still requires opt-in. */
+  aiFeaturesEnabled: boolean;
   /** UI language. Always defaults to English. Independent from currency. */
   language: LanguageCode;
   /** Optional OpenAI-compatible LLM config for PDF import categorization.
@@ -163,12 +165,14 @@ export const DEFAULT_SETTINGS: UserSettings = {
   includePrimaryResidenceInFIRE: true, // Default to including primary residence
   searchThreshold: 8,
   experimentalFeatures: EFFECTIVE_EXPERIMENTAL_DEFAULTS,
+  aiFeaturesEnabled: true,
   language: 'en',
   backend: DEFAULT_BACKEND_SETTINGS,
   updater: DEFAULT_UPDATER_SETTINGS,
 };
 
 const SETTINGS_KEY = 'fire-calculator-settings';
+export const SETTINGS_CHANGED_EVENT = 'fire-tools:settings-changed';
 let cachedCiphertext: string | undefined;
 let cachedPayload: Partial<UserSettings> | undefined;
 
@@ -180,6 +184,29 @@ const COOKIE_OPTIONS: CookieAttributes = {
   path: '/',
 };
 
+function notifySettingsChanged(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new Event(SETTINGS_CHANGED_EVENT));
+  } catch (error) {
+    logger.error('cookie-settings', 'dispatch-failed', 'Could not notify listeners about a settings change.', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+  }
+}
+
+export function subscribeToSettingsChanges(listener: () => void): () => void {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener(SETTINGS_CHANGED_EVENT, listener);
+  window.addEventListener('storage', listener);
+  window.addEventListener('focus', listener);
+  return () => {
+    window.removeEventListener(SETTINGS_CHANGED_EVENT, listener);
+    window.removeEventListener('storage', listener);
+    window.removeEventListener('focus', listener);
+  };
+}
+
 /**
  * Save user settings to encrypted storage
  * @param settings - The settings to save
@@ -190,10 +217,14 @@ export function saveSettings(settings: UserSettings): void {
     const settingsJson = JSON.stringify(settings);
     const encryptedSettings = encryptData(settingsJson);
     SafeCookies.set(SETTINGS_KEY, encryptedSettings, COOKIE_OPTIONS);
+    if (SafeCookies.get(SETTINGS_KEY) !== encryptedSettings) {
+      throw new Error('The saved settings could not be read back from storage.');
+    }
   } catch (error) {
     logger.error('cookie-settings', 'save-failed', 'failed to save settings', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save settings.');
   }
+  notifySettingsChanged();
 }
 
 /**
@@ -234,6 +265,9 @@ export function loadSettings(): UserSettings {
           if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
             throw new Error('Saved settings must be an object.');
           }
+          if ('aiFeaturesEnabled' in payload && typeof payload.aiFeaturesEnabled !== 'boolean') {
+            logger.error('cookie-settings', 'invalid-ai-preference', 'Saved AI preference must be a boolean; AI features are disabled.');
+          }
           cachedPayload = payload as Partial<UserSettings>;
           cachedCiphertext = encryptedSettings;
         }
@@ -244,6 +278,8 @@ export function loadSettings(): UserSettings {
         return {
           ...DEFAULT_SETTINGS,
           ...parsed,
+          aiFeaturesEnabled: parsed.aiFeaturesEnabled === undefined
+            ? DEFAULT_SETTINGS.aiFeaturesEnabled : parsed.aiFeaturesEnabled === true,
           currencySettings: {
             ...DEFAULT_SETTINGS.currencySettings,
             ...(parsed.currencySettings || {}),
@@ -291,6 +327,7 @@ export function clearSettings(): void {
   } catch (error) {
     logger.error('cookie-settings', 'clear-failed', 'failed to clear settings', { pii: { error: (error as Error)?.message } });
   }
+  notifySettingsChanged();
 }
 
 /**
@@ -371,6 +408,9 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
 
   if (settings.loggingPiiEnabled !== undefined && typeof settings.loggingPiiEnabled !== 'boolean') {
     errors.push('loggingPiiEnabled must be a boolean');
+  }
+  if (settings.aiFeaturesEnabled !== undefined && typeof settings.aiFeaturesEnabled !== 'boolean') {
+    errors.push('aiFeaturesEnabled must be a boolean');
   }
 
   if (settings.backend !== undefined) {

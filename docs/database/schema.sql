@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
     include_primary_residence_in_fire INTEGER NOT NULL DEFAULT 1 CHECK (include_primary_residence_in_fire IN (0,1)),
     search_threshold                 INTEGER NOT NULL DEFAULT 8,
     experimental_features_json       TEXT    NOT NULL DEFAULT '{}', -- JSON: ExperimentalFeatures
+    ai_features_enabled              INTEGER NOT NULL DEFAULT 1 CHECK (ai_features_enabled IN (0,1)),
     llm_base_url                     TEXT,
     llm_api_key                      TEXT,                          -- store encrypted server-side
     llm_model                        TEXT,

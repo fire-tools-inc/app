@@ -7,6 +7,21 @@ import { SETTINGS_SCHEMA_VERSION } from '../src/settingsFile.js';
 const setup = makeAppWithTmpDb;
 
 describe('settings.json sidecar — sync after writes', () => {
+  it('mirrors a disabled AI switch without losing a local model with no API key', async () => {
+    const { app, settingsPath } = await setup();
+    const llmCategorization = { baseUrl: 'http://localhost:11434/v1', model: 'synthetic', apiKey: '' };
+    await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: false, llmCategorization });
+    const file = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    expect(file.users['1'].settings.aiFeaturesEnabled).toBe(false);
+    expect(file.users['1'].settings.llmCategorization).toEqual(llmCategorization);
+    await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: true, llmCategorization: null });
+    const imported = await request(app).post('/api/v1/settings/file/import').send(file);
+    expect(imported.status).toBe(200);
+    const settings = await request(app).get('/api/v1/settings');
+    expect(settings.body.aiFeaturesEnabled).toBe(false);
+    expect(settings.body.llmCategorization).toEqual(llmCategorization);
+  });
+
   it('exists at boot with empty users, then mirrors PATCH /settings', async () => {
     const { app, settingsPath } = await setup();
     expect(fs.existsSync(settingsPath)).toBe(true);
@@ -92,6 +107,28 @@ describe('POST /settings/file/sync', () => {
 });
 
 describe('POST /settings/file/import', () => {
+  it('rejects malformed settings instead of changing a saved AI permission', async () => {
+    const { app } = await setup();
+    await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: false });
+    const result = await request(app).post('/api/v1/settings/file/import').send({
+      users: { '1': { settings: 'invalid settings', notificationPreferences: {} } },
+    });
+    expect(result.status).toBe(400);
+    expect(result.body.error.code).toBe('invalid_body');
+    expect((await request(app).get('/api/v1/settings')).body.aiFeaturesEnabled).toBe(false);
+  });
+
+  it('rolls back an AI permission change when another imported preference is invalid', async () => {
+    const { app, settingsPath } = await setup();
+    await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: false });
+    const result = await request(app).post('/api/v1/settings/file/import').send({
+      users: { '1': { settings: { aiFeaturesEnabled: true }, notificationPreferences: { enableEmailNotifications: false } } },
+    });
+    expect(result.status).toBe(400);
+    expect((await request(app).get('/api/v1/settings')).body.aiFeaturesEnabled).toBe(false);
+    expect(JSON.parse(fs.readFileSync(settingsPath, 'utf8')).users['1'].settings.aiFeaturesEnabled).toBe(false);
+  });
+
   it('applies a posted shape into the DB and resyncs the file', async () => {
     const { app, settingsPath } = await setup();
     await request(app).get('/api/v1/settings'); // create defaults

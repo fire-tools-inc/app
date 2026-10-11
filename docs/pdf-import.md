@@ -125,7 +125,8 @@ see [deployment instructions](deployment/README.md#receipt-phone-uploads).
 ## Optional OpenAI-compatible categorization
 
 Configure an **OpenAI-compatible chat/completions endpoint** and **model** in
-Settings, then explicitly tick **Use AI categorization** for an import.
+**Settings > AI features > Model configuration**, then explicitly tick
+**Use AI categorization** for an import.
 Authentication is optional: leave the key blank for an unauthenticated local
 server. A key is sent as a bearer token only when provided.
 
@@ -145,6 +146,12 @@ Timeouts, invalid JSON or network errors are reported while retaining editable
 heuristic results. Browser CORS and mixed-content restrictions still apply;
 prefer the Electron renderer for an HTTP local model.
 
+**Disable all AI features** at the top of Settings blocks local and hosted
+model calls and cancels pending categorization. Editable heuristic drafts and
+stored originals remain available; OCR, parsing, pairing and imports are not
+disabled. **Enable all AI features** restores availability without clearing
+saved endpoints, keys or models, but you must opt in again for each import.
+
 ## Limitations and troubleshooting
 
 Always compare detected totals and dates with the original. OCR can misread
@@ -159,5 +166,5 @@ photo or edit the draft; no parser can guarantee financial correctness.
 | Phone cannot connect | Check the Wi-Fi link, firewall, upload port and lease; do not use the computer-only loopback link. |
 | Container link uses an internal address | Supply the host's private Wi-Fi upload address before pairing. |
 | Phone send fails | Keep the queue; reconnect or re-pair at the same origin, then retry. |
-| Categorization unavailable | Configure endpoint and model; a key is unnecessary for unauthenticated local models. |
+| Categorization unavailable | Enable AI in Settings and configure endpoint and model; a key is unnecessary for unauthenticated local models. |
 | Imported entries appear in another month | The tracker navigates to the earliest imported date. |

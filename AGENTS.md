@@ -149,6 +149,10 @@ doing so. Blur mode hides values visually, not from code or exports.
   constitute authentication; do not invent accounts or logout flows.
 - Keep imports, exports, legacy-data compatibility and demo guards consistent.
   Treat changing an authoritative store as a migration, not a silent fallback.
+- Gate AI model calls with `aiFeaturesEnabled` and per-action consent. Bulk
+  disable cancels model requests and ignores late enrichment without clearing
+  model configuration. Local OCR, parsers, capture/pairing and financial
+  imports are independent of this permission.
 
 ### Domain and schema changes
 

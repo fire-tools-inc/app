@@ -9,6 +9,12 @@ conventions, but a PostgreSQL driver is not implemented. Existing renderer
 financial stores remain localStorage/SafeCookies stores; receipt originals
 are stored in the backend database.
 
+`0005_ai_features` adds the per-user `ai_features_enabled` permission with a
+default of `1`, preserving existing per-action AI opt-in behavior. Its rollback
+removes this permission only; endpoint credentials, model IDs, receipts and
+financial data are retained. Older clients may omit the optional API field
+without changing a saved permission.
+
 ---
 
 ## Design goals

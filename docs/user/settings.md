@@ -4,6 +4,26 @@ Everything that controls how Fire Tools looks and behaves lives on this page.
 
 ![Settings](./screenshots/settings.png)
 
+## AI features
+
+The **AI features** section at the top has **Disable all AI features** and
+**Enable all AI features** controls. They apply to every model call, whether
+the model is local or hosted. Disabling cancels pending categorization and
+retains endpoint URLs, API keys and model IDs. Local OCR, PDF.js/LiteParse
+parsing, receipt capture/pairing and ordinary imports remain available.
+
+Enabling AI does not send data automatically: each import still requires
+**Use AI categorization** consent. New and legacy settings preserve this
+per-import opt-in behavior; no model is configured by default.
+Expand **Model configuration** here to configure an
+[OpenAI-compatible local or hosted endpoint](../pdf-import.md#optional-openai-compatible-categorization),
+even when experimental document imports or AI are currently disabled.
+
+The master preference is saved with the renderer's encrypted settings and
+applies immediately in that app/browser profile. The backend settings API and
+`settings.json` sidecar also retain `aiFeaturesEnabled` on export/import, but
+do not automatically synchronize it with renderer settings.
+
 ## Currency
 
 Pick the currency the app displays everywhere. The setting is global and

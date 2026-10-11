@@ -34,6 +34,7 @@ import { getApiBaseUrl } from '../utils/apiBase';
 import { isValidCalendarDate } from '../utils/dateValidation';
 import { extractDocumentTextWithLiteParse, getReceiptFile, markReceiptReviewed, saveReceipt } from '../utils/documentImportApi';
 import type { ReceiptDocument } from '../types/receiptImport';
+import { loadSettings, subscribeToSettingsChanges } from '../utils/cookieSettings';
 import { logger } from '../utils/logger';
 import { MaterialIcon } from './MaterialIcon';
 import { ReceiptInbox } from './ReceiptInbox';
@@ -88,6 +89,7 @@ export function PDFImportDialog({
   const { t } = useTranslation();
   const [docType, setDocType] = useState<PdfDocType>('auto');
   const [useLlm, setUseLlm] = useState<boolean>(false);
+  const [aiFeaturesEnabled, setAiFeaturesEnabled] = useState(() => loadSettings().aiFeaturesEnabled);
   const [drafts, setDrafts] = useState<ParsedTransactionDraft[]>([]);
   const [status, setStatus] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -101,9 +103,19 @@ export function PDFImportDialog({
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const running = useRef<AbortController | null>(null);
+  const aiConsent = useRef(false);
   const dialog = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
+
+  useEffect(() => subscribeToSettingsChanges(() => {
+    const enabled = loadSettings().aiFeaturesEnabled;
+    setAiFeaturesEnabled(enabled);
+    if (!enabled) {
+      aiConsent.current = false;
+      setUseLlm(false);
+    }
+  }), []);
 
   useEffect(() => {
     let mounted = true;
@@ -201,13 +213,14 @@ export function PDFImportDialog({
       }
 
       let final = collected;
-      if (useLlm && isLlmConfigured(llmConfig) && collected.length > 0) {
+      if (aiConsent.current && loadSettings().aiFeaturesEnabled && isLlmConfigured(llmConfig) && collected.length > 0) {
         setStatus(t('dialogs.pdfImport.status.runningLlm'));
         try {
-          final = await categorizer(collected, llmConfig, categories, {
+          const categorized = await categorizer(collected, llmConfig, categories, {
             signal: controller.signal,
             onError: () => setError(previous => appendError(previous, t('dialogs.pdfImport.errors.llmFailed'))),
           });
+          if (aiConsent.current && loadSettings().aiFeaturesEnabled) final = categorized;
         } catch (err) {
           logger.error('pdf-import-dialog', 'llm-categorization-failed', 'LLM categorization failed', { pii: { error: (err as Error)?.message } });
           if (!controller.signal.aborted) setError(previous => appendError(previous, t('dialogs.pdfImport.errors.llmFailed')));
@@ -240,7 +253,7 @@ export function PDFImportDialog({
         setBusy(false);
       }
     }
-  }, [docType, defaultCurrency, useLlm, llmConfig, categories, extractor, categorizer, liteParseExtractor, engine, t]);
+  }, [docType, defaultCurrency, llmConfig, categories, extractor, categorizer, liteParseExtractor, engine, t]);
 
   const updateDraft = (id: string, patch: Partial<ParsedTransactionDraft>) => {
     setDrafts(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
@@ -386,18 +399,21 @@ export function PDFImportDialog({
                 }} />
             </div>
 
-            <div className={`form-group pdf-import-llm-toggle${llmConfigured ? '' : ' is-disabled'}`}>
+            <div className={`form-group pdf-import-llm-toggle${llmConfigured && aiFeaturesEnabled ? '' : ' is-disabled'}`}>
               <input
                 id="pdf-use-llm"
                 type="checkbox"
-                checked={useLlm && llmConfigured}
-                disabled={!llmConfigured || busy || batchSaved || IS_DEMO_MODE}
-                onChange={e => setUseLlm(e.target.checked)}
+                checked={useLlm && llmConfigured && aiFeaturesEnabled}
+                disabled={!llmConfigured || !aiFeaturesEnabled || busy || batchSaved || IS_DEMO_MODE}
+                onChange={e => {
+                  aiConsent.current = e.target.checked;
+                  setUseLlm(e.target.checked);
+                }}
               />
               <label htmlFor="pdf-use-llm">
                 {t('dialogs.pdfImport.useAiCategorization')}
-                {!llmConfigured && <span className="disabled-tag">{t('settings.disabled')}</span>}
-                {!llmConfigured && (
+                {(!llmConfigured || !aiFeaturesEnabled) && <span className="disabled-tag">{t('settings.disabled')}</span>}
+                {!aiFeaturesEnabled ? <span className="pdf-row-meta">{t('aiSettings.disabledHint')}</span> : !llmConfigured && (
                   <span className="pdf-row-meta">{t('dialogs.pdfImport.configureAiHint')}</span>
                 )}
               </label>
