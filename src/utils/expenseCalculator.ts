@@ -390,10 +390,11 @@ export function calculateCategoryTrends(monthsData: MonthData[]): CategoryTrendD
 /**
  * Calculate year-to-date average per category
  */
-export function calculateYearToDateAverage(monthsData: MonthData[]): CategoryBreakdown[] {
+export function calculateYearToDateAverage(monthsData: MonthData[], elapsedMonths = monthsData.length): CategoryBreakdown[] {
   if (monthsData.length === 0) {
     return [];
   }
+  if (!Number.isInteger(elapsedMonths) || elapsedMonths < 1) throw new RangeError('Elapsed months must be a positive integer.');
 
   // Aggregate all expenses (supports both built-in and custom category IDs)
   const categoryTotals = new Map<ExpenseCategory | string, { total: number; count: number; months: Set<number> }>();
@@ -416,7 +417,7 @@ export function calculateYearToDateAverage(monthsData: MonthData[]): CategoryBre
   }
 
   // Calculate averages
-  const numMonths = monthsData.length;
+  const numMonths = elapsedMonths;
   const breakdown: CategoryBreakdown[] = [];
 
   for (const [category, data] of categoryTotals) {
@@ -496,7 +497,7 @@ export function calculateYearToDateBreakdown(
     expenses: calculateCategoryBreakdown(allExpenses),
     totalIncome,
     totalExpenses,
-    average: calculateYearToDateAverage(ytdMonths),
+    average: calculateYearToDateAverage(ytdMonths, upToMonth),
   };
 }
 

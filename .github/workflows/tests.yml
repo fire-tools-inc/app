@@ -38,8 +38,8 @@ jobs:
               - 'src/utils/{allocation,portfolio,price,yahoo,ticker,etf,exchange,currency,defaultAssets,dca}*'
             expense_tracker:
               - 'tests/pages/expense-tracker/**'
-              - 'src/components/{Expense,Income,Monthly,CategoryManager,PDFImport,MassEdit}*'
-              - 'src/utils/{expense,pdf,demoExpense,llm,categories,customCategories}*'
+              - 'src/components/{Expense,Income,Monthly,CategoryManager,PDFImport,Receipt,MassEdit}*'
+              - 'src/utils/{expense,pdf,liteParse,documentImport,dateValidation,demoExpense,llm,categories,customCategories}*'
             fire_calculator:
               - 'tests/pages/fire-calculator/**'
               - 'src/components/{Calculator,FIRE,MonteCarlo,Projection}*'
@@ -75,6 +75,10 @@ jobs:
               - 'src/constants/navbarLabels.ts'
               - 'src/utils/{chartColors,expenseChartColors,navigationPreferences}*'
               - 'src/utils/dashboard*'
+              - 'src/utils/{documentImport,liteParse,pdfImport,expenseStatistics,dateValidation}*'
+              - 'server/src/{documentParser,documentWorker,receiptFiles}.*'
+              - 'server/src/routes/receipts.ts'
+              - 'server/public/**'
               - 'src/hooks/**'
               - 'src/workers/**'
               - 'index.html'
@@ -127,6 +131,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: npm --prefix server ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
 

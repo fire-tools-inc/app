@@ -9,6 +9,7 @@ COPY server/package.json server/package-lock.json* ./
 RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY server/tsconfig.json ./
 COPY server/src ./src
+COPY server/scripts ./scripts
 RUN npm run build && npm prune --omit=dev --ignore-scripts --no-audit --no-fund \
     && node -e "const fs = require('node:fs'); const dir = 'node_modules/better-sqlite3/prebuilds'; const keep = 'linux-' + process.arch + '.node'; for (const file of fs.readdirSync(dir)) { if (file !== keep) fs.unlinkSync(dir + '/' + file); } const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
 
@@ -28,10 +29,12 @@ RUN useradd --system --uid 10001 --key SYS_UID_MAX=10001 --gid 0 --shell /usr/sb
     && chown -R firetools:0 /data /app
 COPY --from=build --chown=firetools:0 /app/node_modules ./node_modules
 COPY --from=build --chown=firetools:0 /app/dist ./dist
+COPY --from=build --chown=firetools:0 /app/tessdata ./tessdata
 COPY --from=build --chown=firetools:0 /app/package.json ./package.json
 COPY --chown=firetools:0 server/migrations ./migrations
+COPY --chown=firetools:0 server/public ./public
 USER firetools
-EXPOSE 8787
+EXPOSE 8787 8790
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8787)+'/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

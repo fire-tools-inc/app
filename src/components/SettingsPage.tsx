@@ -7,6 +7,7 @@ import { ALL_COUNTRIES, isEUCountry } from '../types/country';
 import { recalculateFallbackRates, convertAssetsToNewCurrency, convertNetWorthDataToNewCurrency, convertExpenseDataToNewCurrency, convertFireCalculatorInputsToNewCurrency } from '../utils/currencyConverter';
 import { exportFireCalculatorToCSV, exportAssetAllocationToCSV, importFireCalculatorFromCSV, importAssetAllocationFromCSV, exportExpenseTrackerToCSV, importExpenseTrackerFromCSV, exportNetWorthTrackerToJSON, importNetWorthTrackerFromJSON } from '../utils/csvExport';
 import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData } from '../utils/cookieStorage';
+import { clearReceiptOriginals } from '../utils/documentImportApi';
 import { DEFAULT_INPUTS, getDemoNetWorthData, getDemoAssetAllocationData } from '../utils/defaults';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
 import { formatWithSeparator, validateNumberInput } from '../utils/inputValidation';
@@ -988,10 +989,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   };
 
   // Reset all data
-  const handleResetAll = () => {
+  const handleResetAll = async () => {
+    if (IS_DEMO_MODE) return;
     if (confirm(t('settings.confirm.resetAll'))) {
-      clearAllData();
-      showMessage('success', t('settings.messages.allDataReset'));
+      try {
+        await clearReceiptOriginals();
+        clearAllData();
+        showMessage('success', t('settings.messages.allDataReset'));
+      } catch (error) {
+        logger.error('settings', 'reset-failed', 'Data reset could not be completed.', { pii: { error: String(error) } });
+        showMessage('error', t('receiptImport.resetFailed'));
+      }
     }
   };
 
@@ -2241,6 +2249,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                         model: settings.llmCategorization?.model ?? '',
                       })}
                     />
+                    <span className="setting-help">{t('settings.localModelKeyHelp')}</span>
                   </div>
                   <div className="form-group">
                     <label htmlFor="llmModel">{t('settings.model')}</label>
@@ -2820,7 +2829,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               <div className="data-management-group danger-zone">
                 <h3><MaterialIcon name="warning" /> {t('settings.dangerZone')}</h3>
                 <p className="setting-help">{t('settings.actionCannotBeUndone')}</p>
-                <button className="danger-btn" onClick={handleResetAll}>
+                <button className="danger-btn" onClick={() => { void handleResetAll(); }}>
                   <MaterialIcon name="delete" /> {t('settings.resetAllData')}
                 </button>
               </div>

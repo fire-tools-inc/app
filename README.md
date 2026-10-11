@@ -28,10 +28,10 @@ This software is for **educational and planning purposes only** — not financia
 | 📉 **Withdrawal Rate Simulator** | Trinity-style portfolio longevity test across withdrawal rates with a live slider |
 | 📊 **Asset Allocation Manager** | Portfolio tracking with rebalancing recommendations |
 | 🍩 **Portfolio Breakdown** *(experimental)* | Multi-dimensional view (sector, region, currency, provider) — [details](docs/pdf-import.md) |
-| 📄 **PDF Import** *(experimental)* | Parse receipts/statements in-browser; optional LLM categorization — [details](docs/pdf-import.md) |
+| 📄 **Document / Receipt Import** *(experimental)* | PDF.js or local LiteParse/OCR, retained photos, paired Wi-Fi uploads and optional HTTPS tunnel; OpenAI-compatible local-model categorization — [details](docs/pdf-import.md) |
 | 💵 **DCA Helper** | Dollar-cost averaging planning |
 | 💳 **Debt Payoff Calculator** | Snowball/avalanche strategies, fixed-budget or fixed-timeline modes, repayment timeline chart |
-| 💰 **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis |
+| 💰 **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis, YTD/yearly/custom-range expense totals and averages |
 | 📈 **Net Worth Tracker** | Monthly snapshots of assets, cash, pensions with historical charts |
 | 📥 **CSV Export / Import** | Full data backup and restore |
 | 🌍 **Multi-language** | English, Italian, French, German, Spanish — change in Settings |

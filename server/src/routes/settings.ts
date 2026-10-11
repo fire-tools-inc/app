@@ -70,10 +70,10 @@ const mapSettings = (row: SettingsRow) => {
     searchThreshold: row.search_threshold,
     experimentalFeatures: parseJson<Record<string, boolean>>(row.experimental_features_json, {}),
   };
-  if (row.llm_base_url && row.llm_api_key && row.llm_model) {
+  if (row.llm_base_url && row.llm_model) {
     out.llmCategorization = {
       baseUrl: row.llm_base_url,
-      apiKey: row.llm_api_key,
+      apiKey: row.llm_api_key ?? '',
       model: row.llm_model,
     };
   }

@@ -38,6 +38,59 @@ function incomeDraft(id: string, description: string): ParsedTransactionDraft {
 }
 
 describe('categorizeWithLlm', () => {
+  it('supports local OpenAI-compatible models without an API key or forced JSON response format', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[{"id":"a","category":"GROCERIES"}]}' } }],
+    }), { status: 200 }));
+    const result = await categorizeWithLlm([expenseDraft('a', 'Synthetic merchant')], {
+      baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'local-model',
+    }, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    const [url, options] = fetchImpl.mock.calls[0];
+    expect(url).toBe('http://localhost:11434/v1/chat/completions');
+    expect(options.headers).not.toHaveProperty('Authorization');
+    expect(JSON.parse(options.body)).not.toHaveProperty('response_format');
+    expect(result[0].suggestedCategory).toBe('GROCERIES');
+  });
+
+  it('preserves endpoint query parameters and accepts a full chat-completions URL', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[]}' } }],
+    })));
+    await categorizeWithLlm([expenseDraft('a', 'Synthetic merchant')], {
+      ...config, baseUrl: 'https://models.example/v1/chat/completions?api-version=example',
+    }, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://models.example/v1/chat/completions?api-version=example');
+  });
+
+  it('reports model failures while retaining the editable heuristic drafts', async () => {
+    const onError = vi.fn();
+    const fetchImpl = vi.fn().mockResolvedValue(new Response('Unavailable', { status: 503 }));
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    expect(await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl, onError })).toBe(drafts);
+    expect(onError).toHaveBeenCalledOnce();
+  });
+
+  it('does not contact the model after cancellation', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchImpl = vi.fn();
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    expect(await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, {
+      fetchImpl, signal: controller.signal,
+    })).toBe(drafts);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('does not trust malformed model rows or mark them as enriched', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[null,7,{"id":"a","category":{}}]}' } }],
+    })));
+    const drafts = [expenseDraft('a', 'Synthetic merchant')];
+    const result = await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(result).toEqual(drafts);
+  });
+
   it('returns input drafts when list is empty', async () => {
     const result = await categorizeWithLlm([], config, EXPENSE_CATEGORIES);
     expect(result).toEqual([]);

@@ -9,11 +9,12 @@
   },
   "main": "dist/index.js",
   "scripts": {
+    "predev": "node scripts/bundle-ocr-data.mjs",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node scripts/bundle-ocr-data.mjs",
     "start": "node dist/index.js",
     "lint:tsc": "tsc --noEmit",
-    "pretest": "node ../scripts/ensure-sqlite-for-node.cjs",
+    "pretest": "node ../scripts/ensure-sqlite-for-node.cjs && node scripts/bundle-ocr-data.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "tsx src/cli-migrate.ts up",
@@ -21,6 +22,7 @@
     "migrate:status": "tsx src/cli-migrate.ts status"
   },
   "dependencies": {
+    "@llamaindex/liteparse": "^2.15.1",
     "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^13.0.3",
     "cors": "^2.8.5",
     "express": "^5.2.1",
@@ -28,6 +30,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",

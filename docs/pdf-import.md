@@ -1,93 +1,163 @@
-# PDF Expense / Income Import (Experimental)
+# Document and receipt import (experimental)
 
-The Expense Tracker can read **receipts**, **invoices**, **bank / credit-card statements**, and **payslips** straight from PDF files and turn them into transactions.
+The Cashflow Tracker imports receipts, invoices, bank statements and payslips
+from **PDFs and JPEG/PNG/WebP photos**. Enable **Settings > Experimental
+Features > PDF Import**, then select **Import documents** in the tracker.
+The public web demo remains read-only: camera, uploads, pairing and confirmation
+are disabled there.
 
-This feature is **experimental** and **off by default**. Enable it under **Settings → Experimental Features → PDF expense/income import**.
+## Choose a local parser
 
-## How it works
-
-1. You pick one or more PDF files in the *Import PDF* dialog.
-2. The PDF is parsed **in your browser** using [`pdfjs-dist`](https://github.com/mozilla/pdf.js). Nothing is uploaded anywhere.
-3. Heuristic parsers extract transactions:
-   - **Receipt** — single expense with the line marked *Total / Totale / Importo totale / …*
-   - **Invoice** — single expense with the *Grand total / Importo totale*
-   - **Payslip** — single income with the *Net pay / Importo netto / Stipendio netto / …*
-   - **Bank statement** — every line that starts with a date and has an amount becomes a transaction. Negative amounts (or "debit"-style keywords) become expenses; positive amounts (or "credit / stipendio / bonifico in entrata" keywords) become income.
-4. Detected transactions land in an **editable review table**. You can:
-   - Toggle each row on/off.
-   - Change the kind (income ↔ expense).
-   - Edit the date, description, amount, category, expense type (need/want) or income source.
-5. Confirm to push the included rows into the Expense Tracker. The view jumps to the month of the earliest imported transaction so you immediately see the added rows (a payslip dated in May lands in May, not whichever month you were viewing).
-
-The doc-type dropdown lets you override the auto-detected parser if it picks the wrong one.
-
-## Parsing engine (and the LiteParse experiment)
-
-Text extraction is deliberately decoupled from the heuristic parsers: any engine
-that produces the shared `ExtractedPdf` shape (line-grouped text) can feed them.
-
-- **Production (browser):** [`pdfjs-dist`](https://github.com/mozilla/pdf.js) in
-  `src/utils/pdfTextExtractor.ts`. Runs fully client-side with no native deps.
-  Its standard fonts, character maps, decoder resources and their upstream
-  licenses are bundled as local build assets. The PDF.js 6 `BinaryDataFactory`
-  resolves Vite's asset URLs on the main thread, including
-  relative Electron `file://` paths; it does not fetch fonts from a CDN or rely
-  on system fonts. Loading tasks and page resources are released on failure
-  as well as success.
-- **Experimental (Node-only):** [LiteParse](https://github.com/run-llama/liteparse)
-  in `src/utils/liteParseExtractor.ts`. LiteParse uses a native PDFium binding, so
-  it cannot run in the browser bundle and is loaded dynamically — it is wired up
-  for benchmarking and potential desktop/server use, not the web build.
-
-A benchmark test (`tests/pages/expense-tracker/pdfParsingBenchmark.test.ts`) runs a
-sample **paystub** and **invoice** (fixtures under `tests/.../fixtures/`, regenerate
-with `node tests/pages/expense-tracker/fixtures/generate.mjs`) through *both* engines
-and the same heuristics. Both recover the correct doc type, amount and currency; on
-these text-layer PDFs LiteParse extracts noticeably faster than pdfjs.
-
-## Optional AI categorization
-
-If a heuristic category is wrong (e.g. an obscure merchant), an **optional** LLM step can re-categorize the rows.
-
-- You provide an **OpenAI-compatible** `/chat/completions` endpoint, an API key, and a model name in *Settings → Experimental Features*.
-- Works with **OpenAI**, **Azure OpenAI**, hosted aggregators (**OpenRouter**, **Together**, …), and — most importantly for privacy — **self-hosted open-source models** running locally via **Ollama** (`http://localhost:11434/v1`), **LM Studio** (`http://localhost:1234/v1`), **llama.cpp**, **vLLM**, etc. For local servers, any non-empty API-key value works.
-- It only runs when you tick **Use AI categorization** inside the import dialog for that import.
-- Only the parsed transaction descriptions, kinds, amounts, and currencies are sent — never the raw PDF bytes.
-- If the request fails, times out, or returns invalid JSON, the heuristic results are used unchanged.
-
-### Example endpoints
-
-| Provider     | Base URL                                  | Model example     |
-| ------------ | ----------------------------------------- | ----------------- |
-| OpenAI       | `https://api.openai.com/v1`               | `gpt-4o-mini`     |
-| Azure OpenAI | `https://<resource>.openai.azure.com/openai/deployments/<deployment>` (append `?api-version=…` as needed) | your deployment id |
-| Ollama       | `http://localhost:11434/v1`               | `llama3.1:8b`     |
-| LM Studio    | `http://localhost:1234/v1`                | local model id    |
-| OpenRouter   | `https://openrouter.ai/api/v1`            | `openai/gpt-4o-mini` |
-
-## Privacy
-
-- **No PDF bytes ever leave your device.** Parsing happens fully in the browser.
-- **No external network calls** unless you (a) configure the LLM endpoint **and** (b) tick *Use AI categorization* for an import. The parser loads its bundled worker, fonts and decoder resources from the app itself.
-- The API key is stored encrypted with the rest of your settings (local SQLite database on desktop, AES-256-encrypted cookie in browser).
-- You can clear everything via *Settings → Data Management → Reset All Data*.
-
-## Limitations
-
-Heuristic parsing is intentionally conservative and will never be 100% accurate. Expect to:
-
-- Hand-fix rows highlighted as **low confidence** (light-orange background).
-- Override the doc-type dropdown for unusual layouts.
-- Edit categories for niche merchants, or use the optional LLM step.
-
-Scanned PDFs (image-only, no text layer) are **not supported**. Run them through an OCR tool first to get a text-bearing PDF.
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
+| Engine | Where it runs | Supported input |
 | --- | --- | --- |
-| "No transactions detected" | Wrong doc-type or unusual layout | Pick the correct doc type from the dropdown. |
-| All rows have wrong dates | Locale mismatch (DD/MM vs MM/DD) | Edit each row's date manually before confirming. |
-| Imported rows seem to vanish after confirming | They belong to a different month than the one you were viewing | The view now auto-jumps to the imported month; use the month/year selector to revisit other periods. |
-| LLM categorization does nothing | Endpoint/key not set, or model name wrong | Re-check the three fields in Settings. |
-| Build error about `?url` import | Vite version too old | This feature needs Vite 5+ (already pinned in the project). |
+| **PDF.js** (default) | Your renderer, with bundled worker/fonts/decoders | Text-layer PDFs |
+| **LiteParse + OCR** | Your configured local backend, including Electron's embedded server | Text PDFs, scans and receipt photos |
+
+LiteParse is an alternative, not a replacement for PDF.js. Select it in the
+dialog's **Parsing engine** menu. Photos always use LiteParse's bundled local
+Tesseract OCR; an AI model, API key, cloud OCR account or external service is
+not required. A custom backend receives document bytes explicitly; use your
+own trusted server. Browser-only debugging without a backend can still read
+text PDFs with PDF.js.
+
+The build bundles English Tesseract language data, its license and provenance
+from the pinned `@tesseract.js-data/eng` package (about 23.5 MB uncompressed).
+The worker requires that local file before parsing, rather than allowing
+LiteParse's automatic first-use download. Docker and desktop OCR therefore
+work without internet access; the data does not enter the web bundle.
+
+LiteParse documents are limited to **10 MB** and **100 pages**. Native parsing runs in
+a disposable process with a 60-second deadline and at most two concurrent
+jobs. Its private temporary input is deleted after completion, failure or
+cancellation. The temporary file is not encrypted by the SQLite passphrase.
+No native Node access is exposed to the renderer.
+
+## Review before importing
+
+1. Select PDFs/photos, use **Take a receipt photo**, or open a stored receipt
+   from the **Receipt inbox**.
+2. Choose **Auto-detect**, **Receipt**, **Invoice**, **Bank statement** or
+   **Payslip**. The existing conservative heuristics extract totals, dates,
+   transaction types and categories from the selected engine's text.
+3. Review the editable rows. Fix dates, amounts, kind, category, need/want or
+   income source; exclude unwanted rows. Adding files retains existing edits.
+4. Confirm the complete batch. Every included date must exist in the calendar
+   and every included amount must be finite and greater than zero.
+
+Confirmation saves one complete renderer-ledger update before marking receipt
+originals reviewed. It does not migrate the financial ledger to the backend.
+Failed writes keep drafts and originals available. Receipt rows have stable
+content-derived IDs, so retries do not duplicate already imported entries.
+If saving succeeded but updating receipt status failed, **Finish receipt
+review** retries the status update without changing or re-saving entries.
+The tracker navigates to the earliest imported transaction's month.
+
+## Retained originals
+
+Photos are stored **before OCR** in the backend SQLite `receipts` table,
+separate from financial entries. Re-uploading identical bytes is idempotent.
+The inbox can show pending or reviewed images, review them again, download the
+original or explicitly delete it. Deleting an image does not delete its
+transactions. Closing the dialog or a parser/model error does not delete it.
+
+Originals are included in SQLite backups and in optional database passphrase
+encryption. They are **not** included in the existing ledger CSV or all-data
+renderer JSON export; download originals or keep a database backup.
+**Settings > Data Management > Reset All Data** also deletes originals from
+the configured backend, after confirmation. An unavailable configured backend
+blocks reset rather than silently claiming success. Phone queues belong to
+the phone and are not cleared by a desktop reset.
+
+## Pair a phone over Wi-Fi
+
+1. Open **Import documents > Phone receipt uploads** on the desktop.
+2. Keep the default **8790** upload port, or choose a free port.
+3. Select **Start phone pairing**. Share a **Phone pairing link** with your
+   phone; the loopback link labelled *This computer only* will not reach it.
+4. Open the link while connected to the same trusted Wi-Fi. Use **Take a
+   receipt photo** (the phone/browser handles native camera permission) or
+   select existing photos.
+5. Select **Send queued receipts**, then refresh/review the desktop inbox.
+
+The listener is opt-in, upload-only and separate from the desktop's
+loopback-only financial API. It cannot read receipts, list data, change
+settings or create financial entries. Links authorize uploads for 30 minutes;
+**Stop phone pairing**, dialog closure or app shutdown stops the listener.
+Never share a link publicly. Plain HTTP is not encrypted: use it only on a
+trusted LAN. Firewalls must permit the selected upload port.
+
+The phone saves **original bytes**, not recompressed copies, in its
+origin-scoped IndexedDB queue before sending. It removes a queued photo only
+after the server confirms storage. Offline/network failures and lost
+acknowledgements retain the queue; identical retries are deduplicated.
+Keep the already-loaded page open when away from the server to take photos.
+It is not an installed offline PWA and cannot initially load without reaching
+the listener.
+
+If pairing expires, reopen a fresh link at the **same scheme, host and port**
+to reach the existing queue. A different Wi-Fi hostname, tunnel origin or port
+has a separate queue. Download pending originals before changing addresses or
+clearing browser data. Private browsing or disabled/full storage can prevent
+queuing; failures are shown instead of reporting a save.
+HEIC photos are not accepted: choose a JPEG/PNG/WebP export. Photos larger than
+10 MB stay queued; save the original and select a resized copy explicitly.
+
+## Optional HTTPS tunnel
+
+Fire Tools accepts an **existing user-configured HTTPS tunnel origin**. It
+does not install a tunnel client, create a public hostname or call a tunnel
+provider.
+
+Forward the tunnel to the **receipt upload port only**, for example
+`http://127.0.0.1:8790`, never to the ordinary financial API. Enter its HTTPS
+origin (for example `https://receipts.example.net`, without a path, query or
+credentials) before pairing. Open the generated HTTPS phone link.
+
+If the tunnel already exists, the upload listener only remains active for
+the pairing lease. The capability is carried in the link's fragment and then
+sent in an Authorization header, not a query string. The phone page sends no
+referrer and loads no third-party resources. The tunnel operator can still
+access traffic; choose a trusted service or use Wi-Fi instead.
+
+For Docker's explicit upload-only port publication and private host address,
+see [deployment instructions](deployment/README.md#receipt-phone-uploads).
+
+## Optional OpenAI-compatible categorization
+
+Configure an **OpenAI-compatible chat/completions endpoint** and **model** in
+Settings, then explicitly tick **Use AI categorization** for an import.
+Authentication is optional: leave the key blank for an unauthenticated local
+server. A key is sent as a bearer token only when provided.
+
+| Service | Base URL | Example model |
+| --- | --- | --- |
+| Ollama | `http://localhost:11434/v1` | A model already downloaded locally |
+| LM Studio | `http://localhost:1234/v1` | Your loaded local model ID |
+| llama.cpp / vLLM | Your local server's `/v1` URL | Its configured model ID |
+| OpenAI or hosted compatible server | Its `/v1` URL | Your selected model ID |
+
+Full `/chat/completions` URLs and query parameters are supported. The request
+does not require the optional `response_format` parameter, which many local
+servers lack. The model must return JSON as requested by the prompt.
+Only parsed transaction fields are sent, never PDF/photo bytes. Dates,
+amounts and currencies are never rewritten by categorization.
+Timeouts, invalid JSON or network errors are reported while retaining editable
+heuristic results. Browser CORS and mixed-content restrictions still apply;
+prefer the Electron renderer for an HTTP local model.
+
+## Limitations and troubleshooting
+
+Always compare detected totals and dates with the original. OCR can misread
+digits, especially on blurry, handwritten or very long receipts. Improve the
+photo or edit the draft; no parser can guarantee financial correctness.
+
+| Symptom | Action |
+| --- | --- |
+| Text PDF parses incorrectly | Try the other engine or override document type. |
+| Scan has no text | Select LiteParse + OCR on a running local backend. |
+| Original saved but OCR failed | Retry from the inbox; the original is retained. |
+| Phone cannot connect | Check the Wi-Fi link, firewall, upload port and lease; do not use the computer-only loopback link. |
+| Container link uses an internal address | Supply the host's private Wi-Fi upload address before pairing. |
+| Phone send fails | Keep the queue; reconnect or re-pair at the same origin, then retry. |
+| Categorization unavailable | Configure endpoint and model; a key is unnecessary for unauthenticated local models. |
+| Imported entries appear in another month | The tracker navigates to the earliest imported date. |

@@ -14,6 +14,8 @@ import { buildExpenseTrackerRouter } from './routes/expenseTracker.js';
 import { buildNetWorthRouter } from './routes/netWorth.js';
 import { buildQuestionnaireRouter } from './routes/questionnaire.js';
 import { buildPdfImportsRouter } from './routes/pdfImports.js';
+import { buildReceiptsRouter } from './routes/receipts.js';
+import type { extractDocumentText } from './documentParser.js';
 import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
@@ -34,9 +36,10 @@ export interface BuildAppOptions {
    * `Boolean(env.passphrase)`.
    */
   adminState?: AdminState;
+  documentExtractor?: typeof extractDocumentText;
 }
 
-export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: BuildAppOptions) => {
+export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor }: BuildAppOptions) => {
   const corsOptions: CorsOptions = {
     origin: (origin, cb) => {
       if (!origin) {
@@ -100,6 +103,8 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: Buil
   v1.use(buildNetWorthRouter(db));
   v1.use(buildQuestionnaireRouter(db));
   v1.use(buildPdfImportsRouter(db));
+  const receipts = buildReceiptsRouter(db, documentExtractor);
+  v1.use(receipts.router);
   v1.use(buildPortfolioBreakdownRouter(db));
   v1.use(buildBanksRouter(db));
   v1.use(buildUiPreferencesRouter(db));
@@ -135,5 +140,5 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: Buil
     });
   });
 
-  return app;
+  return Object.assign(app, { closeReceiptUploads: receipts.close });
 };
