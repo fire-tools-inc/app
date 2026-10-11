@@ -1,0 +1,17 @@
+{
+  "skill_name": "fire-tools-performance",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "A 100,000-run Monte Carlo job still freezes when its result arrives, even though it runs in a worker. Plan the investigation and verification without changing the simulation count or editing files.",
+      "expected_output": "Separate worker calculation, serialized payload and result mounting; retain worker-side distributions and the compact result shape, inspect heavyweight rendering, and verify cancellation, stale messages, all runs and comparable frame/long-task measurements.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Formatting a large portfolio table is slow. Explain how to investigate settings reads and cache them safely without editing files.",
+      "expected_output": "Measure a fixed formatting workload, reuse ciphertext-keyed settings caching and the shared formatter, verify save/clear/external-change invalidation and nested mutation isolation, and avoid per-cell deep-clone or stale-setting regressions.",
+      "files": []
+    }
+  ]
+}

@@ -20,9 +20,9 @@ instead.
 
 ```
 +----------------+        +----------------+        +----------------+
-|  Web / Electron| <----> |  Node.js API   | <----> |  SQLite (def.) |
-|     client     |  HTTP  |   Express +    |  SQL   |  or Postgres   |
-|  (React, Vite) |        |    OpenAPI     |        |   (compose)    |
+|  Web / Electron| <----> |  Node.js API   | <----> |     SQLite     |
+|     client     |  HTTP  |   Express +    |  SQL   |  local file DB |
+|  (React, Vite) |        |    OpenAPI     |        |  local/compose |
 +----------------+        +----------------+        +----------------+
 ```
 
@@ -48,8 +48,13 @@ instead.
   System typefaces and a bundled, Apache-licensed Material Symbols font keep
   interface rendering independent of external font services.
 - **Settings reads** — the decrypted payload is cached by its encrypted
-  storage value. Callers receive independent values, so formatting many cells
-  does not repeatedly decrypt settings or leak mutations between readers.
+  storage value. Saved settings are reconstructed with independent nested
+  fields, so formatting many cells does not repeatedly decrypt the payload or
+  leak cached mutations between readers. Treat shared defaults as immutable.
+- **Client storage** — frontend domain stores still use encrypted cookies and
+  localStorage, with localStorage authoritative in Electron. Supported UI
+  preferences mirror the backend, but not every domain page is an API client.
+  The read-only browser demo does not require a backend.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   supported storage driver; the schema is Postgres-compatible, but the
   Postgres driver remains deferred.
@@ -68,9 +73,9 @@ is meant to run **on your own machine** (Docker Desktop, your homelab,
 whatever) so your data stays on your hardware while still being reachable
 from multiple devices on your network.
 
-The same code can be deployed multi-tenant — every domain table already
-carries `user_id` — but the default configuration boots a single user so you
-don't need to think about auth on day one.
+Every domain table already carries `user_id`, but the default configuration
+boots a single user. The schema and user-scoping helpers leave room for a
+future authenticated multi-tenant deployment; they are not authentication.
 
 ## Source map
 
@@ -81,6 +86,7 @@ don't need to think about auth on day one.
 | `src/routes/` | Lazy route registry and navigation preloading |
 | `src/workers/` | Monte Carlo and withdrawal-rate simulation execution |
 | `src/assets/fonts/` | Bundled icon font; its license is distributed from `public/` |
+| `.github/skills/` | Repository-local UI, performance and data-integrity workflows |
 | `server/` | Node.js + Express + better-sqlite3 backend |
 | `electron/` | Electron main + preload (desktop wrapper) |
 | `website/` | Marketing landing page |
@@ -89,6 +95,14 @@ don't need to think about auth on day one.
 | `docs/deployment/` | Docker Compose how-tos |
 | `docs/user/` | End-user documentation (this site's `/docs/user/`) |
 | `docs/engineering/` | Engineering documentation (this site's `/docs/engineering/`) |
+
+## Agent-assisted changes
+
+`AGENTS.md` is the contributor-wide agent entry point. The focused skills in
+`.github/skills/` capture the interface, calculation-performance and
+data-retention safeguards for future changes. Read the relevant `SKILL.md`
+before working in that area. Each skill includes planning smoke-test prompts;
+those fixtures are not claims of completed model benchmarks.
 
 ## Related links
 

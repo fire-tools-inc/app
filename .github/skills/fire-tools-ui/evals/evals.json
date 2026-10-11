@@ -1,0 +1,17 @@
+{
+  "skill_name": "fire-tools-ui",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Plan a sidebar refinement from a new visual reference without editing files. Keep dark mode, the profile-first rail and all existing tools. Explain how you would preserve the mobile drawer and Electron navigation.",
+      "expected_output": "A focused plan using AppNavigation and App.css, critical CSS synchronization, English-only labels, drawer focus/inert checks, title-bar drag safety and responsive screenshot verification. No invented auth/logout or storage changes.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Asset Allocation looks correct until I visit another tool, then the chart legends and section headers change color. Describe a diagnosis and regression strategy without editing files.",
+      "expected_output": "Inspect selector/media-query ordering and route-loaded CSS, reuse chartColors and shared tokens, check computed normal/hover styles and readable legends, and verify cross-route browser behavior rather than adding another overriding rule.",
+      "files": []
+    }
+  ]
+}
