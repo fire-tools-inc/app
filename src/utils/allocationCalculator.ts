@@ -9,7 +9,7 @@ import {
   ChartData,
 } from '../types/assetAllocation';
 import { formatDisplayCurrency, formatDisplayPercent } from './numberFormatter';
-import { loadSettings } from './cookieSettings';
+import { loadSettings, type UserSettings } from './cookieSettings';
 import { ASSET_CLASS_CHART_COLORS, getChartColor } from './chartColors';
 
 export interface FIREPortfolioData {
@@ -23,8 +23,10 @@ export interface FIREPortfolioData {
  * Calculate portfolio data for FIRE calculations, respecting asset class inclusion settings
  * and primary residence inclusion setting.
  */
-export function calculateFIREPortfolioData(assets: Asset[]): FIREPortfolioData | undefined {
-  const settings = loadSettings();
+export function calculateFIREPortfolioData(
+  assets: Asset[],
+  settings: Pick<UserSettings, 'fireAssetClassInclusion' | 'includePrimaryResidenceInFIRE'> = loadSettings(),
+): FIREPortfolioData | undefined {
   const inclusion = settings.fireAssetClassInclusion;
   const includePrimaryResidence = settings.includePrimaryResidenceInFIRE;
 

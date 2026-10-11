@@ -41,6 +41,15 @@ const routes = [
   { slug: 'questionnaire',      path: '/demo/questionnaire' },
   { slug: 'settings',           path: '/demo/settings' },
 ];
+const requestedRoutes = process.argv.slice(2);
+for (const slug of requestedRoutes) {
+  if (!routes.some(route => route.slug === slug)) {
+    throw new Error(`Unknown screenshot route: ${slug}. Available: ${routes.map(route => route.slug).join(', ')}`);
+  }
+}
+const selectedRoutes = requestedRoutes.length
+  ? routes.filter(route => requestedRoutes.includes(route.slug))
+  : routes;
 
 let chromium;
 try {
@@ -66,7 +75,7 @@ async function main() {
   await mkdir(outDir, { recursive: true });
 
   console.error(`[take-screenshots] starting vite dev server on ${BASE} ...`);
-  const vite = spawn('npx', ['vite', '--host', HOST, '--port', String(PORT), '--strictPort'], {
+  const vite = spawn(process.execPath, [resolve(repoRoot, 'node_modules/vite/bin/vite.js'), '--host', HOST, '--port', String(PORT), '--strictPort'], {
     cwd: repoRoot,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, BROWSER: 'none' },
@@ -83,6 +92,11 @@ async function main() {
 
     const browser = await chromium.launch();
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2 });
+    await context.route('**/*', route => {
+      const url = new URL(route.request().url());
+      return url.origin === BASE || url.protocol === 'data:'
+        ? route.continue() : route.abort();
+    });
 
     // Pre-accept the cookie banner so it doesn't cover the UI.
     const consent = JSON.stringify({
@@ -124,7 +138,7 @@ async function main() {
     const page = await context.newPage();
     page.on('pageerror', (err) => console.error('[page error]', err.message));
 
-    for (const r of routes) {
+    for (const r of selectedRoutes) {
       const url = `${BASE}${r.path}`;
       console.error(`[take-screenshots] -> ${r.slug} (${url})`);
       await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 }).catch(async () => {

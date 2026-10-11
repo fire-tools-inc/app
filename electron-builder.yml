@@ -16,15 +16,13 @@ directories:
   buildResources: electron/build
 
 files:
-  - electron/**/*
-  - dist-electron/**/*
-  - server/dist/**/*
-  - server/migrations/**/*
-  - package.json
-  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
-  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
-  - "!**/node_modules/*.d.ts"
-  - "!**/node_modules/.bin"
+  - &app-files "{electron/**/*,dist-electron/**/*,server/{dist,migrations}/**/*,package.json}"
+  - &dependency-docs "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
+  - &dependency-tests "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
+  - &dependency-types "!**/node_modules/*.d.ts"
+  - &dependency-bins "!**/node_modules/.bin"
+  - &sqlite-builds "!**/node_modules/{better-sqlite3,better-sqlite3-multiple-ciphers}/build/**/*"
+  - &development-artifacts "!{tests,test-results,coverage,playwright-report}/**/*"
 
 asarUnpack:
   - "**/*.{node,dll,dylib,so}"
@@ -34,6 +32,7 @@ extraMetadata:
   main: electron/main.cjs
 
 asar: true
+npmRebuild: false
 
 # After macOS signing (including ad-hoc), re-sign with the correct bundle
 # identifier so NotificationCenter attributes notifications to "Fire Tools"
@@ -41,6 +40,15 @@ asar: true
 afterSign: scripts/electron-after-sign.cjs
 
 mac:
+  files:
+    - *app-files
+    - *dependency-docs
+    - *dependency-tests
+    - *dependency-types
+    - *dependency-bins
+    - *sqlite-builds
+    - *development-artifacts
+    - "!**/node_modules/{better-sqlite3,better-sqlite3-multiple-ciphers}/prebuilds/!(darwin-${arch}).node"
   artifactName: "Fire.Tools-${version}-${arch}-mac.${ext}"
   category: public.app-category.finance
   hardenedRuntime: true
@@ -62,6 +70,15 @@ mac:
   notarize: false
 
 win:
+  files:
+    - *app-files
+    - *dependency-docs
+    - *dependency-tests
+    - *dependency-types
+    - *dependency-bins
+    - *sqlite-builds
+    - *development-artifacts
+    - "!**/node_modules/{better-sqlite3,better-sqlite3-multiple-ciphers}/prebuilds/!(win32-${arch}).node"
   legalTrademarks: ""
   target:
     - target: nsis
@@ -81,6 +98,15 @@ nsis:
   createStartMenuShortcut: true
 
 linux:
+  files:
+    - *app-files
+    - *dependency-docs
+    - *dependency-tests
+    - *dependency-types
+    - *dependency-bins
+    - *sqlite-builds
+    - *development-artifacts
+    - "!**/node_modules/{better-sqlite3,better-sqlite3-multiple-ciphers}/prebuilds/!(linux-${arch}|linuxmusl-${arch}).node"
   category: Finance
   target:
     - target: AppImage

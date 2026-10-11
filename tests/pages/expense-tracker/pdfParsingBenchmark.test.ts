@@ -48,8 +48,8 @@ async function extractWithPdfjs(bytes: Uint8Array, fileName: string): Promise<Ex
   const task = pdfjs.getDocument({
     data: bytes,
     useWorkerFetch: false,
-    isEvalSupported: false,
     useSystemFonts: false,
+    standardFontDataUrl: fileURLToPath(new URL('../../../node_modules/pdfjs-dist/standard_fonts/', import.meta.url)),
   });
   const pdf = await task.promise;
   const lines = [];

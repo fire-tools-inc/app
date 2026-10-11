@@ -14,38 +14,78 @@ If the tag and `package.json` disagree, the `verify` job fails with:
 
 ## One-tap script
 
-Use [`scripts/release.sh`](../../scripts/release.sh). It enforces the same
-rules as CI **before** anything is pushed, so you never ship a mismatched tag.
+Pass the desired **stable release tag** to
+[`scripts/release.sh`](../../scripts/release.sh). It bumps the version,
+validates the release locally, commits and pushes the tag in one command:
 
 ```sh
-# Release the version already committed to main:
+# Example: choose an unreleased version, then run from clean, synced main.
+./scripts/release.sh v2.4.0
+
+# Or release the version already committed to main, without another bump:
 ./scripts/release.sh
 
-# Bump to the next minor (X.Y.Z -> X.(Y+1).0), commit + push main, then release:
+# Existing shortcuts remain supported:
 ./scripts/release.sh --bump
-
-# Bump to an explicit version, then release:
-./scripts/release.sh --bump 2.1.3
+./scripts/release.sh --bump 2.4.0
 ```
 
-What it does:
+Prerequisites: Git, Node.js >=22.22.0, npm, a clean `main` checkout synchronized
+with `origin/main`, and permission to push both the release commit and tag.
+Merge the intended changes and wait for the automatic version-bump workflow
+before synchronizing your release checkout. The script never switches branches,
+merges a PR, force-pushes or rewrites an existing tag.
 
-- Refuses to run unless you are on a clean `main` that is in sync with `origin/main`.
-- With `--bump X.Y.Z`: runs `scripts/bump-version.mjs`, commits with
-  `--no-gpg-sign`, and pushes `main`.
-- With a bare `--bump` (no version): bumps to the next minor — `X.Y.Z` becomes
-  `X.(Y+1).0` (e.g. `2.1.1` → `2.2.0`).
-- Verifies `package.json` core matches the tag core.
-- Refuses to clobber an existing local or remote tag.
-- Creates an annotated tag `vX.Y.Z` and pushes it.
+The script performs these steps in order:
+
+1. Fetch and verify the current `main` commit, reject malformed/downgrade
+   versions and existing tags, then update the five version files when needed.
+   Bare `--bump` chooses the next minor version.
+2. Run sequential clean installs in the root and `server/`, both dependency
+   audits and both full test suites.
+3. Ensure the Playwright Chromium binary is installed and run the production
+   browser regression suite. Chromium's OS libraries must be available; the
+   script does not automatically install privileged system packages.
+4. Build the Pages site and the Electron renderer/embedded backend with the
+   existing build scripts.
+5. Verify every version again, reject unrelated changes introduced by checks,
+   and recheck that local and remote `main` did not move during validation.
+   Validated file contents must stay unchanged through the checks and commit
+   hooks; unexpected modifications stop the release.
+6. Commit only the version files with `--no-gpg-sign` and no tool attribution,
+   create an unsigned annotated `vX.Y.Z` tag, and push `main` and the tag
+   **atomically**. The version commit's `bump version to` message prevents the
+   automatic patch workflow from changing the selected release version.
+7. Print that **GitHub Actions will build and publish the release**, with the
+   release-workflow URL. The script returns after the push; it does not wait for
+   Actions or claim the installers have already been published.
+
+Local checks must all pass before any commit or tag is pushed. Publication is
+still performed by the existing tag-triggered workflow, not by local packaging
+or `gh release create`. The website's main-triggered Pages workflow remains
+separate.
 
 The published GitHub Release body is **changelog first** (auto-generated from
 the PRs/commits since the previous tag, via the GitHub API) followed by the
 macOS/Windows install instructions — see the `Build release notes` step in
 [`release.yml`](../../.github/workflows/release.yml).
 
-> If `main` is branch-protected and the bump push is rejected, open a PR for the
-> bump, merge it, then re-run `./scripts/release.sh` (no `--bump`).
+## Failed runs and protected branches
+
+The script stops with a nonzero exit on a failed install, audit, test, build,
+version check or remote operation. It preserves local edits, commits and tags;
+it does not automatically discard work.
+
+If an atomic push is rejected, neither ref is published by that transaction.
+For an interrupted connection, inspect remote refs before assuming whether
+the server accepted the push. There is no fallback to separate, partially
+successful pushes.
+
+If branch protection requires a PR for the bump, submit the local version commit
+for review, merge it, synchronize a clean release checkout, and invoke the script
+without a new bump. A local tag retained from a failed push must be inspected and
+handled explicitly first; the script will not move or overwrite it. Never push
+the retained tag at an unmerged local commit merely to bypass branch protection.
 
 ## What `scripts/bump-version.mjs` updates
 
@@ -55,12 +95,8 @@ macOS/Windows install instructions — see the `Build release notes` step in
 - `server/package.json` and `server/package-lock.json`
 - `tests/setup.ts` (`__APP_VERSION__` stub)
 
-## Fixing a mismatched tag
+## Fixing a mismatched or published tag
 
-If a tag already points at the wrong commit (version drift), move it to the
-commit whose `package.json` matches, then force-push:
-
-```sh
-git tag -f vX.Y.Z <commit>
-git push origin vX.Y.Z --force
-```
+Do not move an existing published tag. Correct the version through the normal
+reviewed branch flow and choose a new unused tag. The script verifies the
+root/server manifests, both lockfiles and the test version stub together.

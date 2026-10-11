@@ -188,6 +188,20 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
 
 .features, .download { margin-top: 4rem; }
 
+.features .feature-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: auto;
+  font-size: 0.9rem;
+}
+
+.features-note {
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

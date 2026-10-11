@@ -9,7 +9,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 
 ## Pages in this guide
 
-- [Homepage & navigation](./homepage.md)
+- [Dashboard & navigation](./homepage.md)
 - [FIRE calculator](./fire-calculator.md)
 - [Monte Carlo simulation](./monte-carlo.md)
 - [Withdrawal rate options (SWR / LTWR / PWR)](./withdrawal-rate.md)

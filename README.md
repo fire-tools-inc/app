@@ -19,6 +19,7 @@ This software is for **educational and planning purposes only** — not financia
 
 | Feature | Description |
 |---------|-------------|
+| **Home dashboard** | Saved net worth history, current allocation, monthly cash flow and FIRE-target progress — [guide](docs/user/homepage.md). Tool discovery lives on the [website](https://fire-tools-inc.github.io/app/#features). |
 | **Dark glass workspace** | Branded, collapsible sidebar, teal accents and readable financial data. Collapse to named icons for more page space; dark mode remains the default. |
 | 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns. Supports **Standard, Lean, Fat, Barista, and Coast** FIRE variants — see [docs/user/fire-calculator.md](docs/user/fire-calculator.md). |
 | ↩️ **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age — [docs](docs/user/fire-calculator.md) |
@@ -69,6 +70,18 @@ For Vite + Electron with the embedded backend, first run
 Electron 44.7.0 includes the upstream macOS sleep/wake-registration startup
 crash fix; see [desktop troubleshooting](electron/README.md#startup-troubleshooting).
 
+SQLite 13 uses bundled Node-API binaries shared by Node.js and Electron.
+Linux desktop builds require **glibc 2.35 or newer**; the Docker images use
+Debian Bookworm and meet this minimum. Existing SQLite files and passphrase
+encryption remain supported; no data-store migration is required.
+
+Dependency lifecycle approvals are version-pinned in both package manifests.
+After updating dependencies, review `npm install-scripts ls` in the root and
+`server/`, then approve only the scripts you inspected with
+`npm install-scripts approve <package>`. Do not approve all packages blindly.
+The frontend container intentionally skips lifecycle scripts because it does
+not run native desktop modules.
+
 ## Development checks
 
 ```sh
@@ -76,6 +89,7 @@ npm test
 npm run build
 npx playwright install chromium  # once, if the browser binary is missing
 npm run test:browser
+npm run docs:screenshots -- homepage  # refresh only the dashboard screenshot
 ```
 
 The browser suite builds the self-hosted app and uses an isolated Vite preview
@@ -86,6 +100,13 @@ geometry across desktop/mobile routes without contacting market services.
 ---
 
 ## Deployment Options
+
+For a desktop release, run `./scripts/release.sh vX.Y.Z` from a clean `main`
+checkout synchronized with `origin/main`. It bumps the version, restores
+dependencies, audits/tests/builds locally, then atomically pushes the version
+commit and tag. GitHub Actions builds and publishes the installers afterward;
+the script prints the workflow link without waiting. See the
+[release guide](docs/engineering/releasing.md).
 
 | Mode | Storage | How to run | Details |
 |------|---------|------------|---------|

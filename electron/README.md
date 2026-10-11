@@ -47,13 +47,17 @@ That crash happens before app JavaScript, so renderer error handlers cannot
 repair it. Update dependencies and rebuild; do not ship power-monitor shims or
 disable the Electron sandbox as a workaround.
 
-If SQLite reports a native ABI mismatch after running plain-Node tests, use
-`npm run electron:rebuild` before launching Electron. If the embedded server
-entry is missing, use `npm --prefix server run build`. Startup diagnostics are
-written to the normal application log described in the engineering guide.
-The rebuild helper opens an in-memory database with Electron's Node ABI for
-each root/server binding and verifies the result after rebuilding. It does not
-trust file timestamps, which downloaded Node prebuilds can preserve.
+SQLite 13 ships Node-API binaries shared by Node.js and Electron, so running
+plain-Node tests no longer requires switching the native ABI. Linux binaries
+require glibc 2.35 or newer; Node.js >=22.22.0 and Electron 44.7.0 satisfy the
+runtime minimums. Existing plain and passphrase-encrypted databases remain
+compatible.
+
+`npm run electron:rebuild` still probes a real in-memory database in Electron
+for each root/server copy; healthy bundled binaries do not rebuild. If a binding
+fails, check for stale dependencies or an unsupported host before launching.
+If the embedded server entry is missing, use `npm --prefix server run build`.
+Startup diagnostics are written to the normal application log.
 
 ## Build a distributable
 
@@ -65,7 +69,9 @@ npm run electron:dist    # runs electron-builder per electron-builder.yml
 Artifacts land in `release/<version>/`. Defaults: `.dmg` (macOS),
 `.exe` NSIS installer (Windows), `.AppImage` (Linux).
 The Electron build rechecks both SQLite bindings after restoring the server's
-dependencies, so a plain-Node prebuild cannot slip into the desktop output.
+dependencies. Packaging uses those Node-API binaries without forcing a
+runtime-specific rebuild and removes prebuilds for unrelated platforms and
+architectures.
 
 ## Signing & notarization
 

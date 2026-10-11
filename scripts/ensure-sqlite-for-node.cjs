@@ -66,6 +66,8 @@ for (const target of TARGETS) {
 
   try {
     execSync('npm rebuild better-sqlite3', { stdio: 'inherit', cwd: target.cwd });
+    const verification = probe(target.cwd);
+    if (verification !== true) throw verification;
     console.log(`[ensure-sqlite-for-node] ${target.label}: rebuild succeeded; new binary will be loaded by next process.`);
   } catch (err) {
     console.error(`[ensure-sqlite-for-node] ${target.label}: rebuild failed:`, err && err.message);

@@ -46,7 +46,8 @@ jobs:
               - 'src/utils/{fire,monteCarlo,chartHelper,projection}*'
             homepage:
               - 'tests/pages/homepage/**'
-              - 'src/components/HomePage*'
+              - 'src/components/{HomePage,DashboardChart}*'
+              - 'src/utils/dashboard*'
             net_worth_tracker:
               - 'tests/pages/net-worth-tracker/**'
               - 'src/components/{NetWorth,Historical}*'
@@ -73,12 +74,14 @@ jobs:
               - 'src/main.tsx'
               - 'src/constants/navbarLabels.ts'
               - 'src/utils/{chartColors,expenseChartColors,navigationPreferences}*'
+              - 'src/utils/dashboard*'
               - 'src/hooks/**'
               - 'src/workers/**'
               - 'index.html'
               - 'package.json'
               - 'package-lock.json'
               - 'vite.config.ts'
+              - 'electron-builder.yml'
               - '.github/workflows/tests.yml'
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
@@ -93,6 +96,7 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
               - 'vite.config.ts'
+              - 'electron-builder.yml'
               - 'tsconfig*.json'
               - '.github/workflows/tests.yml'
 
