@@ -200,10 +200,10 @@ export function NetWorthSankeyChart({
   }
 
   return (
-    <div className="sankey-chart-wrapper" aria-label={t('netWorth.sankey.title')}>
+    <div className="sankey-chart-wrapper" role="region" tabIndex={0} aria-label={t('netWorth.sankey.title')}>
       <Sankey
         width={920}
-        height={440}
+        height={Math.max(440, sankeyData.nodes.filter(node => node.level === 2).length * 30 + 240)}
         data={sankeyData}
         nodeWidth={18}
         nodePadding={30}
@@ -225,10 +225,10 @@ export function NetWorthSankeyChart({
             isPrivacyMode ? '***' : formatAmount(Number(value ?? 0), currency, false)
           }
           contentStyle={{
-            background: '#1A1D26',
-            border: '1px solid #2DD4BF',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
             borderRadius: '8px',
-            color: '#F8FAFC',
+            color: 'var(--text-primary)',
           }}
           labelStyle={{ color: '#94A3B8' }}
           itemStyle={{ color: '#F8FAFC' }}

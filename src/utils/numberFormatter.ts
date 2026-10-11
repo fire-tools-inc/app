@@ -4,7 +4,7 @@
  * Respects user settings for decimal places and decimal separator
  */
 
-import { loadSettings } from './cookieSettings';
+import { loadSettings, type UserSettings } from './cookieSettings';
 import { getCurrencySymbol } from './currencyConverter';
 import type { SupportedCurrency } from '../types/currency';
 
@@ -18,7 +18,10 @@ import type { SupportedCurrency } from '../types/currency';
  * @returns The formatted string
  */
 export function formatDisplayNumber(value: number): string {
-  const settings = loadSettings();
+  return formatNumber(value, loadSettings());
+}
+
+function formatNumber(value: number, settings: Pick<UserSettings, 'decimalSeparator' | 'decimalPlaces'>): string {
   const decimalSeparator = settings.decimalSeparator;
   const decimalPlaces = settings.decimalPlaces ?? 2;
   
@@ -116,45 +119,5 @@ export function formatDisplayCurrency(value: number, currency?: string): string 
   const settings = loadSettings();
   const currencyCode = (currency ?? settings.currencySettings.defaultCurrency) as SupportedCurrency;
   const symbol = getCurrencySymbol(currencyCode);
-  
-  const decimalSeparator = settings.decimalSeparator;
-  const decimalPlaces = settings.decimalPlaces ?? 2;
-  
-  const absValue = Math.abs(value);
-  const isNegative = value < 0;
-  
-  // Determine if we should show decimals (only for values < 1000)
-  const roundedValue = Math.round(absValue * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
-  const showDecimals = roundedValue < 1000;
-  
-  let formatted: string;
-  
-  if (showDecimals) {
-    formatted = roundedValue.toFixed(decimalPlaces);
-  } else {
-    formatted = Math.round(absValue).toString();
-  }
-  
-  // Add thousands separators
-  const thousandsSeparator = decimalSeparator === '.' ? ',' : '.';
-  
-  const parts = formatted.split('.');
-  const integerPart = parts[0];
-  const decimalPart = parts[1];
-  
-  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
-  
-  let result = formattedInteger;
-  if (decimalPart !== undefined) {
-    result += decimalSeparator + decimalPart;
-  }
-  
-  // Add negative sign and currency symbol
-  if (isNegative) {
-    result = symbol + '-' + result;
-  } else {
-    result = symbol + result;
-  }
-  
-  return result;
+  return symbol + formatNumber(value, settings);
 }

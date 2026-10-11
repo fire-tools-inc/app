@@ -1,6 +1,7 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../src/App';
+import { NAVBAR_LABELS } from '../../src/constants/navbarLabels';
 
 const mocks = vi.hoisted(() => ({
   loadTourCompleted: vi.fn(),
@@ -34,6 +35,9 @@ vi.mock('../../src/components/GuidedTour', () => ({
 describe('App startup', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.stubGlobal('matchMedia', () => ({
+      matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    }));
     window.history.replaceState({}, '', '/');
     mocks.loadTourCompleted.mockReset().mockReturnValue(false);
     mocks.syncPreferencesFromBackend.mockReset().mockReturnValue(new Promise(() => {}));
@@ -42,6 +46,7 @@ describe('App startup', () => {
   afterEach(() => {
     act(() => cleanup());
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('renders the app immediately while backend preference sync is pending', () => {
@@ -50,6 +55,24 @@ describe('App startup', () => {
     expect(document.querySelector('#main-content')).not.toBeNull();
     expect(screen.queryByTestId('guided-tour')).toBeNull();
     expect(screen.queryByTestId('questionnaire-prompt')).toBeNull();
+  });
+
+  it('closes mobile navigation with Escape and restores focus', () => {
+    render(<App />);
+    const toggle = screen.getByRole('button', { name: NAVBAR_LABELS.toggle });
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(toggle);
+  });
+
+  it('moves skip-link focus without changing the URL used by the Electron hash router', () => {
+    render(<App />);
+    const url = window.location.href;
+    fireEvent.click(screen.getByText('Skip to main content'));
+    expect(window.location.href).toBe(url);
+    expect(document.activeElement).toBe(document.getElementById('main-content'));
   });
 
   it('reconciles preference-dependent UI when a slow sync completes', async () => {

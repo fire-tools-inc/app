@@ -75,17 +75,19 @@ export const initDb = (env: ServerEnv, opts: InitDbOptions = {}): InitDbResult =
 
   const db = new Database(dbPath);
 
-  // SQLCipher requires `PRAGMA key` to be issued BEFORE any other I/O — including
-  // `journal_mode = WAL`, which writes to the database header.
-  if (env.passphrase) {
-    applyPassphrase(db, env.passphrase);
+  try {
+    // SQLCipher requires the key before any I/O, including WAL initialization.
+    if (env.passphrase) {
+      applyPassphrase(db, env.passphrase);
+    }
+    db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
+    const migrationsResult: RunMigrationsResult = opts.skipMigrations
+      ? { migrationsApplied: [], totalMigrations: 0, migrationsDir: env.migrationsPath }
+      : runMigrations(db, env.migrationsPath);
+    return { db, migrationsResult, dbPath };
+  } catch (error) {
+    db.close();
+    throw error;
   }
-
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
-
-  const migrationsResult: RunMigrationsResult = opts.skipMigrations
-    ? { migrationsApplied: [], totalMigrations: 0, migrationsDir: env.migrationsPath }
-    : runMigrations(db, env.migrationsPath);
-  return { db, migrationsResult, dbPath };
 };

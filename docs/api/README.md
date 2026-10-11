@@ -59,6 +59,15 @@ npx @openapitools/openapi-generator-cli generate \
 | **Errors**       | `{ "error": { "code": string, "message": string, "details"?: object } }`                    |
 | **Empty 204**    | Used for successful DELETEs                                                                 |
 
+Request bodies are limited to **2 MB**. Malformed JSON returns
+`400 invalid_body`; an oversized body returns `413 payload_too_large`.
+Unexpected failures return a generic `500 internal_error`, with details
+recorded in the server logs. Expense and income amounts must be finite,
+non-negative JSON numbers, and dates must be valid calendar dates.
+
+Replacing assets, transactions or custom categories is transactional: if an
+insertion fails, the previously saved record is retained.
+
 ## Auth
 
 The spec declares a reserved `bearerAuth` security scheme. **Single-user

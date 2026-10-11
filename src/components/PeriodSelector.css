@@ -30,6 +30,7 @@
   border-radius: 6px;
   font-size: 1rem;
   background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   min-width: 120px;
 }
@@ -42,31 +43,30 @@
 
 .btn-add-month,
 .btn-current-period {
-  color: white;
+  color: var(--text-inverse);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 44px;
+  transition: background-color var(--transition-fast);
 }
 
 .btn-add-month {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
 }
 
 .btn-add-month:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  background: var(--accent-primary-light);
 }
 
 .btn-current-period {
-  background: linear-gradient(135deg, var(--warning) 0%, var(--warning) 100%);
+  background: var(--warning);
 }
 
 .btn-current-period:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
+  border-color: var(--warning);
 }
 
 @media (max-width: 768px) {

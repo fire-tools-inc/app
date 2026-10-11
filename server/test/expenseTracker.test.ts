@@ -112,6 +112,35 @@ describe('expense-tracker months', () => {
 });
 
 describe('expense-tracker expenses', () => {
+  it.each([-1, null, '12.5'])('rejects an invalid expense amount %s with a validation error', async (amount) => {
+    const { app, db } = makeApp();
+    const res = await request(app).post(`${base}/expenses`).send(exp({ amount }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
+    db.close();
+  });
+
+  it('rejects a nonexistent calendar date', async () => {
+    const { app, db } = makeApp();
+    const res = await request(app).post(`${base}/expenses`).send(exp({ date: '2026-02-30' }));
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('invalid_body');
+    db.close();
+  });
+
+  it('preserves the saved expense when replacing it fails', async () => {
+    const { app, db } = makeApp();
+    await request(app).post(`${base}/expenses`).send(exp());
+    db.exec(`CREATE TRIGGER reject_expense BEFORE INSERT ON expense_entries
+      WHEN NEW.amount = 99 BEGIN SELECT RAISE(ABORT, 'Injected write failure'); END`);
+    const failed = await request(app).put(`${base}/expenses/e-1`).send(exp({ amount: 99 }));
+    expect(failed.status).toBe(500);
+    const saved = await request(app).get(`${base}/expenses`);
+    expect(saved.body.items).toHaveLength(1);
+    expect(saved.body.items[0].amount).toBe(12.5);
+    db.close();
+  });
+
   it('POST creates expense', async () => {
     const { app } = makeApp();
     const res = await request(app).post(`${base}/expenses`).send(exp());
@@ -222,6 +251,29 @@ describe('expense-tracker expenses', () => {
 });
 
 describe('expense-tracker incomes', () => {
+  it('rejects invalid income values before modifying the saved record', async () => {
+    const { app, db } = makeApp();
+    await request(app).post(`${base}/incomes`).send(inc());
+    const res = await request(app).put(`${base}/incomes/i-1`).send(inc({ amount: -10 }));
+    expect(res.status).toBe(400);
+    const saved = await request(app).get(`${base}/incomes`);
+    expect(saved.body.items[0].amount).toBe(3000);
+    db.close();
+  });
+
+  it('preserves the saved income when replacing it fails', async () => {
+    const { app, db } = makeApp();
+    await request(app).post(`${base}/incomes`).send(inc());
+    db.exec(`CREATE TRIGGER reject_income BEFORE INSERT ON income_entries
+      WHEN NEW.amount = 99 BEGIN SELECT RAISE(ABORT, 'Injected write failure'); END`);
+    const failed = await request(app).put(`${base}/incomes/i-1`).send(inc({ amount: 99 }));
+    expect(failed.status).toBe(500);
+    const saved = await request(app).get(`${base}/incomes`);
+    expect(saved.body.items).toHaveLength(1);
+    expect(saved.body.items[0].amount).toBe(3000);
+    db.close();
+  });
+
   it('POST creates income', async () => {
     const { app } = makeApp();
     const res = await request(app).post(`${base}/incomes`).send(inc());

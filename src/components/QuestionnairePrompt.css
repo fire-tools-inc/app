@@ -100,10 +100,6 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Description */
@@ -177,7 +173,7 @@
 }
 
 .questionnaire-prompt-btn-secondary:hover {
-  background: var(--bg-card);
+  background: var(--bg-elevated);
   border-color: var(--border-accent);
 }
 

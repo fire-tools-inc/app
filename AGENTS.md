@@ -1,383 +1,239 @@
-# AI Agent Instructions for Fire Tools
+# Agent instructions for Fire Tools
 
-This document provides comprehensive instructions for AI agents working on the Fire Tools repository.
+Fire Tools is a local-first financial planning app. Preserve financial
+correctness, existing data and the usable dark interface before optimizing or
+adding features. This file is the repository-wide entry point; consult the
+focused skills below for the task at hand.
 
-## Stack & Technologies
+## Repository skills
 
-### Frontend Framework
-- **React 19** with TypeScript
-- **React Router v8** for client-side routing
-- **Vite** as the build tool and development server
+| Task | Skill |
+| --- | --- |
+| Navigation, layouts, dark glass styling, charts and accessibility | [fire-tools-ui](.github/skills/fire-tools-ui/SKILL.md) |
+| Profiling, simulations, render cost, settings reads and bundle loading | [fire-tools-performance](.github/skills/fire-tools-performance/SKILL.md) |
+| Persistence, synchronization, imports, API validation and database changes | [fire-tools-data-integrity](.github/skills/fire-tools-data-integrity/SKILL.md) |
 
-### Visualization & UI
-- **Recharts v3** for interactive charts and data visualization
-- **CSS3** for styling (no CSS framework - custom CSS)
+Read the relevant `SKILL.md` before implementing. These are repository-local
+skills, not replacements for the user's personal/global skills. Their
+`evals/evals.json` files contain future smoke-test prompts, not recorded
+benchmark results.
 
-### Data Security & Storage
-- **js-cookie v3** for cookie management
-- **crypto-js v4** for AES encryption of sensitive data stored in cookies
+## Current architecture
 
-### Development & Testing
-- **TypeScript 5.9+** with strict mode enabled
-- **Vitest** for unit and integration testing
-- **@testing-library/react** for component testing
-- **jsdom** for DOM simulation in tests
+- **Renderer:** React, strict TypeScript, React Router, Vite, Recharts and custom
+  CSS. Use the versions in `package.json` and its lockfile; the server has its
+  own manifest and lockfile.
+- **Calculations:** client-side utilities in `src/utils/`; Monte Carlo and
+  withdrawal-rate simulations execute in module workers under `src/workers/`.
+- **Backend:** implemented Node.js + Express 5 service in `server/`, with Zod
+  validation and SQLite via the `better-sqlite3-multiple-ciphers` alias.
+  PostgreSQL-compatible DDL is not an implemented PostgreSQL driver.
+- **Desktop:** Electron main/preload code in `electron/`; use the narrow
+  `window.fireTools` bridge rather than enabling renderer Node access.
+- **Web:** the normal HTTP(S) renderer is a read-only, mock-data demo. Preserve
+  `IS_DEMO_MODE` guards. The explicit `?demo=0` debugging override is not a
+  reason to remove those guards.
+- **Integrations:** Yahoo Finance price/metadata requests and optional
+  user-configured OpenAI-compatible PDF categorization exist. Do not claim the
+  app has no external APIs or add new external calls without an explicit feature.
 
-### Node.js Version Requirements
-- Node.js >=22.22.0
+### Storage boundaries
 
-### Backend (implemented — [`server/`](server/))
-Local-deployment / Electron path (issues [#133](https://github.com/fire-tools-inc/app/issues/133),
-[#189](https://github.com/fire-tools-inc/app/issues/189),
-[#195](https://github.com/fire-tools-inc/app/issues/195),
-[#222](https://github.com/fire-tools-inc/app/issues/222)):
-- **Runtime**: Node.js + Express 4 + TypeScript (strict, ESM)
-- **REST API**: OpenAPI 3.0.3 contract at [`docs/api/openapi.yaml`](docs/api/openapi.yaml). See [`docs/api/README.md`](docs/api/README.md) for conventions, type mapping, and client generation.
-- **Database**: better-sqlite3 (SQLite as the **first-class** target), **PostgreSQL-compatible** schema. DDL at [`docs/database/schema.sql`](docs/database/schema.sql); design notes and ERD at [`docs/database/README.md`](docs/database/README.md).
-- **Auth model**: single-user-by-default; schema/API are already multi-tenant-ready (a `users` table exists and every domain row carries `user_id`).
-- **Deployment**: Docker Compose ([`docker-compose.yml`](docker-compose.yml)) or bundled in Electron.
+Frontend domain stores still use the synchronous helpers in
+`src/utils/cookieStorage.ts` and `cookieSettings.ts`. Do not assume every domain
+screen is already wired to the backend.
 
-When adding or changing a domain type in `src/types/*.ts`, update **all three**:
-1. The TS interface / union
-2. The matching schema/enum in [`docs/api/openapi.yaml`](docs/api/openapi.yaml)
-3. The matching column / `CHECK (... IN (...))` constraint in [`docs/database/schema.sql`](docs/database/schema.sql)
+- Small stores use encrypted `SafeCookies`; Expense and Net Worth histories
+  use encrypted `localStorage` because they can exceed cookie limits.
+- `SafeCookies` makes `localStorage` authoritative inside Electron, where
+  `file://` cookie writes do not work. In browsers, cookies remain authoritative
+  with a local-storage fallback.
+- `uiPreferencesSync.ts` mirrors supported backend preferences into local
+  stores without blocking application startup.
+- The local backend owns its SQLite data and optional passphrase encryption.
+  Follow [database documentation](docs/database/README.md) and
+  [passphrase boundaries](docs/security/passphrase.md).
 
-Validate after edits:
+Client-side encryption with a shipped key is not protection against arbitrary
+JavaScript execution. `js-cookie` cannot set `HttpOnly`; do not document it as
+doing so. Blur mode hides values visually, not from code or exports.
+
+## Code and state conventions
+
+- Use functional components, typed props and hooks. Prefer interfaces for
+  object shapes; avoid `any`, unnecessary casts and duplicated helpers.
+- Keep components and their CSS co-located; keep calculation and data logic
+  in utilities rather than JSX.
+- Derive values where possible. Memoize expensive computations when measured;
+  do not add memoization or state merely to make code look optimized.
+- Preserve calculator URL state, React Router basenames and Electron hash
+  routes. Use `PreloadLink` for in-app navigation, not root-relative HTML links.
+- Keep changes surgical. Refactor large page components when the current
+  change needs it, not as an untested whole-app rewrite.
+- Clean up timers, workers, object URLs, event subscriptions and DB handles,
+  including error and unmount paths.
+- Use `logger` from `src/utils/logger.ts` or `server/src/logger.ts`, not direct
+  `console.*` in production TypeScript. Put financial details in the logger's
+  gated `pii` field; never log credentials. Surface user-action failures in the UI.
+- Do not silently replace a failed operation with a success-shaped result.
+  Preserve documented optional/offline behavior and log unexpected failures.
+
+## Interface invariants
+
+- Dark mode remains the default even with a light system theme.
+- Keep the green/teal brand accents and render `public/fire-icon.svg` through
+  the build basename, including relative Electron asset paths.
+- `AppNavigation.tsx` and `AppNavigation.css` own the narrow, rounded inset
+  sidebar: static portfolio identity above the menu, utilities below a divider.
+  Desktop collapse keeps named icon links and gives the workspace more room;
+  `navigationPreferences.ts` persists the choice outside financial settings.
+  Smaller windows always use a full-label, focus-contained drawer.
+- Keep Settings in the sidebar, not an actionless profile dropdown. Preserve
+  accessible link names and hover labels when hiding desktop label text.
+- Keep all destinations reachable, experimental items behind their flags,
+  `aria-current` accurate and the page inactive while the mobile drawer is open.
+- Preserve Escape/close focus restoration and the Electron title-bar drag
+  region. Do not let drag regions consume clicks on controls.
+- Navigation labels come from `src/constants/navbarLabels.ts` and remain
+  **English-only**. Localize other UI through `src/i18n/` in all five languages.
+- Use `App.css` tokens and `src/utils/chartColors.ts`. A portfolio class should
+  keep the same readable color across allocation, breakdown and net-worth flows.
+- Keep text opaque and readable. Avoid saturated section backgrounds, colored
+  text gradients, excessive blur and later CSS rules that undo shared styles.
+- Use responsive pie radii and keep long legends outside fixed-height plots.
+  Reuse `ChartLegend` and stable `expenseChartColors.ts`; honor user category
+  overrides. Scope page-specific chart/table CSS beneath its page class.
+- Keep dense histograms and Sankey flows locally keyboard-scrollable instead
+  of clipping data or shrinking text. Test chart/label bounds after cross-route
+  navigation and sidebar resizing, not only direct page loads.
+- System fonts and the bundled Material Symbols font work offline. Preserve
+  its license in `public/material-symbols.LICENSE.txt`.
+- Maintain keyboard focus, semantic controls, reduced motion, text contrast
+  of at least 4.5:1 and touch targets of at least 44 pixels.
+- Keep `index.html` critical layout styles in sync with shell changes. Verify
+  computed styles and screenshots, not just the first plausible CSS declaration.
+
+## Performance and calculation invariants
+
+- Profile the original symptom, then repeat the same workload after changes.
+  Keep input data, simulation counts and financial semantics comparable.
+- Reuse `useSimulationWorker` and the typed protocol in `simulationWorker.ts`.
+  Cancel obsolete work, ignore stale replies and release workers on unmount.
+- Monte Carlo computes distributions in the worker and sends a compact
+  `MonteCarloDisplayResult`; do not send its full `simulations` array to React.
+- Preserve the 100,000-run UI limit, opt-in detailed logs and the shared
+  10,000-run detailed-log limit. Only the latest run's logs are retained.
+- Preserve failure reasons, zero-year FIRE results, histogram upper boundaries,
+  zero-valued percentiles and depleted portfolios in final-portfolio statistics.
+- Honor the selected maximum age and the existing 50-year Monte Carlo cap.
+  Do not alter these or other model assumptions as an incidental optimization.
+- `loadSettings()` caches saved payloads by encrypted storage value and
+  reconstructs nested fields when returning saved settings. Keep cached values
+  isolated between callers and treat default objects as immutable.
+- Preserve lazy routes, intent-based preloading, deferred chart rendering and
+  on-demand language resources. Check both JavaScript and font/network costs.
+
+## Persistence and API invariants
+
+- Persist every valid edit. A timeout-based "sync lock" must not discard rapid
+  changes. Keep Asset Allocation / Net Worth synchronization limited to the
+  intended current snapshot and preserve unrelated histories and entry types.
+- Wrap replacement writes and related DB changes in transactions. If an
+  insertion fails, the previous saved record must survive.
+- Validate boundary data before writing. Expense/income amounts are finite,
+  non-negative JSON numbers; dates are valid calendar dates.
+- Keep API errors in the existing `{ error: { code, message, details? } }`
+  envelope. Malformed JSON is `400 invalid_body`; bodies over 2 MB are
+  `413 payload_too_large`; internal details belong in logs, not 500 responses.
+- Scope domain operations by `user_id`. Multi-tenant-ready columns do not
+  constitute authentication; do not invent accounts or logout flows.
+- Keep imports, exports, legacy-data compatibility and demo guards consistent.
+  Treat changing an authoritative store as a migration, not a silent fallback.
+
+### Domain and schema changes
+
+When adding/changing a domain type in `src/types/*.ts`, update the TS definition,
+`docs/api/openapi.yaml` and `docs/database/schema.sql` together. Add matching
+forward/rollback files in `server/migrations/` when the live DB changes; do not
+rewrite migrations already shipped to users. Cover the server mapper and
+frontend import/export consumers as well.
+
 ```sh
 npx @redocly/cli lint docs/api/openapi.yaml --config docs/api/redocly.yaml
 sqlite3 :memory: < docs/database/schema.sql
+npm --prefix server test -- test/migrate.test.ts
 ```
 
-## Architecture Overview
+## Development and validation
 
-### Application Structure
-Fire Tools is **today** a **client-side only** React application for FIRE (Financial Independence Retire Early) planning. A local-deployment backend (see "Planned Backend" above) is contract-only — the frontend is still the only running component. It consists of multiple tools accessible through a single-page application architecture:
+Use Node.js >=22.22.0. Install/restore dependencies when manifests change or a
+selected command reports missing packages, not before every edit. Audit both
+dependency trees after changes; avoid forced major upgrades merely to silence
+warnings.
 
-1. **Homepage** - Landing page with tool overview
-2. **FIRE Calculator** - Main calculator with projections and Monte Carlo simulations
-3. **Asset Allocation Manager** - Portfolio tracking and rebalancing recommendations
-4. **Settings Page** - User preferences and data management
+| Purpose | Command |
+| --- | --- |
+| Renderer development | `npm run dev` |
+| Full landing/demo/docs preview | `npm run dev:all` |
+| Targeted renderer tests | `npm test -- tests/shared/AppNavigation.test.tsx` |
+| Full renderer tests | `npm test` |
+| Real-browser navigation and graph regressions | `npm run test:browser` |
+| Targeted backend tests | `npm --prefix server test -- test/expenseTracker.test.ts` |
+| Backend build | `npm --prefix server run build` |
+| Pages build, including docs | `npm run build` |
+| Self-hosted `/demo/` build with fingerprinted assets | `npm run build:self-hosted` |
+| Desktop renderer build after type checking | `npx vite build --mode electron` |
+| Full Electron/backend build | `npm run electron:build` |
+| Refresh user screenshots | `npm run docs:screenshots` |
 
-### Key Design Principles
+`predev` and Electron dev scripts call `stop-dev.mjs`. In a shared environment,
+prefer a dedicated free port and direct Vite for isolated checks; do not stop
+unrelated services. For example, if port 5187 is free:
 
-#### Privacy-First Architecture
-- **No backend servers (today)** - All data processing happens client-side. The planned backend (above) runs **locally** on the user's machine; data never leaves the device.
-- **Encrypted local storage** - AES-256 encryption for all sensitive data stored in browser cookies
-- **No data transmission** - Nothing is sent to external servers (Yahoo Finance is the only opt-in external call)
-- **Secure cookies** - `SameSite=Strict` and `Secure` flags for HTTPS
-
-#### State Management
-- React Context and hooks for global state
-- URL parameters for shareable calculator configurations
-- Encrypted cookies for data persistence
-- No external state management library (Redux, etc.)
-
-#### Component Organization
-- Functional components with hooks only (no class components)
-- One component per file
-- Co-located CSS files when component-specific styles needed
-- Shared utilities in `/src/utils`
-- Type definitions in `/src/types`
-
-## Project Scope
-
-### What Fire Tools Does
-- **FIRE Calculator**: Projects years to financial independence based on savings rate, expenses, and expected returns
-- **Monte Carlo Simulations**: Runs probabilistic simulations accounting for market volatility and black swan events
-- **Asset Allocation Manager**: Tracks portfolio allocation across stocks, bonds, real estate, commodities, and cash
-- **Rebalancing Recommendations**: Provides buy/sell/hold guidance to maintain target allocations
-- **DCA Helper**: Assists with dollar-cost averaging strategies
-- **Data Export/Import**: CSV export for backup and data portability
-
-### What Fire Tools Does NOT Do
-- Real-time market data integration
-- Brokerage account connections
-- Tax calculations or advice
-- Automatic trading or rebalancing
-- Server-side data storage or user accounts
-- Payment processing or premium features
-
-## API Documentation
-
-### Internal APIs
-
-#### Cookie Storage API (`/src/utils/cookieStorage.ts`)
-```typescript
-// Save FIRE calculator inputs
-saveFireCalculatorInputs(inputs: CalculatorInputs): void
-
-// Load FIRE calculator inputs
-loadFireCalculatorInputs(): CalculatorInputs | null
-
-// Clear all application data
-clearAllData(): void
+```sh
+npx vite --host 127.0.0.1 --port 5187 --strictPort
 ```
 
-#### Settings API (`/src/utils/cookieSettings.ts`)
-```typescript
-// Save user settings
-saveSettings(settings: UserSettings): void
+The normal install rebuilds native modules for Electron. `npm test` and the
+backend test script run `ensure-sqlite-for-node.cjs` before plain-Node tests.
+Do not run competing native rebuilds concurrently or bypass these hooks after
+changing runtimes. The full Electron build also installs server dependencies;
+use the renderer-only check when no backend/install validation is needed.
+`ensure-native-modules.mjs` probes each SQLite copy with Electron in
+run-as-Node mode. Archive timestamps and stale marker files cannot prove ABI
+compatibility; verify a real in-memory open after any rebuild.
+Electron 44.7.0 includes the upstream macOS power-registration startup fix.
+Native crashes before JavaScript require a corrected runtime, not renderer
+catches or shipped system-call shims. The dev launcher owns actual child
+processes and treats signal exits as failures.
 
-// Load user settings
-loadSettings(): UserSettings
-```
+- Put new tests in `tests/pages/<feature>/`, `tests/shared/` or `tests/types/`.
+  Existing co-located `src/**/*.test.*` files are also included by Vitest.
+  Backend tests live in `server/test/`.
+- Use synthetic fixtures; never customer data, real profiles or secrets.
+- Run the smallest suite covering the change, then broaden when shared
+  behavior/dependencies warrant it. Reproduce bugs before fixing them.
+- On a busy host, isolate an intermittent failure or lower worker concurrency;
+  do not weaken assertions or inflate timeouts to hide a regression.
+- Verify UI changes with headless Playwright/screenshots at desktop and mobile
+  widths, including short windows, keyboard interaction and blocked external
+  resources. Use an isolated profile for hidden Electron `file://` checks.
+- Build Docker images with `docker compose build --no-cache`; isolate test
+  project names, images, ports and volumes. Check actual readiness and clean up
+  only resources created for the check. Some runtimes do not expose Docker
+  health status; explicit health probes are then necessary.
+- Check `.github/workflows/tests.yml` path filters when adding shared files
+  so the appropriate CI tests run.
 
-#### CSV Export API (`/src/utils/csvExport.ts`)
-```typescript
-// Export FIRE calculator data to CSV
-exportFireCalculatorToCSV(inputs: CalculatorInputs): void
+## Delivery
 
-// Import FIRE calculator data from CSV
-importFireCalculatorFromCSV(file: File): Promise<CalculatorInputs>
+Update existing user/engineering docs for directly related changes. Keep
+standalone documentation under `docs/`, skills under `.github/skills/`, and
+uncommitted scratch artifacts outside the repository.
 
-// Export asset allocation to CSV
-exportAssetAllocationToCSV(assets: Asset[], currency: string): void
-
-// Import asset allocation from CSV
-importAssetAllocationFromCSV(file: File): Promise<Asset[]>
-```
-
-#### URL Parameters API (`/src/utils/urlParams.ts`)
-```typescript
-// Serialize calculator inputs to URL
-serializeInputsToURL(inputs: CalculatorInputs): string
-
-// Deserialize calculator inputs from URL
-deserializeInputsFromURL(params: URLSearchParams): Partial<CalculatorInputs>
-
-// Check if URL has calculator parameters
-hasURLParams(params: URLSearchParams): boolean
-```
-
-### No External APIs
-This application does not integrate with external APIs or services.
-
-## Directory Structure
-
-```
-fire-tools/
-├── .github/
-│   └── workflows/          # GitHub Actions for CI/CD
-├── public/                 # Static assets
-├── src/
-│   ├── components/         # React components
-│   │   ├── *Page.tsx      # Top-level page components
-│   │   ├── *Chart.tsx     # Recharts visualization components
-│   │   ├── *Dialog.tsx    # Modal dialog components
-│   │   ├── *Form.tsx      # Form components
-│   │   ├── *Table.tsx     # Table components
-│   │   └── *.css          # Component-specific styles
-│   ├── hooks/             # Custom React hooks
-│   ├── types/             # TypeScript type definitions
-│   │   ├── calculator.ts  # FIRE calculator types
-│   │   ├── assetAllocation.ts  # Asset allocation types
-│   │   └── currency.ts    # Currency types
-│   ├── utils/             # Utility functions and logic
-│   │   ├── *Calculator.ts # Business logic calculators
-│   │   ├── cookie*.ts     # Cookie/storage utilities
-│   │   ├── csv*.ts        # CSV import/export
-│   │   ├── defaults.ts    # Default values
-│   │   └── *.test.ts      # Unit tests
-│   ├── App.tsx            # Main application component with routing
-│   ├── App.css            # Global application styles
-│   ├── main.tsx           # Application entry point
-│   └── index.css          # Global CSS styles
-├── index.html             # HTML template
-├── package.json           # Dependencies and scripts
-├── tsconfig.json          # TypeScript configuration
-├── vite.config.ts         # Vite build configuration
-└── README.md              # Project documentation
-```
-
-### File Naming Conventions
-- **Components**: PascalCase (e.g., `CalculatorInputsForm.tsx`)
-- **Utilities**: camelCase (e.g., `fireCalculator.ts`)
-- **Types**: camelCase (e.g., `assetAllocation.ts`)
-- **Tests**: `*.test.ts` or `*.test.tsx`
-- **CSS**: Match component name (e.g., `HomePage.css` for `HomePage.tsx`)
-
-## Coding Standards
-
-### TypeScript Guidelines
-- **Strict mode enabled** - All TypeScript strict checks are enforced
-- **Explicit types** - Avoid `any`, use specific types or `unknown`
-- **Interface over type** - Prefer `interface` for object shapes
-- **Type exports** - Export types alongside implementation
-- **No unused variables** - `noUnusedLocals` and `noUnusedParameters` are enabled
-
-### React Best Practices
-- **Functional components only** - No class components
-- **Hooks** - Use React hooks for state and side effects
-- **Props destructuring** - Destructure props in function parameters
-- **Key props** - Always provide stable keys in lists
-- **Accessibility** - Use semantic HTML and ARIA attributes where needed
-
-### Error Handling
-- **User-facing errors** - Display errors in the UI for user actions
-- **Console errors** - Use `console.error()` for logging errors (NOT `console.log()`)
-- **Try-catch blocks** - Wrap risky operations in try-catch
-- **Graceful degradation** - Provide fallbacks when features fail
-
-### State Management Rules
-- **Minimize state** - Derive values when possible instead of storing them
-- **Single source of truth** - Don't duplicate state
-- **Lift state up** - Keep state at the lowest common ancestor
-- **URL as state** - Use URL parameters for shareable state (calculator inputs)
-
-### Performance Considerations
-- **Lazy loading** - Code-split routes if the app grows significantly
-- **Memoization** - Use `useMemo` and `useCallback` for expensive computations
-- **Debouncing** - Debounce expensive operations triggered by user input
-- **Virtual scrolling** - Consider for large lists (though not currently needed)
-
-### Accessibility Requirements
-- **Semantic HTML** - Use appropriate HTML elements (`<nav>`, `<main>`, `<button>`, etc.)
-- **ARIA attributes** - Add `aria-label`, `aria-expanded`, `aria-current` where needed
-- **Keyboard navigation** - All interactive elements must be keyboard accessible
-- **Focus management** - Manage focus for dialogs and dynamic content
-- **Color contrast** - Ensure WCAG AA contrast ratios (4.5:1 for text)
-- **Screen reader testing** - Test with screen readers when making UI changes
-
-### Loading Speed & Performance
-- **Bundle size** - Keep bundle size minimal, avoid large dependencies
-- **Code splitting** - Split routes to avoid loading unnecessary code
-- **Lazy images** - Use lazy loading for images (when/if added)
-- **Optimize charts** - Limit data points in charts for large datasets
-- **Efficient rendering** - Avoid unnecessary re-renders with React.memo when beneficial
-- **Critical CSS** - Above-the-fold styles are inlined in `index.html` to prevent render-blocking and improve First Contentful Paint (FCP)
-- **Layout stability** - Conditional UI elements are positioned to avoid Cumulative Layout Shift (CLS)
-
-## Backend Rules
-
-**There is no backend.** This is a fully client-side application.
-
-### Data Storage Strategy
-- **Primary storage**: Encrypted cookies (via `js-cookie` and `crypto-js`)
-- **Why cookies**: More secure than localStorage with httpOnly and secure flags
-- **Encryption**: AES-256 encryption for all sensitive financial data
-- **Expiration**: Cookies set to expire after 365 days
-
-### Security Considerations
-- **XSS Protection**: All user input is rendered through React (automatic escaping)
-- **No eval()**: Never use `eval()` or `Function()` constructor
-- **Encryption keys**: Encryption keys are client-side only, not transmitted
-- **HTTPS only**: Secure flag on cookies requires HTTPS in production
-
-## Testing Strategy
-
-### Test Coverage Goals
-- **Utility functions**: 100% coverage for calculators and business logic
-- **Components**: Test user interactions and rendering logic
-- **Integration**: Test data flow between components
-
-### Running Tests
-```bash
-# Run all tests once
-npm test
-
-# Run tests in watch mode during development
-npm run test:watch
-```
-
-### Test Conventions
-- Place tests next to the files they test (`utils/fireCalculator.test.ts`)
-- Use descriptive test names: `it('should calculate years to FIRE correctly', ...)`
-- Test edge cases and error conditions
-- Mock external dependencies (cookies, file system)
-
-## Build & Development
-
-### Development Server
-```bash
-npm run dev
-```
-Starts Vite dev server at `http://localhost:5173`
-
-### Production Build
-```bash
-npm run build
-```
-Outputs to `/dist` directory. Includes TypeScript compilation and Vite bundling.
-
-### Preview Production Build
-```bash
-npm run preview
-```
-Serves the production build locally for testing.
-
-### Deployment
-- **GitHub Pages** — the landing page, the read-only demo, the user and
-  engineering docs, and the OpenAPI viewer are published to GitHub Pages by
-  `.github/workflows/deploy.yml` on every push to `main` (also runnable manually
-  via `workflow_dispatch`). It runs `npm run build`, whose `postbuild` stages the
-  landing page (`/`), the demo SPA (`/demo/`), the docs
-  (`/docs/{user,engineering}/`) and the API viewer (`/api/`) into `dist/`. The
-  Pages base path is derived from the repo slug, so it survives repo renames /
-  org moves with no code edits.
-- **Desktop** — Electron releases are built by `.github/workflows/release.yml`,
-  triggered when a version tag matching `v*` (e.g. `v1.2.3`) is pushed.
-- **Self-hosted** — a Docker Compose stack (`docker-compose.yml`) runs the
-  backend on your own machine.
-
-## Common Tasks for AI Agents
-
-### Adding a New Feature
-1. Determine if it requires new types (add to `/src/types`)
-2. Create utility functions with tests (in `/src/utils`)
-3. Build React component (in `/src/components`)
-4. Add routing if needed (in `App.tsx`)
-5. Update `README.md` if user-facing
-
-### Fixing a Bug
-1. Write a failing test that reproduces the bug
-2. Fix the bug in the minimal way possible
-3. Verify the test passes
-4. Check for similar bugs in related code
-
-### Refactoring
-1. Ensure tests exist and pass before refactoring
-2. Make incremental changes
-3. Run tests after each change
-4. Don't change behavior, only structure
-
-### Improving Performance
-1. Profile first (React DevTools Profiler)
-2. Identify bottlenecks
-3. Apply optimizations (memoization, code splitting)
-4. Measure improvement
-5. Document performance considerations
-
-### Security Updates
-1. Check `npm audit` regularly
-2. Update dependencies carefully (test thoroughly)
-3. Review CHANGELOG for breaking changes
-4. Run full test suite after updates
-
-## Code Review Checklist
-
-Before submitting changes, verify:
-- [ ] TypeScript compiles without errors (`npm run build`)
-- [ ] All tests pass (`npm test`)
-- [ ] No `console.log()` statements (only `console.error()` for errors)
-- [ ] Accessibility attributes added where needed
-- [ ] Code follows existing style and conventions
-- [ ] Documentation updated (README, comments if needed)
-- [ ] No sensitive data or API keys in code
-- [ ] Bundle size hasn't grown significantly
-- [ ] Manual testing completed for UI changes
-
-## Resources
-
-- **React Documentation**: https://react.dev
-- **TypeScript Handbook**: https://www.typescriptlang.org/docs/handbook/
-- **Vite Documentation**: https://vitejs.dev
-- **Recharts Documentation**: https://recharts.org
-- **WCAG Accessibility Guidelines**: https://www.w3.org/WAI/WCAG21/quickref/
-
-## Questions or Issues?
-
-If you encounter ambiguity or need clarification:
-1. Check this document first
-2. Review similar existing code in the repository
-3. Consult the README.md for user-facing documentation
-4. Open an issue for discussion if unclear
+Work on the intended feature branch and existing draft for the same task;
+preserve unrelated changes. Commit with `--no-gpg-sign` and no AI/tool
+attribution. Do not push to main or merge without an explicit request.
+Run local review and validation before pushing. After pushing, watch current CI
+and review feedback; address actionable failures and surface remaining warnings
+or genuine blockers plainly.

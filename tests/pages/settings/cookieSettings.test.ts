@@ -1,4 +1,5 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
+import * as encryption from '../../../src/utils/cookieEncryption';
 import {
   saveSettings,
   loadSettings,
@@ -157,6 +158,36 @@ describe('Cookie Settings utilities', () => {
   });
 
   describe('loadSettings', () => {
+    it('decrypts unchanged settings only once without sharing mutable nested values', () => {
+      saveSettings({ ...DEFAULT_SETTINGS, accountName: 'Cached test portfolio' });
+      const decrypt = vi.spyOn(encryption, 'decryptData');
+      try {
+        const first = loadSettings();
+        first.currencySettings.fallbackRates.USD = 0;
+        const second = loadSettings();
+        expect(decrypt).toHaveBeenCalledTimes(1);
+        expect(second.currencySettings.fallbackRates.USD).toBe(DEFAULT_SETTINGS.currencySettings.fallbackRates.USD);
+
+        saveSettings({ ...DEFAULT_SETTINGS, decimalSeparator: ',' });
+        expect(loadSettings().decimalSeparator).toBe(',');
+        expect(decrypt).toHaveBeenCalledTimes(2);
+        clearSettings();
+        expect(loadSettings()).toEqual(DEFAULT_SETTINGS);
+      } finally {
+        decrypt.mockRestore();
+      }
+    });
+
+    it('does not share nested LLM configuration between settings reads', () => {
+      saveSettings({
+        ...DEFAULT_SETTINGS,
+        llmCategorization: { baseUrl: 'http://localhost:11434/v1', model: 'test-model', apiKey: '' },
+      });
+      const first = loadSettings();
+      first.llmCategorization!.model = 'changed-model';
+      expect(loadSettings().llmCategorization?.model).toBe('test-model');
+    });
+
     it('should return DEFAULT_SETTINGS when no settings saved', () => {
       const loaded = loadSettings();
       

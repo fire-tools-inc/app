@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Fire Tools",
-    "tagline": "Combustible para tu planificación financiera",
+    "tagline": "Planificación financiera, a tu manera",
     "skipToContent": "Saltar al contenido principal",
     "disclaimer": "Fire Tools - Aviso: esta herramienta tiene fines educativos. Los datos de mercado se proporcionan de forma orientativa y pueden estar retrasados o ser inexactos. Consulta con un asesor financiero para obtener consejo profesional.",
     "privacyPolicy": "Política de privacidad",
@@ -59,8 +59,11 @@
     }
   },
   "home": {
-    "aboutTitle": "Acerca de FIRE Tools",
-    "aboutBody": "FIRE Tools te ayuda a planificar y alcanzar la independencia financiera y la jubilación anticipada. Nuestra suite de calculadoras ofrece análisis basados en datos para decisiones financieras informadas.",
+    "aboutTitle": "Tu espacio financiero",
+    "aboutBody": "Controla tu cartera, flujo de caja y patrimonio. Después, pon a prueba tu plan de independencia financiera.",
+    "trackingTitle": "Controla tus finanzas",
+    "planningTitle": "Planifica y pon a prueba",
+    "localFirst": "Diseñado para datos locales",
     "disclaimer": "Aviso:",
     "disclaimerBody": "Estas herramientas tienen fines educativos y de planificación. Consulta siempre a un asesor financiero cualificado o realiza tu propia investigación antes de tomar decisiones de inversión.",
     "toolsLabel": "Herramientas disponibles",
@@ -1065,6 +1068,7 @@
       "fixErrors": "Por favor, corrija los errores de validación antes de ejecutar las simulaciones",
       "numSimulationsMin": "Se requieren mínimo 1.000 simulaciones para significancia estadística",
       "numSimulationsMax": "Se permiten máximo 100.000 simulaciones por rendimiento",
+      "logsMax": "Los registros detallados admiten hasta 10.000 simulaciones. Reduce la cantidad o desactiva los registros.",
       "stockVolatilityMin": "La volatilidad de acciones debe ser mayor que 0%",
       "bondVolatilityMin": "La volatilidad de bonos debe ser mayor que 0%",
       "bondVolatilityMax": "La volatilidad de bonos debe ser menor que la volatilidad de acciones ({{value}}%)",
@@ -1074,6 +1078,9 @@
     },
     "runSimulation": "Ejecutar simulaciones",
     "runningSimulation": "Ejecutando simulaciones...",
+    "captureLogs": "Registrar los detalles de las simulaciones",
+    "captureLogsHelp": "Datos anuales opcionales para cada simulación. Las simulaciones grandes usan más memoria con esta opción. Solo se conserva la última ejecución.",
+    "simulationFailed": "No se pudo completar la simulación",
     "runSimulationAria": "Ejecutar simulaciones Monte Carlo",
     "runningSimulationAria": "Ejecutando simulaciones, por favor espere",
     "fixErrorsAria": "Corrija los errores de validación para ejecutar las simulaciones",
@@ -1201,10 +1208,6 @@
   "scrollToTop": {
     "ariaLabel": "Volver arriba",
     "title": "Ir arriba"
-  },
-  "profileMenu": {
-    "ariaLabel": "Menú de perfil",
-    "settings": "Configuración"
   },
   "legal": {
     "privacyPolicy": "Política de privacidad",

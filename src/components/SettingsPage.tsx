@@ -1089,11 +1089,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   };
 
   if (isLoading) {
-    return <div className="settings-page loading">{t('settings.loadingSettings')}</div>;
+    return <main className="settings-page loading" id="main-content" role="status">{t('settings.loadingSettings')}</main>;
   }
 
   return (
-    <div className="settings-page">
+    <main className="settings-page" id="main-content" tabIndex={-1}>
       <div className="settings-container">
         <div className="settings-header">
           <button className="back-button" onClick={() => navigate(-1)}>
@@ -3100,6 +3100,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           getExpenseCountForCategory={getExpenseCountForCategory}
         />
       )}
-    </div>
+    </main>
   );
 };

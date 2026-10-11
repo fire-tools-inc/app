@@ -68,10 +68,7 @@
 .policy-modal-header h1 {
   margin: 0;
   font-size: 1.75rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .policy-modal-close {
@@ -288,8 +285,8 @@
 
 /* Info box */
 .policy-modal-body .info-box {
-  background: rgba(45, 212, 191, 0.1);
-  border-left: 4px solid var(--accent-primary);
+  background: var(--accent-surface);
+  border: 1px solid var(--border-accent);
   padding: 1.5rem;
   margin: 1.5rem 0;
   border-radius: 8px;

@@ -20,6 +20,7 @@ tests/
 │                              # (PolicyModal, SearchableSelect, SliderInput,
 │                              # formatCurrency, numberFormatter, dateFormatter,
 │                              # inputValidation, useTableSort)
+├── browser/                   # Headless Playwright workspace/chart regressions
 └── types/                     # Pure type/data-definition tests
                                # (bank, country, customCategories, priceApi)
 ```
@@ -36,10 +37,21 @@ tests/
 npm test                          # run all tests once
 npm run test:watch                # watch mode
 npm test -- tests/pages/settings/ # run just one page's tests
+npm run test:browser             # isolated browser checks on port 5188
 ```
+
+The runner also includes co-located `src/**/*.test.ts` and `.test.tsx` files.
+New tests should still follow the feature-based layout above.
+
+The browser suite checks the compiled self-hosted build with synthetic/demo
+data, mocks market endpoints and blocks
+other external requests. It checks actual plot/label bounds, navigation state,
+local overflow and keyboard behavior rather than CSS source-text proxies.
+Install its browser once with `npx playwright install chromium` if missing.
 
 ## CI
 
-`.github/workflows/tests-per-page.yml` runs scoped tests per page directory
+`.github/workflows/tests.yml` runs scoped tests per page directory
 when source or test files for that page change, and runs the full suite on
 shared/, types/, or config changes. See that workflow for the path filters.
+UI-related changes also run the **Browser UI regressions** job.

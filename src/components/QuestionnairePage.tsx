@@ -3,7 +3,7 @@
  * Multi-step wizard for identifying FIRE persona and getting recommendations
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -29,6 +29,12 @@ export const QuestionnairePage: React.FC = () => {
   const [results, setResults] = useState<QuestionnaireResults | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelAdvance = useCallback(() => {
+    if (advanceTimer.current !== null) clearTimeout(advanceTimer.current);
+    advanceTimer.current = null;
+  }, []);
+  useEffect(() => cancelAdvance, [cancelAdvance]);
 
   // Load existing results on mount
   useEffect(() => {
@@ -46,6 +52,7 @@ export const QuestionnairePage: React.FC = () => {
 
   // Handle option selection
   const handleOptionSelect = (optionId: string) => {
+    cancelAdvance();
     const newResponse: QuestionnaireResponse = {
       questionId: currentQuestion.id,
       selectedOptionId: optionId,
@@ -67,7 +74,8 @@ export const QuestionnairePage: React.FC = () => {
     // Trigger animation and move to next question
     setAnimationKey(prev => prev + 1);
     
-    setTimeout(() => {
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
       if (currentStep < totalSteps - 1) {
         setCurrentStep(currentStep + 1);
       } else {
@@ -82,6 +90,7 @@ export const QuestionnairePage: React.FC = () => {
 
   // Handle back navigation
   const handleBack = () => {
+    cancelAdvance();
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
       setAnimationKey(prev => prev + 1);
@@ -90,6 +99,7 @@ export const QuestionnairePage: React.FC = () => {
 
   // Handle retake
   const handleRetake = () => {
+    cancelAdvance();
     setResponses([]);
     setResults(null);
     setShowResults(false);
@@ -123,7 +133,7 @@ export const QuestionnairePage: React.FC = () => {
     const personaInfo = getPersonaInfo(results.persona);
     
     return (
-      <div className="questionnaire-page">
+      <main className="questionnaire-page" id="main-content" tabIndex={-1}>
         <div className="questionnaire-container">
           {/* Disclaimer Banner */}
           <div className="disclaimer-banner">
@@ -281,13 +291,13 @@ export const QuestionnairePage: React.FC = () => {
             </button>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   // Render questionnaire wizard
   return (
-    <div className="questionnaire-page">
+    <main className="questionnaire-page" id="main-content" tabIndex={-1}>
       <div className="questionnaire-container">
         {/* Header */}
         <div className="questionnaire-header">
@@ -359,6 +369,6 @@ export const QuestionnairePage: React.FC = () => {
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

@@ -27,10 +27,12 @@ import './NotificationBell.css';
 
 interface NotificationBellProps {
   onNotificationClick?: (notification: Notification) => void;
+  showLabel?: boolean;
 }
 
 export const NotificationBell: React.FC<NotificationBellProps> = ({
   onNotificationClick,
+  showLabel = false,
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -198,8 +200,10 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         aria-label={unreadCount > 0 ? t('notifications.bellAriaUnread', { count: unreadCount }) : t('notifications.bellAria')}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        title={showLabel ? undefined : t('notifications.title')}
       >
         <MaterialIcon name="notifications" />
+        {showLabel && <span className="notification-bell-label">{t('notifications.title')}</span>}
         {unreadCount > 0 && (
           <span className="notification-badge" aria-hidden="true">
             {unreadCount > 9 ? '9+' : unreadCount}

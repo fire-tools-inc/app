@@ -1,0 +1,17 @@
+{
+  "skill_name": "fire-tools-data-integrity",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Replacing a saved expense fails and the old record disappears. Describe the root-cause investigation and a data-retention regression test without editing files.",
+      "expected_output": "Trace validation and destructive writes, use a single transaction, reject invalid amounts/dates before modification, inject a failed insert in an isolated DB, verify the original record survives, and preserve user/external-ID scoping.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need a new persisted asset field that also survives CSV backup and Net Worth synchronization. Plan all affected surfaces and compatibility checks without editing files.",
+      "expected_output": "Cover TS/OpenAPI/DDL, forward/rollback migration, server mappers, canonical stores, conversion helpers and CSV import/export. Verify legacy payloads, round trips, demo guards, current-snapshot scope and explicit store ownership without rewriting shipped migrations.",
+      "files": []
+    }
+  ]
+}

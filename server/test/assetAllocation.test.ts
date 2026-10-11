@@ -45,6 +45,19 @@ describe('asset-allocation config', () => {
 });
 
 describe('asset-allocation assets', () => {
+  it('keeps the original asset if the replacement fails', async () => {
+    const { app, db } = makeApp();
+    await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
+    db.exec(`CREATE TRIGGER reject_asset BEFORE INSERT ON assets
+      WHEN NEW.current_value = 99 BEGIN SELECT RAISE(ABORT, 'Injected write failure'); END`);
+    const failed = await request(app).put('/api/v1/asset-allocation/assets/a-1').send({ ...validAsset, currentValue: 99 });
+    expect(failed.status).toBe(500);
+    const saved = await request(app).get('/api/v1/asset-allocation/assets/a-1');
+    expect(saved.status).toBe(200);
+    expect(saved.body.currentValue).toBe(1000);
+    db.close();
+  });
+
   it('GET returns empty', async () => {
     const { app } = makeApp();
     const res = await request(app).get('/api/v1/asset-allocation/assets');

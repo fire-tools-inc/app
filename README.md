@@ -19,9 +19,10 @@ This software is for **educational and planning purposes only** — not financia
 
 | Feature | Description |
 |---------|-------------|
+| **Dark glass workspace** | Branded, collapsible sidebar, teal accents and readable financial data. Collapse to named icons for more page space; dark mode remains the default. |
 | 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns. Supports **Standard, Lean, Fat, Barista, and Coast** FIRE variants — see [docs/user/fire-calculator.md](docs/user/fire-calculator.md). |
 | ↩️ **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age — [docs](docs/user/fire-calculator.md) |
-| 🎲 **Monte Carlo Simulations** | Probabilistic success analysis with volatility and black-swan modelling |
+| 🎲 **Monte Carlo Simulations** | Cancellable background-worker simulations, with volatility, black-swan modelling and opt-in detailed logs |
 | 📈 **Investment Growth Calculator** | Project portfolio end value over time with contributions, expected returns, inflation, and savings-rate feedback |
 | 📉 **Withdrawal Rate Simulator** | Trinity-style portfolio longevity test across withdrawal rates with a live slider |
 | 📊 **Asset Allocation Manager** | Portfolio tracking with rebalancing recommendations |
@@ -51,6 +52,10 @@ To preview the full site (landing page + docs + OpenAPI viewer):
 npm run dev:all      # mirrors GitHub Pages layout
 ```
 
+For a build served at `/demo/` on your own host, use `npm run build:self-hosted`.
+Docker uses this mode so assets do not inherit the GitHub Pages repository
+prefix, and asset filenames remain fingerprinted for cache-safe updates.
+
 To run the Electron desktop app against the local backend (boots
 `server/` + Vite + Electron in one shot):
 
@@ -59,7 +64,24 @@ npm install --prefix server   # first time only
 npm run electron:dev:full     # backend on :8787 + Electron renderer
 ```
 
-Use `npm run electron:dev` if you only want Vite + Electron without the backend.
+For Vite + Electron with the embedded backend, first run
+`npm --prefix server run build`, then `npm run electron:dev`.
+Electron 44.7.0 includes the upstream macOS sleep/wake-registration startup
+crash fix; see [desktop troubleshooting](electron/README.md#startup-troubleshooting).
+
+## Development checks
+
+```sh
+npm test
+npm run build
+npx playwright install chromium  # once, if the browser binary is missing
+npm run test:browser
+```
+
+The browser suite builds the self-hosted app and uses an isolated Vite preview
+on port 5188, synthetic data and
+mock market responses. It checks sidebar collapse/focus and complete chart
+geometry across desktop/mobile routes without contacting market services.
 
 ---
 
@@ -79,7 +101,7 @@ Use `npm run electron:dev` if you only want Vite + Electron without the backend.
 | Layer | Technologies |
 |-------|-------------|
 | **Frontend** | React 19 · TypeScript · Vite · React Router · Recharts · react-i18next · crypto-js |
-| **Backend** | Node.js · Express 4 · better-sqlite3 · Zod · TypeScript (ESM) |
+| **Backend** | Node.js · Express 5 · better-sqlite3 · Zod · TypeScript (ESM) |
 | **Desktop** | Electron (hardened, contextIsolation + sandbox) · electron-builder · electron-updater |
 | **API** | OpenAPI 3.0.3 — [`docs/api/openapi.yaml`](docs/api/openapi.yaml) |
 | **Database** | SQLite (first-class) · PostgreSQL-compatible — [`docs/database/schema.sql`](docs/database/schema.sql) |
@@ -92,6 +114,7 @@ Use `npm run electron:dev` if you only want Vite + Electron without the backend.
 - **AES-256 browser encryption** — cookie values encrypted before storage
 - **Optional passphrase DB encryption** (desktop) — [docs/security/passphrase.md](docs/security/passphrase.md)
 - **PII-gated logs** — financial data excluded unless explicitly enabled — [docs/engineering/logging.md](docs/engineering/logging.md)
+- **Offline interface assets** — system typefaces and a bundled Material Symbols icon font; the app does not fetch interface fonts from Google
 
 Full policy: [SECURITY.md](SECURITY.md)
 

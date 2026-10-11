@@ -1436,8 +1436,10 @@ export function ExpenseTrackerPage() {
               <Suspense fallback={<ChartLoadingFallback />}>
                 <ExpenseBreakdownChart
                   data={categoryBreakdown}
+                  title={t('expenseTracker.expenseBreakdown', { period: periodLabel })}
                   currency={data.currency}
                   customCategories={data.customCategories}
+                  categoryOverrides={data.categoryOverrides}
                 />
               </Suspense>
             </div>
@@ -1463,13 +1465,14 @@ export function ExpenseTrackerPage() {
                   data={categoryTrendsData}
                   currency={data.currency}
                   customCategories={data.customCategories}
+                  categoryOverrides={data.categoryOverrides}
                 />
               </Suspense>
             </div>
 
             {/* Category Breakdown Table */}
-            <div className="breakdown-table-container">
-              <h4>{t('expenseTracker.categoryBreakdown', { period: periodLabel })}</h4>
+            <div className="breakdown-table-container" role="region" tabIndex={0} aria-labelledby="category-breakdown-heading">
+              <h4 id="category-breakdown-heading">{t('expenseTracker.categoryBreakdown', { period: periodLabel })}</h4>
               <table className="breakdown-table">
                 <thead>
                   <tr>
