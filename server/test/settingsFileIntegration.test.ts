@@ -1,24 +1,14 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import fs from 'node:fs';
 import { makeAppWithTmpDb } from './helpers.js';
 import { SETTINGS_SCHEMA_VERSION } from '../src/settingsFile.js';
 
-const cleanups: Array<() => void> = [];
-
-afterEach(() => {
-  while (cleanups.length) cleanups.pop()?.();
-});
-
-const setup = () => {
-  const env = makeAppWithTmpDb();
-  cleanups.push(env.cleanup);
-  return env;
-};
+const setup = makeAppWithTmpDb;
 
 describe('settings.json sidecar — sync after writes', () => {
   it('exists at boot with empty users, then mirrors PATCH /settings', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     expect(fs.existsSync(settingsPath)).toBe(true);
     const beforeWrite = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
     expect(beforeWrite.users['1']).toBeUndefined();
@@ -33,7 +23,7 @@ describe('settings.json sidecar — sync after writes', () => {
   });
 
   it('mirrors PATCH /settings to disk', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     await request(app)
       .patch('/api/v1/settings')
       .send({ accountName: 'Mirrored', privacyMode: true });
@@ -43,7 +33,7 @@ describe('settings.json sidecar — sync after writes', () => {
   });
 
   it('mirrors PUT /settings/notifications to disk', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     await request(app)
       .put('/api/v1/settings/notifications')
       .send({
@@ -70,7 +60,7 @@ describe('settings.json sidecar — sync after writes', () => {
 
 describe('GET /settings/file', () => {
   it('returns path + contents', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     await request(app).get('/api/v1/settings');
     const res = await request(app).get('/api/v1/settings/file');
     expect(res.status).toBe(200);
@@ -80,7 +70,7 @@ describe('GET /settings/file', () => {
   });
 
   it('returns the freshly-booted (empty users) shape', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await request(app).get('/api/v1/settings/file');
     expect(res.status).toBe(200);
     expect(res.body.exists).toBe(true);
@@ -90,7 +80,7 @@ describe('GET /settings/file', () => {
 
 describe('POST /settings/file/sync', () => {
   it('rewrites the file from current DB state', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     await request(app).patch('/api/v1/settings').send({ accountName: 'A' });
     fs.unlinkSync(settingsPath);
     const res = await request(app).post('/api/v1/settings/file/sync');
@@ -103,7 +93,7 @@ describe('POST /settings/file/sync', () => {
 
 describe('POST /settings/file/import', () => {
   it('applies a posted shape into the DB and resyncs the file', async () => {
-    const { app, settingsPath } = setup();
+    const { app, settingsPath } = await setup();
     await request(app).get('/api/v1/settings'); // create defaults
     const importBody = {
       schemaVersion: SETTINGS_SCHEMA_VERSION,
@@ -128,7 +118,7 @@ describe('POST /settings/file/import', () => {
   });
 
   it('rejects an obviously malformed body', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await request(app)
       .post('/api/v1/settings/file/import')
       .send({ totally: 'wrong' });
@@ -142,8 +132,7 @@ describe('boot-time legacy migration', () => {
     // We can't easily exercise this without re-running buildApp; the unit
     // tests cover migrateLegacySettingsFile in isolation. This integration
     // test asserts the behaviour end-to-end with a fresh DB dir.
-    const env = makeAppWithTmpDb();
-    cleanups.push(env.cleanup);
+    const env = await makeAppWithTmpDb();
     // After build, the canonical file should now exist (initial sync).
     expect(fs.existsSync(env.settingsPath)).toBe(true);
   });

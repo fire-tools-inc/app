@@ -489,13 +489,13 @@ describe('Cookie Storage utilities', () => {
     });
 
     it('should handle corrupted expense tracker data gracefully', () => {
-      // Suppress console.log for migration message during this test
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
       
       document.cookie = 'fire-tools-expense-tracker=invalid-encrypted-data';
       const loaded = loadExpenseTrackerData();
 
       expect(loaded).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('[migrate]'), '');
       
       consoleSpy.mockRestore();
     });

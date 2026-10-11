@@ -65,6 +65,7 @@ jobs:
             server:
               - 'server/**'
               - 'scripts/**'
+              - 'tests/shared/diagnostics.ts'
             browser:
               - 'tests/browser/**'
               - 'playwright.config.ts'
@@ -90,6 +91,7 @@ jobs:
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
             full:
+              - 'tests/setup.ts'
               - 'tests/shared/**'
               - 'tests/types/**'
               - 'tests/README.md'

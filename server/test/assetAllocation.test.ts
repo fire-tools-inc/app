@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { makeApp } from './helpers.js';
+import { expectDiagnostic } from '../../tests/shared/diagnostics.js';
 
 const validAsset = {
   externalId: 'a-1',
@@ -14,7 +15,7 @@ const validAsset = {
 
 describe('asset-allocation config', () => {
   it('GET returns defaults', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/asset-allocation/config');
     expect(res.status).toBe(200);
     expect(res.body.currency).toBe('EUR');
@@ -23,7 +24,7 @@ describe('asset-allocation config', () => {
   });
 
   it('PUT updates config', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/asset-allocation/config').send({
       currency: 'USD',
       allowNegativeCash: true,
@@ -36,7 +37,7 @@ describe('asset-allocation config', () => {
   });
 
   it('PUT rejects missing field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .put('/api/v1/asset-allocation/config')
       .send({ currency: 'EUR', allowNegativeCash: false });
@@ -46,12 +47,13 @@ describe('asset-allocation config', () => {
 
 describe('asset-allocation assets', () => {
   it('keeps the original asset if the replacement fails', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     db.exec(`CREATE TRIGGER reject_asset BEFORE INSERT ON assets
       WHEN NEW.current_value = 99 BEGIN SELECT RAISE(ABORT, 'Injected write failure'); END`);
     const failed = await request(app).put('/api/v1/asset-allocation/assets/a-1').send({ ...validAsset, currentValue: 99 });
     expect(failed.status).toBe(500);
+    expectDiagnostic('error', '[unhandled-error]: Injected write failure');
     const saved = await request(app).get('/api/v1/asset-allocation/assets/a-1');
     expect(saved.status).toBe(200);
     expect(saved.body.currentValue).toBe(1000);
@@ -59,14 +61,14 @@ describe('asset-allocation assets', () => {
   });
 
   it('GET returns empty', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/asset-allocation/assets');
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
 
   it('POST creates an asset', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     expect(res.status).toBe(201);
     expect(res.body.externalId).toBe('a-1');
@@ -75,21 +77,21 @@ describe('asset-allocation assets', () => {
   });
 
   it('POST 409 on dup', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     const res = await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     expect(res.status).toBe(409);
   });
 
   it('POST rejects missing field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { name: _x, ...partial } = validAsset;
     const res = await request(app).post('/api/v1/asset-allocation/assets').send(partial);
     expect(res.status).toBe(400);
   });
 
   it('POST rejects invalid assetClass', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/asset-allocation/assets')
       .send({ ...validAsset, assetClass: 'BOGUS' });
@@ -97,7 +99,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('POST rejects invalid subAssetType', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/asset-allocation/assets')
       .send({ ...validAsset, subAssetType: 'NOPE' });
@@ -105,7 +107,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('POST rejects invalid targetMode', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/asset-allocation/assets')
       .send({ ...validAsset, targetMode: 'WEIRD' });
@@ -113,7 +115,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('POST rejects invalid originalCurrency', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/asset-allocation/assets')
       .send({ ...validAsset, originalCurrency: 'XYZ', originalValue: 100 });
@@ -121,7 +123,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('GET filters by assetClass', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     await request(app)
       .post('/api/v1/asset-allocation/assets')
@@ -133,13 +135,13 @@ describe('asset-allocation assets', () => {
   });
 
   it('GET rejects invalid assetClass param', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/asset-allocation/assets?assetClass=NOPE');
     expect(res.status).toBe(400);
   });
 
   it('GET by externalId', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     const res = await request(app).get('/api/v1/asset-allocation/assets/a-1');
     expect(res.status).toBe(200);
@@ -147,13 +149,13 @@ describe('asset-allocation assets', () => {
   });
 
   it('GET 404 for missing externalId', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/asset-allocation/assets/missing');
     expect(res.status).toBe(404);
   });
 
   it('PUT replaces (upserts) asset', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     const res = await request(app)
       .put('/api/v1/asset-allocation/assets/a-1')
@@ -164,14 +166,14 @@ describe('asset-allocation assets', () => {
   });
 
   it('PUT creates if missing', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/asset-allocation/assets/new-1').send(validAsset);
     expect(res.status).toBe(200);
     expect(res.body.externalId).toBe('new-1');
   });
 
   it('POST includes mortgageData', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/asset-allocation/assets')
       .send({
@@ -198,7 +200,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('DELETE removes asset', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send(validAsset);
     const del = await request(app).delete('/api/v1/asset-allocation/assets/a-1');
     expect(del.status).toBe(204);
@@ -207,7 +209,7 @@ describe('asset-allocation assets', () => {
   });
 
   it('DELETE 404 for missing', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete('/api/v1/asset-allocation/assets/none');
     expect(res.status).toBe(404);
   });

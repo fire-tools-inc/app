@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { categorizeWithLlm } from '../../../src/utils/llmCategorizer';
 import type { LlmCategorizationConfig, ParsedTransactionDraft } from '../../../src/types/pdfImport';
 import { EXPENSE_CATEGORIES } from '../../../src/types/expenseTracker';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 const config: LlmCategorizationConfig = {
   baseUrl: 'https://api.openai.example/v1',
@@ -158,6 +159,7 @@ describe('categorizeWithLlm', () => {
     const drafts = [expenseDraft('a', 'x')];
     const result = await categorizeWithLlm(drafts, config, EXPENSE_CATEGORIES, { fetchImpl });
     expect(result).toBe(drafts);
+    expectDiagnostic('error', '[http-error]: LLM categorization request failed');
   });
 
   it('falls back when LLM returns non-JSON content', async () => {
