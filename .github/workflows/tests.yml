@@ -65,6 +65,7 @@ jobs:
             server:
               - 'server/**'
               - 'scripts/**'
+              - 'tests/shared/diagnostics.ts'
             browser:
               - 'tests/browser/**'
               - 'playwright.config.ts'

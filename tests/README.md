@@ -96,4 +96,5 @@ Install its browser once with `npx playwright install chromium` if missing.
 when source or test files for that page change, and runs the full suite on
 shared/, types/, or config changes. See that workflow for the path filters.
 Shared test setup changes also trigger the full renderer suite.
+Shared diagnostic helper changes trigger the backend suite as well.
 UI-related changes also run the **Browser UI regressions** job.
