@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { execFileSync, spawnSync } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const releaseScript = resolve('scripts/release.sh');
 const bumpScript = resolve('scripts/bump-version.mjs');
+const fixtureShell = process.platform === 'darwin' ? '/bin/bash' : '/usr/bin/env bash';
+const commandTimeout = 20000;
 const expectedChecks = [
   'ci',
   '--prefix server ci',
@@ -29,40 +31,67 @@ let remote: string;
 let environment: NodeJS.ProcessEnv;
 let originalCommit: string;
 let commandLog: string;
+const processes = new Map<ChildProcess, Promise<void>>();
 
-function git(args: string[], cwd = project): string {
-  return execFileSync('git', args, { cwd, env: environment, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+interface CommandResult {
+  status: number;
+  stdout: string;
+  stderr: string;
 }
 
-function remoteRef(ref: string): string | null {
-  const result = spawnSync('git', ['--git-dir', remote, 'rev-parse', '--verify', ref], {
-    env: environment, encoding: 'utf8',
+function execute(executable: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): Promise<CommandResult> {
+  const child = spawn(executable, args, {
+    cwd, env, timeout: commandTimeout, stdio: ['ignore', 'pipe', 'pipe'],
   });
+  processes.set(child, new Promise(resolve => child.once('close', () => {
+    processes.delete(child);
+    resolve();
+  })));
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk; });
+    child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
+    child.once('error', reject);
+    child.once('close', (status, signal) => {
+      if (signal || status === null) {
+        reject(new Error(`${executable} ${args.join(' ')} did not exit normally (${signal ?? 'missing exit code'}).\n${stderr}`));
+        return;
+      }
+      resolve({ status, stdout, stderr });
+    });
+  });
+}
+
+async function git(args: string[], cwd = project): Promise<string> {
+  const result = await execute('git', args, cwd, environment);
+  if (result.status !== 0) throw new Error(`git ${args.join(' ')} exited ${result.status}.\n${result.stderr}`);
+  return result.stdout.trim();
+}
+
+async function remoteRef(ref: string): Promise<string | null> {
+  const result = await execute('git', ['--git-dir', remote, 'rev-parse', '--verify', ref], project, environment);
   return result.status === 0 ? result.stdout.trim() : null;
 }
 
 function run(args: string[] = [], overrides: NodeJS.ProcessEnv = {}) {
-  return spawnSync(process.platform === 'darwin' ? '/bin/bash' : 'bash', ['scripts/release.sh', ...args], {
-    cwd: project,
-    env: { ...environment, ...overrides },
-    encoding: 'utf8',
-    timeout: 20000,
-  });
+  return execute(process.platform === 'darwin' ? '/bin/bash' : 'bash', ['scripts/release.sh', ...args],
+    project, { ...environment, ...overrides });
 }
 
 function commands(): string[] {
   return existsSync(commandLog) ? readFileSync(commandLog, 'utf8').trim().split('\n') : [];
 }
 
-function commitFixtureChange(path: string, content: string): void {
+async function commitFixtureChange(path: string, content: string): Promise<void> {
   writeFileSync(join(project, path), content);
-  git(['add', '--', path]);
-  git(['commit', '--no-gpg-sign', '-qm', 'Synthetic fixture change']);
-  git(['push', '-q', 'origin', 'HEAD:main']);
-  originalCommit = git(['rev-parse', 'HEAD']);
+  await git(['add', '--', path]);
+  await git(['commit', '--no-gpg-sign', '-qm', 'Synthetic fixture change']);
+  await git(['push', '-q', 'origin', 'HEAD:main']);
+  originalCommit = await git(['rev-parse', 'HEAD']);
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   directory = mkdtempSync(join(tmpdir(), 'fire-tools-release-test-'));
   project = join(directory, 'project');
   remote = join(directory, 'remote.git');
@@ -88,7 +117,7 @@ beforeEach(() => {
   };
   for (const key of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete environment[key];
   writeFileSync(gitConfig, '');
-  writeFileSync(join(bin, 'npm'), `#!/usr/bin/env bash
+  writeFileSync(join(bin, 'npm'), `#!${fixtureShell}
 set -euo pipefail
 printf '%s\\n' "$*" >> "$RELEASE_COMMAND_LOG"
 if [[ "$*" == "\${RELEASE_FAIL_COMMAND:-}" ]]; then
@@ -107,8 +136,8 @@ if [[ "$*" == 'run electron:build' ]]; then
   fi
 fi
 `, { mode: 0o755 });
-  git(['init', '--bare', '-q', remote], directory);
-  git(['init', '-q', '-b', 'main']);
+  await git(['init', '--bare', '-q', remote], directory);
+  await git(['init', '-q', '-b', 'main']);
   for (const subdirectory of ['scripts', 'server', 'tests']) mkdirSync(join(project, subdirectory));
   copyFileSync(releaseScript, join(project, 'scripts/release.sh'));
   copyFileSync(bumpScript, join(project, 'scripts/bump-version.mjs'));
@@ -122,18 +151,33 @@ fi
     }, null, 2) + '\n');
   }
   writeFileSync(join(project, 'tests/setup.ts'), "vi.stubGlobal('__APP_VERSION__', '1.2.3');\n");
-  git(['add', '.']);
-  git(['commit', '--no-gpg-sign', '-qm', 'Synthetic initial commit']);
-  git(['remote', 'add', 'origin', remote]);
-  git(['push', '-q', 'origin', 'HEAD:main']);
-  originalCommit = git(['rev-parse', 'HEAD']);
+  await git(['add', '.']);
+  await git(['commit', '--no-gpg-sign', '-qm', 'Synthetic initial commit']);
+  await git(['remote', 'add', 'origin', remote]);
+  await git(['push', '-q', 'origin', 'HEAD:main']);
+  originalCommit = await git(['rev-parse', 'HEAD']);
 });
 
-afterEach(() => rmSync(directory, { recursive: true, force: true }));
+afterEach(async () => {
+  await Promise.all([...processes].map(([child, closed]) => {
+    child.kill('SIGTERM');
+    return closed;
+  }));
+  rmSync(directory, { recursive: true, force: true });
+});
 
-describe('one-command release script', () => {
-  it('bumps an explicit tag, validates locally, and publishes an atomic matching commit and tag', () => {
-    const result = run(['v1.3.0']);
+describe('one-command release script', { timeout: commandTimeout + 5000 }, () => {
+  it('rejects a command that cannot start instead of treating it as a release rejection', async () => {
+    await expect(execute(join(directory, 'missing-command'), [], project, environment)).rejects.toThrow('ENOENT');
+  });
+
+  it.skipIf(process.platform === 'win32')('rejects signal termination instead of treating it as a normal nonzero exit', async () => {
+    await expect(execute(process.execPath, ['-e', 'process.kill(process.pid, "SIGTERM")'], project, environment))
+      .rejects.toThrow('did not exit normally (SIGTERM)');
+  });
+
+  it('bumps an explicit tag, validates locally, and publishes an atomic matching commit and tag', async () => {
+    const result = await run(['v1.3.0']);
     expect(result.status, result.stderr).toBe(0);
     expect(commands()).toEqual(expectedChecks);
     for (const file of versionFiles.filter(file => file.endsWith('.json'))) {
@@ -142,183 +186,188 @@ describe('one-command release script', () => {
       if (file.endsWith('package-lock.json')) expect(payload.packages[''].version).toBe('1.3.0');
     }
     expect(readFileSync(join(project, 'tests/setup.ts'), 'utf8')).toContain("'1.3.0'");
-    const commit = git(['rev-parse', 'HEAD']);
+    const commit = await git(['rev-parse', 'HEAD']);
     expect(commit).not.toBe(originalCommit);
-    expect(remoteRef('refs/heads/main')).toBe(commit);
-    expect(remoteRef('refs/tags/v1.3.0^{}')).toBe(commit);
-    expect(git(['cat-file', '-t', 'refs/tags/v1.3.0'])).toBe('tag');
-    expect(git(['show', '--format=', '--name-only', 'HEAD']).split('\n').sort()).toEqual([...versionFiles].sort());
-    expect(git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.3.0');
-    expect(git(['status', '--porcelain'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(commit);
+    expect(await remoteRef('refs/tags/v1.3.0^{}')).toBe(commit);
+    expect(await git(['cat-file', '-t', 'refs/tags/v1.3.0'])).toBe('tag');
+    expect((await git(['show', '--format=', '--name-only', 'HEAD'])).split('\n').sort()).toEqual([...versionFiles].sort());
+    expect(await git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.3.0');
+    expect(await git(['status', '--porcelain'])).toBe('');
     expect(result.stdout).toContain('GitHub Actions will');
     expect(result.stdout).toContain('publish');
     expect(result.stdout).toContain('/actions/workflows/release.yml');
   });
 
-  it('keeps no-argument releases of an already committed version without creating another commit', () => {
-    const result = run();
+  it('keeps no-argument releases of an already committed version without creating another commit', async () => {
+    const result = await run();
     expect(result.status, result.stderr).toBe(0);
     expect(commands()).toEqual(expectedChecks);
-    expect(git(['rev-parse', 'HEAD'])).toBe(originalCommit);
-    expect(remoteRef('refs/tags/v1.2.3^{}')).toBe(originalCommit);
+    expect(await git(['rev-parse', 'HEAD'])).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.2.3^{}')).toBe(originalCommit);
   });
 
-  it('does not depend on interactive signing settings or introduce attribution trailers', () => {
-    git(['config', 'commit.gpgsign', 'true']);
-    git(['config', 'tag.gpgsign', 'true']);
-    git(['config', 'gpg.program', join(directory, 'missing-signing-program')]);
-    const result = run(['v1.3.0']);
+  it('does not depend on interactive signing settings or introduce attribution trailers', async () => {
+    await git(['config', 'commit.gpgsign', 'true']);
+    await git(['config', 'tag.gpgsign', 'true']);
+    await git(['config', 'gpg.program', join(directory, 'missing-signing-program')]);
+    const result = await run(['v1.3.0']);
     expect(result.status, result.stderr).toBe(0);
-    expect(git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.3.0');
-    expect(git(['cat-file', 'tag', 'v1.3.0'])).not.toContain('BEGIN PGP SIGNATURE');
+    expect(await git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.3.0');
+    expect(await git(['cat-file', 'tag', 'v1.3.0'])).not.toContain('BEGIN PGP SIGNATURE');
   });
 
   it.each([
     { args: ['--bump'], version: '1.3.0' },
     { args: ['--bump', '2.0.0'], version: '2.0.0' },
-  ])('preserves the existing $args bump interface', ({ args, version }) => {
-    const result = run(args);
+  ])('preserves the existing $args bump interface', async ({ args, version }) => {
+    const result = await run(args);
     expect(result.status, result.stderr).toBe(0);
-    expect(remoteRef(`refs/tags/v${version}^{}`)).toBe(git(['rev-parse', 'HEAD']));
+    expect(await remoteRef(`refs/tags/v${version}^{}`)).toBe(await git(['rev-parse', 'HEAD']));
   });
 
   it.each([
-    ['v1.3'], ['v01.3.0'], ['v1.3.0-extra'], ['v1.3.0', '--bump'],
-    ['v1.3.0', 'v1.4.0'], ['--bump', 'not-a-version'],
-  ])('rejects invalid or conflicting input %j without changing refs or versions', args => {
-    const result = run(args);
-    expect(result.status).not.toBe(0);
+    { args: ['v1.3'], message: 'not a valid stable tag' },
+    { args: ['v01.3.0'], message: 'not a valid stable tag' },
+    { args: ['v1.3.0-extra'], message: 'not a valid stable tag' },
+    { args: ['v1.3.0', '--bump'], message: 'Specify only one release tag' },
+    { args: ['v1.3.0', 'v1.4.0'], message: 'Specify only one release tag' },
+    { args: ['--bump', 'not-a-version'], message: 'not a valid stable version' },
+  ])('rejects invalid or conflicting input $args without changing refs or versions', async ({ args, message }) => {
+    const result = await run(args);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(message);
     expect(commands()).toEqual([]);
-    expect(git(['status', '--porcelain'])).toBe('');
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await git(['status', '--porcelain'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
   });
 
-  it('refuses to release a downgrade', () => {
-    const result = run(['v1.2.2']);
+  it('refuses to release a downgrade', async () => {
+    const result = await run(['v1.2.2']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('older');
     expect(commands()).toEqual([]);
-    expect(git(['status', '--porcelain'])).toBe('');
+    expect(await git(['status', '--porcelain'])).toBe('');
   });
 
-  it('requires a clean main checkout without switching branches', () => {
-    git(['switch', '-q', '-c', 'synthetic-feature']);
-    expect(run(['v1.3.0']).status).not.toBe(0);
-    expect(git(['branch', '--show-current'])).toBe('synthetic-feature');
-    git(['switch', '-q', 'main']);
+  it('requires a clean main checkout without switching branches', async () => {
+    await git(['switch', '-q', '-c', 'synthetic-feature']);
+    expect((await run(['v1.3.0'])).status).not.toBe(0);
+    expect(await git(['branch', '--show-current'])).toBe('synthetic-feature');
+    await git(['switch', '-q', 'main']);
     writeFileSync(join(project, 'unrelated.txt'), 'Synthetic unsaved edit');
-    expect(run(['v1.3.0']).status).not.toBe(0);
+    expect((await run(['v1.3.0'])).status).not.toBe(0);
     expect(readFileSync(join(project, 'unrelated.txt'), 'utf8')).toBe('Synthetic unsaved edit');
     expect(commands()).toEqual([]);
   });
 
-  it('refuses an existing remote tag before bumping or installing', () => {
-    git(['tag', '-a', 'v1.3.0', '-m', 'Synthetic existing tag']);
-    git(['push', '-q', 'origin', 'refs/tags/v1.3.0']);
-    git(['tag', '-d', 'v1.3.0']);
-    const existingTag = remoteRef('refs/tags/v1.3.0');
-    const result = run(['v1.3.0']);
+  it('refuses an existing remote tag before bumping or installing', async () => {
+    await git(['tag', '-a', 'v1.3.0', '-m', 'Synthetic existing tag']);
+    await git(['push', '-q', 'origin', 'refs/tags/v1.3.0']);
+    await git(['tag', '-d', 'v1.3.0']);
+    const existingTag = await remoteRef('refs/tags/v1.3.0');
+    const result = await run(['v1.3.0']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('already exists');
-    expect(remoteRef('refs/tags/v1.3.0')).toBe(existingTag);
-    expect(git(['status', '--porcelain'])).toBe('');
+    expect(await remoteRef('refs/tags/v1.3.0')).toBe(existingTag);
+    expect(await git(['status', '--porcelain'])).toBe('');
     expect(commands()).toEqual([]);
   });
 
   it.each(['ci', '--prefix server audit', 'test', '--prefix server test', 'run test:browser', 'run build', 'run electron:build'])(
     'does not commit or push when %s fails',
-    failedCommand => {
-      const result = run(['v1.3.0'], { RELEASE_FAIL_COMMAND: failedCommand });
+    async failedCommand => {
+      const result = await run(['v1.3.0'], { RELEASE_FAIL_COMMAND: failedCommand });
       expect(result.status).toBe(17);
       expect(commands()).toEqual(expectedChecks.slice(0, expectedChecks.indexOf(failedCommand) + 1));
-      expect(git(['rev-parse', 'HEAD'])).toBe(originalCommit);
-      expect(remoteRef('refs/heads/main')).toBe(originalCommit);
-      expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
-      expect(git(['tag', '--list', 'v1.3.0'])).toBe('');
+      expect(await git(['rev-parse', 'HEAD'])).toBe(originalCommit);
+      expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+      expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
+      expect(await git(['tag', '--list', 'v1.3.0'])).toBe('');
       expect(readFileSync(join(project, 'package.json'), 'utf8')).toContain('1.3.0');
       expect(result.stderr).toContain('failed');
     },
   );
 
-  it('does not stage unrelated changes introduced during validation', () => {
-    const result = run(['v1.3.0'], { RELEASE_MUTATE_UNRELATED: '1' });
+  it('does not stage unrelated changes introduced during validation', async () => {
+    const result = await run(['v1.3.0'], { RELEASE_MUTATE_UNRELATED: '1' });
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('unexpected.txt');
-    expect(git(['diff', '--cached', '--name-only'])).toBe('');
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
-    expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
+    expect(await git(['diff', '--cached', '--name-only'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
   });
 
-  it('does not publish a version file modified after its checks', () => {
-    const result = run(['v1.3.0'], { RELEASE_MUTATE_VERSION_FILE: '1' });
+  it('does not publish a version file modified after its checks', async () => {
+    const result = await run(['v1.3.0'], { RELEASE_MUTATE_VERSION_FILE: '1' });
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('Tracked files changed');
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
-    expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
-    expect(git(['diff', '--cached', '--name-only'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
+    expect(await git(['diff', '--cached', '--name-only'])).toBe('');
   });
 
-  it('does not publish changes added by a commit hook after validation', () => {
-    commitFixtureChange('synthetic.txt', 'Synthetic validated source\n');
+  it('does not publish changes added by a commit hook after validation', async () => {
+    await commitFixtureChange('synthetic.txt', 'Synthetic validated source\n');
     const hooks = join(project, '.git/hooks');
     mkdirSync(hooks, { recursive: true });
-    writeFileSync(join(hooks, 'pre-commit'), `#!/usr/bin/env bash
+    writeFileSync(join(hooks, 'pre-commit'), `#!${fixtureShell}
 set -euo pipefail
 printf 'Synthetic unvalidated source\\n' >> synthetic.txt
 git add -- synthetic.txt
 `, { mode: 0o755 });
-    const result = run(['v1.3.0']);
+    const result = await run(['v1.3.0']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('commit hook');
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
-    expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
   });
 
-  it('rechecks main after local validation and does not tag a stale branch', () => {
-    const tree = git(['rev-parse', 'HEAD^{tree}']);
-    const concurrentCommit = git(['commit-tree', tree, '-p', originalCommit, '-m', 'Synthetic concurrent change']);
-    git(['push', '-q', 'origin', `${concurrentCommit}:refs/heads/synthetic-concurrent`]);
-    const result = run(['v1.3.0'], { RELEASE_CONCURRENT_COMMIT: concurrentCommit });
+  it('rechecks main after local validation and does not tag a stale branch', async () => {
+    const tree = await git(['rev-parse', 'HEAD^{tree}']);
+    const concurrentCommit = await git(['commit-tree', tree, '-p', originalCommit, '-m', 'Synthetic concurrent change']);
+    await git(['push', '-q', 'origin', `${concurrentCommit}:refs/heads/synthetic-concurrent`]);
+    const result = await run(['v1.3.0'], { RELEASE_CONCURRENT_COMMIT: concurrentCommit });
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('main');
-    expect(remoteRef('refs/heads/main')).toBe(concurrentCommit);
-    expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
-    expect(git(['rev-parse', 'HEAD'])).toBe(originalCommit);
+    expect(await remoteRef('refs/heads/main')).toBe(concurrentCommit);
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
+    expect(await git(['rev-parse', 'HEAD'])).toBe(originalCommit);
   });
 
-  it.each(['tag', 'main'])('does not publish either ref when the remote rejects %s', rejectedRef => {
+  it.each(['tag', 'main'])('does not publish either ref when the remote rejects %s', async rejectedRef => {
     mkdirSync(join(remote, 'hooks'), { recursive: true });
-    writeFileSync(join(remote, 'hooks/update'), `#!/usr/bin/env bash
+    writeFileSync(join(remote, 'hooks/update'), `#!${fixtureShell}
 if [[ "$1" == ${rejectedRef === 'tag' ? 'refs/tags/*' : 'refs/heads/main'} ]]; then
   echo "Synthetic ref rejection" >&2
   exit 1
 fi
 `, { mode: 0o755 });
-    const result = run(['v1.3.0']);
+    const result = await run(['v1.3.0']);
     expect(result.status).not.toBe(0);
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
-    expect(remoteRef('refs/tags/v1.3.0')).toBeNull();
-    expect(git(['rev-parse', 'HEAD'])).not.toBe(originalCommit);
-    expect(git(['tag', '--list', 'v1.3.0'])).toBe('v1.3.0');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
+    expect(await git(['rev-parse', 'HEAD'])).not.toBe(originalCommit);
+    expect(await git(['tag', '--list', 'v1.3.0'])).toBe('v1.3.0');
     expect(result.stderr).toContain('atomic');
   });
 
-  it('fails if a precommitted release has inconsistent package or test versions', () => {
-    commitFixtureChange('server/package.json', JSON.stringify({ version: '0.0.0' }) + '\n');
-    const result = run();
+  it('fails if a precommitted release has inconsistent package or test versions', async () => {
+    await commitFixtureChange('server/package.json', JSON.stringify({ version: '0.0.0' }) + '\n');
+    const result = await run();
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('server/package.json');
     expect(commands()).toEqual([]);
-    expect(remoteRef('refs/tags/v1.2.3')).toBeNull();
+    expect(await remoteRef('refs/tags/v1.2.3')).toBeNull();
   });
 
-  it('does not confuse a failed remote connection with an available release tag', () => {
-    git(['remote', 'set-url', 'origin', join(directory, 'missing-remote.git')]);
-    const result = run(['v1.3.0']);
+  it('does not confuse a failed remote connection with an available release tag', async () => {
+    await git(['remote', 'set-url', 'origin', join(directory, 'missing-remote.git')]);
+    const result = await run(['v1.3.0']);
     expect(result.status).not.toBe(0);
     expect(commands()).toEqual([]);
-    expect(git(['status', '--porcelain'])).toBe('');
-    expect(git(['tag', '--list', 'v1.3.0'])).toBe('');
-    expect(remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await git(['status', '--porcelain'])).toBe('');
+    expect(await git(['tag', '--list', 'v1.3.0'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
   });
 });

@@ -4,7 +4,7 @@ import { makeApp } from './helpers.js';
 
 describe('GET /api/v1/users/me', () => {
   it('returns bootstrap user', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/users/me');
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(1);
@@ -14,7 +14,7 @@ describe('GET /api/v1/users/me', () => {
   });
 
   it('returns 404 when bootstrap user is missing', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     db.prepare('DELETE FROM users WHERE id = 1').run();
     const res = await request(app).get('/api/v1/users/me');
     expect(res.status).toBe(404);

@@ -1,9 +1,26 @@
 // Global vitest setup. Ensures i18next is initialised with English resources
 // before any component that calls `useTranslation()` is rendered.
-import { vi } from 'vitest';
+import { beforeEach, onTestFinished, vi } from 'vitest';
 import { i18nReady } from '../src/i18n';
+import { testDiagnostics } from './shared/diagnostics';
 
 await i18nReady;
+
+beforeEach(() => {
+  testDiagnostics.clear();
+  const spies = [
+    vi.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => testDiagnostics.record('warn', args)),
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => testDiagnostics.record('error', args)),
+  ];
+  onTestFinished(() => {
+    try {
+      testDiagnostics.assertEmpty();
+    } finally {
+      for (const spy of spies) spy.mockRestore();
+      testDiagnostics.clear();
+    }
+  });
+});
 
 vi.stubGlobal('__APP_VERSION__', '2.3.47');
 vi.stubGlobal('__APP_COMMIT_HASH__', 'testcommit');

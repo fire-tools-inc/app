@@ -1,24 +1,18 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import Database from 'better-sqlite3';
-import { runMigrations } from '../src/migrate.js';
-import { buildApp } from '../src/app.js';
 import { testEnv, makeApp } from './helpers.js';
 
-const buildRestricted = () => {
-  const db = new Database(':memory:');
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+const buildRestricted = async () => {
   const env = testEnv();
   env.corsAllowAll = false;
   env.corsOrigins = ['http://localhost:5173'];
-  runMigrations(db, env.migrationsPath);
-  return buildApp({ db, env, dbPath: ':memory:', disableRateLimit: true });
+  const { app } = await makeApp(env);
+  return app;
 };
 
 describe('CORS handling', () => {
   it('allows configured origin', async () => {
-    const app = buildRestricted();
+    const app = await buildRestricted();
     const res = await request(app)
       .get('/api/v1/health')
       .set('Origin', 'http://localhost:5173');
@@ -27,7 +21,7 @@ describe('CORS handling', () => {
   });
 
   it('denies disallowed origin with 403 cors_denied', async () => {
-    const app = buildRestricted();
+    const app = await buildRestricted();
     const res = await request(app)
       .get('/api/v1/health')
       .set('Origin', 'http://evil.com');
@@ -36,13 +30,13 @@ describe('CORS handling', () => {
   });
 
   it('allows requests without an Origin header', async () => {
-    const app = buildRestricted();
+    const app = await buildRestricted();
     const res = await request(app).get('/api/v1/health');
     expect(res.status).toBe(200);
   });
 
   it('corsAllowAll bypasses allowlist', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .get('/api/v1/health')
       .set('Origin', 'http://anywhere.example');
@@ -52,7 +46,7 @@ describe('CORS handling', () => {
 
 describe('Route mounting', () => {
   it('returns a validation error for malformed JSON', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     const res = await request(app).put('/api/v1/settings')
       .set('Content-Type', 'application/json').send('{"broken":');
     expect(res.status).toBe(400);
@@ -61,7 +55,7 @@ describe('Route mounting', () => {
   });
 
   it('returns a clear payload limit error instead of an internal error', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     const res = await request(app).put('/api/v1/settings')
       .send({ data: 'x'.repeat(2 * 1024 * 1024) });
     expect(res.status).toBe(413);
@@ -70,7 +64,7 @@ describe('Route mounting', () => {
   });
 
   it('all routers mounted under /api/v1', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const paths = [
       '/api/v1/health',
       '/api/v1/users/me',
@@ -96,20 +90,20 @@ describe('Route mounting', () => {
   });
 
   it('unknown /api/v1 route returns 501 not_implemented', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/does-not-exist');
     expect(res.status).toBe(501);
     expect(res.body.error.code).toBe('not_implemented');
   });
 
   it('unknown route outside /api/v1 returns 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/totally-unknown');
     expect(res.status).toBe(404);
   });
 
   it('x-powered-by header is disabled', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/health');
     expect(res.headers['x-powered-by']).toBeUndefined();
   });

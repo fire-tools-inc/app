@@ -67,17 +67,24 @@ vi.mock('../../../src/utils/yahooMetadata', () => ({
 
 import { PortfolioBreakdownPage } from '../../../src/components/PortfolioBreakdownPage';
 
+async function mount() {
+  render(
+    <MemoryRouter>
+      <PortfolioBreakdownPage />
+    </MemoryRouter>,
+  );
+  await waitFor(() => {
+    expect(screen.getByRole('button', { name: /refresh.*metadata/i }).hasAttribute('disabled')).toBe(false);
+  });
+}
+
 describe('PortfolioBreakdownPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders the page header and portfolio value', async () => {
-    render(
-      <MemoryRouter>
-        <PortfolioBreakdownPage />
-      </MemoryRouter>,
-    );
+    await mount();
 
     expect(screen.getByRole('heading', { name: /Portfolio Breakdown/i })).toBeTruthy();
     // Sum of mocked assets = 201_000
@@ -87,11 +94,7 @@ describe('PortfolioBreakdownPage', () => {
   });
 
   it('renders breakdown charts (titles) for every dimension', async () => {
-    render(
-      <MemoryRouter>
-        <PortfolioBreakdownPage />
-      </MemoryRouter>,
-    );
+    await mount();
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /By Currency/i })).toBeTruthy();
@@ -107,11 +110,7 @@ describe('PortfolioBreakdownPage', () => {
 
   it('fetches metadata for tickers that exist on initial render (no async-load race)', async () => {
     const { fetchAssetMetadataBatch } = await import('../../../src/utils/yahooMetadata');
-    render(
-      <MemoryRouter>
-        <PortfolioBreakdownPage />
-      </MemoryRouter>,
-    );
+    await mount();
 
     await waitFor(() => {
       expect(fetchAssetMetadataBatch).toHaveBeenCalled();
@@ -120,17 +119,12 @@ describe('PortfolioBreakdownPage', () => {
     // the saved allocation. If the page loads assets asynchronously, the
     // first call would happen with an empty array and metadata would never
     // populate.
-    const firstCall = (fetchAssetMetadataBatch as unknown as { mock: { calls: unknown[][] } }).mock
-      .calls[0];
+    const firstCall = vi.mocked(fetchAssetMetadataBatch).mock.calls[0];
     expect(firstCall[0]).toContain('VTI');
   });
 
-  it('shows a back link to Asset Allocation', () => {
-    render(
-      <MemoryRouter>
-        <PortfolioBreakdownPage />
-      </MemoryRouter>,
-    );
+  it('shows a back link to Asset Allocation', async () => {
+    await mount();
 
     const links = screen.getAllByRole('link', { name: /Asset Allocation/i });
     expect(links.length).toBeGreaterThan(0);

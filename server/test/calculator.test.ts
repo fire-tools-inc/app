@@ -31,7 +31,7 @@ const fullInputs = {
 
 describe('GET /api/v1/calculator/inputs', () => {
   it('auto-creates defaults on first call', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/calculator/inputs');
     expect(res.status).toBe(200);
     expect(typeof res.body.initialSavings).toBe('number');
@@ -42,7 +42,7 @@ describe('GET /api/v1/calculator/inputs', () => {
 
 describe('PUT /api/v1/calculator/inputs', () => {
   it('replaces all fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/calculator/inputs').send(fullInputs);
     expect(res.status).toBe(200);
     expect(res.body.initialSavings).toBe(50000);
@@ -51,7 +51,7 @@ describe('PUT /api/v1/calculator/inputs', () => {
   });
 
   it('persists after PUT', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).put('/api/v1/calculator/inputs').send(fullInputs);
     const res = await request(app).get('/api/v1/calculator/inputs');
     expect(res.body.initialSavings).toBe(50000);
@@ -59,14 +59,14 @@ describe('PUT /api/v1/calculator/inputs', () => {
   });
 
   it('rejects empty body', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/calculator/inputs').send({});
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('invalid_body');
   });
 
   it('rejects missing single field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { maxAge: _x, ...partial } = fullInputs;
     const res = await request(app).put('/api/v1/calculator/inputs').send(partial);
     expect(res.status).toBe(400);
@@ -76,7 +76,7 @@ describe('PUT /api/v1/calculator/inputs', () => {
 
 describe('calculator multi-user isolation', () => {
   it('keeps inputs separate per x-user-id', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     db.prepare(
       "INSERT INTO users (id, email, created_at) VALUES (2, 'two@x', '2024-01-01T00:00:00Z')",
     ).run();

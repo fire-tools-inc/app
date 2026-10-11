@@ -37,7 +37,7 @@ const validNotifPref = {
 
 describe('GET /api/v1/settings', () => {
   it('auto-creates and returns default settings', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/settings');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accountName');
@@ -51,7 +51,7 @@ describe('GET /api/v1/settings', () => {
 
 describe('PUT /api/v1/settings', () => {
   it('replaces all settings fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/settings').send(validSettings);
     expect(res.status).toBe(200);
     expect(res.body.accountName).toBe('Alice');
@@ -62,7 +62,7 @@ describe('PUT /api/v1/settings', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { decimalSeparator: _x, ...partial } = validSettings;
     const res = await request(app).put('/api/v1/settings').send(partial);
     expect(res.status).toBe(400);
@@ -73,21 +73,21 @@ describe('PUT /api/v1/settings', () => {
 
 describe('PATCH /api/v1/settings', () => {
   it('applies partial updates', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ accountName: 'Bob' });
     expect(res.status).toBe(200);
     expect(res.body.accountName).toBe('Bob');
   });
 
   it('ignores invalid decimalSeparator silently', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ decimalSeparator: 'X' });
     expect(res.status).toBe(200);
     expect(res.body.decimalSeparator).not.toBe('X');
   });
 
   it('clears llmCategorization when set to null', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app)
       .patch('/api/v1/settings')
       .send({
@@ -103,7 +103,7 @@ describe('PATCH /api/v1/settings', () => {
 
 describe('GET /api/v1/settings/notifications', () => {
   it('returns defaults', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/settings/notifications');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('enableInAppNotifications');
@@ -114,7 +114,7 @@ describe('GET /api/v1/settings/notifications', () => {
 
 describe('PUT /api/v1/settings/notifications', () => {
   it('replaces all fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/settings/notifications').send(validNotifPref);
     expect(res.status).toBe(200);
     expect(res.body.emailAddress).toBe('a@b.com');
@@ -122,7 +122,7 @@ describe('PUT /api/v1/settings/notifications', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { emailAddress: _x, ...partial } = validNotifPref;
     const res = await request(app).put('/api/v1/settings/notifications').send(partial);
     expect(res.status).toBe(400);
@@ -132,7 +132,7 @@ describe('PUT /api/v1/settings/notifications', () => {
 
 describe('settings multi-user isolation', () => {
   it('keeps settings separate per x-user-id', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     db.prepare(
       "INSERT INTO users (id, email, created_at) VALUES (2, 'two@x', '2024-01-01T00:00:00Z')",
     ).run();

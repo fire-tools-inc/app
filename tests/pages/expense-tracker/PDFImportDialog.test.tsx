@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { expectDiagnostic } from '../../shared/diagnostics';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PDFImportDialog } from '../../../src/components/PDFImportDialog';
 import type { ExtractedPdf } from '../../../src/utils/pdfTextExtractor';
@@ -118,7 +119,6 @@ describe('PDFImportDialog', () => {
     const onAddIncome = vi.fn();
     const onAddExpense = vi.fn();
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const extractor = vi.fn()
       .mockRejectedValueOnce(new Error('boom'))
       .mockResolvedValueOnce(makeExtracted('ok.pdf', [
@@ -142,6 +142,6 @@ describe('PDFImportDialog', () => {
 
     await waitFor(() => expect(extractor).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.getByText(/Failed to read "bad.pdf"/i)).toBeTruthy());
-    consoleSpy.mockRestore();
+    expectDiagnostic('error', '[pdf-parse-failed]: failed to parse PDF');
   });
 });

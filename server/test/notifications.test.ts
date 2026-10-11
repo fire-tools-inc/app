@@ -10,7 +10,7 @@ const validNotif = {
 
 describe('POST /api/v1/notifications', () => {
   it('creates a notification with defaults', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/notifications').send(validNotif);
     expect(res.status).toBe(201);
     expect(res.body.type).toBe('SYSTEM');
@@ -21,7 +21,7 @@ describe('POST /api/v1/notifications', () => {
   });
 
   it('uses provided externalId and priority', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/notifications')
       .send({ ...validNotif, externalId: 'ext-1', priority: 'HIGH' });
@@ -31,7 +31,7 @@ describe('POST /api/v1/notifications', () => {
   });
 
   it('returns 409 on duplicate externalId', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'dup' });
     const res = await request(app)
       .post('/api/v1/notifications')
@@ -41,14 +41,14 @@ describe('POST /api/v1/notifications', () => {
   });
 
   it('rejects missing fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/notifications').send({ type: 'SYSTEM' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('invalid_body');
   });
 
   it('rejects invalid type', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/notifications')
       .send({ ...validNotif, type: 'BOGUS' });
@@ -57,7 +57,7 @@ describe('POST /api/v1/notifications', () => {
   });
 
   it('rejects invalid priority', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/notifications')
       .send({ ...validNotif, priority: 'URGENT' });
@@ -68,7 +68,7 @@ describe('POST /api/v1/notifications', () => {
 
 describe('GET /api/v1/notifications', () => {
   it('returns empty', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/notifications');
     expect(res.status).toBe(200);
     expect(res.body.items).toEqual([]);
@@ -76,7 +76,7 @@ describe('GET /api/v1/notifications', () => {
   });
 
   it('lists ordered by timestamp desc', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, title: 'A' });
     await request(app).post('/api/v1/notifications').send({ ...validNotif, title: 'B' });
     const res = await request(app).get('/api/v1/notifications');
@@ -84,7 +84,7 @@ describe('GET /api/v1/notifications', () => {
   });
 
   it('filters by unreadOnly', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const c1 = await request(app)
       .post('/api/v1/notifications')
       .send({ ...validNotif, externalId: 'a' });
@@ -96,7 +96,7 @@ describe('GET /api/v1/notifications', () => {
   });
 
   it('paginates', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     for (let i = 0; i < 3; i++) {
       await request(app)
         .post('/api/v1/notifications')
@@ -115,7 +115,7 @@ describe('GET /api/v1/notifications', () => {
 
 describe('GET/PATCH/DELETE /api/v1/notifications/:externalId', () => {
   it('gets a notification by externalId', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'g1' });
     const res = await request(app).get('/api/v1/notifications/g1');
     expect(res.status).toBe(200);
@@ -123,13 +123,13 @@ describe('GET/PATCH/DELETE /api/v1/notifications/:externalId', () => {
   });
 
   it('returns 404 for unknown', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/notifications/missing');
     expect(res.status).toBe(404);
   });
 
   it('marks read via patch', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'p1' });
     const res = await request(app).patch('/api/v1/notifications/p1').send({ read: true });
     expect(res.status).toBe(200);
@@ -137,14 +137,14 @@ describe('GET/PATCH/DELETE /api/v1/notifications/:externalId', () => {
   });
 
   it('rejects non-boolean read', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'p2' });
     const res = await request(app).patch('/api/v1/notifications/p2').send({ read: 'yes' });
     expect(res.status).toBe(400);
   });
 
   it('deletes a notification', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'd1' });
     const del = await request(app).delete('/api/v1/notifications/d1');
     expect(del.status).toBe(204);
@@ -155,7 +155,7 @@ describe('GET/PATCH/DELETE /api/v1/notifications/:externalId', () => {
 
 describe('POST /api/v1/notifications/mark-all-read', () => {
   it('marks all unread as read', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'm1' });
     await request(app).post('/api/v1/notifications').send({ ...validNotif, externalId: 'm2' });
     const res = await request(app).post('/api/v1/notifications/mark-all-read');
