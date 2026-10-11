@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/fire-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0B1018" />
+    <meta name="theme-color" content="#0B1415" />
     <meta name="description" content="Fire Tools - A local-first financial planning workspace. Track your portfolio, cashflow and net worth, and plan financial independence with projections and simulations." />
     <link rel="preload" href="/src/assets/fonts/material-symbols.woff2" as="font" type="font/woff2" crossorigin />
     <title>Fire Tools - Financial planning workspace</title>
@@ -14,13 +14,14 @@
       html { color-scheme: dark; }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: #0B1018;
-        color: #EDF2F8;
+        background: #0B1415;
+        color: #EBF4F1;
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
       }
       #root, .app { min-height: 100vh; }
-      .app { display: grid; grid-template-columns: 204px minmax(0, 1fr); }
+      .app { --sidebar-width: 204px; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+      .app--sidebar-collapsed { --sidebar-width: 84px; }
       .app-workspace { display: flex; flex-direction: column; min-width: 0; }
       .app-navigation {
         position: sticky;
@@ -29,8 +30,8 @@
         margin: 12px 0 12px 12px;
         display: flex;
         flex-direction: column;
-        background: rgba(19, 28, 40, 0.92);
-        border: 1px solid #344355;
+        background: rgba(20, 34, 36, 0.94);
+        border: 1px solid #385556;
         border-radius: 20px;
       }
       .app-mobile-header { display: none; }

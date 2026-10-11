@@ -38,6 +38,8 @@ export const NAVBAR_LABELS = {
   settings: 'Settings',
   menu: 'Menu',
   close: 'Close navigation',
+  collapse: 'Collapse sidebar',
+  expand: 'Expand sidebar',
 } as const;
 
 export type NavbarLabelKey = keyof typeof NAVBAR_LABELS;

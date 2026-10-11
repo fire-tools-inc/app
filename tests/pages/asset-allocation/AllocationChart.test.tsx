@@ -34,7 +34,7 @@ describe('Allocation chart presentation', () => {
     expect(within(legend).getByText('60.00%')).toBeTruthy();
     expect(screen.getByTestId('chart-size').getAttribute('data-height')).toBe('240');
     expect(mocks.pie).toHaveBeenCalledWith(expect.objectContaining({
-      outerRadius: 90, innerRadius: 62, isAnimationActive: false,
+      outerRadius: '78%', innerRadius: '54%', isAnimationActive: false,
     }));
     expect(mocks.pie.mock.lastCall?.[0].label).toBeUndefined();
   });

@@ -698,14 +698,14 @@
   margin-bottom: 1.5rem;
 }
 
-.chart-container {
+.expense-tracker-page .chart-container {
   margin-bottom: 2rem;
   padding: 1rem;
   background: var(--bg-tertiary);
   border-radius: 12px;
 }
 
-.chart-container h4 {
+.expense-tracker-page .chart-container h4 {
   font-size: 1.1rem;
   color: var(--text-primary);
   margin-bottom: 1rem;

@@ -26,19 +26,21 @@ export const MonteCarloChart: React.FC<MonteCarloChartProps> = ({ yearsDistribut
       <section className="chart-section" aria-labelledby="years-distribution-heading">
         <h4 id="years-distribution-heading">{t('monteCarlo.chart.yearsDistribution')}</h4>
         <figure className="simulation-histogram" aria-label={t('monteCarlo.chart.yearsDistributionAria')}>
-          <div className="histogram-columns" role="list" aria-label={t('monteCarlo.chart.simulationsAxisLabel')}>
-            {distributionData.bins.map(bin => (
-              <div
-                key={bin.range}
-                className={`histogram-bin${bin.isMedian ? ' histogram-bin--median' : ''}`}
-                role="listitem"
-                title={`${t('monteCarlo.chart.tooltipYears', { label: bin.range })}: ${t('monteCarlo.chart.tooltipSimulations', { value: bin.count })}`}
-              >
-                <span className="histogram-count">{bin.count}</span>
-                <span className="histogram-bar" style={{ height: `${bin.count / maxCount * 180}px` }} aria-hidden="true" />
-                <span className="histogram-range">{bin.range}</span>
-              </div>
-            ))}
+          <div className="histogram-scroll" role="region" tabIndex={0} aria-label={t('monteCarlo.chart.yearsDistributionAria')}>
+                <div className="histogram-columns" role="list" aria-label={t('monteCarlo.chart.simulationsAxisLabel')}>
+                  {distributionData.bins.map(bin => (
+                    <div
+                      key={bin.range}
+                      className={`histogram-bin${bin.isMedian ? ' histogram-bin--median' : ''}`}
+                      role="listitem"
+                      title={`${t('monteCarlo.chart.tooltipYears', { label: bin.range })}: ${t('monteCarlo.chart.tooltipSimulations', { value: bin.count })}`}
+                    >
+                      <span className="histogram-count">{bin.count}</span>
+                      <span className="histogram-bar" style={{ height: `${bin.count / maxCount * 180}px` }} aria-hidden="true" />
+                      <span className="histogram-range">{bin.range}</span>
+                    </div>
+                  ))}
+                </div>
           </div>
           <figcaption className="histogram-caption">
             <span>{t('monteCarlo.chart.yearsAxisLabel')}</span>

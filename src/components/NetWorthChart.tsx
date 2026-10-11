@@ -72,6 +72,7 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
             dataKey="age" 
             label={{ value: t('charts.ageLabel'), position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
             interval={calculateXAxisInterval(data.length)}
+            padding={{ left: 10, right: 10 }}
             tick={{ fill: '#94A3B8' }}
             stroke="#3A3D46"
           />

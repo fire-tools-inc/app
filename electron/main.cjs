@@ -212,7 +212,7 @@ function createWindow() {
     y: state.y,
     minWidth: 960,
     minHeight: 600,
-    backgroundColor: '#0A0B0E',
+    backgroundColor: '#0B1415',
     title: 'Fire Tools',
     show: false, // show after ready-to-show to avoid white flash
     // Native macOS look: hide the title bar but keep traffic-light controls

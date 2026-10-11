@@ -60,6 +60,8 @@ describe('navbar is English-only (#233)', () => {
       settings: 'Settings',
       menu: 'Menu',
       close: 'Close navigation',
+      collapse: 'Collapse sidebar',
+      expand: 'Expand sidebar',
     });
   });
 

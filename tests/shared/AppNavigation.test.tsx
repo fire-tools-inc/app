@@ -8,15 +8,19 @@ import { NAVBAR_LABELS } from '../../src/constants/navbarLabels';
 vi.mock('../../src/components/NotificationBell', () => ({
   NotificationBell: () => <button>Notifications</button>,
 }));
-vi.mock('../../src/components/ProfileMenu', () => ({
-  ProfileMenu: ({ accountName }: { accountName: string }) => <button className="profile-icon-button">{accountName}</button>,
-}));
-
 function Harness({ showPortfolioBreakdown = false }: { showPortfolioBreakdown?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   return (
     <MemoryRouter initialEntries={['/asset-allocation']}>
-      <AppNavigation accountName="Test portfolio" showPortfolioBreakdown={showPortfolioBreakdown} isOpen={isOpen} onOpenChange={setIsOpen} />
+      <AppNavigation
+        accountName="Test portfolio"
+        showPortfolioBreakdown={showPortfolioBreakdown}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+        isCollapsed={isCollapsed}
+        onCollapsedChange={setIsCollapsed}
+      />
       <main id="main-content" tabIndex={-1}>Test page</main>
     </MemoryRouter>
   );
@@ -64,12 +68,46 @@ describe('App sidebar navigation', () => {
   it('places the profile above the menu and utilities below the divider', () => {
     setCompact(false);
     render(<Harness />);
-    const profile = screen.getByRole('button', { name: 'Test portfolio' });
+    const profile = screen.getByText('Test portfolio');
     expect(document.querySelector('.app-navigation-header')?.contains(profile)).toBe(true);
     const footer = document.querySelector('.app-navigation-footer')!;
     expect(footer.contains(screen.getByRole('link', { name: NAVBAR_LABELS.settings }))).toBe(true);
     expect(footer.contains(screen.getByRole('button', { name: 'Notifications' }))).toBe(true);
     expect(footer.contains(profile)).toBe(false);
+  });
+
+  it('restores the existing brand logo in the desktop rail', () => {
+    setCompact(false);
+    render(<Harness />);
+    const brand = screen.getByRole('link', { name: 'Fire Tools' });
+    const logo = brand.querySelector('img');
+    expect(logo).not.toBeNull();
+    expect(logo?.getAttribute('src')).toMatch(/fire-icon\.svg$/);
+  });
+
+  it('collapses to named icon links and can expand again without navigating', () => {
+    setCompact(false);
+    render(<Harness />);
+    const active = screen.getByRole('link', { name: NAVBAR_LABELS.assetAllocation });
+    const collapse = screen.getByRole('button', { name: 'Collapse sidebar' });
+    fireEvent.click(collapse);
+    const expand = screen.getByRole('button', { name: 'Expand sidebar' });
+    expect(expand.getAttribute('aria-expanded')).toBe('false');
+    expect(document.querySelector('.app-navigation')?.classList.contains('is-collapsed')).toBe(true);
+    expect(active.getAttribute('aria-current')).toBe('page');
+    expect(active.getAttribute('title')).toBe(NAVBAR_LABELS.assetAllocation);
+    fireEvent.click(expand);
+    expect(screen.getByRole('button', { name: 'Collapse sidebar' }).getAttribute('aria-expanded')).toBe('true');
+    expect(document.querySelector('.app-navigation')?.classList.contains('is-collapsed')).toBe(false);
+  });
+
+  it('uses the full labelled drawer on mobile rather than a collapsed rail', () => {
+    setCompact(true);
+    render(<Harness />);
+    expect(screen.queryByRole('button', { name: 'Collapse sidebar' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: NAVBAR_LABELS.toggle }));
+    expect(document.querySelector('.app-navigation')?.classList.contains('is-collapsed')).toBe(false);
+    expect(screen.getByRole('link', { name: NAVBAR_LABELS.netWorth })).toBeTruthy();
   });
 
   it('opens a keyboard-accessible drawer and restores focus on Escape', () => {
@@ -98,7 +136,7 @@ describe('App sidebar navigation', () => {
     setCompact(true);
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: NAVBAR_LABELS.toggle }));
-    const first = screen.getByRole('button', { name: 'Test portfolio' });
+    const first = screen.getByRole('link', { name: 'Fire Tools' });
     const last = screen.getByRole('button', { name: 'Notifications' });
     last.focus();
     fireEvent.keyDown(document, { key: 'Tab' });

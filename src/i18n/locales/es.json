@@ -1209,10 +1209,6 @@
     "ariaLabel": "Volver arriba",
     "title": "Ir arriba"
   },
-  "profileMenu": {
-    "ariaLabel": "Menú de perfil",
-    "settings": "Configuración"
-  },
   "legal": {
     "privacyPolicy": "Política de privacidad",
     "cookiePolicy": "Política de cookies",

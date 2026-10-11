@@ -15,6 +15,7 @@ import { AuditLogProvider } from './contexts/AuditLogContext';
 import { loadSettings, type UserSettings } from './utils/cookieSettings';
 import { loadTourCompleted } from './utils/tourPreferences';
 import { syncPreferencesFromBackend } from './utils/uiPreferencesSync';
+import { loadSidebarCollapsed, saveSidebarCollapsed } from './utils/navigationPreferences';
 import { logger } from './utils/logger';
 import {
   LazyAssetAllocationPage,
@@ -125,6 +126,7 @@ function App() {
   // Load settings from localStorage
   const [settings, setSettings] = useState<UserSettings>(() => loadSettings());
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(loadSidebarCollapsed);
   const [uiPreferencesRevision, setUiPreferencesRevision] = useState(0);
   const shouldLoadTour = useMemo(
     () => uiPreferencesRevision > 0 && !loadTourCompleted(),
@@ -163,6 +165,11 @@ function App() {
   const handleSettingsChange = useCallback((newSettings: UserSettings) => {
     setSettings(newSettings);
   }, []);
+
+  const handleSidebarCollapsedChange = useCallback((collapsed: boolean) => {
+    setIsSidebarCollapsed(collapsed);
+    saveSidebarCollapsed(collapsed);
+  }, []);
   
   const openPolicy = useCallback((type: PolicyType) => {
     setPolicyModalType(type);
@@ -177,7 +184,7 @@ function App() {
     <Router basename={basename}>
       <AuditLogProvider>
         <PolicyModalContext.Provider value={policyContext}>
-        <div className={isElectron ? 'app app--electron' : 'app'}>
+        <div className={`app${isElectron ? ' app--electron' : ''}${isSidebarCollapsed ? ' app--sidebar-collapsed' : ''}`}>
           <NavigateBridge />
           <a href="#main-content" className="skip-link" onClick={event => {
             event.preventDefault();
@@ -193,6 +200,8 @@ function App() {
             showPortfolioBreakdown={settings.experimentalFeatures?.portfolioBreakdown ?? false}
             isOpen={isNavigationOpen}
             onOpenChange={setIsNavigationOpen}
+            isCollapsed={isSidebarCollapsed}
+            onCollapsedChange={handleSidebarCollapsedChange}
           />
 
           <div className="app-workspace" inert={isNavigationOpen}>

@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { ChartData } from '../types/assetAllocation';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
 import { getChartColor } from '../utils/chartColors';
+import { ChartLegend } from './ChartLegend';
 import './AllocationChart.css';
 
 interface AllocationChartProps {
@@ -43,14 +44,14 @@ export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, c
     <section className="chart-container allocation-chart">
       <h3>{title}</h3>
       <div className="allocation-chart-body">
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={240} minWidth={0}>
           <PieChart aria-label={title}>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              outerRadius={90}
-              innerRadius={62}
+              outerRadius="78%"
+              innerRadius="54%"
               paddingAngle={2}
               stroke="var(--bg-secondary)"
               strokeWidth={2}
@@ -63,15 +64,11 @@ export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, c
             <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
-        <ul className="allocation-chart-legend" aria-label={title}>
-          {data.map((entry, index) => (
-            <li key={`${entry.name}-${index}`}>
-              <span className="allocation-chart-swatch" style={{ backgroundColor: entry.color || getChartColor(index) }} aria-hidden="true" />
-              <span className="allocation-chart-name">{entry.name}</span>
-              <span className="allocation-chart-percent">{formatPercent(entry.percentage)}</span>
-            </li>
-          ))}
-        </ul>
+        <ChartLegend ariaLabel={title} items={data.map((entry, index) => ({
+          label: entry.name,
+          color: entry.color || getChartColor(index),
+          value: formatPercent(entry.percentage),
+        }))} />
       </div>
     </section>
   );

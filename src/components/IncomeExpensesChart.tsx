@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { YearProjection } from '../types/calculator';
 import { formatCurrency } from '../utils/allocationCalculator';
 import { calculateXAxisInterval, calculateBarSize } from '../utils/chartHelper';
 import { ChartZoomControls } from './ChartZoomControls';
+import { ChartLegend } from './ChartLegend';
 
 // Privacy placeholder for blurred values
 const PRIVACY_PLACEHOLDER = '***';
@@ -49,6 +50,14 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
   };
 
   const data = getFilteredData();
+  const series = [
+    { key: 'Labor Income', label: t('charts.laborIncome'), color: 'var(--success)', stack: 'income' },
+    { key: 'Investment Yield', label: t('charts.investmentYield'), color: 'var(--accent-primary)', stack: 'income' },
+    { key: 'State Pension', label: t('charts.statePension'), color: 'var(--accent-gold)', stack: 'income' },
+    { key: 'Private Pension', label: t('charts.privatePension'), color: 'var(--warning)', stack: 'income' },
+    { key: 'Other Income', label: t('charts.otherIncome'), color: 'var(--chart-bonds)', stack: 'income' },
+    { key: 'Expenses', label: t('charts.expenses'), color: 'var(--error)', stack: 'expenses' },
+  ];
 
   // Format large numbers for Y axis (e.g., 1M, 5M, 10M)
   const formatYAxis = (value: number) => {
@@ -68,12 +77,13 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
         <ChartZoomControls zoomYears={zoomYears} onZoomChange={onZoomChange} customZoomInput={customZoomInput} onCustomZoomInputChange={onCustomZoomInputChange} />
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} aria-label={t('charts.incomeExpensesChartAriaLabel')} barSize={calculateBarSize(data.length)}>
+        <BarChart data={data} aria-label={t('charts.incomeExpensesChartAriaLabel')} maxBarSize={calculateBarSize(data.length)}>
           <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
           <XAxis 
             dataKey="age" 
             label={{ value: t('charts.ageLabel'), position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
             interval={calculateXAxisInterval(data.length)}
+            padding={{ left: 8, right: 8 }}
             tick={{ fill: '#94A3B8' }}
             stroke="#3A3D46"
           />
@@ -91,15 +101,10 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
             labelStyle={{ color: '#F8FAFC' }}
             itemStyle={{ color: '#F8FAFC' }}
           />
-          <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
-          <Bar dataKey="Labor Income" name={t('charts.laborIncome')} fill="var(--success)" isAnimationActive={false} />
-          <Bar dataKey="Investment Yield" name={t('charts.investmentYield')} fill="var(--accent-primary)" isAnimationActive={false} />
-          <Bar dataKey="State Pension" name={t('charts.statePension')} fill="var(--accent-gold)" isAnimationActive={false} />
-          <Bar dataKey="Private Pension" name={t('charts.privatePension')} fill="var(--warning)" isAnimationActive={false} />
-          <Bar dataKey="Other Income" name={t('charts.otherIncome')} fill="#88CDD5" isAnimationActive={false} />
-          <Bar dataKey="Expenses" name={t('charts.expenses')} fill="var(--error)" isAnimationActive={false} />
+          {series.map(item => <Bar key={item.key} dataKey={item.key} name={item.label} fill={item.color} stackId={item.stack} isAnimationActive={false} />)}
         </BarChart>
       </ResponsiveContainer>
+      <ChartLegend ariaLabel={t('charts.incomeVsExpenses')} items={series} />
     </section>
   );
 };

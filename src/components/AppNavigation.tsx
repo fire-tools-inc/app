@@ -6,7 +6,7 @@ import { FireIcon } from './FireIcon';
 import { MaterialIcon } from './MaterialIcon';
 import { NotificationBell } from './NotificationBell';
 import { PreloadLink } from './PreloadLink';
-import { ProfileMenu } from './ProfileMenu';
+import { ProfileBadge } from './ProfileBadge';
 import './AppNavigation.css';
 
 interface NavigationItem {
@@ -37,16 +37,19 @@ interface AppNavigationProps {
   showPortfolioBreakdown: boolean;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  isCollapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 const COMPACT_QUERY = '(max-width: 999px)';
 
-export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onOpenChange }: AppNavigationProps) {
+export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onOpenChange, isCollapsed, onCollapsedChange }: AppNavigationProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const [isCompact, setIsCompact] = useState(() => window.matchMedia?.(COMPACT_QUERY).matches ?? false);
   const panelRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const desktopCollapsed = isCollapsed && !isCompact;
 
   const closeMenu = useCallback(() => {
     onOpenChange(false);
@@ -105,10 +108,12 @@ export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onO
       to={path}
       className={`app-navigation-link${location.pathname === path ? ' active' : ''}`}
       aria-current={location.pathname === path ? 'page' : undefined}
+      aria-label={NAVBAR_LABELS[label]}
+      title={desktopCollapsed ? NAVBAR_LABELS[label] : undefined}
       onClick={closeMenu}
     >
       <MaterialIcon name={icon} size="small" />
-      <span>{NAVBAR_LABELS[label]}</span>
+      <span className="app-navigation-label">{NAVBAR_LABELS[label]}</span>
     </PreloadLink>
   );
 
@@ -135,21 +140,37 @@ export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onO
       <aside
         ref={panelRef}
         id="app-navigation-panel"
-        className={`app-navigation${isOpen ? ' is-open' : ''}`}
+        className={`app-navigation${isOpen ? ' is-open' : ''}${desktopCollapsed ? ' is-collapsed' : ''}`}
         role={isCompact && isOpen ? 'dialog' : undefined}
         aria-modal={isCompact && isOpen ? true : undefined}
         aria-label={isCompact && isOpen ? NAVBAR_LABELS.ariaLabel : undefined}
       >
         <div className="app-navigation-header">
-          <ProfileMenu accountName={accountName} showAccountName />
-          <PreloadLink to="/" className="app-navigation-brand" onClick={closeMenu}>
-            <h1>{t('app.title')}</h1>
-          </PreloadLink>
+          <ProfileBadge accountName={accountName} showAccountName={!desktopCollapsed} />
+          <div className="app-navigation-identity">
+            <PreloadLink to="/" className="app-navigation-brand" onClick={closeMenu} aria-label={t('app.title')}>
+              <FireIcon size={28} />
+              <h1>{t('app.title')}</h1>
+            </PreloadLink>
+            {!isCompact && (
+              <button
+                type="button"
+                className="app-navigation-collapse"
+                aria-label={desktopCollapsed ? NAVBAR_LABELS.expand : NAVBAR_LABELS.collapse}
+                title={desktopCollapsed ? NAVBAR_LABELS.expand : NAVBAR_LABELS.collapse}
+                aria-expanded={!desktopCollapsed}
+                aria-controls="app-navigation-list"
+                onClick={() => onCollapsedChange(!isCollapsed)}
+              >
+                <MaterialIcon name={desktopCollapsed ? 'chevron_right' : 'chevron_left'} size="small" />
+              </button>
+            )}
+          </div>
           <button type="button" className="app-navigation-close" aria-label={NAVBAR_LABELS.close} onClick={closeMenu}>
             <MaterialIcon name="close" size="small" />
           </button>
         </div>
-        <nav className="app-navigation-list" aria-label={NAVBAR_LABELS.ariaLabel}>
+        <nav id="app-navigation-list" className="app-navigation-list" aria-label={NAVBAR_LABELS.ariaLabel}>
           {renderItem({ path: '/', label: 'home', icon: 'home' })}
           <div className="app-navigation-group">
             <p className="app-navigation-group-title">{NAVBAR_LABELS.tracking}</p>
@@ -163,7 +184,7 @@ export function AppNavigation({ accountName, showPortfolioBreakdown, isOpen, onO
         </nav>
         <div className="app-navigation-footer">
           {renderItem({ path: '/settings', label: 'settings', icon: 'settings' })}
-          <NotificationBell showLabel />
+          <NotificationBell showLabel={!desktopCollapsed} />
         </div>
       </aside>
     </>

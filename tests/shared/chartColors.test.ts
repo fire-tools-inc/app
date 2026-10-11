@@ -12,13 +12,21 @@ function luminance(hex: string): number {
 
 describe('Portfolio chart palette', () => {
   it('keeps every asset-class legend readable on elevated dark panels', () => {
-    const background = luminance('#243244');
+    const background = luminance('#263C3E');
     for (const color of Object.values(ASSET_CLASS_CHART_COLORS)) {
       expect((luminance(color) + 0.05) / (background + 0.05), color).toBeGreaterThanOrEqual(4.5);
     }
     expect(new Set(Object.values(ASSET_CLASS_CHART_COLORS)).size).toBe(9);
   });
 
+  it('uses a green-teal primary class rather than the previous blue accent', () => {
+    const color = ASSET_CLASS_CHART_COLORS.STOCKS;
+    const red = parseInt(color.slice(1, 3), 16);
+    const green = parseInt(color.slice(3, 5), 16);
+    const blue = parseInt(color.slice(5, 7), 16);
+    expect(green).toBeGreaterThan(red);
+    expect(green).toBeGreaterThan(blue);
+  });
   it('uses the same class color in allocation and detailed breakdowns', () => {
     const asset: Asset = {
       id: 'test-property', name: 'Test property', ticker: '', assetClass: 'REAL_ESTATE',

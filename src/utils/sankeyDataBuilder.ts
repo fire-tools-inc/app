@@ -32,15 +32,15 @@ export const ASSET_CLASS_COLORS: Record<string, string> = {
 };
 
 export const CASH_TYPE_COLORS: Record<string, string> = {
-  SAVINGS: '#8BD0AF',
+  SAVINGS: ASSET_CLASS_CHART_COLORS.CASH,
   CHECKING: '#91C8CC',
-  BROKERAGE: '#8CBCF3',
+  BROKERAGE: ASSET_CLASS_CHART_COLORS.STOCKS,
   CREDIT_CARD: '#F3A5AD',
   OTHER: '#9BAAC0',
 };
 
 export const PENSION_TYPE_COLORS: Record<string, string> = {
-  STATE: '#A8B9D1',
+  STATE: ASSET_CLASS_CHART_COLORS.BONDS,
   PRIVATE: '#C5AF96',
   EMPLOYER: '#D4C392',
   OTHER: '#9BAAC0',

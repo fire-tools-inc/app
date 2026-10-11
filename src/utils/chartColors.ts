@@ -1,13 +1,13 @@
 import type { AssetClass } from '../types/assetAllocation';
 
 export const ASSET_CLASS_CHART_COLORS: Readonly<Record<AssetClass, string>> = {
-  STOCKS: '#8CBCF3',
-  BONDS: '#A8B9D1',
-  CASH: '#8BD0AF',
+  STOCKS: '#65D4C4',
+  BONDS: '#B5C9C5',
+  CASH: '#9BD7B0',
   CRYPTO: '#EDB58A',
   REAL_ESTATE: '#C5AF96',
   COMMODITIES: '#D4C392',
-  VEHICLE: '#92A2B8',
+  VEHICLE: '#99ACA9',
   COLLECTIBLE: '#CFA7AD',
   ART: '#91C8CC',
 };

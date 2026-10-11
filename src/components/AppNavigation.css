@@ -17,65 +17,101 @@
 }
 
 .app-navigation-header {
-  padding: 1.25rem 0.8rem 1rem;
+  padding: 1rem 0.65rem 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.75rem;
   position: relative;
+}
+
+.app-navigation-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  width: 100%;
 }
 
 .app-navigation-brand {
   display: inline-flex;
   align-items: center;
-  color: var(--text-muted);
+  gap: 0.45rem;
+  color: var(--text-primary);
   text-decoration: none;
 }
 
 .app-navigation-brand h1 {
   font-family: var(--font-body);
-  font-size: 0.65rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.app-navigation-header .profile-menu-container {
-  width: 100%;
-  min-width: 0;
-}
-
-.app-navigation-header .profile-icon-button {
-  flex-direction: column;
-  gap: 0.6rem;
-  width: 100%;
-  color: var(--text-primary);
-  border-radius: var(--radius-md);
-}
-
-.app-navigation-header .profile-icon {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  background: var(--accent-surface);
-  border: 1px solid var(--border-accent);
-  box-shadow: inset 0 1px 0 rgba(238, 245, 255, 0.1);
-}
-
-.profile-account-name {
-  max-width: 100%;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.app-navigation-header .profile-dropdown {
-  left: 0;
-  right: auto;
-  min-width: 180px;
+.app-navigation-collapse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.app-navigation-collapse:hover {
+  background: var(--accent-surface);
+  color: var(--accent-primary);
+}
+
+.app-navigation.is-collapsed .app-navigation-header {
+  padding-inline: 0.4rem;
+}
+
+.app-navigation.is-collapsed .profile-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.app-navigation.is-collapsed .app-navigation-identity {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.app-navigation.is-collapsed .app-navigation-brand h1,
+.app-navigation.is-collapsed .app-navigation-label,
+.app-navigation.is-collapsed .app-navigation-group-title {
+  display: none;
+}
+
+.app-navigation.is-collapsed .app-navigation-link,
+.app-navigation.is-collapsed .notification-bell-button {
+  justify-content: center;
+  min-height: 40px;
+  padding-inline: 0;
+}
+
+.app-navigation.is-collapsed .app-navigation-link .material-symbols-outlined,
+.app-navigation.is-collapsed .notification-bell-button .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.app-navigation.is-collapsed .notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  font-size: 0.6rem;
+}
+
+.app-navigation.is-collapsed .notification-panel {
+  left: calc(100% + 12px);
+  bottom: 0;
 }
 
 .app-navigation-list {
@@ -194,6 +230,20 @@
 .app--electron .app-navigation a,
 .app--electron .app-navigation button {
   -webkit-app-region: no-drag;
+}
+
+@media (pointer: coarse) {
+  .app-navigation-link,
+  .app-navigation-collapse,
+  .app-navigation-footer .notification-bell-button,
+  .app-navigation.is-collapsed .app-navigation-link,
+  .app-navigation.is-collapsed .notification-bell-button {
+    min-height: 44px;
+  }
+
+  .app-navigation-collapse {
+    min-width: 44px;
+  }
 }
 
 @media (max-width: 999px) {

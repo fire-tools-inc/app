@@ -200,10 +200,10 @@ export function NetWorthSankeyChart({
   }
 
   return (
-    <div className="sankey-chart-wrapper" aria-label={t('netWorth.sankey.title')}>
+    <div className="sankey-chart-wrapper" role="region" tabIndex={0} aria-label={t('netWorth.sankey.title')}>
       <Sankey
         width={920}
-        height={440}
+        height={Math.max(440, sankeyData.nodes.filter(node => node.level === 2).length * 30 + 240)}
         data={sankeyData}
         nodeWidth={18}
         nodePadding={30}

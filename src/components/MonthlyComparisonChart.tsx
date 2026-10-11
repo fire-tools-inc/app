@@ -41,11 +41,11 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
 
   return (
     <div style={{
-      background: '#1e293b',
+      background: 'var(--bg-elevated)',
       padding: '0.75rem 1rem',
       borderRadius: '8px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-subtle)',
     }}>
       <p style={{ margin: 0, fontWeight: 600, color: '#f1f5f9' }}>{label}</p>
       {payload.map((entry: any, index: number) => (
@@ -82,13 +82,7 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
   const { t } = useTranslation();
   if (data.length === 0) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '3rem', 
-        color: '#666',
-        background: '#f8f9fa',
-        borderRadius: '8px',
-      }}>
+      <div className="empty-chart">
         <p>{t('charts.noMonthlyData')}</p>
       </div>
     );
@@ -104,42 +98,44 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
       <ResponsiveContainer>
         <BarChart
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 20, right: 12, left: 0, bottom: 12 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
           <XAxis 
             dataKey="month" 
-            tick={{ fontSize: 12 }}
-            tickLine={{ stroke: '#ccc' }}
+            tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+            stroke="var(--border-subtle)"
           />
           <YAxis 
             tickFormatter={(value) => `${Math.round(value / 1000)}k`}
-            tick={{ fontSize: 12 }}
-            tickLine={{ stroke: '#ccc' }}
+            tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+            stroke="var(--border-subtle)"
           />
           <Tooltip content={<CustomTooltip currency={currency} />} />
-          <Legend />
+          <Legend formatter={value => <span style={{ color: 'var(--text-primary)' }}>{value}</span>} />
           <ReferenceLine 
             y={average} 
-            stroke="#ff9800" 
+            stroke="var(--warning)"
             strokeDasharray="5 5" 
             label={{ 
               value: t('charts.avg'), 
-              position: 'right', 
-              fill: '#ff9800',
+              position: 'insideTopRight',
+              fill: 'var(--warning)',
               fontSize: 12,
             }} 
           />
           <Bar 
             dataKey="income" 
             name={t('charts.income')} 
-            fill="#4CAF50" 
+            fill="var(--success)"
+            isAnimationActive={false}
             radius={[4, 4, 0, 0]}
           />
           <Bar 
             dataKey="expenses" 
             name={t('charts.expenses')} 
-            fill="#f44336" 
+            fill="var(--error)"
+            isAnimationActive={false}
             radius={[4, 4, 0, 0]}
           />
         </BarChart>

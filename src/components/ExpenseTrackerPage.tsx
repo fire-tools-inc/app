@@ -1436,8 +1436,10 @@ export function ExpenseTrackerPage() {
               <Suspense fallback={<ChartLoadingFallback />}>
                 <ExpenseBreakdownChart
                   data={categoryBreakdown}
+                  title={t('expenseTracker.expenseBreakdown', { period: periodLabel })}
                   currency={data.currency}
                   customCategories={data.customCategories}
+                  categoryOverrides={data.categoryOverrides}
                 />
               </Suspense>
             </div>
@@ -1463,6 +1465,7 @@ export function ExpenseTrackerPage() {
                   data={categoryTrendsData}
                   currency={data.currency}
                   customCategories={data.customCategories}
+                  categoryOverrides={data.categoryOverrides}
                 />
               </Suspense>
             </div>

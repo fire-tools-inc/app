@@ -1209,10 +1209,6 @@
     "ariaLabel": "Nach oben scrollen",
     "title": "Nach oben"
   },
-  "profileMenu": {
-    "ariaLabel": "Profilmenü",
-    "settings": "Einstellungen"
-  },
   "legal": {
     "privacyPolicy": "Datenschutzerklärung",
     "cookiePolicy": "Cookie-Richtlinie",

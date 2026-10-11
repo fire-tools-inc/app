@@ -1,44 +1,13 @@
 .allocation-chart-body {
+  width: 100%;
+  min-width: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   align-items: center;
   gap: 1.25rem;
 }
 
-.allocation-chart-legend {
-  list-style: none;
-  max-height: 280px;
-  overflow-y: auto;
-  padding: 0;
+.allocation-chart .chart-legend {
+  grid-template-columns: 1fr;
   margin: 0;
-}
-
-.allocation-chart-legend li {
-  display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 0.8rem;
-}
-
-.allocation-chart-legend li:last-child {
-  border-bottom: none;
-}
-
-.allocation-chart-swatch {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.allocation-chart-name {
-  color: var(--text-primary);
-  overflow-wrap: anywhere;
-}
-
-.allocation-chart-percent {
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
 }

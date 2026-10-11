@@ -259,7 +259,7 @@
   margin: 0 0 1rem;
 }
 
-.chart-container {
+.net-worth-tracker-page .chart-container {
   background: var(--bg-tertiary);
   border-radius: 12px;
   padding: 1.5rem;

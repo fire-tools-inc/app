@@ -47,6 +47,8 @@ Thumbs.db
 coverage
 .nyc_output
 test-results.json
+test-results/
+playwright-report/
 
 # Temporary files
 *.tmp

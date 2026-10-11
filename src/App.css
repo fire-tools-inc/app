@@ -5,40 +5,40 @@
    ============================================================================ */
 :root {
   color-scheme: dark;
-  --bg-primary: #0B1018;
-  --bg-secondary: #131C28;
-  --bg-tertiary: #1B2736;
-  --bg-elevated: #243244;
-  --bg-overlay: rgba(19, 28, 40, 0.92);
-  --glass-surface: linear-gradient(145deg, rgba(238, 245, 255, 0.065), rgba(238, 245, 255, 0.015)), rgba(19, 28, 40, 0.88);
-  --glass-shadow: inset 0 1px 0 rgba(238, 245, 255, 0.06), 0 8px 28px rgba(3, 8, 16, 0.18);
-  --accent-surface: rgba(140, 188, 243, 0.1);
-  --chart-stocks: #8CBCF3;
-  --chart-bonds: #A8B9D1;
-  --chart-cash: #8BD0AF;
+  --bg-primary: #0B1415;
+  --bg-secondary: #142224;
+  --bg-tertiary: #1D3032;
+  --bg-elevated: #263C3E;
+  --bg-overlay: rgba(20, 34, 36, 0.94);
+  --glass-surface: linear-gradient(145deg, rgba(235, 244, 241, 0.065), rgba(235, 244, 241, 0.015)), rgba(20, 34, 36, 0.88);
+  --glass-shadow: inset 0 1px 0 rgba(235, 244, 241, 0.06), 0 8px 28px rgba(3, 12, 13, 0.18);
+  --accent-surface: rgba(101, 212, 196, 0.1);
+  --chart-stocks: #65D4C4;
+  --chart-bonds: #B5C9C5;
+  --chart-cash: #9BD7B0;
   --chart-real-estate: #C5AF96;
   
   /* Border Colors */
-  --border-subtle: #344355;
-  --border-accent: rgba(140, 188, 243, 0.22);
-  --border-accent-strong: rgba(140, 188, 243, 0.5);
+  --border-subtle: #385556;
+  --border-accent: rgba(101, 212, 196, 0.25);
+  --border-accent-strong: rgba(101, 212, 196, 0.5);
   --border-gold: rgba(237, 181, 138, 0.3);
   
   /* Text Colors */
-  --text-primary: #EDF2F8;
-  --text-secondary: #AFBED0;
-  --text-muted: #9BAAC0;
-  --text-inverse: #0B1018;
+  --text-primary: #EBF4F1;
+  --text-secondary: #B3C9C5;
+  --text-muted: #A3BBB6;
+  --text-inverse: #0B1415;
   
-  --accent-primary: #8CBCF3;
-  --accent-primary-dark: #6CA2E2;
-  --accent-primary-light: #BDD8F8;
-  --accent-glow: rgba(140, 188, 243, 0.12);
-  --accent-glow-strong: rgba(140, 188, 243, 0.2);
+  --accent-primary: #65D4C4;
+  --accent-primary-dark: #2FBFAF;
+  --accent-primary-light: #A6EEE3;
+  --accent-glow: rgba(101, 212, 196, 0.12);
+  --accent-glow-strong: rgba(101, 212, 196, 0.2);
   
-  --accent-gold: #9EABD0;
-  --accent-gold-dark: #8190B7;
-  --accent-gold-glow: rgba(158, 171, 208, 0.12);
+  --accent-gold: #DCC58E;
+  --accent-gold-dark: #C5AA70;
+  --accent-gold-glow: rgba(220, 197, 142, 0.12);
   
   /* Semantic Colors */
   --success: #8BD0AF;
@@ -47,7 +47,7 @@
   --warning-glow: rgba(237, 181, 138, 0.12);
   --error: #F3A5AD;
   --error-glow: rgba(243, 165, 173, 0.12);
-  --info: #8CBCF3;
+  --info: #65D4C4;
   
   /* Typography */
   --font-heading: 'Avenir Next', 'Segoe UI', sans-serif;
@@ -81,10 +81,15 @@
   margin: 1rem 0;
 }
 
+.histogram-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
 .histogram-columns {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-columns: minmax(2.75rem, 1fr);
   align-items: end;
   gap: 0.5rem;
   min-height: 225px;
@@ -120,6 +125,7 @@
 
 .histogram-range {
   padding-bottom: 0.5rem;
+  white-space: nowrap;
 }
 
 .histogram-caption {
@@ -168,7 +174,7 @@ body {
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: radial-gradient(ellipse at 12% 0%, rgba(99, 140, 195, 0.12), transparent 48%), var(--bg-primary);
+  background: radial-gradient(ellipse at 12% 0%, rgba(47, 191, 175, 0.08), transparent 48%), var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
 }
@@ -197,9 +203,14 @@ body {
    APP LAYOUT
    ============================================================================ */
 .app {
+  --sidebar-width: 204px;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 204px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+.app--sidebar-collapsed {
+  --sidebar-width: 84px;
 }
 
 .app-workspace {
@@ -987,11 +998,41 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .chart-container {
+  min-width: 0;
   margin-bottom: 2rem;
   background: var(--glass-surface);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   border: 1px solid var(--border-subtle);
+}
+
+.empty-chart {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.custom-tooltip {
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.custom-tooltip .label {
+  margin-bottom: 0.5rem;
+}
+
+.custom-tooltip .value {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.custom-tooltip .percentage {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .chart-container h3 {

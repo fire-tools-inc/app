@@ -18,6 +18,7 @@ import {
   convertMonthlyVariationsToDisplayCurrency, 
   convertNetWorthForecastToDisplayCurrency,
 } from '../utils/currencyConverter';
+import { ASSET_CLASS_CHART_COLORS } from '../utils/chartColors';
 
 export type ChartViewMode = 'ytd' | 'all';
 
@@ -58,9 +59,9 @@ function getCurrencySymbol(currency: SupportedCurrency): string {
 
 // Colors for additional currency lines
 const ADDITIONAL_CURRENCY_COLORS: Record<SupportedCurrency, string> = {
-  EUR: '#8BD0AF',
-  USD: '#8CBCF3',
-  GBP: '#A8B9D1',
+  EUR: ASSET_CLASS_CHART_COLORS.CASH,
+  USD: ASSET_CLASS_CHART_COLORS.STOCKS,
+  GBP: ASSET_CLASS_CHART_COLORS.BONDS,
   CHF: '#EDB58A',
   JPY: '#CFA7AD',
   AUD: '#91C8CC',
@@ -523,7 +524,7 @@ export function HistoricalNetWorthChart({
               strokeDasharray="5 5"
               label={{
                 value: isPrivacyMode ? t('charts.prevYear', { value: PRIVACY_PLACEHOLDER }) : t('charts.prevYear', { value: `${symbol}${formatChartCurrency(previousYearEnd)}` }),
-                position: 'right',
+                position: 'insideTopRight',
                 fill: 'var(--warning)',
                 fontSize: 11,
               }}
