@@ -116,33 +116,75 @@
       </section>
 
       <section id="features" class="features">
-        <h2>What you get</h2>
+        <h2>Tools for every part of your plan</h2>
         <div class="grid">
           <article>
+            <h3>Dashboard</h3>
+            <p>Start with your net worth, portfolio allocation, monthly cash flow and progress toward your saved FIRE target.</p>
+            <a class="feature-link" href="./demo/">Open the dashboard</a>
+          </article>
+          <article>
             <h3>FIRE calculator</h3>
-            <p>Project years-to-FIRE from savings rate, expenses, returns and inflation. Share scenarios via URL.</p>
+            <p>Project years to financial independence with Standard, Lean, Fat, Barista and Coast FIRE. Save scenarios or share them by URL.</p>
+            <a class="feature-link" href="./demo/fire-calculator">Plan your FIRE target</a>
+          </article>
+          <article>
+            <h3>Reverse FIRE calculator</h3>
+            <p>Choose your target retirement age and work out the monthly savings needed to get there.</p>
+            <a class="feature-link" href="./demo/reverse-fire-calculator">Calculate required savings</a>
           </article>
           <article>
             <h3>Monte Carlo</h3>
-            <p>Probabilistic projections with configurable volatility and black-swan events.</p>
+            <p>Stress-test your plan across randomized returns, market volatility and black-swan events, with optional detailed logs.</p>
+            <a class="feature-link" href="./demo/monte-carlo">Run simulations</a>
           </article>
           <article>
             <h3>Asset allocation</h3>
-            <p>Track portfolio breakdown and get buy / sell / hold rebalancing hints.</p>
+            <p>Manage holdings, set allocation targets, review buy/sell/hold suggestions and plan contributions with the DCA helper.</p>
+            <a class="feature-link" href="./demo/asset-allocation">Manage a portfolio</a>
           </article>
           <article>
-            <h3>Expense &amp; net-worth tracking</h3>
-            <p>Lightweight ledgers with CSV import/export — your bank, your rules.</p>
+            <h3>Cashflow tracker</h3>
+            <p>Record income and expenses, set category budgets, review the 50/30/20 rule and import or export CSV files. PDF import is an opt-in preview.</p>
+            <a class="feature-link" href="./demo/expense-tracker">Track cash flow</a>
           </article>
           <article>
-            <h3>Privacy-first</h3>
-            <p>Client-side only by default. Sensitive data lives in AES-256-encrypted cookies on your device.</p>
+            <h3>Net worth tracker</h3>
+            <p>Keep monthly snapshots of assets, cash, pensions, debts and taxes. Review your history without losing earlier balances.</p>
+            <a class="feature-link" href="./demo/net-worth-tracker">Track net worth</a>
           </article>
           <article>
-            <h3>Self-hostable</h3>
-            <p>A local backend (SQLite-first, Postgres-ready) ships via Docker Compose for power users.</p>
+            <h3>Investment growth</h3>
+            <p>Project portfolio growth from recurring contributions, expected returns and inflation.</p>
+            <a class="feature-link" href="./demo/investment-growth">Project investment growth</a>
+          </article>
+          <article>
+            <h3>Portfolio backtest</h3>
+            <p>Compare your allocation with historical returns and inspect growth, volatility, drawdowns and yearly results.</p>
+            <a class="feature-link" href="./demo/portfolio-backtest">Backtest a portfolio</a>
+          </article>
+          <article>
+            <h3>Withdrawal rate</h3>
+            <p>Explore retirement portfolio longevity at different withdrawal rates, grounded in the Trinity Study.</p>
+            <a class="feature-link" href="./demo/withdrawal-rate">Test a withdrawal rate</a>
+          </article>
+          <article>
+            <h3>Debt payoff</h3>
+            <p>Compare snowball and avalanche strategies, choose a repayment budget or timeline, and see the interest cost.</p>
+            <a class="feature-link" href="./demo/debt-payoff">Plan debt repayment</a>
+          </article>
+          <article>
+            <h3>FIRE questionnaire</h3>
+            <p>Explore a FIRE approach based on your goals, finances and risk tolerance.</p>
+            <a class="feature-link" href="./demo/questionnaire">Take the questionnaire</a>
+          </article>
+          <article>
+            <h3>Portfolio breakdown <span class="badge">Preview</span></h3>
+            <p>Explore holdings by sector, region, currency and provider. Enable this experimental view in the desktop app's Settings.</p>
+            <a class="feature-link" href="./demo/portfolio-breakdown">Explore portfolio breakdown</a>
           </article>
         </div>
+        <p class="features-note">The browser demo uses sample data and does not save edits. Download the local-first desktop app for your own finances, or run its SQLite backend with Docker Compose.</p>
       </section>
 
       <section id="download" class="download">
@@ -155,7 +197,7 @@
           </article>
           <article>
             <h3>Self-host</h3>
-            <p>One <code>docker compose up</code>. SQLite by default, Postgres via profile.</p>
+            <p>Run the SQLite backend and read-only web demo with Docker Compose. Connect the desktop app to save and manage your data.</p>
             <a class="btn primary" href="./docs/engineering/backend-deploy.html">Deployment guide</a>
           </article>
           <article>

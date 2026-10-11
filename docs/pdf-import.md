@@ -28,6 +28,12 @@ that produces the shared `ExtractedPdf` shape (line-grouped text) can feed them.
 
 - **Production (browser):** [`pdfjs-dist`](https://github.com/mozilla/pdf.js) in
   `src/utils/pdfTextExtractor.ts`. Runs fully client-side with no native deps.
+  Its standard fonts, character maps, decoder resources and their upstream
+  licenses are bundled as local build assets. The PDF.js 6 `BinaryDataFactory`
+  resolves Vite's asset URLs on the main thread, including
+  relative Electron `file://` paths; it does not fetch fonts from a CDN or rely
+  on system fonts. Loading tasks and page resources are released on failure
+  as well as success.
 - **Experimental (Node-only):** [LiteParse](https://github.com/run-llama/liteparse)
   in `src/utils/liteParseExtractor.ts`. LiteParse uses a native PDFium binding, so
   it cannot run in the browser bundle and is loaded dynamically — it is wired up
@@ -62,7 +68,7 @@ If a heuristic category is wrong (e.g. an obscure merchant), an **optional** LLM
 ## Privacy
 
 - **No PDF bytes ever leave your device.** Parsing happens fully in the browser.
-- **No network calls at all** unless you (a) configure the LLM endpoint **and** (b) tick *Use AI categorization* for an import.
+- **No external network calls** unless you (a) configure the LLM endpoint **and** (b) tick *Use AI categorization* for an import. The parser loads its bundled worker, fonts and decoder resources from the app itself.
 - The API key is stored encrypted with the rest of your settings (local SQLite database on desktop, AES-256-encrypted cookie in browser).
 - You can clear everything via *Settings → Data Management → Reset All Data*.
 

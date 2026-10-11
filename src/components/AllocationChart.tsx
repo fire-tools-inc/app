@@ -10,6 +10,7 @@ interface AllocationChartProps {
   data: ChartData[];
   title: string;
   currency: string;
+  isPrivacyMode?: boolean;
 }
 
 interface TooltipProps {
@@ -17,7 +18,7 @@ interface TooltipProps {
   payload?: Array<{ payload: ChartData }>;
 }
 
-export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, currency }) => {
+export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, currency, isPrivacyMode = false }) => {
   const { t } = useTranslation();
   if (data.length === 0) {
     return (
@@ -34,8 +35,8 @@ export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, c
     return (
       <div className="custom-tooltip">
         <p className="label"><strong>{entry.name}</strong></p>
-        <p className="value">{formatCurrency(entry.value, currency)}</p>
-        <p className="percentage">{formatPercent(entry.percentage)}</p>
+        <p className="value">{isPrivacyMode ? '***' : formatCurrency(entry.value, currency)}</p>
+        <p className="percentage">{isPrivacyMode ? '***' : formatPercent(entry.percentage)}</p>
       </div>
     );
   };
@@ -67,7 +68,7 @@ export const AllocationChart: React.FC<AllocationChartProps> = ({ data, title, c
         <ChartLegend ariaLabel={title} items={data.map((entry, index) => ({
           label: entry.name,
           color: entry.color || getChartColor(index),
-          value: formatPercent(entry.percentage),
+          value: isPrivacyMode ? '***' : formatPercent(entry.percentage),
         }))} />
       </div>
     </section>

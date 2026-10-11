@@ -2,6 +2,7 @@
 # Build context MUST be the repo root (see docker-compose.yml).
 
 FROM node:22-bookworm-slim AS build
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 ARG GIT_COMMIT_HASH=unknown
 ARG BUILD_TIME
 ENV GIT_COMMIT_HASH=${GIT_COMMIT_HASH} \
@@ -12,7 +13,7 @@ WORKDIR /app
 # the frontend image only needs `vite build`, not Electron or better-sqlite3
 # native rebuilds (those run via root postinstall on developer machines).
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-fund; else npm install --ignore-scripts --no-fund; fi
 
 # Then the rest of the source.
 COPY . .

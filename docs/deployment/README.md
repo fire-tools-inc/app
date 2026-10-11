@@ -19,6 +19,14 @@ and run automatically on boot (also runnable via `npm run migrate`).
   Proxies `/api/*` to the backend on the internal network.
 - `postgres` *(profile)* — Postgres 17 for users who don't want SQLite.
 
+The backend image uses Node.js 22 on Debian Bookworm. SQLite 13's bundled
+Node-API binary needs no compiler toolchain or APT install during the build,
+avoiding the old debconf and missing-manpage notices. The production image
+keeps only its Linux architecture's binary and production dependencies.
+Linux desktop binaries require glibc >=2.35; Bookworm meets that minimum.
+The existing backend UID 10001 is preserved for data-volume compatibility.
+Node receives SIGTERM directly and closes the HTTP server and database.
+
 ## Quick start
 
 ```sh
@@ -79,9 +87,13 @@ docker compose cp backend:/data/firetools.db ./firetools-backup.db
 
 ## Troubleshooting
 
-- **better-sqlite3 build errors in CI** — the Dockerfile installs
-  `python3` + `build-essential` precisely to handle the node-gyp
-  fallback. If you build outside Docker, ensure those are present.
+- **SQLite native-load errors** — use Node.js >=22.22.0 and a supported
+  x64/arm64 host. Linux glibc builds need glibc >=2.35. Restore dependencies
+  to get the bundled Node-API binary; the Bookworm container does not need a
+  source compilation or Electron-specific rebuild.
+- **No Docker health status from a compatible runtime** — probe
+  `/api/v1/health` explicitly instead of treating a missing status as healthy.
+  The standard Docker stack still waits for the backend healthcheck.
 - **CORS errors from the browser** — set `CORS_ORIGIN` to the exact
   scheme+host+port serving the frontend, or set `CORS_ALLOW_ALL=true`
   for trusted local-only stacks.

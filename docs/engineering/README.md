@@ -36,6 +36,12 @@ instead.
   too, so the UI receives a compact summary rather than the full simulation
   array. Detailed logs are explicitly opt-in.
   The same client ships to the web (`dist/`) and Electron.
+- **Dashboard** — `/` reads the existing frontend stores through
+  `src/utils/dashboard.ts`. It derives net worth, active allocation, calendar-month
+  cash flow and the saved FIRE plan with the shared calculation helpers. It does
+  not create a backend store, mutate financial records or seed defaults.
+  Recharts loads only in the deferred dashboard chart chunk. Marketing/tool
+  discovery remains in `website/index.html#features`.
 - **Interface** — a dark-default, teal liquid-glass token system in `src/App.css`.
   Backdrop blur is reserved for floating chrome rather than every data card.
   `AppNavigation` owns a fixed-width desktop sidebar and a keyboard-contained
@@ -68,9 +74,46 @@ instead.
   sleep/wake-registration fix. The development launcher owns the actual Vite
   and Electron processes and reports native signal failures. See
   [desktop startup troubleshooting](../../electron/README.md#startup-troubleshooting).
+- **Native SQLite** — `better-sqlite3-multiple-ciphers` 13 uses bundled Node-API
+  binaries, preserving encryption while removing the deprecated native
+  installer. Node.js and Electron use the same compatible prebuild. Both
+  manifests require Node.js >=22.22.0; Linux binaries require glibc >=2.35.
+  Electron packages retain only their target platform/architecture (Linux
+  keeps its glibc and musl variants); the Bookworm backend image keeps only
+  its Linux architecture. The existing real database-open probes remain in
+  the install/build lifecycle. Packaging does not force an ABI-specific rebuild.
+  Each platform's `files` list includes the shared positive application
+  whitelist (YAML anchors), not only native exclusions. A negative-only
+  platform list can expand packaging to the whole repository. Inspect the
+  final ASAR as well as testing individual glob matches.
+  Keep the existing `@types/better-sqlite3` dependency: the cipher package's
+  bundled declaration currently lacks an export-map entry for NodeNext.
+- **Dependency approvals** — `allowScripts` entries are pinned to reviewed
+  installed versions in both manifests. Use `npm install-scripts ls`,
+  review any newly listed dependency scripts, then approve specific packages;
+  prune only obsolete pins after upgrades. Keep reviewed native pins when npm
+  reports an implicit install script, even if the package sets `gypfile: false`;
+  pruning those pins can bring the clean-install notices back.
+  Older npm releases may not enforce this
+  policy, so use an npm release supporting `install-scripts` when reviewing it.
+  The `electron-updater`-scoped equality override replaces deprecated
+  `lodash.isequal` with `fast-deep-equal` for its plain update-manifest and file
+  metadata comparisons. Update cache regressions exercise the actual updater
+  helper; other Lodash dependencies are unchanged.
+- **PDF assets** — standard fonts and their licenses are emitted as local Vite
+  assets alongside character maps and decoder resources, and loaded by the
+  PDF.js 6 `BinaryDataFactory` on the main thread. This works
+  with fingerprinted web builds and relative Electron assets without a CDN.
 - **Container builds** — `build:self-hosted` uses `/demo/` with fingerprinted
   assets, rather than the repository-prefixed Pages path. `.dockerignore`
   keeps host dependencies and generated outputs out of the build context.
+  Bundled SQLite binaries remove the compiler/APT installation steps and their
+  debconf/missing-manpage notices. The backend runs Node directly as PID 1;
+  its SIGTERM/SIGINT handlers close HTTP and SQLite. The existing UID 10001
+  remains unchanged so existing data-volume permissions still work.
+  Container installs skip unneeded lifecycle scripts to avoid older npm's
+  implicit node-gyp build, and disable only npm's interactive update notifier.
+  Build errors and database-open failures still fail the image build.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
   Source of truth for both server routes and any generated client. Also
   published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).

@@ -2,6 +2,18 @@ import { expect, test, type Page } from '@playwright/test';
 import CryptoJS from 'crypto-js';
 
 const pageErrors = new WeakMap<Page, string[]>();
+const routeHeadings: Record<string, { name: string; level: number }> = {
+  '': { name: 'Dashboard', level: 1 },
+  'asset-allocation': { name: 'Asset Allocation Manager', level: 1 },
+  'expense-tracker': { name: 'Cashflow Tracker', level: 1 },
+  'net-worth-tracker': { name: 'Net Worth Tracker', level: 1 },
+  'portfolio-breakdown': { name: 'Portfolio Breakdown', level: 1 },
+  'fire-calculator': { name: 'FIRE Metrics', level: 3 },
+  'investment-growth': { name: 'Investment Growth Calculator', level: 1 },
+  'withdrawal-rate': { name: 'Withdrawal Rate Simulator', level: 2 },
+  'debt-payoff': { name: 'Debt Payoff Calculator', level: 2 },
+  'portfolio-backtest': { name: 'Portfolio backtest', level: 1 },
+};
 
 test.beforeEach(async ({ context, baseURL, page }) => {
   if (!baseURL) throw new Error('A browser-test base URL is required.');
@@ -64,12 +76,118 @@ test.afterEach(async ({ page }) => {
 
 async function navigate(page: Page, route: string) {
   const nav = page.locator('.app-navigation');
-  if (!await nav.isVisible()) {
-    await page.getByRole('button', { name: 'Toggle navigation menu' }).click();
+  const toggle = page.getByRole('button', { name: 'Toggle navigation menu' });
+  const isMobile = await toggle.isVisible();
+  if (isMobile) {
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   }
-  await nav.locator(`a[href$="/${route}"]`).click();
+  const link = route
+    ? nav.locator(`a[href$="/${route}"]`)
+    : nav.getByRole('link', { name: 'Home', exact: true, includeHidden: true });
+  const href = await link.getAttribute('href');
+  if (!href) throw new Error(`Navigation link has no destination: ${route}`);
+  const destination = new URL(href, page.url()).pathname;
+  await link.click();
+  await page.waitForURL(url => url.pathname === destination);
+  const heading = routeHeadings[route];
+  if (!heading) throw new Error(`No page-ready heading configured for ${route}`);
+  await expect(page.getByRole('heading', { ...heading, exact: true })).toBeVisible();
+  await expect(link).toHaveAttribute('aria-current', 'page');
+  if (isMobile) await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await page.waitForLoadState('networkidle');
 }
+
+for (const width of [1440, 1280, 1024, 768, 390, 320]) {
+  test(`home dashboard stays complete after navigation and resizing at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: width >= 1000 ? 620 : 740 });
+    await page.goto('./');
+    await expect(page.locator('#main-content').getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+    await expect(page.locator('.dashboard-grid > section')).toHaveCount(4);
+    await expect(page.locator('.homepage .recharts-surface')).toHaveCount(3);
+    await expectHealthyPlots(page);
+    await navigate(page, 'expense-tracker');
+    await navigate(page, '');
+    await expectHealthyPlots(page);
+    if (width >= 1000) {
+      await page.getByRole('button', { name: 'Collapse sidebar' }).click();
+      await expectHealthyPlots(page);
+      await page.getByRole('button', { name: 'Expand sidebar' }).click();
+      await expectHealthyPlots(page);
+    }
+    await page.locator('.dashboard-chart-data').first().getByText('View chart data').click();
+    await expect(page.locator('.dashboard-chart-data').first().getByRole('table')).toBeVisible();
+    await expect(page.locator('.dashboard-table-scroll').first()).toHaveAttribute('tabindex', '0');
+    await page.getByRole('button', { name: 'Hide values', exact: true }).click();
+    await expect(page.locator('.dashboard-metric--fire .privacy-blur')).toBeVisible();
+    await expect(page.getByRole('progressbar', { name: 'FIRE target progress' })).not.toHaveAttribute('aria-valuenow');
+    await page.getByRole('button', { name: 'Show values', exact: true }).click();
+    await expectHealthyPlots(page);
+    await page.screenshot({ path: testInfo.outputPath(`dashboard-${width}.png`), fullPage: true });
+  });
+}
+
+for (const [language, heading] of [
+  ['it', 'Panoramica'], ['fr', 'Tableau de bord'], ['de', 'Übersicht'], ['es', 'Panel'],
+]) {
+  test(`dashboard copy uses ${language} while navigation stays English`, async ({ page, context, baseURL }) => {
+    if (!baseURL) throw new Error('A browser-test base URL is required.');
+    await context.addCookies([{
+      name: 'fire-calculator-settings',
+      value: encodeURIComponent(CryptoJS.AES.encrypt(JSON.stringify({ language }),
+        'fire-calculator-secret-key-v1-2024').toString()),
+      url: baseURL, sameSite: 'Strict',
+    }]);
+    await page.goto('./');
+    await expect(page.locator('.dashboard-header h1')).toHaveText(heading);
+    await expect(page.locator('.app-navigation').getByRole('link', { name: 'Home', exact: true })).toBeVisible();
+    await expect(page.locator('.homepage .recharts-surface')).toHaveCount(3);
+    await expectHealthyPlots(page);
+    expect(await page.locator('.homepage').innerText()).not.toMatch(/dashboard\.|dialogs\.shared\.assetClassNames/);
+  });
+}
+
+test('an empty local dashboard neither seeds data nor shows invented balances', async ({ page }) => {
+  await page.goto('./?demo=0');
+  await expect(page.locator('.dashboard-metric--net-worth dd')).toHaveText('—');
+  await expect(page.locator('.dashboard-metric--portfolio dd')).toHaveText('—');
+  await expect(page.getByRole('link', { name: 'Set up your FIRE plan', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => [
+    'fire-calculator-asset-allocation', 'fire-calculator-inputs',
+    'fire-tools-net-worth-tracker', 'fire-tools-expense-tracker',
+  ].map(key => localStorage.getItem(key)))).toEqual([null, null, null, null]);
+  await page.reload();
+  await expect(page.locator('.dashboard-metric--net-worth dd')).toHaveText('—');
+});
+
+test('PDF import loads bundled fonts without external requests or standard-font warnings', async ({ page, context, baseURL }) => {
+  if (!baseURL) throw new Error('A browser-test base URL is required.');
+  const warnings: string[] = [];
+  const fonts: string[] = [];
+  page.on('console', message => {
+    if (/standardFontDataUrl|Unable to load.*font|not bundled/.test(message.text())) warnings.push(message.text());
+  });
+  page.on('request', request => {
+    if (/\.(?:pfb|ttf)(?:$|\?)/.test(request.url())) fonts.push(request.url());
+  });
+  await context.addCookies([{
+    name: 'fire-calculator-settings',
+    value: encodeURIComponent(CryptoJS.AES.encrypt(JSON.stringify({
+      experimentalFeatures: { pdfImport: true, portfolioBreakdown: false },
+    }), 'fire-calculator-secret-key-v1-2024').toString()),
+    url: baseURL,
+    sameSite: 'Strict',
+  }]);
+  await page.goto('./expense-tracker?demo=0');
+  await page.getByRole('button', { name: 'Import Pdf Aria', exact: true }).click();
+  await page.locator('#pdf-files').setInputFiles('tests/pages/expense-tracker/fixtures/sample-invoice.pdf');
+  await expect(page.locator('.pdf-import-table tbody tr')).toHaveCount(1);
+  await expect(page.locator('.pdf-import-table input[type="number"]')).toHaveValue('2158.8');
+  expect(fonts.length).toBeGreaterThan(0);
+  expect(fonts.every(url => new URL(url).origin === new URL(baseURL).origin)).toBe(true);
+  expect(warnings).toEqual([]);
+});
 
 async function expectHealthyPlots(page: Page) {
   await expect.poll(() => page.locator('.recharts-wrapper > .recharts-surface').count()).toBeGreaterThan(0);
