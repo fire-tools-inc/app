@@ -24,9 +24,11 @@ export const testEnv = (): ServerEnv => ({
 const makeTestApp = async (dbPath: string, env: ServerEnv, dir?: string, adminState?: AdminState) => {
   const app = createServer();
   let db: InstanceType<typeof Database> | undefined;
+  let application: ReturnType<typeof buildApp> | undefined;
   let cleanupPromise: Promise<void> | undefined;
   const cleanup = (): Promise<void> => cleanupPromise ??= (async () => {
     try {
+      await application?.closeReceiptUploads();
       if (app.listening) {
         await new Promise<void>((resolve, reject) => {
           app.close(error => error ? reject(error) : resolve());
@@ -48,7 +50,8 @@ const makeTestApp = async (dbPath: string, env: ServerEnv, dir?: string, adminSt
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     runMigrations(db, env.migrationsPath);
-    app.on('request', buildApp({ db, env, dbPath, disableRateLimit: true, adminState }));
+    application = buildApp({ db, env, dbPath, disableRateLimit: true, adminState });
+    app.on('request', application);
     await new Promise<void>((resolve, reject) => {
       app.once('error', reject);
       app.listen(0, '127.0.0.1', () => {

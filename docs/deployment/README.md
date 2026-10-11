@@ -85,6 +85,37 @@ The SQLite DB lives in the `firetools-data` named volume mounted at
 docker compose cp backend:/data/firetools.db ./firetools-backup.db
 ```
 
+## Receipt phone uploads
+
+LiteParse and its bundled Tesseract OCR run locally inside the backend. Enable
+the experimental document importer in the Electron app configured to use this
+backend. Original photos are retained as SQLite BLOBs and included in the
+database backup; renderer ledger JSON/CSV exports do not include them.
+
+The ordinary Compose stack does not publish the separate receipt upload port.
+Explicitly add the receipt override when you need it:
+
+```sh
+# Host-loopback publication: suitable for your own HTTPS tunnel.
+docker compose -f docker-compose.yml -f docker-compose.receipts.yml up -d
+
+# Trusted Wi-Fi publication: exposes ONLY the upload receiver on port 8790.
+RECEIPT_UPLOAD_BIND=0.0.0.0 docker compose \
+  -f docker-compose.yml -f docker-compose.receipts.yml up -d
+```
+
+In **Import documents > Phone receipt uploads**, use port **8790** and enter
+either `http://<host-private-Wi-Fi-IP>:8790` or an existing HTTPS tunnel origin
+forwarded to that port. Container-discovered network addresses may not reach
+the phone; use the host address. Then start pairing and open the generated
+phone link. Never forward a public tunnel to the financial API.
+
+The receiver opens only on explicit pairing, accepts uploads using the
+short-lived capability, and closes after 30 minutes or when pairing/dialog/app
+ends. It has no financial, settings or receipt-read endpoints. Plain HTTP
+is for trusted Wi-Fi; use your trusted HTTPS tunnel for remote access.
+See the [phone queue and retention guide](../pdf-import.md).
+
 ## Troubleshooting
 
 - **SQLite native-load errors** — use Node.js >=22.22.0 and a supported

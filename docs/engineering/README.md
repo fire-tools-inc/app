@@ -104,6 +104,29 @@ instead.
   assets alongside character maps and decoder resources, and loaded by the
   PDF.js 6 `BinaryDataFactory` on the main thread. This works
   with fingerprinted web builds and relative Electron assets without a CDN.
+- **Document parsing and receipts** — PDF.js remains the renderer default;
+  `POST /document-text` runs the optional LiteParse/Tesseract engine in a
+  bounded, disposable Node/Electron-as-Node process. Native bindings and the
+  worker are unpacked for Electron. Source files use private temporary
+  directories removed on every outcome. Build/test/dev lifecycle hooks bundle
+  English Tesseract data from a pinned development-only package, including its
+  Apache-2.0 license and SHA-256 provenance. The worker verifies the local model
+  exists and uses its real unpacked path; it never falls back to a first-use
+  download. The 23.5 MB data file is not part of the renderer bundle.
+  `receipts` retains original photo
+  BLOBs before OCR; renderer financial writes remain localStorage-authoritative.
+  Batch import persists once and uses content-derived receipt transaction IDs.
+  `receipt-pairings` opens an opt-in, upload-only listener with a 30-minute
+  capability. Phone IndexedDB retains originals until storage acknowledgement.
+  An existing HTTPS tunnel or private container-host address can be supplied;
+  no tunnel provider is integrated and the normal desktop API stays private.
+  Migration `0004_receipts` adds only the original-image table; rollback deletes
+  images but leaves imported financial entries untouched.
+- **Expense statistics** — inclusive transaction-date filtering, elapsed
+  calendar denominators (including gaps), archived history and explicit
+  currency filtering. Invalid legacy records produce a visible exclusion
+  count. Wide history charts use local keyboard scrolling and accessible data
+  tables rather than viewport-wide overflow.
 - **Container builds** — `build:self-hosted` uses `/demo/` with fingerprinted
   assets, rather than the repository-prefixed Pages path. `.dockerignore`
   keeps host dependencies and generated outputs out of the build context.

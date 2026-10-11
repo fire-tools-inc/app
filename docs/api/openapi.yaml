@@ -5,12 +5,10 @@ info:
   description: |
     REST API contract for the Fire Tools backend (local-deployment / Electron).
 
-    Fire Tools is currently a client-side React app that stores everything in
-    encrypted cookies. This OpenAPI contract describes the **planned** backend
-    that will power local deployments (Docker / Electron) — see
-    [issue #133](https://github.com/fire-tools-inc/app/issues/133).
-
-    **Status — contract only.** No server implementation exists yet.
+    The Node.js + Express backend is implemented for local Docker and Electron
+    deployments. Existing renderer domain stores are not all API clients:
+    financial histories still use encrypted localStorage; small stores use
+    SafeCookies. Receipt originals are stored in the local backend SQLite DB.
 
     Conventions
     -----------
@@ -1331,6 +1329,189 @@ paths:
   # ---------------------------------------------------------------------------
   # PDF import (experimental)
   # ---------------------------------------------------------------------------
+  /document-text:
+    post:
+      tags: [PdfImport]
+      summary: Parse a document with local LiteParse and OCR
+      description: |
+        Accepts raw PDF, JPEG, PNG or WebP bytes, up to 10 MB and 100 pages.
+        Parsing runs in an isolated child process with a 60-second deadline.
+        No financial writes, external OCR service or model call occurs.
+      operationId: extractDocumentText
+      parameters:
+        - in: query
+          name: fileName
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 255 }
+      requestBody:
+        required: true
+        content:
+          application/pdf:
+            schema: { type: string, format: binary }
+          image/jpeg:
+            schema: { type: string, format: binary }
+          image/png:
+            schema: { type: string, format: binary }
+          image/webp:
+            schema: { type: string, format: binary }
+      responses:
+        '200':
+          description: Extracted text and positioned page items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentTextResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '408': { description: Parsing cancelled or timed out; no financial data changed }
+        '413': { description: Document exceeds 10 MB }
+        '415': { description: Unsupported document type }
+        '422': { description: Parse failure or more than 100 pages }
+        '429': { description: Local parser concurrency limit reached }
+
+  /receipts:
+    get:
+      tags: [PdfImport]
+      summary: List stored original receipt images
+      operationId: listReceipts
+      parameters:
+        - { in: query, name: status, schema: { type: string, enum: [pending, reviewed] } }
+        - { in: query, name: cursor, schema: { type: string } }
+        - { in: query, name: limit, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+      responses:
+        '200':
+          description: Metadata only; no image bytes in the list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/ReceiptDocument' } }
+                  nextCursor: { type: string, nullable: true }
+    post:
+      tags: [PdfImport]
+      summary: Store an original receipt photo without creating financial entries
+      operationId: saveReceipt
+      description: Original bytes are retained in SQLite. Identical SHA-256 content is idempotent within a user.
+      parameters:
+        - { in: query, name: fileName, required: true, schema: { type: string, minLength: 1, maxLength: 255 } }
+      requestBody:
+        required: true
+        content:
+          image/jpeg: { schema: { type: string, format: binary } }
+          image/png: { schema: { type: string, format: binary } }
+          image/webp: { schema: { type: string, format: binary } }
+      responses:
+        '201':
+          description: Stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptDocument' }
+        '200':
+          description: Identical original already stored
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptDocument' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413': { description: Photo exceeds 10 MB }
+        '415': { description: Unsupported image type }
+    delete:
+      tags: [PdfImport]
+      summary: Delete all original receipts for the current user
+      description: Stops that user's active pairing; financial entries are unchanged. Used by the explicitly confirmed data reset.
+      operationId: clearReceiptOriginals
+      responses:
+        '204': { description: Original receipts deleted }
+
+  /receipts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    patch:
+      tags: [PdfImport]
+      summary: Mark a receipt pending or reviewed without deleting its original
+      operationId: reviewReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [pending, reviewed] }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptDocument' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [PdfImport]
+      summary: Delete a stored original image without deleting financial entries
+      operationId: deleteReceipt
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /receipts/{id}/content:
+    parameters:
+      - $ref: '#/components/parameters/IdPath'
+    get:
+      tags: [PdfImport]
+      summary: Download a retained original receipt image
+      operationId: getReceiptOriginal
+      responses:
+        '200':
+          description: Original binary bytes with no-store and nosniff headers
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /receipt-pairings:
+    post:
+      tags: [PdfImport]
+      summary: Start a short-lived upload-only phone listener
+      description: |
+        Explicitly opens a separate listener; the desktop financial API stays
+        loopback-only. The receiver serves /receipt-upload and accepts POST
+        /receipts with its generated bearer capability, for at most 30 minutes.
+        It cannot list or read receipts or access financial/settings endpoints.
+        The caller must protect the normal local API and share links only with
+        the intended phone. An optional HTTPS origin must already tunnel to
+        the receiver port; Fire Tools never provisions a tunnel.
+      operationId: startReceiptPairing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                port: { type: integer, minimum: 0, maximum: 65535, default: 8790, description: '0 chooses a random port; explicit ports must be at least 1024.' }
+                publicUrl: { type: string, format: uri, description: 'Optional HTTPS tunnel origin or private IPv4 HTTP origin for a published container port. No paths, credentials, query or fragment.' }
+                language: { type: string, enum: [en, it, fr, de, es], default: en }
+      responses:
+        '201':
+          description: Upload listener started
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReceiptPairing' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { description: A receipt pairing is already active }
+
+  /receipt-pairings/{pairingId}:
+    parameters:
+      - { in: path, name: pairingId, required: true, schema: { type: string, format: uuid } }
+    delete:
+      tags: [PdfImport]
+      summary: Stop the upload-only listener immediately
+      operationId: stopReceiptPairing
+      responses:
+        '204': { description: Pairing stopped; stored receipts are retained }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /pdf-imports:
     get:
       tags: [PdfImport]
@@ -1708,7 +1889,7 @@ components:
       required: [baseUrl, apiKey, model]
       properties:
         baseUrl: { type: string }
-        apiKey:  { type: string, format: password }
+        apiKey:  { type: string, format: password, description: 'May be empty for unauthenticated local OpenAI-compatible models.' }
         model:   { type: string }
 
     CurrencySettings:
@@ -1760,6 +1941,7 @@ components:
         includePrimaryResidenceInFIRE: { type: boolean }
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        aiFeaturesEnabled:      { type: boolean, default: true, description: 'Master permission for hosted/local AI model calls. Per-action opt-in is still required; local OCR and document imports are unaffected.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     UserSettingsPatch:
@@ -1777,6 +1959,7 @@ components:
         includePrimaryResidenceInFIRE: { type: boolean }
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
+        aiFeaturesEnabled:      { type: boolean, description: 'Enable or disable all AI model calls without clearing endpoint/model configuration. Does not disable local OCR or imports.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     # -- Notifications -------------------------------------------------------
@@ -2581,6 +2764,53 @@ components:
         completedAt: { type: string, format: date-time }
 
     # -- PDF import ----------------------------------------------------------
+    ReceiptDocument:
+      type: object
+      required: [id, fileName, mimeType, byteLength, sha256, status, createdAt]
+      properties:
+        id: { type: integer, minimum: 1 }
+        fileName: { type: string, minLength: 1, maxLength: 255 }
+        mimeType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        byteLength: { type: integer, minimum: 1, maximum: 10485760 }
+        sha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        status: { type: string, enum: [pending, reviewed] }
+        createdAt: { type: string, format: date-time }
+
+    ReceiptPairing:
+      type: object
+      required: [id, port, expiresAt, urls]
+      properties:
+        id: { type: string, format: uuid }
+        port: { type: integer, minimum: 1024, maximum: 65535 }
+        expiresAt: { type: string, format: date-time }
+        urls:
+          type: array
+          items: { type: string, format: uri }
+          description: 'Private Wi-Fi and optional HTTPS tunnel links. The 30-minute upload-only capability is in each URL fragment; do not log or share links beyond the intended phone.'
+
+    DocumentTextResult:
+      type: object
+      required: [text, pages, totalPages]
+      properties:
+        text: { type: string }
+        totalPages: { type: integer, minimum: 1, maximum: 100 }
+        pages:
+          type: array
+          items:
+            type: object
+            required: [pageNum, textItems]
+            properties:
+              pageNum: { type: integer, minimum: 1 }
+              textItems:
+                type: array
+                items:
+                  type: object
+                  required: [text, x, y]
+                  properties:
+                    text: { type: string }
+                    x: { type: number }
+                    y: { type: number }
+
     PdfDocType:
       type: string
       enum: [auto, receipt, invoice, bank_statement, payslip]

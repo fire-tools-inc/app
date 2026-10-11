@@ -1,6 +1,7 @@
 .git
 .impeccable
 **/node_modules
+server/tessdata
 dist
 dist-electron
 release

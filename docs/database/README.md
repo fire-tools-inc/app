@@ -1,13 +1,19 @@
 # Database Schema
 
-Fire Tools' planned local-deployment backend stores data in a relational
+Fire Tools' local-deployment backend stores data in a relational
 database. This document describes the schema in [`schema.sql`](./schema.sql).
 
-> **Status — contract only.** The backend itself is not yet implemented
-> (tracked in issues [#189](https://github.com/fire-tools-inc/app/issues/189),
-> [#195](https://github.com/fire-tools-inc/app/issues/195),
-> [#222](https://github.com/fire-tools-inc/app/issues/222)). This schema
-> defines the persistence contract that the future backend will honour.
+The SQLite backend in [`server/`](../../server/) is implemented and runs
+paired migrations on startup. The reference DDL also uses PostgreSQL-compatible
+conventions, but a PostgreSQL driver is not implemented. Existing renderer
+financial stores remain localStorage/SafeCookies stores; receipt originals
+are stored in the backend database.
+
+`0005_ai_features` adds the per-user `ai_features_enabled` permission with a
+default of `1`, preserving existing per-action AI opt-in behavior. Its rollback
+removes this permission only; endpoint credentials, model IDs, receipts and
+financial data are retained. Older clients may omit the optional API field
+without changing a saved permission.
 
 ---
 
@@ -142,6 +148,12 @@ erDiagram
 - **`questionnaire_results`** — FIRE persona quiz outcomes; one row per
   completion (history kept).
 - **`pdf_imports`** — drafts parsed from receipts/statements/payslips.
+- **`receipts`** — original JPEG/PNG/WebP bytes, SHA-256, file metadata and
+  pending/reviewed state, scoped by user. This is the authoritative original
+  photo store, not a migration of the renderer's financial ledger.
+  `0004_receipts` is forward/rollback paired; rolling it back destroys original
+  photos but preserves financial entries. Back up originals before rollback.
+  Database backups and optional passphrase encryption include these BLOBs.
 - **`portfolio_metadata_cache`** — Yahoo metadata per ticker, cached.
 
 ### Lookup

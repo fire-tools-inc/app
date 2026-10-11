@@ -75,6 +75,8 @@ test.afterEach(async ({ page }) => {
 });
 
 async function navigate(page: Page, route: string) {
+  await page.locator('.app-navigation').waitFor({ state: 'attached' });
+  await page.waitForLoadState('networkidle');
   const nav = page.locator('.app-navigation');
   const toggle = page.getByRole('button', { name: 'Toggle navigation menu' });
   const isMobile = await toggle.isVisible();
@@ -180,7 +182,7 @@ test('PDF import loads bundled fonts without external requests or standard-font 
     sameSite: 'Strict',
   }]);
   await page.goto('./expense-tracker?demo=0');
-  await page.getByRole('button', { name: 'Import Pdf Aria', exact: true }).click();
+  await page.getByRole('button', { name: 'Import documents and receipt photos', exact: true }).click();
   await page.locator('#pdf-files').setInputFiles('tests/pages/expense-tracker/fixtures/sample-invoice.pdf');
   await expect(page.locator('.pdf-import-table tbody tr')).toHaveCount(1);
   await expect(page.locator('.pdf-import-table input[type="number"]')).toHaveValue('2158.8');
@@ -210,6 +212,44 @@ async function expectHealthyPlots(page: Page) {
     return failures;
   })).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+}
+
+for (const width of [1440, 1280, 1024, 768, 390, 320]) {
+  test(`expense statistics remain readable after navigation and range changes at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: width >= 1000 ? 620 : 740 });
+    await page.goto('./');
+    await navigate(page, 'expense-tracker');
+    await page.getByRole('tab', { name: 'Analytics', exact: true }).click();
+    const statistics = page.locator('.expense-statistics');
+    await expect(statistics.getByRole('heading', { name: 'Expense statistics' })).toBeVisible();
+    await expect(statistics.locator('.recharts-surface')).toHaveCount(1);
+    await expectHealthyPlots(page);
+    if (width >= 1000) {
+      await page.getByRole('button', { name: 'Collapse sidebar' }).click();
+      await expectHealthyPlots(page);
+      await page.getByRole('button', { name: 'Expand sidebar' }).click();
+      await expectHealthyPlots(page);
+    }
+    await statistics.getByLabel('Expense statistics view').selectOption('yearly');
+    await statistics.getByText('View statistics data').click();
+    await expect(statistics.getByRole('table', { name: 'Expense statistics data' })).toBeVisible();
+    await statistics.getByLabel('Expense statistics view').selectOption('custom');
+    await statistics.getByLabel('From date').fill('2019-01-01');
+    await statistics.getByLabel('To date', { exact: true }).fill('2026-12-31');
+    await expect(statistics.locator('tbody tr')).toHaveCount(96);
+    const scroll = statistics.locator('.expense-statistics-plot');
+    await scroll.focus();
+    await page.keyboard.press('ArrowRight');
+    expect(await scroll.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true);
+    await statistics.getByLabel('From date').fill('2026-12-31');
+    await statistics.getByLabel('To date', { exact: true }).fill('2026-01-01');
+    await expect(statistics.getByRole('alert')).toHaveText('Choose valid dates with the start on or before the end.');
+    await statistics.getByLabel('Expense statistics view').selectOption('ytd');
+    await expectHealthyPlots(page);
+    await statistics.getByRole('heading', { name: 'Expense statistics' }).hover();
+    await statistics.screenshot({ path: testInfo.outputPath(`expense-statistics-${width}.png`) });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  });
 }
 
 test('the branded icon rail expands, persists and keeps every destination named', async ({ page }) => {
@@ -267,7 +307,7 @@ for (const width of [1440, 320]) {
     await page.waitForLoadState('networkidle');
     await page.getByRole('tab', { name: 'Analytics' }).click();
     await page.locator('#analytics-view').selectOption('yearly');
-    await expect.poll(() => page.locator('.recharts-wrapper > .recharts-surface').count()).toBe(3);
+    await expect.poll(() => page.locator('.recharts-wrapper > .recharts-surface').count()).toBe(4);
     await expectHealthyPlots(page);
     for (const route of ['withdrawal-rate', 'debt-payoff']) {
       await navigate(page, route);

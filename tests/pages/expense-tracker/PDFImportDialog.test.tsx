@@ -142,6 +142,6 @@ describe('PDFImportDialog', () => {
 
     await waitFor(() => expect(extractor).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(screen.getByText(/Failed to read "bad.pdf"/i)).toBeTruthy());
-    expectDiagnostic('error', '[pdf-parse-failed]: failed to parse PDF');
+    expectDiagnostic('error', '[document-parse-failed]: failed to parse document; stored receipts are retained');
   });
 });

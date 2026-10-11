@@ -64,6 +64,10 @@ Request bodies are limited to **2 MB**. Malformed JSON returns
 Unexpected failures return a generic `500 internal_error`, with details
 recorded in the server logs. Expense and income amounts must be finite,
 non-negative JSON numbers, and dates must be valid calendar dates.
+The raw-binary `/document-text` and `/receipts` upload routes have their own
+**10 MB** limit. They validate file signatures and MIME types. Receipt list
+responses contain metadata, not image BLOBs; original downloads are no-store
+attachments.
 
 Replacing assets, transactions or custom categories is transactional: if an
 insertion fails, the previously saved record is retained.
@@ -92,6 +96,7 @@ The OpenAPI schemas are named to mirror the TypeScript interfaces in
 | `MonthlySnapshot`, `AssetHolding`, `CashEntry`, `PensionEntry`, `DebtEntry`, `TaxEntry`, `FinancialOperation`, `VehicleDepreciation`, `MortgageInfo`, `NetWorthTrackerData` | `netWorthTracker.ts` |
 | `QuestionnaireResults`, `FIREPersona`, `AssetAllocationTarget` | `questionnaire.ts` |
 | `ParsedTransactionDraft`, `PdfDocType`, `PdfImport`            | `pdfImport.ts`     |
+| `ReceiptDocument`, `ReceiptPairing` | `receiptImport.ts` |
 | `AssetMetadata`, `BreakdownResult`, `BreakdownDimension`       | `portfolioBreakdown.ts` |
 | `BankInfo`, `InstitutionType` | `bank.ts`                                            |
 | `SupportedCurrency`           | `currency.ts`                                        |
@@ -103,8 +108,10 @@ corresponding `CHECK` constraint in [`../database/schema.sql`](../database/schem
 ## Out of scope (deferred)
 
 - WebSocket / SSE endpoints for live notifications
-- Multipart `POST /pdf-imports/upload` for server-side PDF parsing — the
-  current flow expects the React client to parse the PDF and POST drafts
+- Multipart uploads — the implemented `/document-text` and `/receipts` routes
+  accept raw document bytes, while the existing `/pdf-imports` route accepts
+  already-parsed drafts. Receipt pairings expose a separate upload-only
+  capability listener, not the ordinary financial API.
 - Server-side computation endpoints (`POST /calculator/run`,
   `POST /calculator/monte-carlo/run`) — the React client owns those
   calculations today; once moved server-side, they'll be added here

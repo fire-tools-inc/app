@@ -42,7 +42,7 @@ import {
   exportExpenseTrackerToCSV,
   importExpenseTrackerFromCSV,
 } from '../utils/csvExport';
-import { loadSettings, saveSettings, type DateFormat } from '../utils/cookieSettings';
+import { loadSettings, saveSettings, subscribeToSettingsChanges, type DateFormat } from '../utils/cookieSettings';
 import { formatDate } from '../utils/dateFormatter';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
 import { createLazyComponent } from '../utils/lazyComponent';
@@ -55,6 +55,10 @@ import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { PDFImportDialog } from './PDFImportDialog';
+import { ExpenseStatistics } from './ExpenseStatistics';
+import { mergeImportedTransactions } from '../utils/pdfImportTransactions';
+import type { ParsedTransactionDraft } from '../types/pdfImport';
+import { IS_DEMO_MODE } from '../utils/demoMode';
 import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
 import './PeriodSelector.css';
 import './ExpenseTrackerPage.css';
@@ -220,13 +224,7 @@ export function ExpenseTrackerPage() {
       setLlmConfig(settings.llmCategorization);
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleStorageChange);
-    };
+    return subscribeToSettingsChanges(handleStorageChange);
   }, []);
   
   // Toggle privacy mode and save to settings
@@ -466,13 +464,20 @@ export function ExpenseTrackerPage() {
 
   // Monthly comparison data - uses filtered months based on analytics view
   const monthlyComparisonData = useMemo(() => {
-    return calculateMonthlyComparison(filteredMonthsData);
-  }, [filteredMonthsData]);
+    return calculateMonthlyComparison(filteredMonthsData, analyticsView === 'ytd' ? selectedMonth : filteredMonthsData.length);
+  }, [filteredMonthsData, analyticsView, selectedMonth]);
 
   // Category trends data - uses filtered months based on analytics view
   const categoryTrendsData = useMemo(() => {
     return calculateCategoryTrends(filteredMonthsData);
   }, [filteredMonthsData]);
+
+  const handleCommitDrafts = useCallback((drafts: ParsedTransactionDraft[]) => {
+    if (IS_DEMO_MODE) throw new Error(t('demo.disabledAction'));
+    const next = mergeImportedTransactions(data, drafts);
+    saveExpenseTrackerData(next);
+    setData(next);
+  }, [data, t]);
 
   // Add income - combines month creation and income addition in one update
   const handleAddIncome = useCallback((income: Omit<IncomeEntry, 'id' | 'type'>) => {
@@ -1395,6 +1400,7 @@ export function ExpenseTrackerPage() {
         {activeTab === 'analytics' && (
           <section className="analytics-section" role="tabpanel" aria-labelledby="analytics-tab" data-tour="analytics-content">
             <h3>{t('expenseTracker.spendingAnalyticsFor', { year: selectedYear })}</h3>
+            <ExpenseStatistics data={data} isPrivacyMode={isPrivacyMode} />
             
             {/* Analytics View Selector */}
             <div className="analytics-view-selector">
@@ -1574,6 +1580,7 @@ export function ExpenseTrackerPage() {
             onClose={() => setShowPdfImport(false)}
             onAddIncome={handleAddIncome}
             onAddExpense={handleAddExpense}
+            onCommitDrafts={handleCommitDrafts}
             onImported={({ year, month }) => {
               setSelectedYear(year);
               setSelectedMonth(month);

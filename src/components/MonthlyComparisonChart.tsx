@@ -63,7 +63,7 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
           <span style={{ fontWeight: 500 }}>{formatCurrency(entry.value, currency)}</span>
         </p>
       ))}
-      {payload[0]?.payload?.average && (
+      {typeof payload[0]?.payload?.average === 'number' && (
         <p style={{ 
           margin: '0.5rem 0 0', 
           color: '#94a3b8', 
@@ -89,9 +89,7 @@ export function MonthlyComparisonChart({ data, currency }: MonthlyComparisonChar
   }
 
   // Calculate average for reference line
-  const average = data.length > 0 
-    ? data.reduce((sum, d) => sum + d.expenses, 0) / data.length 
-    : 0;
+  const average = data[0].average ?? data.reduce((sum, point) => sum + point.expenses, 0) / data.length;
 
   return (
     <div style={{ width: '100%', height: 350 }}>

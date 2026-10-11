@@ -16,7 +16,7 @@ directories:
   buildResources: electron/build
 
 files:
-  - &app-files "{electron/**/*,dist-electron/**/*,server/{dist,migrations}/**/*,package.json}"
+  - &app-files "{electron/**/*,dist-electron/**/*,server/{dist,migrations,public,tessdata}/**/*,package.json}"
   - &dependency-docs "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}"
   - &dependency-tests "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}"
   - &dependency-types "!**/node_modules/*.d.ts"
@@ -27,6 +27,9 @@ files:
 asarUnpack:
   - "**/*.{node,dll,dylib,so}"
   - "node_modules/better-sqlite3/**/*"
+  - "node_modules/@llamaindex/**/*"
+  - "server/dist/documentWorker.mjs"
+  - "server/tessdata/**/*"
 
 extraMetadata:
   main: electron/main.cjs

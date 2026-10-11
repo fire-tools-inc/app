@@ -1,5 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import * as encryption from '../../../src/utils/cookieEncryption';
+import SafeCookies from '../../../src/utils/safeCookies';
+import { expectDiagnostic } from '../../shared/diagnostics';
 import {
   saveSettings,
   loadSettings,
@@ -10,6 +12,7 @@ import {
   DEFAULT_UPDATER_SETTINGS,
   MIN_KEEP_BACKUPS,
   MAX_KEEP_BACKUPS,
+  subscribeToSettingsChanges,
   type UserSettings,
 } from '../../../src/utils/cookieSettings';
 
@@ -26,7 +29,8 @@ const cookieMock = (() => {
     set: (value: string) => {
       // Parse cookie string like "key=value; path=/; max-age=..."
       const [cookiePair] = value.split(';');
-      const [key, val] = cookiePair.split('=');
+      const [key, ...parts] = cookiePair.split('=');
+      const val = parts.join('=');
       if (key && val !== undefined) {
         if (val === '' || value.includes('max-age=0') || value.includes('expires=Thu, 01 Jan 1970')) {
           // Cookie deletion
@@ -63,6 +67,40 @@ describe('Cookie Settings utilities', () => {
   });
 
   describe('saveSettings', () => {
+    it('notifies same-window listeners only after persistence and releases every subscription', () => {
+      const listener = vi.fn(() => loadSettings().aiFeaturesEnabled);
+      const unsubscribe = subscribeToSettingsChanges(listener);
+      try {
+        saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false });
+        expect(listener).toHaveReturnedWith(false);
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new Event('focus'));
+        expect(listener).toHaveBeenCalledTimes(3);
+      } finally {
+        unsubscribe();
+      }
+      saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: true });
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('focus'));
+      expect(listener).toHaveBeenCalledTimes(3);
+    });
+
+    it('does not announce a silently dropped settings write as successful', () => {
+      saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false });
+      const listener = vi.fn();
+      const unsubscribe = subscribeToSettingsChanges(listener);
+      const write = vi.spyOn(SafeCookies, 'set').mockImplementation(() => {});
+      try {
+        expect(() => saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: true })).toThrow('Failed to save settings');
+        expect(loadSettings().aiFeaturesEnabled).toBe(false);
+        expect(listener).not.toHaveBeenCalled();
+        expectDiagnostic('error', '[save-failed]: failed to save settings');
+      } finally {
+        write.mockRestore();
+        unsubscribe();
+      }
+    });
+
     it('should save settings to cookies', () => {
       const settings: UserSettings = {
         ...DEFAULT_SETTINGS,
@@ -158,6 +196,25 @@ describe('Cookie Settings utilities', () => {
   });
 
   describe('loadSettings', () => {
+    it('fails closed for a malformed saved AI switch and reports the invalid preference', () => {
+      SafeCookies.set('fire-calculator-settings', encryption.encryptData(JSON.stringify({ aiFeaturesEnabled: 'true' })));
+      expect(loadSettings().aiFeaturesEnabled).toBe(false);
+      expectDiagnostic('error', '[invalid-ai-preference]: Saved AI preference must be a boolean; AI features are disabled.');
+    });
+
+    it('preserves legacy per-action AI availability when the bulk preference is absent', () => {
+      const { aiFeaturesEnabled: _omit, ...legacy } = DEFAULT_SETTINGS;
+      SafeCookies.set('fire-calculator-settings', encryption.encryptData(JSON.stringify(legacy)));
+      expect(loadSettings().aiFeaturesEnabled).toBe(true);
+    });
+
+    it('round-trips bulk AI disable without altering encrypted endpoint configuration', () => {
+      const llmCategorization = { baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'synthetic' };
+      saveSettings({ ...DEFAULT_SETTINGS, aiFeaturesEnabled: false, llmCategorization });
+      expect(loadSettings().aiFeaturesEnabled).toBe(false);
+      expect(loadSettings().llmCategorization).toEqual(llmCategorization);
+    });
+
     it('decrypts unchanged settings only once without sharing mutable nested values', () => {
       saveSettings({ ...DEFAULT_SETTINGS, accountName: 'Cached test portfolio' });
       const decrypt = vi.spyOn(encryption, 'decryptData');
@@ -359,6 +416,13 @@ describe('Cookie Settings utilities', () => {
   });
 
   describe('validateSettings', () => {
+    it('accepts both boolean AI preferences and rejects malformed imported values', () => {
+      expect(validateSettings({ aiFeaturesEnabled: true }).isValid).toBe(true);
+      expect(validateSettings({ aiFeaturesEnabled: false }).isValid).toBe(true);
+      const malformed = JSON.parse('{"aiFeaturesEnabled":"true"}');
+      expect(validateSettings(malformed).errors).toContain('aiFeaturesEnabled must be a boolean');
+    });
+
     it('should accept valid date format DD/MM/YYYY', () => {
       const result = validateSettings({ dateFormat: 'DD/MM/YYYY' });
       expect(result.isValid).toBe(true);
