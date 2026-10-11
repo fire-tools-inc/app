@@ -5,6 +5,7 @@ import { HomePage } from '../../../src/components/HomePage';
 import { createEmptyMonthlySnapshot } from '../../../src/types/netWorthTracker';
 import { DEFAULT_SETTINGS } from '../../../src/utils/cookieSettings';
 import { DEFAULT_INPUTS } from '../../../src/utils/defaults';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 const mocks = vi.hoisted(() => ({
   assets: vi.fn(),
@@ -117,6 +118,7 @@ describe('home dashboard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Hide values' }));
     expect(screen.getByRole('alert').textContent).toContain('Could not save your privacy preference');
     expect(screen.getByRole('button', { name: 'Hide values' })).toBeDefined();
+    expectDiagnostic('error', '[privacy-save-failed]: failed to save dashboard privacy preference');
   });
 
   it('removes refresh subscriptions on unmount', () => {

@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { extractPdfText } from '../../../src/utils/pdfTextExtractor';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 const mocks = vi.hoisted(() => ({
   getDocument: vi.fn(),
@@ -62,6 +63,7 @@ describe('production PDF extraction', () => {
     vi.stubGlobal('fetch', fetchFont);
     await expect(factory.fetch({ kind: 'standardFontDataUrl', filename: '../unbundled.pfb' })).rejects.toThrow('not bundled');
     expect(fetchFont).not.toHaveBeenCalled();
+    expectDiagnostic('error', '[resource-load-failed]: failed to load a bundled PDF resource');
   });
 
   it('reports an unsuccessful local font response', async () => {
@@ -69,6 +71,7 @@ describe('production PDF extraction', () => {
     const factory = new mocks.getDocument.mock.calls[0][0].BinaryDataFactory();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
     await expect(factory.fetch({ kind: 'standardFontDataUrl', filename: 'FoxitSerif.pfb' })).rejects.toThrow('404');
+    expectDiagnostic('error', '[resource-load-failed]: failed to load a bundled PDF resource');
   });
 
   it.each([

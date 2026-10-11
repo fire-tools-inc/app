@@ -86,11 +86,16 @@ not run native desktop modules.
 
 ```sh
 npm test
+npm --prefix server test
 npm run build
 npx playwright install chromium  # once, if the browser binary is missing
 npm run test:browser
 npm run docs:screenshots -- homepage  # refresh only the dashboard screenshot
 ```
+
+Unexpected warnings and errors fail tests; deliberate failure paths assert
+their diagnostic messages. See [test conventions](tests/README.md) for
+async fixtures, log assertions and verbose output.
 
 The browser suite builds the self-hosted app and uses an isolated Vite preview
 on port 5188, synthetic data and

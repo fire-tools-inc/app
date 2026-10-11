@@ -122,6 +122,19 @@ entirely client-side.
 outside of the logger sources and test files. New code must go through the
 logger.
 
+### Test output
+
+Renderer and backend tests fail on unexpected warnings or errors. Deliberate
+failure-path tests assert the operation's result and acknowledge the expected
+message and count with `expectDiagnostic`; any other diagnostic still fails.
+This includes React `act()` warnings, which must be fixed by awaiting the
+asynchronous work rather than muting the warning.
+
+Passing tests do not print their informational logs. Failure diagnostics
+remain visible, and `npm test -- --silent=false` enables informational output
+for debugging. The backend logger is captured only in test setup, not changed
+in production. See `tests/README.md` in the repository for test conventions.
+
 ## See also
 
 - [Privacy & data storage](../user/privacy.md) (if present)

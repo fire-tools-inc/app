@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import Database from 'better-sqlite3';
 import { runMigrations } from '../src/migrate.js';
+import { expectDiagnostic } from '../../tests/shared/diagnostics.js';
 import {
   SETTINGS_FILE_NAME,
   SETTINGS_SCHEMA_VERSION,
@@ -92,6 +93,8 @@ describe('writeSettingsFileAtomic + readSettingsFile', () => {
     const target = path.join(tmpDir, SETTINGS_FILE_NAME);
     fs.writeFileSync(target, '{ this is not valid json');
     expect(readSettingsFile(target)).toBeNull();
+    expectDiagnostic('error', 'malformed JSON at');
+    expectDiagnostic('error', 'quarantined corrupt file to');
     expect(fs.existsSync(target)).toBe(false);
     const quarantined = fs
       .readdirSync(tmpDir)
@@ -103,6 +106,8 @@ describe('writeSettingsFileAtomic + readSettingsFile', () => {
     const target = path.join(tmpDir, SETTINGS_FILE_NAME);
     fs.writeFileSync(target, JSON.stringify({ wrong: 'shape' }));
     expect(readSettingsFile(target)).toBeNull();
+    expectDiagnostic('error', 'unexpected shape at');
+    expectDiagnostic('error', 'quarantined corrupt file to');
     const quarantined = fs
       .readdirSync(tmpDir)
       .filter((f) => f.startsWith(`${SETTINGS_FILE_NAME}.corrupt-`));
