@@ -34,6 +34,7 @@ describe('Income versus expenses plot', () => {
     expect(bars.find(bar => bar.dataKey === 'Expenses')?.stackId).toBe('expenses');
     expect(mocks.chart.mock.lastCall?.[0].barSize).toBeUndefined();
     expect(mocks.chart.mock.lastCall?.[0].maxBarSize).toBe(40);
+    expect(mocks.chart.mock.lastCall?.[0].stackOffset).toBe('sign');
     expect(document.querySelectorAll('.chart-legend li')).toHaveLength(6);
   });
 });

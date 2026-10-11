@@ -19,7 +19,7 @@ This software is for **educational and planning purposes only** — not financia
 
 | Feature | Description |
 |---------|-------------|
-| **Dark glass workspace** | Labelled sidebar navigation, restrained glass panels and readable financial data. Dark mode stays the default, including when the system uses a light theme. |
+| **Dark glass workspace** | Branded, collapsible sidebar, teal accents and readable financial data. Collapse to named icons for more page space; dark mode remains the default. |
 | 🧮 **FIRE Calculator** | Net-worth projections based on savings rate, expenses, and expected returns. Supports **Standard, Lean, Fat, Barista, and Coast** FIRE variants — see [docs/user/fire-calculator.md](docs/user/fire-calculator.md). |
 | ↩️ **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age — [docs](docs/user/fire-calculator.md) |
 | 🎲 **Monte Carlo Simulations** | Cancellable background-worker simulations, with volatility, black-swan modelling and opt-in detailed logs |
@@ -64,7 +64,23 @@ npm install --prefix server   # first time only
 npm run electron:dev:full     # backend on :8787 + Electron renderer
 ```
 
-Use `npm run electron:dev` if you only want Vite + Electron without the backend.
+For Vite + Electron with the embedded backend, first run
+`npm --prefix server run build`, then `npm run electron:dev`.
+Electron 44.7.0 includes the upstream macOS sleep/wake-registration startup
+crash fix; see [desktop troubleshooting](electron/README.md#startup-troubleshooting).
+
+## Development checks
+
+```sh
+npm test
+npm run build
+npx playwright install chromium  # once, if the browser binary is missing
+npm run test:browser
+```
+
+The browser suite uses an isolated Vite server on port 5188, synthetic data and
+mock market responses. It checks sidebar collapse/focus and complete chart
+geometry across desktop/mobile routes without contacting market services.
 
 ---
 

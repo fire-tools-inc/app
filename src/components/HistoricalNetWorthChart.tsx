@@ -429,7 +429,7 @@ export function HistoricalNetWorthChart({
             tick={tickFormatter}
             tickLine={{ stroke: '#3A3D46' }}
             height={50}
-            interval={0}
+            interval={viewMode === 'all' ? 0 : 'preserveStartEnd'}
             stroke="#3A3D46"
           />
           <YAxis

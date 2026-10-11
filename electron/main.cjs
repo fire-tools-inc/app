@@ -158,7 +158,7 @@ async function startEmbedded() {
     }
     if (!fs.existsSync(embedEntry)) {
       throw new Error(
-        `Embedded server entry not found at ${embedEntry}. Did you run \`npm run --workspace server build\`?`
+        `Embedded server entry not found at ${embedEntry}. Did you run \`npm --prefix server run build\`?`
       );
     }
 

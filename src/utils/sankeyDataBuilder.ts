@@ -134,7 +134,7 @@ export function buildSankeyData(
 
   if (totalPortfolio < MIN_CHART_VALUE) return { nodes: [], links: [] };
 
-  const portfolioIdx = addNode(t('netWorth.sankey.totalPortfolio'), '#8CBCF3', 0);
+  const portfolioIdx = addNode(t('netWorth.sankey.totalPortfolio'), ASSET_CLASS_CHART_COLORS.STOCKS, 0);
 
   if (totalInvestments > 0) {
     const investmentsIdx = addNode(t('netWorth.sankey.investments'), ASSET_CLASS_CHART_COLORS.STOCKS, 1);
@@ -171,7 +171,7 @@ export function buildSankeyData(
   }
 
   if (totalPension > 0 && showPension) {
-    const pensionIdx = addNode(t('netWorth.sankey.pension'), '#A8B9D1', 1);
+    const pensionIdx = addNode(t('netWorth.sankey.pension'), ASSET_CLASS_CHART_COLORS.BONDS, 1);
     links.push({ source: portfolioIdx, target: pensionIdx, value: totalPension });
 
     for (const [pensionType, value] of pensionByType.entries()) {

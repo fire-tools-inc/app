@@ -54,6 +54,9 @@ assumptions is not an equivalent optimization.
   decryption with a new expensive full deep clone per formatted cell.
 - Preserve on-demand routes/languages and safe Pages, self-hosted and Electron
   asset paths. Avoid new heavy dependencies for simple bounded graphics.
+- Run `npm run test:browser` for render changes. Preserve readable minimum
+  histogram bin widths with local scrolling; do not reclaim space by clipping
+  chart data, squeezing plots behind internal legends or discarding entries.
 
 ## Regression checks
 

@@ -13,6 +13,14 @@ annual expenses (the number that drives the FIRE target) instead of guessing.
    currency conversion is optional.
 3. The ledger groups transactions by month and shows totals per category.
 
+## Reading analytics
+
+Open **Analytics** and choose a month, quarter or year. Category pies and trends
+use the same muted colors and respect your category color overrides. Legends
+sit outside the plot so long category lists do not crop the chart. On a small
+screen, scroll the detailed breakdown table horizontally instead of the whole
+page.
+
 ## Importing from your bank
 
 Use **Import PDF** to upload a bank statement. Fire Tools includes lightweight

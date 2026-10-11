@@ -23,6 +23,7 @@ jobs:
       settings: ${{ steps.filter.outputs.settings }}
       server: ${{ steps.filter.outputs.server }}
       full: ${{ steps.filter.outputs.full }}
+      browser: ${{ steps.filter.outputs.browser }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -63,6 +64,22 @@ jobs:
             server:
               - 'server/**'
               - 'scripts/**'
+            browser:
+              - 'tests/browser/**'
+              - 'playwright.config.ts'
+              - 'src/components/**'
+              - 'src/App.*'
+              - 'src/index.css'
+              - 'src/main.tsx'
+              - 'src/constants/navbarLabels.ts'
+              - 'src/utils/{chartColors,expenseChartColors,navigationPreferences}*'
+              - 'src/hooks/**'
+              - 'src/workers/**'
+              - 'index.html'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vite.config.ts'
+              - '.github/workflows/tests.yml'
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
             full:
@@ -93,6 +110,21 @@ jobs:
       # Skip root postinstall (electron/native rebuild) in FE-only CI jobs.
       - run: npm ci --ignore-scripts
       - run: npm test -- --run
+
+  browser-tests:
+    name: Browser UI regressions
+    needs: changes
+    if: ${{ needs.changes.outputs.browser == 'true' || github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
 
   page:
     name: Page tests

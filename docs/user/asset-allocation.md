@@ -18,7 +18,7 @@ real time.
 
 ## Reading the allocation chart
 
-The compact donut shows the current split. Its legend lists full names and
+The compact donut resizes with its panel without cropping slices. Its legend lists full names and
 percentages in readable text; hover a slice for its value. Asset classes use the
 same muted colors in Allocation, Portfolio Breakdown and Net Worth flows.
 Section headers stay dark, with color reserved for class badges and buy/sell

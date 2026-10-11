@@ -487,6 +487,7 @@ export const WithdrawalRatePage: React.FC = () => {
                     value: 'Success rate (%)',
                     angle: -90,
                     position: 'insideLeft',
+                    offset: 14,
                     fill: '#94A3B8',
                   }}
                 />

@@ -36,15 +36,21 @@ instead.
   too, so the UI receives a compact summary rather than the full simulation
   array. Detailed logs are explicitly opt-in.
   The same client ships to the web (`dist/`) and Electron.
-- **Interface** — a dark-default liquid-glass token system in `src/App.css`.
+- **Interface** — a dark-default, teal liquid-glass token system in `src/App.css`.
   Backdrop blur is reserved for floating chrome rather than every data card.
   `AppNavigation` owns a fixed-width desktop sidebar and a keyboard-contained
   mobile drawer; route content uses the remaining workspace. The desktop rail
-  is inset and rounded, with a centered profile header and compact pointer
-  targets; touch navigation retains 44-pixel targets. Portfolio charts
+  is inset and rounded, with a branded static profile header and compact pointer
+  targets; touch navigation retains 44-pixel targets. A persisted desktop
+  collapse mode keeps named icon links while widening the page, and mobile
+  always retains full labels. Settings is not duplicated in the profile.
+  Portfolio charts
   share `src/utils/chartColors.ts` so a class has the same readable color in
   allocation, breakdown and net-worth flow views. The allocation donut uses a
   compact plot with an opaque-text legend, rather than colored floating labels.
+  Responsive radii, external legends, sign-aware income stacks and page-scoped
+  chart styles prevent cropping. Histograms and Sankey diagrams scroll locally
+  at narrow widths. Cashflow charts share stable colors and user overrides.
   System typefaces and a bundled, Apache-licensed Material Symbols font keep
   interface rendering independent of external font services.
 - **Settings reads** — the decrypted payload is cached by its encrypted
@@ -58,6 +64,10 @@ instead.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   supported storage driver; the schema is Postgres-compatible, but the
   Postgres driver remains deferred.
+- **Native startup** — Electron 44.7.0 includes the macOS unavailable
+  sleep/wake-registration fix. The development launcher owns the actual Vite
+  and Electron processes and reports native signal failures. See
+  [desktop startup troubleshooting](../../electron/README.md#startup-troubleshooting).
 - **Container builds** — `build:self-hosted` uses `/demo/` with fingerprinted
   assets, rather than the repository-prefixed Pages path. `.dockerignore`
   keeps host dependencies and generated outputs out of the build context.
@@ -103,6 +113,11 @@ future authenticated multi-tenant deployment; they are not authentication.
 data-retention safeguards for future changes. Read the relevant `SKILL.md`
 before working in that area. Each skill includes planning smoke-test prompts;
 those fixtures are not claims of completed model benchmarks.
+
+`npm run test:browser` runs the committed Playwright regression suite with
+synthetic data and mocked external responses. Its CI job verifies navigation,
+plot and label bounds, usable chart height and local-only overflow across
+desktop/mobile routes.
 
 ## Related links
 

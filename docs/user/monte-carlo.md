@@ -32,7 +32,9 @@ The horizon ends at the maximum age selected in the FIRE calculator, capped at
 - **Median years to FIRE** uses successful runs. Zero means FIRE was already
   reached at the start; N/A means there were no successful runs.
 - The **years histogram** counts successful runs by time to FIRE, including
-  the upper boundary of the distribution.
+  the upper boundary of the distribution. Dense histograms scroll horizontally
+  in narrow windows so counts and ranges remain legible; focus the plot to use
+  keyboard scrolling.
 - **Final portfolio statistics** include depleted portfolios at zero, not
   just surviving portfolios. The median and 10th/90th percentiles summarize
   the full set of outcomes.

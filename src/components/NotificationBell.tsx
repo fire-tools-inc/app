@@ -200,6 +200,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
         aria-label={unreadCount > 0 ? t('notifications.bellAriaUnread', { count: unreadCount }) : t('notifications.bellAria')}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        title={showLabel ? undefined : t('notifications.title')}
       >
         <MaterialIcon name="notifications" />
         {showLabel && <span className="notification-bell-label">{t('notifications.title')}</span>}

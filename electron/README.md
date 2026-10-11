@@ -16,18 +16,44 @@ Windows and Linux. Tracks issue
 
 ## Run in dev
 
-Two terminals:
+The development launcher starts Vite in Electron mode, waits for the renderer
+and launches the locally installed Electron binary. Build the embedded backend
+first:
 
 ```sh
-# 1. Vite dev server (relative-base build for Electron)
-ELECTRON_RENDERER_URL=http://localhost:5173 npm run dev
-
-# 2. Electron, pointed at the Vite dev server
-ELECTRON_RENDERER_URL=http://localhost:5173 npm run electron:dev
+npm --prefix server run build
+npm run electron:dev
 ```
 
-Or one-liner with concurrent processes (your shell of choice — we
-intentionally don't pull in `concurrently` to keep deps lean).
+Do not start a second Vite server on the same port. The launcher owns both child
+processes, stops its renderer when Electron closes, and reports a native signal
+exit as failure instead of returning success.
+
+The normal dev lifecycle stops known development ports. On a shared host,
+prepare the native modules and use a dedicated free port without that stop hook:
+
+```sh
+npm run electron:rebuild
+ELECTRON_RENDERER_URL=http://127.0.0.1:5190 node scripts/electron-dev.mjs
+```
+
+## Startup troubleshooting
+
+Electron 44.7.0 is the minimum selected runtime in this repository. It includes
+the fix shipped in 44.6.0 for a native macOS startup crash when
+`IORegisterForSystemPower` fails:
+[electron/electron#54596](https://github.com/electron/electron/pull/54596).
+That crash happens before app JavaScript, so renderer error handlers cannot
+repair it. Update dependencies and rebuild; do not ship power-monitor shims or
+disable the Electron sandbox as a workaround.
+
+If SQLite reports a native ABI mismatch after running plain-Node tests, use
+`npm run electron:rebuild` before launching Electron. If the embedded server
+entry is missing, use `npm --prefix server run build`. Startup diagnostics are
+written to the normal application log described in the engineering guide.
+The rebuild helper opens an in-memory database with Electron's Node ABI for
+each root/server binding and verifies the result after rebuilding. It does not
+trust file timestamps, which downloaded Node prebuilds can preserve.
 
 ## Build a distributable
 
@@ -38,6 +64,8 @@ npm run electron:dist    # runs electron-builder per electron-builder.yml
 
 Artifacts land in `release/<version>/`. Defaults: `.dmg` (macOS),
 `.exe` NSIS installer (Windows), `.AppImage` (Linux).
+The Electron build rechecks both SQLite bindings after restoring the server's
+dependencies, so a plain-Node prebuild cannot slip into the desktop output.
 
 ## Signing & notarization
 
@@ -73,8 +101,8 @@ The Electron build is not just a thin web wrapper:
 
 - **Boots straight into the FIRE Calculator** (`/fire-calculator`) instead
   of the marketing homepage.
-- **Decorative web header is hidden**; the nav bar becomes the OS
-  drag-region.
+- **Branded, collapsible sidebar** preserves page space; a small title region
+  handles window dragging without intercepting navigation controls.
 - **macOS** uses `titleBarStyle: 'hiddenInset'` for a flush, native look
   (traffic-light controls only). About panel data comes from
   `package.json`.
@@ -171,5 +199,3 @@ SHA-256 verification). Clicking **Restore** runs
 
 See [`docs/engineering/auto-updater.md`](../docs/engineering/auto-updater.md)
 for the full design including manifest schema and rollback flow.
-
-

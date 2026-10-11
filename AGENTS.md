@@ -81,9 +81,15 @@ doing so. Blur mode hides values visually, not from code or exports.
 ## Interface invariants
 
 - Dark mode remains the default even with a light system theme.
+- Keep the green/teal brand accents and render `public/fire-icon.svg` through
+  the build basename, including relative Electron asset paths.
 - `AppNavigation.tsx` and `AppNavigation.css` own the narrow, rounded inset
-  sidebar: centered profile above the menu, utilities below a divider.
-  On smaller windows it becomes a focus-contained drawer.
+  sidebar: static portfolio identity above the menu, utilities below a divider.
+  Desktop collapse keeps named icon links and gives the workspace more room;
+  `navigationPreferences.ts` persists the choice outside financial settings.
+  Smaller windows always use a full-label, focus-contained drawer.
+- Keep Settings in the sidebar, not an actionless profile dropdown. Preserve
+  accessible link names and hover labels when hiding desktop label text.
 - Keep all destinations reachable, experimental items behind their flags,
   `aria-current` accurate and the page inactive while the mobile drawer is open.
 - Preserve Escape/close focus restoration and the Electron title-bar drag
@@ -94,6 +100,12 @@ doing so. Blur mode hides values visually, not from code or exports.
   keep the same readable color across allocation, breakdown and net-worth flows.
 - Keep text opaque and readable. Avoid saturated section backgrounds, colored
   text gradients, excessive blur and later CSS rules that undo shared styles.
+- Use responsive pie radii and keep long legends outside fixed-height plots.
+  Reuse `ChartLegend` and stable `expenseChartColors.ts`; honor user category
+  overrides. Scope page-specific chart/table CSS beneath its page class.
+- Keep dense histograms and Sankey flows locally keyboard-scrollable instead
+  of clipping data or shrinking text. Test chart/label bounds after cross-route
+  navigation and sidebar resizing, not only direct page loads.
 - System fonts and the bundled Material Symbols font work offline. Preserve
   its license in `public/material-symbols.LICENSE.txt`.
 - Maintain keyboard focus, semantic controls, reduced motion, text contrast
@@ -165,6 +177,7 @@ warnings.
 | Full landing/demo/docs preview | `npm run dev:all` |
 | Targeted renderer tests | `npm test -- tests/shared/AppNavigation.test.tsx` |
 | Full renderer tests | `npm test` |
+| Real-browser navigation and graph regressions | `npm run test:browser` |
 | Targeted backend tests | `npm --prefix server test -- test/expenseTracker.test.ts` |
 | Backend build | `npm --prefix server run build` |
 | Pages build, including docs | `npm run build` |
@@ -186,6 +199,13 @@ backend test script run `ensure-sqlite-for-node.cjs` before plain-Node tests.
 Do not run competing native rebuilds concurrently or bypass these hooks after
 changing runtimes. The full Electron build also installs server dependencies;
 use the renderer-only check when no backend/install validation is needed.
+`ensure-native-modules.mjs` probes each SQLite copy with Electron in
+run-as-Node mode. Archive timestamps and stale marker files cannot prove ABI
+compatibility; verify a real in-memory open after any rebuild.
+Electron 44.7.0 includes the upstream macOS power-registration startup fix.
+Native crashes before JavaScript require a corrected runtime, not renderer
+catches or shipped system-call shims. The dev launcher owns actual child
+processes and treats signal exits as failures.
 
 - Put new tests in `tests/pages/<feature>/`, `tests/shared/` or `tests/types/`.
   Existing co-located `src/**/*.test.*` files are also included by Vitest.

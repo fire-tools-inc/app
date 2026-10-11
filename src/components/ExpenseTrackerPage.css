@@ -712,30 +712,32 @@
 }
 
 /* Breakdown Table */
-.breakdown-table-container {
+.expense-tracker-page .breakdown-table-container {
   margin-top: 2rem;
+  min-width: 0;
+  overflow-x: auto;
 }
 
-.breakdown-table-container h4 {
+.expense-tracker-page .breakdown-table-container h4 {
   font-size: 1.1rem;
   color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
-.breakdown-table {
+.expense-tracker-page .breakdown-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.95rem;
 }
 
-.breakdown-table th,
-.breakdown-table td {
+.expense-tracker-page .breakdown-table th,
+.expense-tracker-page .breakdown-table td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.breakdown-table th {
+.expense-tracker-page .breakdown-table th {
   background: var(--bg-elevated);
   font-weight: 600;
   color: var(--text-secondary);

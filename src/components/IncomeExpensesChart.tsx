@@ -77,7 +77,7 @@ export const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
         <ChartZoomControls zoomYears={zoomYears} onZoomChange={onZoomChange} customZoomInput={customZoomInput} onCustomZoomInputChange={onCustomZoomInputChange} />
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} aria-label={t('charts.incomeExpensesChartAriaLabel')} maxBarSize={calculateBarSize(data.length)}>
+        <BarChart data={data} aria-label={t('charts.incomeExpensesChartAriaLabel')} maxBarSize={calculateBarSize(data.length)} stackOffset="sign">
           <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
           <XAxis 
             dataKey="age" 

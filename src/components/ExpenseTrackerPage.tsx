@@ -1471,8 +1471,8 @@ export function ExpenseTrackerPage() {
             </div>
 
             {/* Category Breakdown Table */}
-            <div className="breakdown-table-container">
-              <h4>{t('expenseTracker.categoryBreakdown', { period: periodLabel })}</h4>
+            <div className="breakdown-table-container" role="region" tabIndex={0} aria-labelledby="category-breakdown-heading">
+              <h4 id="category-breakdown-heading">{t('expenseTracker.categoryBreakdown', { period: periodLabel })}</h4>
               <table className="breakdown-table">
                 <thead>
                   <tr>

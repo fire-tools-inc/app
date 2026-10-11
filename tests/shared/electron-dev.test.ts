@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ spawn: vi.fn() }));
 vi.mock('node:child_process', () => ({ spawn: mocks.spawn, default: { spawn: mocks.spawn } }));
+vi.mock('node:module', async importOriginal => {
+  const actual = await importOriginal<typeof import('node:module')>();
+  const createRequire = () => () => '/synthetic/Electron';
+  return { ...actual, createRequire, default: { ...actual, createRequire } };
+});
 
 class FakeChild extends EventEmitter {
   killed = false;
