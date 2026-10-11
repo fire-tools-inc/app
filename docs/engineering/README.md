@@ -46,6 +46,9 @@ instead.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   supported storage driver; the schema is Postgres-compatible, but the
   Postgres driver remains deferred.
+- **Container builds** — `build:self-hosted` uses `/demo/` with fingerprinted
+  assets, rather than the repository-prefixed Pages path. `.dockerignore`
+  keeps host dependencies and generated outputs out of the build context.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
   Source of truth for both server routes and any generated client. Also
   published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).

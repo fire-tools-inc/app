@@ -198,6 +198,10 @@ body {
   flex-direction: column;
 }
 
+#main-content {
+  scroll-margin-top: 6rem;
+}
+
 .route-loading,
 .route-load-error {
   flex: 1;

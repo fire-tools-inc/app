@@ -56,12 +56,12 @@ describe('simulation worker transport', () => {
     expect(postMessage).toHaveBeenLastCalledWith({
       type: 'error', message: 'numSimulations must be an integer between 1 and 100000',
     });
+  });
 
-    it('rejects oversized detailed logs before allocating their yearly records', () => {
-      run(100_000, true);
-      expect(postMessage).toHaveBeenLastCalledWith({
-        type: 'error', message: 'Detailed logs support up to 10000 simulations. Disable logs or lower the count.',
-      });
+  it('rejects oversized detailed logs before allocating their yearly records', () => {
+    run(100_000, true);
+    expect(postMessage).toHaveBeenLastCalledWith({
+      type: 'error', message: 'Detailed logs support up to 10000 simulations. Disable logs or lower the count.',
     });
   });
 });
