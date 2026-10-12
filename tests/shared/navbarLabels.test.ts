@@ -11,7 +11,7 @@
  * navbar is intentionally non-localisable. Update the constants instead.
  */
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { NAVBAR_LABELS } from '../../src/constants/navbarLabels';
@@ -24,15 +24,10 @@ import es from '../../src/i18n/locales/es.json';
 const SELF_FILE = fileURLToPath(import.meta.url);
 const SRC_DIR = resolve(dirname(SELF_FILE), '../../src');
 
-const collectSourceFiles = (dir: string, acc: string[] = []): string[] => {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    const st = statSync(full);
-    if (st.isDirectory()) collectSourceFiles(full, acc);
-    else if (/\.(ts|tsx)$/.test(entry)) acc.push(full);
-  }
-  return acc;
-};
+const collectSourceFiles = (dir: string): string[] =>
+  readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter(entry => entry.isFile() && /\.(ts|tsx)$/.test(entry.name))
+    .map(entry => join(entry.parentPath, entry.name));
 
 const T_NAV_REGEX = /\bt\(\s*['"`]nav\./;
 
@@ -65,9 +60,12 @@ describe('navbar is English-only (#233)', () => {
     });
   });
 
-  it('no source file routes navbar strings through i18n (t("nav.…"))', () => {
+  // Static source scan; the limit only guards against a hung worker on a loaded host.
+  it('no source file routes navbar strings through i18n (t("nav.…"))', { timeout: 30000 }, () => {
     const offenders: string[] = [];
-    for (const file of collectSourceFiles(SRC_DIR)) {
+    const files = collectSourceFiles(SRC_DIR);
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
       if (file === SELF_FILE) continue;
       const content = readFileSync(file, 'utf-8');
       if (T_NAV_REGEX.test(content)) offenders.push(file);

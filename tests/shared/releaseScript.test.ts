@@ -1,14 +1,16 @@
 // @vitest-environment node
 import { spawn, type ChildProcess } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 const releaseScript = resolve('scripts/release.sh');
 const bumpScript = resolve('scripts/bump-version.mjs');
 const fixtureShell = process.platform === 'darwin' ? '/bin/bash' : '/usr/bin/env bash';
-const commandTimeout = 20000;
+// Hang guard, not a performance budget: a full synthetic release takes a few
+// seconds, but the release script runs this suite on a fully loaded host.
+const commandTimeout = 60000;
 const expectedChecks = [
   'ci',
   '--prefix server ci',
@@ -25,6 +27,7 @@ const versionFiles = [
   'package.json', 'package-lock.json', 'server/package.json',
   'server/package-lock.json', 'tests/setup.ts',
 ];
+let template: string;
 let directory: string;
 let project: string;
 let remote: string;
@@ -91,23 +94,23 @@ async function commitFixtureChange(path: string, content: string): Promise<void>
   originalCommit = await git(['rev-parse', 'HEAD']);
 }
 
-beforeEach(async () => {
-  directory = mkdtempSync(join(tmpdir(), 'fire-tools-release-test-'));
+function prepareDirectory(root: string): void {
+  directory = root;
   project = join(directory, 'project');
   remote = join(directory, 'remote.git');
   commandLog = join(directory, 'npm-commands.log');
   const bin = join(directory, 'bin');
-  const template = join(directory, 'empty-template');
+  const gitTemplate = join(directory, 'empty-template');
   const gitConfig = join(directory, 'empty-gitconfig');
-  mkdirSync(bin);
-  mkdirSync(template);
-  mkdirSync(project);
+  mkdirSync(bin, { recursive: true });
+  mkdirSync(gitTemplate, { recursive: true });
+  mkdirSync(project, { recursive: true });
   environment = {
     ...process.env,
     PATH: `${bin}${delimiter}${process.env.PATH}`,
     GIT_CONFIG_GLOBAL: gitConfig,
     GIT_CONFIG_NOSYSTEM: '1',
-    GIT_TEMPLATE_DIR: template,
+    GIT_TEMPLATE_DIR: gitTemplate,
     GIT_AUTHOR_NAME: 'Synthetic release test',
     GIT_AUTHOR_EMAIL: 'synthetic@example.invalid',
     GIT_COMMITTER_NAME: 'Synthetic release test',
@@ -136,6 +139,12 @@ if [[ "$*" == 'run electron:build' ]]; then
   fi
 fi
 `, { mode: 0o755 });
+}
+
+// Build the synthetic repository once; each test gets an independent copy.
+beforeAll(async () => {
+  template = mkdtempSync(join(tmpdir(), 'fire-tools-release-template-'));
+  prepareDirectory(template);
   await git(['init', '--bare', '-q', remote], directory);
   await git(['init', '-q', '-b', 'main']);
   for (const subdirectory of ['scripts', 'server', 'tests']) mkdirSync(join(project, subdirectory));
@@ -153,10 +162,22 @@ fi
   writeFileSync(join(project, 'tests/setup.ts'), "vi.stubGlobal('__APP_VERSION__', '1.2.3');\n");
   await git(['add', '.']);
   await git(['commit', '--no-gpg-sign', '-qm', 'Synthetic initial commit']);
-  await git(['remote', 'add', 'origin', remote]);
+  // Relative so copies of the template push to their own remote.
+  await git(['remote', 'add', 'origin', '../remote.git']);
   await git(['push', '-q', 'origin', 'HEAD:main']);
-  originalCommit = await git(['rev-parse', 'HEAD']);
+}, commandTimeout);
+
+afterAll(() => {
+  if (template) rmSync(template, { recursive: true, force: true });
 });
+
+beforeEach(async () => {
+  const root = mkdtempSync(join(tmpdir(), 'fire-tools-release-test-'));
+  cpSync(join(template, 'project'), join(root, 'project'), { recursive: true });
+  cpSync(join(template, 'remote.git'), join(root, 'remote.git'), { recursive: true });
+  prepareDirectory(root);
+  originalCommit = await git(['rev-parse', 'HEAD']);
+}, commandTimeout);
 
 afterEach(async () => {
   await Promise.all([...processes].map(([child, closed]) => {
@@ -166,7 +187,7 @@ afterEach(async () => {
   rmSync(directory, { recursive: true, force: true });
 });
 
-describe('one-command release script', { timeout: commandTimeout + 5000 }, () => {
+describe('one-command release script', { timeout: commandTimeout + 30000 }, () => {
   it('rejects a command that cannot start instead of treating it as a release rejection', async () => {
     await expect(execute(join(directory, 'missing-command'), [], project, environment)).rejects.toThrow('ENOENT');
   });
