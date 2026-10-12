@@ -11,6 +11,7 @@ import { buildCalculatorRouter } from './routes/calculator.js';
 import { buildMonteCarloRouter } from './routes/monteCarlo.js';
 import { buildAssetAllocationRouter } from './routes/assetAllocation.js';
 import { buildExpenseTrackerRouter } from './routes/expenseTracker.js';
+import { buildExpensePlanningRouter } from './routes/expensePlanning.js';
 import { buildNetWorthRouter } from './routes/netWorth.js';
 import { buildQuestionnaireRouter } from './routes/questionnaire.js';
 import { buildPdfImportsRouter } from './routes/pdfImports.js';
@@ -100,6 +101,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
   v1.use(buildMonteCarloRouter(db));
   v1.use(buildAssetAllocationRouter(db));
   v1.use(buildExpenseTrackerRouter(db));
+  v1.use(buildExpensePlanningRouter(db));
   v1.use(buildNetWorthRouter(db));
   v1.use(buildQuestionnaireRouter(db));
   v1.use(buildPdfImportsRouter(db));

@@ -22,6 +22,7 @@ import {
   getDemoNetWorthTracker,
 } from './demoMode';
 import { logger } from './logger';
+import { validateExpenseTrackerPlanning } from './expensePlanning';
 
 // Cookie keys
 const ASSET_ALLOCATION_KEY = 'fire-calculator-asset-allocation';
@@ -360,13 +361,16 @@ function isValidExpenseTrackerData(obj: any): obj is ExpenseTrackerData {
 export function saveExpenseTrackerData(data: ExpenseTrackerData): void {
   if (IS_DEMO_MODE) return;
   try {
+    validateExpenseTrackerPlanning(data);
     const dataJson = JSON.stringify(data);
     const encryptedData = encryptData(dataJson);
     
     localStorage.setItem(EXPENSE_TRACKER_KEY, encryptedData);
   } catch (error) {
-    logger.error('cookie-storage', 'save-failed', 'failed to save expense tracker data to localStorage', { pii: { error: (error as Error)?.message } });
-    throw new Error('Failed to save data to localStorage. Storage may be full or disabled.');
+    logger.error('cookie-storage', 'save-failed', 'failed to save expense tracker data to localStorage', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+    throw new Error('Failed to save data to localStorage. Check the input and available storage.');
   }
 }
 
