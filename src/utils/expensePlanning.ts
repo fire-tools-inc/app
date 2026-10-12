@@ -115,3 +115,10 @@ export function validateExpenseTrackerPlanning(data: ExpenseTrackerData): void {
     occurrences.add(key);
   }
 }
+
+export class ExpensePlanningError extends Error {
+  constructor(readonly code: 'alreadyRecorded' | 'invalidOccurrence' | 'invalidInput', message: string) {
+    super(message);
+    this.name = 'ExpensePlanningError';
+  }
+}
