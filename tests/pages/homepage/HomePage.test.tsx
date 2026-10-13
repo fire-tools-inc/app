@@ -6,6 +6,8 @@ import { createEmptyMonthlySnapshot } from '../../../src/types/netWorthTracker';
 import { DEFAULT_SETTINGS } from '../../../src/utils/cookieSettings';
 import { DEFAULT_INPUTS } from '../../../src/utils/defaults';
 import { expectDiagnostic } from '../../shared/diagnostics';
+import { cashflowFixture, expenseSchedule, planningFixture } from '../expense-tracker/planningFixtures';
+import { calendarDate } from '../../../src/utils/cashflowSchedules';
 
 const mocks = vi.hoisted(() => ({
   assets: vi.fn(),
@@ -47,6 +49,17 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('home dashboard', () => {
+  it('shows read-only upcoming commitments and manual goals with planner deep links', () => {
+    mocks.cashflow.mockReturnValue({
+      ...cashflowFixture(), planning: planningFixture({ schedules: [expenseSchedule({ startDate: calendarDate() })] }),
+    });
+    mount();
+    expect(screen.getByRole('region', { name: 'Upcoming commitments' })).toBeDefined();
+    expect(screen.getByText('Test goal')).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Open planning' }).getAttribute('href')).toBe('/expense-tracker?tab=planning');
+    expect(mocks.saveSettings).not.toHaveBeenCalled();
+  });
+
   it('replaces tool tiles with four financial sections and useful empty states', () => {
     mount();
     expect(screen.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeDefined();

@@ -435,3 +435,24 @@
     padding: 1.25rem 1rem;
   }
 }
+.homepage .dashboard-planning-list {
+  padding: 0;
+  margin: 1rem 0;
+  list-style: none;
+}
+.homepage .dashboard-planning-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.homepage .dashboard-planning-list li > div {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+.homepage .dashboard-planning-list span {
+  color: var(--text-secondary);
+}

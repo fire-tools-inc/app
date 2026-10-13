@@ -19,6 +19,10 @@ import {
 import { calculateTransactionSummary } from './expenseCalculator';
 import { calculateFIRE } from './fireCalculator';
 import { calculateMonthlyNetWorth, type MonthlyNetWorthResult } from './netWorthCalculator';
+import { addCalendarDays, calendarDate, getScheduleOccurrences, type ScheduleOccurrence } from './cashflowSchedules';
+import type { SavingsGoal } from '../types/expensePlanning';
+import { validateExpenseTrackerPlanning } from './expensePlanning';
+import { logger } from './logger';
 
 export interface DashboardSources {
   assets: Asset[] | null;
@@ -67,6 +71,11 @@ export interface DashboardData {
   };
   fire: DashboardFireSummary | null;
   firePlanInvalid: boolean;
+  planning: {
+    upcoming: ScheduleOccurrence[];
+    goals: SavingsGoal[];
+    invalid: boolean;
+  };
 }
 
 function periodKey(year: number, month: number): string {
@@ -153,6 +162,22 @@ export function buildDashboardData(sources: DashboardSources, now = new Date()):
     }
   }
 
+  const planning: DashboardData['planning'] = { upcoming: [], goals: [], invalid: false };
+  if (sources.cashflow?.planning) {
+    try {
+      validateExpenseTrackerPlanning(sources.cashflow);
+      const today = calendarDate(now);
+      planning.upcoming = getScheduleOccurrences(sources.cashflow, today, addCalendarDays(today, 29))
+        .filter(item => item.status === 'planned').slice(0, 3);
+      planning.goals = sources.cashflow.planning.goals.filter(goal => !goal.archived).slice(0, 3);
+    } catch (error) {
+      planning.invalid = true;
+      logger.error('dashboard', 'invalid-planning', 'saved planning data could not be shown', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+    }
+  }
+
   return {
     settings,
     currentPeriod,
@@ -169,6 +194,7 @@ export function buildDashboardData(sources: DashboardSources, now = new Date()):
     },
     fire,
     firePlanInvalid,
+    planning,
   };
 }
 

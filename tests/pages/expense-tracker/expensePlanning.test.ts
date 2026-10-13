@@ -1,10 +1,26 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { parseExpensePlanning } from '../../../src/utils/expensePlanning';
+import { parseExpensePlanning, removeExpenseCategory } from '../../../src/utils/expensePlanning';
 import { loadExpenseTrackerData, saveExpenseTrackerData } from '../../../src/utils/cookieStorage';
 import { expectDiagnostic } from '../../shared/diagnostics';
 import { cashflowFixture, expenseSchedule, planningFixture, savingsGoal } from './planningFixtures';
 
 describe('expense planning contract', () => {
+  it('keeps category deletion consistent across ledger entries, schedules and rules', () => {
+    const data = {
+      ...cashflowFixture(), planning: planningFixture(),
+      customCategories: [{ id: 'custom', name: 'Synthetic', icon: 'pets', color: '#65D4C4', defaultExpenseType: 'NEED' as const }],
+    };
+    data.planning.schedules = [expenseSchedule({ category: 'custom' })];
+    data.planning.rules = [{
+      id: 'rule', name: 'Test', kind: 'expense', enabled: true, priority: 0, category: 'custom', expenseType: 'NEED',
+      match: { operator: 'contains', description: 'Test' },
+    }];
+    const reassigned = removeExpenseCategory(data, 'custom', 'NO_CATEGORY');
+    expect(reassigned.planning?.schedules[0]).toMatchObject({ category: 'NO_CATEGORY', enabled: true });
+    expect(reassigned.planning?.rules[0]).toMatchObject({ category: 'NO_CATEGORY', enabled: true });
+    expect(removeExpenseCategory(data, 'custom').planning?.rules[0]).toMatchObject({ category: 'custom', enabled: false });
+    expect(data.customCategories).toHaveLength(1);
+  });
   it('reads legacy absence as an empty planning document without inventing balances', () => {
     expect(parseExpensePlanning(undefined)).toEqual({
       schemaVersion: 1,

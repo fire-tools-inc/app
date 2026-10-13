@@ -37,6 +37,8 @@ const routes = [
   { slug: 'monte-carlo',        path: '/demo/monte-carlo' },
   { slug: 'asset-allocation',   path: '/demo/asset-allocation' },
   { slug: 'expense-tracker',    path: '/demo/expense-tracker' },
+  { slug: 'cashflow-planning',  path: '/demo/expense-tracker?tab=planning', selector: '.cashflow-planning' },
+  { slug: 'import-rules',       path: '/demo/expense-tracker?tab=rules', selector: '.cashflow-planning' },
   { slug: 'expense-statistics', path: '/demo/expense-tracker', selector: '.expense-statistics' },
   { slug: 'net-worth-tracker',  path: '/demo/net-worth-tracker' },
   { slug: 'questionnaire',      path: '/demo/questionnaire' },
@@ -158,6 +160,9 @@ async function main() {
         await page.locator(r.selector).locator('.recharts-surface').waitFor({ state: 'visible' });
         await page.locator(r.selector).getByRole('heading', { name: 'Expense statistics' }).hover();
         await page.mouse.move(0, 0);
+        await page.locator(r.selector).screenshot({ path: file });
+      } else if (r.slug === 'cashflow-planning' || r.slug === 'import-rules') {
+        await page.locator(r.selector).waitFor({ state: 'visible' });
         await page.locator(r.selector).screenshot({ path: file });
       } else {
         await page.screenshot({ path: file, fullPage: false });

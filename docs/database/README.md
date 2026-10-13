@@ -9,6 +9,15 @@ conventions, but a PostgreSQL driver is not implemented. Existing renderer
 financial stores remain localStorage/SafeCookies stores; receipt originals
 are stored in the backend database.
 
+`0006_expense_planning` adds a per-user `expense_planning.payload_json`
+document plus optional `schedule_id`/`scheduled_date` linkage on expense and
+income rows. GET/PUT `/expense-tracker/planning` validates the complete
+versioned document before atomic replacement. It does not migrate or
+automatically mirror the renderer's authoritative Cashflow snapshot.
+Occurrence duplication is rejected across income/expense API writes within
+the user's scope. Rolling back removes planning/linkage but preserves recorded
+transaction amounts/history; export a backup before rollback.
+
 `0005_ai_features` adds the per-user `ai_features_enabled` permission with a
 default of `1`, preserving existing per-action AI opt-in behavior. Its rollback
 removes this permission only; endpoint credentials, model IDs, receipts and

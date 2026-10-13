@@ -2474,13 +2474,13 @@ components:
       oneOf:
         - properties: { kind: { enum: [expense] } }
           required: [category, expenseType]
-          not: { required: [source] }
+          not: { properties: { source: {} }, required: [source] }
         - properties: { kind: { enum: [income] } }
           required: [source]
           not:
             anyOf:
-              - { required: [category] }
-              - { required: [expenseType] }
+              - { properties: { category: {} }, required: [category] }
+              - { properties: { expenseType: {} }, required: [expenseType] }
 
     ScheduledOccurrenceReference:
       type: object
@@ -2532,13 +2532,13 @@ components:
       oneOf:
         - properties: { kind: { enum: [expense] } }
           required: [category, expenseType]
-          not: { required: [source] }
+          not: { properties: { source: {} }, required: [source] }
         - properties: { kind: { enum: [income] } }
           required: [source]
           not:
             anyOf:
-              - { required: [category] }
-              - { required: [expenseType] }
+              - { properties: { category: {} }, required: [category] }
+              - { properties: { expenseType: {} }, required: [expenseType] }
 
     CashflowForecastInputs:
       type: object

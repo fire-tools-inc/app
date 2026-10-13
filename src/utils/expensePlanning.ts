@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ExpensePlanningData, ScheduledOccurrenceReference } from '../types/expensePlanning';
 import {
-  INCOME_SOURCES, type IncomeSource, type ExpenseTrackerData, type IncomeEntry, type ExpenseEntry,
+  INCOME_SOURCES, getAllCategories, type IncomeSource, type ExpenseTrackerData, type IncomeEntry, type ExpenseEntry,
 } from '../types/expenseTracker';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '../types/currency';
 import { isValidCalendarDate } from './dateValidation';
@@ -114,6 +114,56 @@ export function validateExpenseTrackerPlanning(data: ExpenseTrackerData): void {
     if (occurrences.has(key)) throw new Error('This scheduled occurrence is already recorded.');
     occurrences.add(key);
   }
+}
+
+export function removeExpenseCategory(
+  data: ExpenseTrackerData, categoryId: string, reassignTo?: string,
+): ExpenseTrackerData {
+  validateExpenseTrackerPlanning(data);
+  const next = structuredClone(data);
+  next.customCategories = (next.customCategories ?? []).filter(category => category.id !== categoryId);
+  if (reassignTo && !getAllCategories(next.customCategories, next.categoryOverrides).some(category => category.id === reassignTo)) {
+    throw new ExpensePlanningError('invalidInput', 'Choose an existing replacement category.');
+  }
+  if (reassignTo) for (const transaction of cashflowTransactions(next)) {
+    if (transaction.type === 'expense' && transaction.category === categoryId) transaction.category = reassignTo;
+  }
+  if (next.planning) {
+    next.planning.schedules = next.planning.schedules.map(schedule => schedule.kind === 'expense' && schedule.category === categoryId
+      ? reassignTo ? { ...schedule, category: reassignTo } : { ...schedule, enabled: false } : schedule);
+    next.planning.rules = next.planning.rules.map(rule => rule.kind === 'expense' && rule.category === categoryId
+      ? reassignTo ? { ...rule, category: reassignTo } : { ...rule, enabled: false } : rule);
+  }
+  return next;
+}
+
+export function planningCategoryReferenceCount(data: ExpenseTrackerData, categoryId: string): number {
+  const planning = parseExpensePlanning(data.planning);
+  return planning.schedules.filter(item => item.kind === 'expense' && item.category === categoryId).length
+    + planning.rules.filter(item => item.kind === 'expense' && item.category === categoryId).length;
+}
+
+export function prepareExpenseTrackerRestore(
+  imported: ExpenseTrackerData, current: ExpenseTrackerData | null,
+): ExpenseTrackerData {
+  const next = structuredClone(imported);
+  if (next.planning === undefined && current?.planning !== undefined) {
+    next.planning = parseExpensePlanning(current.planning);
+    const referenced = new Set([
+      ...next.planning.schedules.filter(item => item.kind === 'expense').map(item => item.category),
+      ...next.planning.rules.filter(item => item.kind === 'expense').map(item => item.category),
+    ]);
+    const ids = new Set((next.customCategories ?? []).map(item => item.id));
+    const retained = (current.customCategories ?? []).filter(item => referenced.has(item.id) && !ids.has(item.id));
+    if (retained.length) next.customCategories = [...(next.customCategories ?? []), ...structuredClone(retained)];
+  }
+  validateExpenseTrackerPlanning(next);
+  const categories = new Set(getAllCategories(next.customCategories, next.categoryOverrides).map(item => item.id));
+  if (next.planning?.schedules.some(item => item.kind === 'expense' && item.enabled && !item.archived && !categories.has(item.category))
+    || next.planning?.rules.some(item => item.kind === 'expense' && item.enabled && !categories.has(item.category))) {
+    throw new ExpensePlanningError('invalidInput', 'Imported planning refers to missing categories. Restore or reassign their definitions first.');
+  }
+  return next;
 }
 
 export class ExpensePlanningError extends Error {

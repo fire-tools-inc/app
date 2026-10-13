@@ -37,6 +37,10 @@ reachable from the sidebar.
 - **No invented data** — missing sections explain what to record and link to
   the relevant tool. Viewing Home does not seed or overwrite financial data.
   The public demo displays the app's existing sample data and stays read-only.
+- **Upcoming commitments and savings goals** — compact summaries of the next
+  three pending commitments within 30 days and three active manual goals link
+  to Cashflow Planning. Reserved goal balances are not added to net worth,
+  portfolio totals, FIRE progress or recorded cashflow.
 - **Dark by default** — the interface stays dark even if your operating system
   uses a light theme. Text and financial values stay opaque; glass effects are
   confined to panels and navigation, with restrained green/teal accents.

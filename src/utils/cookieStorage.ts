@@ -397,7 +397,7 @@ export function loadExpenseTrackerData(): ExpenseTrackerData | null {
         encryptedData = cookieData;
       }
     }
-    
+
     if (encryptedData) {
       const decryptedData = decryptData(encryptedData);
       if (decryptedData) {
@@ -422,6 +422,17 @@ export function clearExpenseTrackerData(): void {
     localStorage.removeItem(EXPENSE_TRACKER_KEY);
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear expense tracker data from localStorage', { pii: { error: (error as Error)?.message } });
+  }
+}
+
+export function hasStoredExpenseTrackerData(): boolean {
+  try {
+    return Boolean(localStorage.getItem(EXPENSE_TRACKER_KEY) || SafeCookies.get(EXPENSE_TRACKER_KEY));
+  } catch (error) {
+    logger.error('cookie-storage', 'storage-check-failed', 'saved cashflow storage could not be checked', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+    return true;
   }
 }
 

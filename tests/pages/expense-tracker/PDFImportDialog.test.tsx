@@ -18,6 +18,29 @@ function makeFile(name: string): File {
 }
 
 describe('PDFImportDialog', () => {
+  it('applies offline rules before AI and keeps the manual review override', async () => {
+    const categorizer = vi.fn().mockImplementation(async drafts => drafts);
+    const onAddExpense = vi.fn();
+    render(<PDFImportDialog onClose={vi.fn()} onAddIncome={vi.fn()} onAddExpense={onAddExpense}
+      defaultCurrency="EUR" extractor={vi.fn().mockResolvedValue(makeExtracted('synthetic.pdf', [
+        'Synthetic shop', '15/03/2024', 'TOTAL €6,50',
+      ]))} categorizer={categorizer}
+      llmConfig={{ baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'synthetic' }}
+      categorizationRules={[{
+        id: 'local-rule', name: 'Synthetic rule', enabled: true, priority: 0, kind: 'expense',
+        match: { description: 'Synthetic shop', operator: 'contains' }, category: 'GROCERIES', expenseType: 'NEED',
+      }]} />);
+    fireEvent.change(screen.getByLabelText(/Document type/i), { target: { value: 'receipt' } });
+    fireEvent.click(screen.getByLabelText(/Use AI categorization/i));
+    fireEvent.change(screen.getByLabelText(/PDF files/i), { target: { files: [makeFile('synthetic.pdf')] } });
+    await screen.findByText(/Rule: Synthetic rule/);
+    expect(categorizer).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Category 1'), { target: { value: 'UTILITIES' } });
+    fireEvent.click(screen.getByRole('button', { name: /Import \(1\)/ }));
+    await waitFor(() => expect(onAddExpense).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 6.5, date: '2024-03-15', category: 'UTILITIES',
+    })));
+  });
   it('renders empty state and disables AI categorization when LLM not configured', () => {
     const onClose = vi.fn();
     const onAddIncome = vi.fn();

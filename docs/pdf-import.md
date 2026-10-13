@@ -52,6 +52,16 @@ If saving succeeded but updating receipt status failed, **Finish receipt
 review** retries the status update without changing or re-saving entries.
 The tracker navigates to the earliest imported transaction's month.
 
+## Offline categorization rules
+
+Cashflow Tracker's **Rules** tab configures local, literal description/kind/
+currency/amount matching. The first enabled match suggests category/type or
+income source before optional AI processing. Matched rows show their rule and
+are not sent to a model; unmatched rows keep the existing consent and
+cancellation behavior. Manual review overrides suggestions. Rules work with
+AI disabled and never change dates, amounts or saved history.
+See [cashflow planning](user/cashflow-planning.md#offline-categorization-rules).
+
 ## Retained originals
 
 Photos are stored **before OCR** in the backend SQLite `receipts` table,

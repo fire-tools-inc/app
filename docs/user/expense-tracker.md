@@ -13,6 +13,15 @@ annual expenses (the number that drives the FIRE target) instead of guessing.
    currency conversion is optional.
 3. The ledger groups transactions by month and shows totals per category.
 
+## Planning ahead
+
+**Planning** adds scheduled income/bills, explicit record/link confirmation,
+30/90/365-day cash forecasts and manually funded savings goals. **Rules** adds
+offline categorization suggestions to the document-import review. These do
+not post money automatically or count reserved goal balances as assets.
+See the [cashflow planning guide](./cashflow-planning.md) for accounting
+assumptions, privacy, category lifecycle and backup/restore details.
+
 ## Reading analytics
 
 Open **Analytics** and choose a month, quarter or year. Category pies and trends
