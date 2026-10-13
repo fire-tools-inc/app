@@ -97,6 +97,8 @@ jobs:
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
             full:
+              - 'scripts/{release.sh,auto-release.sh,release-version.mjs,bump-version.mjs}'
+              - '.github/workflows/{release,version-bump}.yml'
               - 'tests/setup.ts'
               - 'tests/shared/**'
               - 'tests/types/**'

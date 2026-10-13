@@ -45,10 +45,11 @@ The runner also includes co-located `src/**/*.test.ts` and `.test.tsx` files.
 New tests should still follow the feature-based layout above.
 
 Unit tests keep the default timeout and use at most half the available CPU
-workers. The release-script integration suite awaits real subprocess exits:
-each command has a 20-second deadline, with a 25-second per-test budget for
-the command and its assertions. Startup errors and signal termination reject
-the test rather than counting as an expected nonzero release exit.
+workers. The release integration suite exercises manual and automatic release
+preparation with isolated synthetic repositories and real Git subprocesses.
+Each command has a 60-second hang guard and each test a 90-second budget;
+these are not performance thresholds. Startup errors and signal termination
+reject the test rather than counting as an expected nonzero release exit.
 
 ### Diagnostics and async rendering
 

@@ -25,7 +25,12 @@ info() { printf '\033[36m==>\033[0m %s\n' "$*"; }
 fail() { err "$*"; exit 1; }
 
 STEP="checking release prerequisites"
-trap 'status=$?; err "Release failed while $STEP (exit $status). Local changes and tags are preserved; inspect git status before retrying."; exit "$status"' ERR
+release_failed() {
+ local status="$1"
+ err "Release failed while $STEP (exit $status). Local changes and tags are preserved; inspect git status before retrying."
+ exit "$status"
+}
+trap 'release_failed "$?"' ERR
 
 usage() {
  cat <<'EOF'
@@ -91,25 +96,15 @@ valid_version "$CURRENT_VERSION" || fail "package.json must contain a stable X.Y
 VERSION="$CURRENT_VERSION"
 if [[ "$BUMP_REQUESTED" == 1 ]]; then
  if [[ -z "$BUMP_TO" ]]; then
-   BUMP_TO="$(node -e 'const [major, minor] = process.argv[1].split(".").map(Number); process.stdout.write(`${major}.${minor + 1}.0`)' "$CURRENT_VERSION")"
+   BUMP_TO="$(node -e 'const [major, minor] = process.argv[1].split(".").map(Number); process.stdout.write([major, minor + 1, 0].join("."))' "$CURRENT_VERSION")"
  fi
  VERSION="$BUMP_TO"
 fi
 TAG="v$VERSION"
 
-node - "$CURRENT_VERSION" "$VERSION" <<'NODE'
-const current = process.argv[2].split('.').map(Number);
-const requested = process.argv[3].split('.').map(Number);
-if (![...current, ...requested].every(Number.isSafeInteger)) {
- console.error('Version components must be safe integers.');
- process.exit(1);
+check_release_version() {
+ node scripts/release-version.mjs check "$CURRENT_VERSION" "$VERSION" "$REMOTE"
 }
-const firstDifference = requested.findIndex((value, index) => value !== current[index]);
-if (firstDifference !== -1 && requested[firstDifference] < current[firstDifference]) {
- console.error(`Requested version ${process.argv[3]} is older than ${process.argv[2]}.`);
- process.exit(1);
-}
-NODE
 
 check_tag_available() {
  if git show-ref --verify --quiet "refs/tags/$TAG"; then
@@ -128,25 +123,11 @@ check_main_unchanged() {
 }
 
 verify_versions() {
- node - "$VERSION" <<'NODE'
-const fs = require('node:fs');
-const version = process.argv[2];
-for (const file of ['package.json', 'package-lock.json', 'server/package.json', 'server/package-lock.json']) {
- const data = JSON.parse(fs.readFileSync(file, 'utf8'));
- if (data.version !== version || (file.endsWith('package-lock.json') && data.packages?.['']?.version !== version)) {
-   console.error(`${file} does not match release version ${version}.`);
-   process.exit(1);
- }
-}
-const setup = fs.readFileSync('tests/setup.ts', 'utf8');
-const testVersion = setup.match(/vi\.stubGlobal\('__APP_VERSION__',\s*'([^']+)'\)/)?.[1];
-if (testVersion !== version) {
- console.error(`tests/setup.ts does not match release version ${version}.`);
- process.exit(1);
-}
-NODE
+ node scripts/release-version.mjs verify "$VERSION"
 }
 
+STEP="checking the requested release version"
+check_release_version
 check_tag_available
 if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
  STEP="updating version files"
@@ -193,6 +174,7 @@ done <<< "$CHANGED_FILES"
 [[ "$(git diff --binary HEAD)" == "$VERSION_DIFF" ]] ||
   fail "Tracked files changed during validation; the checked release contents will not be committed."
 check_main_unchanged
+check_release_version
 check_tag_available
 
 STEP="committing the validated version"
@@ -208,6 +190,7 @@ verify_versions
 
 STEP="creating and pushing the release tag"
 check_main_unchanged
+check_release_version
 check_tag_available
 info "creating annotated tag $TAG..."
 git -c tag.gpgSign=false tag -a "$TAG" -m "Release $TAG"

@@ -7,6 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 const releaseScript = resolve('scripts/release.sh');
 const bumpScript = resolve('scripts/bump-version.mjs');
+const versionScript = resolve('scripts/release-version.mjs');
+const autoReleaseScript = resolve('scripts/auto-release.sh');
 const fixtureShell = process.platform === 'darwin' ? '/bin/bash' : '/usr/bin/env bash';
 // Hang guard, not a performance budget: a full synthetic release takes a few
 // seconds, but the release script runs this suite on a fully loaded host.
@@ -82,6 +84,23 @@ function run(args: string[] = [], overrides: NodeJS.ProcessEnv = {}) {
     project, { ...environment, ...overrides });
 }
 
+function runAutomatic(before: string, source = originalCommit, overrides: NodeJS.ProcessEnv = {}) {
+  writeFileSync(join(directory, 'github-output'), '');
+  return execute(process.platform === 'darwin' ? '/bin/bash' : 'bash', ['scripts/auto-release.sh'],
+    project, {
+      ...environment,
+      GITHUB_ACTIONS: 'true',
+      GITHUB_OUTPUT: join(directory, 'github-output'),
+      RELEASE_BEFORE: before,
+      RELEASE_SOURCE: source,
+      ...overrides,
+    });
+}
+
+function releaseOutput(): string {
+  return readFileSync(join(directory, 'github-output'), 'utf8').trim();
+}
+
 function commands(): string[] {
   return existsSync(commandLog) ? readFileSync(commandLog, 'utf8').trim().split('\n') : [];
 }
@@ -92,6 +111,20 @@ async function commitFixtureChange(path: string, content: string): Promise<void>
   await git(['commit', '--no-gpg-sign', '-qm', 'Synthetic fixture change']);
   await git(['push', '-q', 'origin', 'HEAD:main']);
   originalCommit = await git(['rev-parse', 'HEAD']);
+}
+
+async function commitFixtureVersion(version: string): Promise<void> {
+  const result = await execute(process.execPath, ['scripts/bump-version.mjs', version], project, environment);
+  expect(result.status, result.stderr).toBe(0);
+  await git(['add', '--', ...versionFiles]);
+  await git(['commit', '--no-gpg-sign', '-qm', `Synthetic version ${version}`]);
+  await git(['push', '-q', 'origin', 'HEAD:main']);
+  originalCommit = await git(['rev-parse', 'HEAD']);
+}
+
+async function publishFixtureTag(version: string): Promise<void> {
+  await git(['-c', 'tag.gpgSign=false', 'tag', '-a', `v${version}`, '-m', `Synthetic release ${version}`]);
+  await git(['push', '-q', 'origin', `refs/tags/v${version}`]);
 }
 
 function prepareDirectory(root: string): void {
@@ -150,6 +183,8 @@ beforeAll(async () => {
   for (const subdirectory of ['scripts', 'server', 'tests']) mkdirSync(join(project, subdirectory));
   copyFileSync(releaseScript, join(project, 'scripts/release.sh'));
   copyFileSync(bumpScript, join(project, 'scripts/bump-version.mjs'));
+  copyFileSync(versionScript, join(project, 'scripts/release-version.mjs'));
+  copyFileSync(autoReleaseScript, join(project, 'scripts/auto-release.sh'));
   for (const prefix of ['', 'server/']) {
     writeFileSync(join(project, prefix, 'package.json'), JSON.stringify({
       name: 'synthetic-release', version: '1.2.3', private: true, type: 'module',
@@ -271,6 +306,79 @@ describe('one-command release script', { timeout: commandTimeout + 30000 }, () =
     expect(await git(['status', '--porcelain'])).toBe('');
   });
 
+  it('releases 2.4.1 after 2.4.0 even when unpublished package bumps reached 2.4.3', async () => {
+    await commitFixtureVersion('2.4.0');
+    await publishFixtureTag('2.4.0');
+    await commitFixtureVersion('2.4.3');
+
+    const result = await run(['v2.4.1']);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(commands()).toEqual(expectedChecks);
+    for (const file of versionFiles.filter(file => file.endsWith('.json'))) {
+      const payload = JSON.parse(readFileSync(join(project, file), 'utf8'));
+      expect(payload.version).toBe('2.4.1');
+      if (file.endsWith('package-lock.json')) expect(payload.packages[''].version).toBe('2.4.1');
+    }
+    expect(readFileSync(join(project, 'tests/setup.ts'), 'utf8')).toContain("'2.4.1'");
+    const commit = await git(['rev-parse', 'HEAD']);
+    expect(await remoteRef('refs/heads/main')).toBe(commit);
+    expect(await remoteRef('refs/tags/v2.4.1^{}')).toBe(commit);
+    expect(await git(['status', '--porcelain'])).toBe('');
+  });
+
+  it('still refuses a version older than an existing stable release tag', async () => {
+    await publishFixtureTag('1.2.3');
+    await commitFixtureVersion('1.2.6');
+
+    const result = await run(['v1.2.2']);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('release tag v1.2.3');
+    expect(commands()).toEqual([]);
+    expect(await git(['status', '--porcelain'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+  });
+
+  it('compares stable release versions numerically rather than lexicographically', async () => {
+    await publishFixtureTag('1.2.3');
+    await commitFixtureVersion('1.10.0');
+    await publishFixtureTag('1.10.0');
+    await commitFixtureVersion('1.10.3');
+
+    const result = await run(['v1.9.9']);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('release tag v1.10.0');
+    expect(commands()).toEqual([]);
+    expect(await git(['status', '--porcelain'])).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.9.9')).toBeNull();
+  });
+
+  it('ignores retained local-only tags when deciding the latest released version', async () => {
+    await publishFixtureTag('1.2.3');
+    await git(['-c', 'tag.gpgSign=false', 'tag', '-a', 'v9.0.0', '-m', 'Synthetic failed release']);
+
+    const result = await run(['v1.2.4']);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(await remoteRef('refs/tags/v1.2.4^{}')).toBe(await git(['rev-parse', 'HEAD']));
+    expect(await remoteRef('refs/tags/v9.0.0')).toBeNull();
+    expect(await git(['tag', '--list', 'v9.0.0'])).toBe('v9.0.0');
+  });
+
+  it('does not mistake a prerelease tag for a newer stable release', async () => {
+    await publishFixtureTag('1.2.3');
+    await publishFixtureTag('9.0.0-beta.1');
+    await commitFixtureVersion('1.2.6');
+
+    const result = await run(['v1.2.4']);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(await remoteRef('refs/tags/v1.2.4^{}')).toBe(await git(['rev-parse', 'HEAD']));
+  });
+
   it('requires a clean main checkout without switching branches', async () => {
     await git(['switch', '-q', '-c', 'synthetic-feature']);
     expect((await run(['v1.3.0'])).status).not.toBe(0);
@@ -390,5 +498,188 @@ fi
     expect(await git(['status', '--porcelain'])).toBe('');
     expect(await git(['tag', '--list', 'v1.3.0'])).toBe('');
     expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+  });
+});
+
+describe('automatic version bump and release preparation', { timeout: commandTimeout + 30000 }, () => {
+  it('atomically pushes an automatic patch bump and matching tag, then exposes the tag to publication', async () => {
+    await publishFixtureTag('1.2.3');
+    const before = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic merged feature\n');
+    const source = originalCommit;
+
+    const result = await runAutomatic(before);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(releaseOutput()).toBe('tag=v1.2.4');
+    expect(commands()).toEqual([]);
+    const commit = await git(['rev-parse', 'HEAD']);
+    expect(commit).not.toBe(source);
+    expect(await git(['rev-parse', 'HEAD^'])).toBe(source);
+    expect(await remoteRef('refs/heads/main')).toBe(commit);
+    expect(await remoteRef('refs/tags/v1.2.4^{}')).toBe(commit);
+    expect(await git(['cat-file', '-t', 'refs/tags/v1.2.4'])).toBe('tag');
+    expect(await git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.2.4 [skip ci]');
+    expect((await git(['show', '--format=', '--name-only', 'HEAD'])).split('\n').sort()).toEqual([...versionFiles].sort());
+    for (const file of versionFiles.filter(file => file.endsWith('.json'))) {
+      const payload = JSON.parse(readFileSync(join(project, file), 'utf8'));
+      expect(payload.version).toBe('1.2.4');
+      if (file.endsWith('package-lock.json')) expect(payload.packages[''].version).toBe('1.2.4');
+    }
+    expect(readFileSync(join(project, 'tests/setup.ts'), 'utf8')).toContain("'1.2.4'");
+    expect(await git(['status', '--porcelain'])).toBe('');
+  });
+
+  it('publishes the explicitly selected 2.4.1 without incrementing unpublished 2.4.3 again', async () => {
+    await commitFixtureVersion('2.4.0');
+    await publishFixtureTag('2.4.0');
+    await commitFixtureVersion('2.4.3');
+    const before = originalCommit;
+    await commitFixtureVersion('2.4.1');
+
+    const result = await runAutomatic(before);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(releaseOutput()).toBe('tag=v2.4.1');
+    expect(await git(['rev-parse', 'HEAD'])).toBe(originalCommit);
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v2.4.1^{}')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v2.4.4')).toBeNull();
+  });
+
+  it('tags the exact explicit version commit without rewinding main if another PR has merged', async () => {
+    const before = originalCommit;
+    await commitFixtureVersion('1.3.0');
+    const source = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic later merged feature\n');
+    const latestMain = originalCommit;
+
+    const result = await runAutomatic(before, source);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(releaseOutput()).toBe('tag=v1.3.0');
+    expect(await remoteRef('refs/tags/v1.3.0^{}')).toBe(source);
+    expect(await remoteRef('refs/heads/main')).toBe(latestMain);
+    expect(await git(['rev-parse', 'HEAD'])).toBe(source);
+  });
+
+  it('does not bump again when retrying a push that already has its automatic commit and tag', async () => {
+    const before = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic merged feature\n');
+    const source = originalCommit;
+    const first = await runAutomatic(before, source);
+    expect(first.status, first.stderr).toBe(0);
+    const commit = await git(['rev-parse', 'HEAD']);
+    const tag = await remoteRef('refs/tags/v1.2.4');
+
+    const retry = await runAutomatic(before, source);
+
+    expect(retry.status, retry.stderr).toBe(0);
+    expect(releaseOutput()).toBe('tag=v1.2.4');
+    expect(await remoteRef('refs/heads/main')).toBe(commit);
+    expect(await remoteRef('refs/tags/v1.2.4')).toBe(tag);
+    expect(await remoteRef('refs/tags/v1.2.5')).toBeNull();
+  });
+
+  it('preserves an existing tag belonging to another commit', async () => {
+    await commitFixtureVersion('1.3.0');
+    await publishFixtureTag('1.3.0');
+    const tag = await remoteRef('refs/tags/v1.3.0');
+    await commitFixtureVersion('1.4.0');
+    const before = originalCommit;
+    await commitFixtureVersion('1.3.0');
+
+    const result = await runAutomatic(before);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('will not be moved');
+    expect(releaseOutput()).toBe('');
+    expect(await remoteRef('refs/tags/v1.3.0')).toBe(tag);
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+  });
+
+  it.each(['tag', 'main'])('does not publish either ref or a publication output when the remote rejects %s', async rejectedRef => {
+    const before = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic merged feature\n');
+    mkdirSync(join(remote, 'hooks'), { recursive: true });
+    writeFileSync(join(remote, 'hooks/update'), `#!${fixtureShell}
+if [[ "$1" == ${rejectedRef === 'tag' ? 'refs/tags/*' : 'refs/heads/main'} ]]; then
+  echo "Synthetic ref rejection" >&2
+  exit 1
+fi
+`, { mode: 0o755 });
+
+    const result = await runAutomatic(before);
+
+    expect(result.status).not.toBe(0);
+    expect(releaseOutput()).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.2.4')).toBeNull();
+    expect(await git(['tag', '--list', 'v1.2.4'])).toBe('v1.2.4');
+    expect(result.stderr).toContain('atomic');
+  });
+
+  it('does not rebase a stale bump onto concurrent main changes or publish its tag', async () => {
+    const before = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic merged feature\n');
+    const tree = await git(['rev-parse', 'HEAD^{tree}']);
+    const concurrentCommit = await git(['commit-tree', tree, '-p', originalCommit, '-m', 'Synthetic concurrent main']);
+    await git(['push', '-q', 'origin', `${concurrentCommit}:refs/heads/synthetic-concurrent`]);
+    const hooks = join(project, '.git/hooks');
+    mkdirSync(hooks, { recursive: true });
+    writeFileSync(join(hooks, 'pre-commit'), `#!${fixtureShell}
+set -euo pipefail
+git --git-dir="$RELEASE_REMOTE" update-ref refs/heads/main "$RELEASE_CONCURRENT_COMMIT"
+`, { mode: 0o755 });
+
+    const result = await runAutomatic(before, originalCommit, { RELEASE_CONCURRENT_COMMIT: concurrentCommit });
+
+    expect(result.status).not.toBe(0);
+    expect(releaseOutput()).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(concurrentCommit);
+    expect(await remoteRef('refs/tags/v1.2.4')).toBeNull();
+    expect(await git(['rev-parse', 'HEAD^'])).toBe(originalCommit);
+  });
+
+  it('refuses an inconsistent explicit version before publishing a tag', async () => {
+    const before = originalCommit;
+    await commitFixtureChange('package.json', JSON.stringify({ version: '1.3.0' }) + '\n');
+
+    const result = await runAutomatic(before);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('package-lock.json');
+    expect(releaseOutput()).toBe('');
+    expect(await remoteRef('refs/tags/v1.3.0')).toBeNull();
+  });
+
+  it('rejects unmerged release sources', async () => {
+    const before = originalCommit;
+    writeFileSync(join(project, 'synthetic.txt'), 'Synthetic unmerged feature\n');
+    await git(['add', '--', 'synthetic.txt']);
+    await git(['commit', '--no-gpg-sign', '-qm', 'Synthetic unmerged commit']);
+    const source = await git(['rev-parse', 'HEAD']);
+
+    const result = await runAutomatic(before, source);
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('not merged');
+    expect(releaseOutput()).toBe('');
+    expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
+    expect(await remoteRef('refs/tags/v1.2.4')).toBeNull();
+  });
+
+  it('does not depend on interactive signing settings or add attribution trailers', async () => {
+    const before = originalCommit;
+    await commitFixtureChange('synthetic.txt', 'Synthetic merged feature\n');
+    await git(['config', 'commit.gpgsign', 'true']);
+    await git(['config', 'tag.gpgsign', 'true']);
+    await git(['config', 'gpg.program', join(directory, 'missing-signing-program')]);
+
+    const result = await runAutomatic(before);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(await git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.2.4 [skip ci]');
+    expect(await git(['cat-file', 'tag', 'v1.2.4'])).not.toContain('BEGIN PGP SIGNATURE');
   });
 });
