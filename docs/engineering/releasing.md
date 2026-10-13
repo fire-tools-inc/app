@@ -30,6 +30,9 @@ handles pushes to `main`:
   necessary: tag pushes made with `GITHUB_TOKEN` do **not** trigger another
   workflow, even when the version commit also carries `[skip ci]`.
 
+Automatic preparation configures a repository-local Git identity before creating
+commits or annotated tags, including explicit versions that need no bump commit.
+
 Version preparation is serialized, but different versions can build in
 parallel without cancelling one another. An explicit version is tagged at its
 merged source commit even if another PR has advanced `main`. A concurrent push

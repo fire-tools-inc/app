@@ -89,6 +89,10 @@ function runAutomatic(before: string, source = originalCommit, overrides: NodeJS
   return execute(process.platform === 'darwin' ? '/bin/bash' : 'bash', ['scripts/auto-release.sh'],
     project, {
       ...environment,
+      GIT_AUTHOR_NAME: undefined,
+      GIT_AUTHOR_EMAIL: undefined,
+      GIT_COMMITTER_NAME: undefined,
+      GIT_COMMITTER_EMAIL: undefined,
       GITHUB_ACTIONS: 'true',
       GITHUB_OUTPUT: join(directory, 'github-output'),
       RELEASE_BEFORE: before,
@@ -519,6 +523,10 @@ describe('automatic version bump and release preparation', { timeout: commandTim
     expect(await remoteRef('refs/heads/main')).toBe(commit);
     expect(await remoteRef('refs/tags/v1.2.4^{}')).toBe(commit);
     expect(await git(['cat-file', '-t', 'refs/tags/v1.2.4'])).toBe('tag');
+    expect(await git(['log', '-1', '--format=%an <%ae>%n%cn <%ce>'])).toBe(
+      'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>\n' +
+      'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>',
+    );
     expect(await git(['log', '-1', '--format=%B'])).toBe('chore: bump version to 1.2.4 [skip ci]');
     expect((await git(['show', '--format=', '--name-only', 'HEAD'])).split('\n').sort()).toEqual([...versionFiles].sort());
     for (const file of versionFiles.filter(file => file.endsWith('.json'))) {
@@ -544,6 +552,10 @@ describe('automatic version bump and release preparation', { timeout: commandTim
     expect(await git(['rev-parse', 'HEAD'])).toBe(originalCommit);
     expect(await remoteRef('refs/heads/main')).toBe(originalCommit);
     expect(await remoteRef('refs/tags/v2.4.1^{}')).toBe(originalCommit);
+    expect(await git(['cat-file', '-t', 'refs/tags/v2.4.1'])).toBe('tag');
+    expect(await git(['for-each-ref', '--format=%(taggername) %(taggeremail)', 'refs/tags/v2.4.1'])).toBe(
+      'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>',
+    );
     expect(await remoteRef('refs/tags/v2.4.4')).toBeNull();
   });
 
