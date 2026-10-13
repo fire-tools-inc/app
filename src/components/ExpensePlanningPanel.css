@@ -1,0 +1,40 @@
+.cashflow-planning { min-width: 0; color: var(--text-primary); }
+.cashflow-planning .planning-section, .cashflow-planning.planning-section { min-width: 0; margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--bg-secondary); }
+.cashflow-planning p { color: var(--text-secondary); line-height: 1.6; overflow-wrap: anywhere; }
+.cashflow-planning h3, .cashflow-planning h4 { color: var(--text-primary); margin: 0 0 .75rem; }
+.cashflow-planning .planning-heading, .cashflow-planning .planning-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.cashflow-planning .planning-heading { justify-content: space-between; }
+.cashflow-planning button, .cashflow-planning summary { min-height: 44px; padding: .65rem .9rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-tertiary); color: var(--text-primary); font: inherit; cursor: pointer; }
+.cashflow-planning button:hover:not(:disabled) { border-color: var(--accent-primary); background: var(--accent-surface); }
+.cashflow-planning button:disabled { cursor: not-allowed; opacity: .6; }
+.cashflow-planning :focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 3px; }
+.cashflow-planning .planning-editor { margin: 1rem 0; padding: 1rem; border: 1px solid var(--border-accent); border-radius: var(--radius-md); }
+.cashflow-planning fieldset { min-width: 0; border: 0; margin: 0; padding: 0; }
+.cashflow-planning legend { margin-bottom: 1rem; color: var(--text-primary); font-weight: 600; }
+.cashflow-planning .planning-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.cashflow-planning .planning-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.cashflow-planning input:not([type=checkbox]), .cashflow-planning select { min-width: 0; width: 100%; min-height: 44px; padding: .6rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-primary); background: var(--bg-primary); font: inherit; box-sizing: border-box; }
+.cashflow-planning label { color: var(--text-primary); }
+.cashflow-planning .planning-check { display: flex; align-items: center; gap: .6rem; min-height: 44px; }
+.cashflow-planning .planning-check input { width: 20px; height: 20px; accent-color: var(--accent-primary); }
+.cashflow-planning .planning-goals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin-top: 1rem; }
+.cashflow-planning .planning-goal { min-width: 0; padding: 1rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-tertiary); }
+.cashflow-planning .planning-progress { height: 8px; overflow: hidden; border-radius: 8px; background: var(--bg-primary); }
+.cashflow-planning .planning-progress span { display: block; height: 100%; background: var(--accent-primary); }
+.cashflow-planning dl { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.cashflow-planning dt { color: var(--text-secondary); }
+.cashflow-planning dd { margin: .3rem 0 1rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.cashflow-planning .planning-totals dd { font-size: 1.35rem; }
+.cashflow-planning .planning-rule-list { list-style: none; padding: 0; margin: 1rem 0; }
+.cashflow-planning .planning-rule-list li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border-subtle); }
+.cashflow-planning .planning-rule-list li > div { min-width: 0; }
+.cashflow-planning .planning-scroll { min-width: 0; max-width: 100%; overflow-x: auto; margin: 1rem 0; }
+.cashflow-planning table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cashflow-planning th, .cashflow-planning td { padding: .75rem; text-align: left; border-bottom: 1px solid var(--border-subtle); white-space: nowrap; color: var(--text-primary); }
+.cashflow-planning th { color: var(--text-secondary); background: var(--bg-tertiary); }
+.cashflow-planning .planning-chart { min-width: 640px; height: 280px; }
+.cashflow-planning .planning-warning { color: var(--warning); }
+.cashflow-planning .planning-empty { padding: .75rem 0; }
+.expense-tracker-page .tabs { flex-wrap: wrap; }
+.expense-tracker-page .tab { min-height: 44px; }
+@media (max-width: 480px) { .cashflow-planning .planning-section { padding: .75rem; } .cashflow-planning .planning-editor { padding: .75rem; } }

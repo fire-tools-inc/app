@@ -106,7 +106,7 @@ for (const width of [1440, 1280, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: width >= 1000 ? 620 : 740 });
     await page.goto('./');
     await expect(page.locator('#main-content').getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
-    await expect(page.locator('.dashboard-grid > section')).toHaveCount(4);
+    await expect(page.locator('.dashboard-grid > section')).toHaveCount(6);
     await expect(page.locator('.homepage .recharts-surface')).toHaveCount(3);
     await expectHealthyPlots(page);
     await navigate(page, 'expense-tracker');

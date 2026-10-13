@@ -41,6 +41,8 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
 
   { method: 'GET', path: '/expense-tracker', summary: 'Expense tracker data', group: 'tracking' },
   { method: 'PUT', path: '/expense-tracker', summary: 'Update expense tracker', group: 'tracking' },
+  { method: 'GET', path: '/expense-tracker/planning', summary: 'Cashflow planning document', group: 'tracking' },
+  { method: 'PUT', path: '/expense-tracker/planning', summary: 'Replace cashflow planning document', group: 'tracking' },
   { method: 'GET', path: '/net-worth', summary: 'Net worth snapshots', group: 'tracking' },
   { method: 'POST', path: '/net-worth', summary: 'Add net worth snapshot', group: 'tracking' },
 

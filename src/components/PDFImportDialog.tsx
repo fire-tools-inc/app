@@ -39,6 +39,8 @@ import { logger } from '../utils/logger';
 import { MaterialIcon } from './MaterialIcon';
 import { ReceiptInbox } from './ReceiptInbox';
 import { ReceiptPairing } from './ReceiptPairing';
+import type { ImportCategorizationRule } from '../types/expensePlanning';
+import { applyImportCategorizationRules } from '../utils/importCategorizationRules';
 import './PDFImportDialog.css';
 
 interface PDFImportDialogProps {
@@ -58,6 +60,7 @@ interface PDFImportDialogProps {
   /** Injected for tests. */
   categorizer?: typeof categorizeWithLlm;
   liteParseExtractor?: typeof extractDocumentTextWithLiteParse;
+  categorizationRules?: ImportCategorizationRule[];
 }
 
 const DOC_TYPE_OPTIONS: { value: PdfDocType; labelKey: string }[] = [
@@ -85,12 +88,16 @@ export function PDFImportDialog({
   extractor = extractPdfText,
   categorizer = categorizeWithLlm,
   liteParseExtractor = extractDocumentTextWithLiteParse,
+  categorizationRules = [],
 }: PDFImportDialogProps) {
   const { t } = useTranslation();
   const [docType, setDocType] = useState<PdfDocType>('auto');
   const [useLlm, setUseLlm] = useState<boolean>(false);
   const [aiFeaturesEnabled, setAiFeaturesEnabled] = useState(() => loadSettings().aiFeaturesEnabled);
   const [drafts, setDrafts] = useState<ParsedTransactionDraft[]>([]);
+  const [ruleMatches, setRuleMatches] = useState<Record<string, string>>({});
+  const draftsRef = useRef(drafts);
+  draftsRef.current = drafts;
   const [status, setStatus] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [busy, setBusy] = useState<boolean>(false);
@@ -212,15 +219,26 @@ export function PDFImportDialog({
         }
       }
 
-      let final = collected;
-      if (aiConsent.current && loadSettings().aiFeaturesEnabled && isLlmConfigured(llmConfig) && collected.length > 0) {
+      const classified = applyImportCategorizationRules(collected, categorizationRules, defaultCurrency, categories);
+      if (classified.invalidRuleIds.length) {
+        logger.warn('pdf-import-dialog', 'invalid-rule-category', 'categorization rules referencing missing categories were not applied', {
+          pii: { ruleIds: classified.invalidRuleIds },
+        });
+        setError(previous => appendError(previous, t('planning.missingCategory')));
+      }
+      let final = classified.drafts;
+      const unmatched = final.filter(draft => !Object.prototype.hasOwnProperty.call(classified.matches, draft.id));
+      if (aiConsent.current && loadSettings().aiFeaturesEnabled && isLlmConfigured(llmConfig) && unmatched.length > 0) {
         setStatus(t('dialogs.pdfImport.status.runningLlm'));
         try {
-          const categorized = await categorizer(collected, llmConfig, categories, {
+          const categorized = await categorizer(unmatched, llmConfig, categories, {
             signal: controller.signal,
             onError: () => setError(previous => appendError(previous, t('dialogs.pdfImport.errors.llmFailed'))),
           });
-          if (aiConsent.current && loadSettings().aiFeaturesEnabled) final = categorized;
+          if (aiConsent.current && loadSettings().aiFeaturesEnabled) {
+            const enriched = new Map(categorized.map(draft => [draft.id, draft]));
+            final = final.map(draft => enriched.get(draft.id) ?? draft);
+          }
         } catch (err) {
           logger.error('pdf-import-dialog', 'llm-categorization-failed', 'LLM categorization failed', { pii: { error: (err as Error)?.message } });
           if (!controller.signal.aborted) setError(previous => appendError(previous, t('dialogs.pdfImport.errors.llmFailed')));
@@ -228,6 +246,11 @@ export function PDFImportDialog({
       }
 
       if (controller.signal.aborted) return;
+      const previousIds = new Set(draftsRef.current.map(draft => draft.id));
+      setRuleMatches(previous => ({
+        ...previous,
+        ...Object.fromEntries(Object.entries(classified.matches).filter(([id]) => !previousIds.has(id))),
+      }));
       setDrafts(previous => {
         const ids = new Set(previous.map(draft => draft.id));
         return [...previous, ...final.filter(draft => !ids.has(draft.id))];
@@ -253,9 +276,10 @@ export function PDFImportDialog({
         setBusy(false);
       }
     }
-  }, [docType, defaultCurrency, llmConfig, categories, extractor, categorizer, liteParseExtractor, engine, t]);
+  }, [docType, defaultCurrency, llmConfig, categories, categorizationRules, extractor, categorizer, liteParseExtractor, engine, t]);
 
   const updateDraft = (id: string, patch: Partial<ParsedTransactionDraft>) => {
+    setRuleMatches(previous => Object.fromEntries(Object.entries(previous).filter(([key]) => key !== id)));
     setDrafts(prev => prev.map(d => (d.id === id ? { ...d, ...patch } : d)));
   };
 
@@ -491,6 +515,7 @@ export function PDFImportDialog({
                           <div className="pdf-row-meta">
                             {d.sourceFile} · {d.docType}
                             {d.llmEnriched ? t('dialogs.pdfImport.aiSuffix') : ''}
+                            {Object.prototype.hasOwnProperty.call(ruleMatches, d.id) && <span>{t('planning.matchedRule', { name: ruleMatches[d.id] })}</span>}
                           </div>
                         </td>
                         <td>

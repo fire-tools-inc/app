@@ -512,6 +512,43 @@ paths:
   # ---------------------------------------------------------------------------
   # Expense tracker
   # ---------------------------------------------------------------------------
+  /expense-tracker/planning:
+    get:
+      tags: [ExpenseTracker]
+      summary: Get the local backend cashflow planning document
+      description: Returns empty planning state when absent without creating data. Renderer storage remains independent.
+      operationId: getExpensePlanning
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpensePlanningData' }
+        '500': { $ref: '#/components/responses/InternalError' }
+    put:
+      tags: [ExpenseTracker]
+      summary: Replace the complete per-user cashflow planning document
+      description: Validates before atomic replacement. Does not post transactions or change goal accounting.
+      operationId: replaceExpensePlanning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExpensePlanningData' }
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExpensePlanningData' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '413':
+          description: Request body exceeds 2 MB
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
   /expense-tracker/config:
     get:
       tags: [ExpenseTracker]
@@ -2384,6 +2421,8 @@ components:
         subCategory:  { type: string, nullable: true }
         expenseType:  { $ref: '#/components/schemas/ExpenseType' }
         isRecurring:  { type: boolean }
+        scheduleId:   { type: string, description: 'Optional schedule ID; paired with scheduledDate' }
+        scheduledDate: { type: string, format: date, description: 'Original occurrence due date, not actual payment date' }
 
     IncomeEntry:
       type: object
@@ -2398,6 +2437,139 @@ components:
         currency:    { $ref: '#/components/schemas/SupportedCurrency' }
         source:      { $ref: '#/components/schemas/IncomeSource' }
         isRecurring: { type: boolean }
+        scheduleId:  { type: string, description: 'Optional schedule ID; paired with scheduledDate' }
+        scheduledDate: { type: string, format: date, description: 'Original occurrence due date, not actual payment date' }
+
+    PlanningDate:
+      type: string
+      format: date
+      description: Valid calendar date from 1900-01-01 through 2100-12-31.
+
+    CashflowRecurrence:
+      type: object
+      additionalProperties: false
+      required: [unit, interval]
+      properties:
+        unit: { type: string, enum: [once, day, week, month, year] }
+        interval: { type: integer, minimum: 1 }
+
+    CashflowSchedule:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind, amount, currency, startDate, recurrence, enabled, archived]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        kind: { type: string, enum: [expense, income] }
+        amount: { type: number, minimum: 0 }
+        currency: { $ref: '#/components/schemas/SupportedCurrency' }
+        startDate: { $ref: '#/components/schemas/PlanningDate' }
+        endDate: { $ref: '#/components/schemas/PlanningDate' }
+        recurrence: { $ref: '#/components/schemas/CashflowRecurrence' }
+        enabled: { type: boolean }
+        archived: { type: boolean }
+        category: { type: string, minLength: 1 }
+        expenseType: { $ref: '#/components/schemas/ExpenseType' }
+        source: { $ref: '#/components/schemas/IncomeSource' }
+      oneOf:
+        - properties: { kind: { enum: [expense] } }
+          required: [category, expenseType]
+          not: { properties: { source: {} }, required: [source] }
+        - properties: { kind: { enum: [income] } }
+          required: [source]
+          not:
+            anyOf:
+              - { properties: { category: {} }, required: [category] }
+              - { properties: { expenseType: {} }, required: [expenseType] }
+
+    ScheduledOccurrenceReference:
+      type: object
+      additionalProperties: false
+      required: [scheduleId, scheduledDate]
+      properties:
+        scheduleId: { type: string, minLength: 1 }
+        scheduledDate: { $ref: '#/components/schemas/PlanningDate' }
+
+    SavingsGoal:
+      type: object
+      additionalProperties: false
+      required: [id, name, currency, targetAmount, savedAmount, archived]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        currency: { $ref: '#/components/schemas/SupportedCurrency' }
+        targetAmount: { type: number, minimum: 0, exclusiveMinimum: true }
+        savedAmount: { type: number, minimum: 0, description: 'Manually earmarked balance; not a new asset or expense' }
+        targetDate: { $ref: '#/components/schemas/PlanningDate' }
+        archived: { type: boolean }
+
+    ImportRuleMatch:
+      type: object
+      additionalProperties: false
+      required: [description, operator]
+      properties:
+        description: { type: string, minLength: 1 }
+        operator: { type: string, enum: [equals, contains] }
+        currency: { $ref: '#/components/schemas/SupportedCurrency' }
+        minAmount: { type: number, minimum: 0 }
+        maxAmount: { type: number, minimum: 0 }
+      description: Literal case-insensitive matching. Amount bounds require currency; maximum must not be less than minimum.
+
+    ImportCategorizationRule:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind, enabled, priority, match]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1 }
+        kind: { type: string, enum: [expense, income] }
+        enabled: { type: boolean }
+        priority: { type: integer, minimum: 0, description: 'Lower priority number runs first; first enabled match wins' }
+        match: { $ref: '#/components/schemas/ImportRuleMatch' }
+        category: { type: string, minLength: 1 }
+        expenseType: { $ref: '#/components/schemas/ExpenseType' }
+        source: { $ref: '#/components/schemas/IncomeSource' }
+      oneOf:
+        - properties: { kind: { enum: [expense] } }
+          required: [category, expenseType]
+          not: { properties: { source: {} }, required: [source] }
+        - properties: { kind: { enum: [income] } }
+          required: [source]
+          not:
+            anyOf:
+              - { properties: { category: {} }, required: [category] }
+              - { properties: { expenseType: {} }, required: [expenseType] }
+
+    CashflowForecastInputs:
+      type: object
+      additionalProperties: false
+      required: [openingBalance, startDate, horizon, currency]
+      properties:
+        openingBalance: { type: number, description: 'Cash at the start of startDate; may be negative' }
+        startDate: { $ref: '#/components/schemas/PlanningDate' }
+        horizon: { type: integer, enum: [30, 90, 365] }
+        currency: { $ref: '#/components/schemas/SupportedCurrency' }
+
+    ExpensePlanningData:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, schedules, skippedOccurrences, goals, rules]
+      properties:
+        schemaVersion: { type: integer, enum: [1] }
+        schedules:
+          type: array
+          items: { $ref: '#/components/schemas/CashflowSchedule' }
+        skippedOccurrences:
+          type: array
+          items: { $ref: '#/components/schemas/ScheduledOccurrenceReference' }
+        goals:
+          type: array
+          items: { $ref: '#/components/schemas/SavingsGoal' }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/ImportCategorizationRule' }
+        forecast: { $ref: '#/components/schemas/CashflowForecastInputs' }
+      description: Versioned planning metadata. IDs within each collection and skipped occurrence references must be unique.
 
     CategoryBudget:
       type: object

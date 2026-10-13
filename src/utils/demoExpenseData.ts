@@ -12,6 +12,7 @@ import {
   ExpenseCategory,
   ExpenseType,
 } from '../types/expenseTracker';
+import { getDemoExpensePlanning } from './demoExpensePlanning';
 
 // Expense templates with humorous descriptions and easter eggs
 const EXPENSE_TEMPLATES: Array<{
@@ -489,5 +490,6 @@ export function generateDemoExpenseData(targetYear?: number, useSeed: boolean = 
     currentMonth,
     currency: 'EUR',
     globalBudgets: [],
+    planning: getDemoExpensePlanning(),
   };
 }

@@ -30,6 +30,7 @@ import { formatAssetName } from '../utils/allocationCalculator';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
 import { fetchExchangeRatesAsMap } from '../utils/exchangeRateApi';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
+import { planningCategoryReferenceCount, prepareExpenseTrackerRestore, removeExpenseCategory } from '../utils/expensePlanning';
 import { SearchableSelect } from './SearchableSelect';
 import { LanguageSelector } from './LanguageSelector';
 import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
@@ -354,26 +355,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   // Delete custom category
   const handleDeleteCategory = useCallback((categoryId: string, reassignTo?: string) => {
     if (!expenseData) return;
-    
-    const category = expenseData.customCategories?.find(c => c.id === categoryId);
-    const newData = {
-      ...expenseData,
-      customCategories: (expenseData.customCategories || []).filter(c => c.id !== categoryId),
-      // Also reassign expenses if needed
-      years: reassignTo ? expenseData.years.map(year => ({
-        ...year,
-        months: year.months.map(month => ({
-          ...month,
-          expenses: month.expenses.map(expense =>
-            expense.category === categoryId ? { ...expense, category: reassignTo } : expense
-          ),
-        })),
-      })) : expenseData.years,
-    };
-    setExpenseData(newData);
-    saveExpenseTrackerData(newData);
-    showMessage('success', t('settings.messages.categoryDeleted', { name: category?.name || t('common.unknown') }));
-  }, [expenseData]);
+    try {
+      const current = loadExpenseTrackerData() ?? expenseData;
+      const category = current.customCategories?.find(item => item.id === categoryId);
+      const next = removeExpenseCategory(current, categoryId, reassignTo);
+      saveExpenseTrackerData(next);
+      setExpenseData(next);
+      showMessage('success', t('settings.messages.categoryDeleted', { name: category?.name || t('common.unknown') }));
+    } catch (error) {
+      logger.error('settings', 'category-delete-failed', 'Category deletion could not be saved.', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('planning.saveFailed'));
+    }
+  }, [expenseData, t]);
   
   // Update built-in category override
   const handleUpdateBuiltInCategory = useCallback((override: CategoryOverride) => {
@@ -887,6 +882,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           settings.currencySettings.defaultCurrency,
           settings.currencySettings.fallbackRates
         );
+        if (imported.expenseTracker) {
+          const current = loadExpenseTrackerData();
+          if (imported.expenseTracker.planning === undefined && current?.planning && !window.confirm(t('planning.legacyImport'))) return;
+          imported.expenseTracker = prepareExpenseTrackerRestore(imported.expenseTracker, current);
+        }
         
         // Save all imported data
         if (imported.fireCalculator) {
@@ -977,7 +977,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       try {
         const csv = e.target?.result as string;
         const imported = importExpenseTrackerFromCSV(csv);
-        saveExpenseTrackerData(imported);
+        const current = loadExpenseTrackerData();
+        if (imported.planning === undefined && current?.planning && !window.confirm(t('planning.legacyImport'))) return;
+        const next = prepareExpenseTrackerRestore(imported, current);
+        saveExpenseTrackerData(next);
+        setExpenseData(next);
         showMessage('success', t('settings.messages.cashflowImported'));
       } catch (error) {
         showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
@@ -3146,6 +3150,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           onUpdateBuiltInCategory={handleUpdateBuiltInCategory}
           onClose={() => setShowCategoryManager(false)}
           getExpenseCountForCategory={getExpenseCountForCategory}
+          getPlanningReferenceCount={categoryId => planningCategoryReferenceCount(expenseData, categoryId)}
         />
       )}
     </main>

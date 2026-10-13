@@ -38,8 +38,8 @@ jobs:
               - 'src/utils/{allocation,portfolio,price,yahoo,ticker,etf,exchange,currency,defaultAssets,dca}*'
             expense_tracker:
               - 'tests/pages/expense-tracker/**'
-              - 'src/components/{Expense,Income,Monthly,CategoryManager,PDFImport,Receipt,MassEdit}*'
-              - 'src/utils/{expense,pdf,liteParse,documentImport,dateValidation,demoExpense,llm,categories,customCategories}*'
+              - 'src/components/{Expense,Income,Monthly,CategoryManager,PDFImport,Receipt,MassEdit,Cashflow,SavingsGoals,ImportRules}*'
+              - 'src/utils/{expense,pdf,liteParse,documentImport,dateValidation,demoExpense,llm,categories,customCategories,cashflowSchedules,scheduledTransactions,savingsGoals,importCategorizationRules}*'
             fire_calculator:
               - 'tests/pages/fire-calculator/**'
               - 'src/components/{Calculator,FIRE,MonteCarlo,Projection}*'
@@ -60,6 +60,7 @@ jobs:
               - 'tests/pages/settings/**'
               - 'src/components/{Settings,Cookie,DataManagement,Policy,Language}*'
               - 'src/utils/{cookie,settings,banner,dataExport,countryToRegion,urlParams}*'
+              - 'src/utils/{csvExport,expenseCsv,expensePlanning,currencyConverter}*'
               - 'src/i18n/**'
               - 'tests/shared/i18n*'
             server:
@@ -67,6 +68,9 @@ jobs:
               - 'scripts/**'
               - 'src/utils/{liteParseResult,pdfHeuristics,dateValidation}.ts'
               - 'tests/shared/diagnostics.ts'
+              - 'src/utils/expensePlanning.ts'
+              - 'src/types/{expensePlanning,expenseTracker}.ts'
+              - 'tests/pages/expense-tracker/planningFixtures.ts'
             browser:
               - 'tests/browser/**'
               - 'playwright.config.ts'
@@ -78,6 +82,7 @@ jobs:
               - 'src/utils/{chartColors,expenseChartColors,navigationPreferences}*'
               - 'src/utils/dashboard*'
               - 'src/utils/{documentImport,liteParse,pdfImport,expenseStatistics,dateValidation,cookieSettings,llmCategorizer}*'
+              - 'src/utils/{expensePlanning,cashflowSchedules,scheduledTransactions,savingsGoals,importCategorizationRules,demoExpensePlanning}*'
               - 'server/src/{documentParser,documentWorker,receiptFiles}.*'
               - 'server/src/routes/receipts.ts'
               - 'server/public/**'

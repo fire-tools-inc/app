@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect, useMemo, useCallback } from 'react';
+import { Suspense, useState, useEffect, useMemo, useCallback, useRef, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchableSelect, SelectOption } from './SearchableSelect';
 import { useSearchParams } from 'react-router';
@@ -37,6 +37,7 @@ import {
 import {
   saveExpenseTrackerData,
   loadExpenseTrackerData,
+  hasStoredExpenseTrackerData,
 } from '../utils/cookieStorage';
 import {
   exportExpenseTrackerToCSV,
@@ -59,6 +60,10 @@ import { ExpenseStatistics } from './ExpenseStatistics';
 import { mergeImportedTransactions } from '../utils/pdfImportTransactions';
 import type { ParsedTransactionDraft } from '../types/pdfImport';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { ExpensePlanningPanel } from './ExpensePlanningPanel';
+import { ImportRulesManager } from './ImportRulesManager';
+import { ExpensePlanningError, planningCategoryReferenceCount, prepareExpenseTrackerRestore, removeExpenseCategory, validateExpenseTrackerPlanning } from '../utils/expensePlanning';
+import { logger } from '../utils/logger';
 import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
 import './PeriodSelector.css';
 import './ExpenseTrackerPage.css';
@@ -122,28 +127,57 @@ function deepCloneData(data: ExpenseTrackerData): ExpenseTrackerData {
   return JSON.parse(JSON.stringify(data));
 }
 
+const EXPENSE_TABS = ['transactions', 'budgets', 'analytics', 'planning', 'rules'] as const;
+type ExpenseTab = typeof EXPENSE_TABS[number];
+const expenseTab = (value: string | null): ExpenseTab => EXPENSE_TABS.find(tab => tab === value) ?? 'transactions';
+
 export function ExpenseTrackerPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State
-  const [data, setData] = useState<ExpenseTrackerData>(() => {
+  const [state, setRenderedState] = useState(() => {
     const saved = loadExpenseTrackerData();
-    // Always get current default currency from settings
-    const settings = loadSettings();
-    const currentDefaultCurrency = settings.currencySettings.defaultCurrency;
-    
-    if (saved) {
-      // Ensure globalBudgets exists for backward compatibility
-      // Update the currency to match current settings
-      return {
-        ...saved,
-        globalBudgets: saved.globalBudgets || [],
-        currency: currentDefaultCurrency,
-      };
-    }
-    return getDefaultData();
+    return {
+      data: saved ? { ...saved, globalBudgets: saved.globalBudgets ?? [] } : getDefaultData(),
+      unreadable: !saved && !IS_DEMO_MODE && hasStoredExpenseTrackerData(),
+    };
   });
+  const data = state.data;
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const translation = useRef(t);
+  translation.current = t;
+  const [saveError, setSaveError] = useState('');
+  const setData = useCallback((update: SetStateAction<ExpenseTrackerData>): boolean => {
+    if (IS_DEMO_MODE) { setSaveError(translation.current('demo.disabledAction')); return false; }
+    try {
+      if (stateRef.current.unreadable && typeof update === 'function') {
+        throw new ExpensePlanningError('invalidInput', 'Restore or reset unreadable saved data before editing.');
+      }
+      const next = typeof update === 'function' ? update(stateRef.current.data) : update;
+      if (next === stateRef.current.data) return true;
+      saveExpenseTrackerData(next);
+      stateRef.current = { data: next, unreadable: false };
+      setRenderedState(stateRef.current);
+      setSaveError('');
+      return true;
+    } catch (error) {
+      logger.error('expense-tracker', 'update-failed', 'cashflow changes could not be saved', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      setSaveError(translation.current(error instanceof ExpensePlanningError ? `planning.errors.${error.code}` : 'planning.saveFailed'));
+      return false;
+    }
+  }, []);
+  const invalidPlanning = useMemo(() => {
+    try { validateExpenseTrackerPlanning(data); return false; }
+    catch { return true; }
+  }, [data]);
+  const dataUnavailable = state.unreadable || invalidPlanning;
+  useEffect(() => {
+    if (dataUnavailable) logger.error('expense-tracker', 'invalid-planning', 'saved cashflow planning data could not be read; edits are blocked');
+  }, [dataUnavailable]);
   
   // Get year/month from URL params or use current
   const now = new Date();
@@ -169,7 +203,12 @@ export function ExpenseTrackerPage() {
     return currentMonth;
   });
   
-  const [activeTab, setActiveTab] = useState<'transactions' | 'budgets' | 'analytics'>('transactions');
+  const activeTab = expenseTab(searchParams.get('tab'));
+  const setActiveTab = (tab: ExpenseTab) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tab);
+    setSearchParams(next, { replace: true });
+  };
   
   // Form state
   const [showIncomeForm, setShowIncomeForm] = useState(false);
@@ -243,11 +282,6 @@ export function ExpenseTrackerPage() {
     setSearchParams(newParams, { replace: true });
   }, [selectedYear, selectedMonth, setSearchParams, searchParams]);
 
-  // Save data whenever it changes
-  useEffect(() => {
-    saveExpenseTrackerData(data);
-  }, [data]);
-  
   // Check if we're viewing a past period
   const isViewingPastPeriod = selectedYear < currentYear || 
     (selectedYear === currentYear && selectedMonth < currentMonth);
@@ -260,6 +294,7 @@ export function ExpenseTrackerPage() {
 
   // Auto-create month/year if it doesn't exist, and copy recurring transactions from previous month
   useEffect(() => {
+    if (activeTab === 'planning' || activeTab === 'rules' || dataUnavailable || IS_DEMO_MODE) return;
     setData(prev => {
       const yearData = prev.years.find(y => y.year === selectedYear);
       const monthExists = yearData?.months.find(m => m.month === selectedMonth);
@@ -316,7 +351,7 @@ export function ExpenseTrackerPage() {
       
       return newData;
     });
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, activeTab, dataUnavailable, setData]);
 
   // Get current month data
   const currentMonthData = useMemo(() => {
@@ -474,10 +509,8 @@ export function ExpenseTrackerPage() {
 
   const handleCommitDrafts = useCallback((drafts: ParsedTransactionDraft[]) => {
     if (IS_DEMO_MODE) throw new Error(t('demo.disabledAction'));
-    const next = mergeImportedTransactions(data, drafts);
-    saveExpenseTrackerData(next);
-    setData(next);
-  }, [data, t]);
+    if (!setData(current => mergeImportedTransactions(current, drafts))) throw new Error(t('planning.saveFailed'));
+  }, [setData, t]);
 
   // Add income - combines month creation and income addition in one update
   const handleAddIncome = useCallback((income: Omit<IncomeEntry, 'id' | 'type'>) => {
@@ -664,27 +697,8 @@ export function ExpenseTrackerPage() {
 
   // Delete custom category - reassign expenses to the specified category (defaults to NO_CATEGORY)
   const handleDeleteCategory = useCallback((categoryId: string, reassignTo?: string) => {
-    setData(prev => {
-      const newData = deepCloneData(prev);
-      if (!newData.customCategories) return newData;
-      
-      // If reassignTo is specified, reassign all expenses with this category
-      if (reassignTo) {
-        for (const yearData of newData.years) {
-          for (const monthData of yearData.months) {
-            for (const expense of monthData.expenses) {
-              if (expense.category === categoryId) {
-                expense.category = reassignTo;
-              }
-            }
-          }
-        }
-      }
-      
-      newData.customCategories = newData.customCategories.filter(c => c.id !== categoryId);
-      return newData;
-    });
-  }, []);
+    setData(current => removeExpenseCategory(current, categoryId, reassignTo));
+  }, [setData]);
 
   // Update a built-in category with an override
   const handleUpdateBuiltInCategory = useCallback((override: CategoryOverride) => {
@@ -745,7 +759,9 @@ export function ExpenseTrackerPage() {
       try {
         const csv = e.target?.result as string;
         const imported = importExpenseTrackerFromCSV(csv);
-        setData(imported);
+        const current = stateRef.current.data;
+        if (imported.planning === undefined && current.planning && !window.confirm(t('planning.legacyImport'))) return;
+        if (!setData(prepareExpenseTrackerRestore(imported, current))) return;
         setSelectedYear(imported.currentYear);
         setSelectedMonth(imported.currentMonth);
       } catch (error) {
@@ -760,7 +776,7 @@ export function ExpenseTrackerPage() {
   const handleResetData = () => {
     if (confirm(t('expenseTracker.confirm.reset'))) {
       const defaultData = getDefaultData();
-      setData(defaultData);
+      if (!setData(defaultData)) return;
       setSelectedYear(defaultData.currentYear);
       setSelectedMonth(defaultData.currentMonth);
     }
@@ -832,6 +848,8 @@ export function ExpenseTrackerPage() {
       </header>
 
       <main className="expense-tracker-main" id="main-content">
+        {dataUnavailable && <p className="planning-warning" role="alert">{t('planning.invalidSaved')}</p>}
+        {saveError && <p className="planning-warning" role="alert">{saveError}</p>}
         {/* How to Use Section */}
         <section className="allocation-info collapsible-section">
           <button 
@@ -1016,37 +1034,33 @@ export function ExpenseTrackerPage() {
 
         {/* Tabs */}
         <div className="tabs" role="tablist" aria-label={t('expenseTracker.tabsAria')} data-tour="expense-tabs">
-          <button
-            role="tab"
-            aria-selected={activeTab === 'transactions'}
-            onClick={() => setActiveTab('transactions')}
-            className={`tab ${activeTab === 'transactions' ? 'active' : ''}`}
-          >
-            <MaterialIcon name="receipt_long" /> {t('expenseTracker.transactions')}
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'budgets'}
-            onClick={() => setActiveTab('budgets')}
-            className={`tab ${activeTab === 'budgets' ? 'active' : ''}`}
-            data-tour="budgets-tab"
-          >
-            <MaterialIcon name="savings" /> {t('expenseTracker.budgets')}
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === 'analytics'}
-            onClick={() => setActiveTab('analytics')}
-            className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
-            data-tour="analytics-tab"
-          >
-            <MaterialIcon name="analytics" /> {t('expenseTracker.analytics')}
-          </button>
+          {EXPENSE_TABS.map((tab, index) => <button key={tab} type="button" role="tab" id={`${tab}-tab`}
+            aria-controls={`${tab}-panel`} aria-selected={activeTab === tab} tabIndex={activeTab === tab ? 0 : -1}
+            onClick={() => setActiveTab(tab)} className={`tab ${activeTab === tab ? 'active' : ''}`}
+            data-tour={`${tab}-tab`} onKeyDown={event => {
+              const destination = event.key === 'ArrowRight' ? (index + 1) % EXPENSE_TABS.length
+                : event.key === 'ArrowLeft' ? (index + EXPENSE_TABS.length - 1) % EXPENSE_TABS.length
+                : event.key === 'Home' ? 0 : event.key === 'End' ? EXPENSE_TABS.length - 1 : null;
+              if (destination === null) return;
+              event.preventDefault();
+              const next = EXPENSE_TABS[destination];
+              setActiveTab(next);
+              document.getElementById(`${next}-tab`)?.focus();
+            }}>
+            {t(tab === 'planning' || tab === 'rules' ? `planning.${tab === 'planning' ? 'tab' : 'rulesTab'}` : `expenseTracker.${tab}`)}
+          </button>)}
         </div>
+
+        {activeTab === 'planning' && <section id="planning-panel" role="tabpanel" aria-labelledby="planning-tab" tabIndex={0}>
+          {!dataUnavailable && <ExpensePlanningPanel data={data} onChange={setData} privacy={isPrivacyMode} readOnly={IS_DEMO_MODE} />}
+        </section>}
+        {activeTab === 'rules' && <section id="rules-panel" role="tabpanel" aria-labelledby="rules-tab" tabIndex={0}>
+          {!dataUnavailable && <ImportRulesManager data={data} onChange={setData} readOnly={IS_DEMO_MODE} />}
+        </section>}
 
         {/* Transactions Tab */}
         {activeTab === 'transactions' && (
-          <section className="transactions-section" role="tabpanel" aria-labelledby="transactions-tab">
+          <section className="transactions-section" id="transactions-panel" role="tabpanel" aria-labelledby="transactions-tab" tabIndex={0}>
             <div className="section-header">
               <h3>{t('expenseTracker.transactions')}</h3>
               <div className="transaction-actions" data-tour="transaction-actions">
@@ -1325,7 +1339,7 @@ export function ExpenseTrackerPage() {
 
         {/* Budgets Tab */}
         {activeTab === 'budgets' && (
-          <section className="budgets-section" role="tabpanel" aria-labelledby="budgets-tab" data-tour="budgets-content">
+          <section className="budgets-section" id="budgets-panel" role="tabpanel" aria-labelledby="budgets-tab" tabIndex={0} data-tour="budgets-content">
             <div className="budgets-header">
               <div>
                 <h3>{t('expenseTracker.monthlyBudgets')}</h3>
@@ -1398,7 +1412,7 @@ export function ExpenseTrackerPage() {
 
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
-          <section className="analytics-section" role="tabpanel" aria-labelledby="analytics-tab" data-tour="analytics-content">
+          <section className="analytics-section" id="analytics-panel" role="tabpanel" aria-labelledby="analytics-tab" tabIndex={0} data-tour="analytics-content">
             <h3>{t('expenseTracker.spendingAnalyticsFor', { year: selectedYear })}</h3>
             <ExpenseStatistics data={data} isPrivacyMode={isPrivacyMode} />
             
@@ -1589,6 +1603,7 @@ export function ExpenseTrackerPage() {
             customCategories={data.customCategories}
             categoryOverrides={data.categoryOverrides}
             llmConfig={llmConfig}
+            categorizationRules={data.planning?.rules}
           />
         )}
 
@@ -1635,6 +1650,7 @@ export function ExpenseTrackerPage() {
             onUpdateBuiltInCategory={handleUpdateBuiltInCategory}
             onClose={() => setShowCategoryManager(false)}
             getExpenseCountForCategory={getExpenseCountForCategory}
+            getPlanningReferenceCount={dataUnavailable ? undefined : categoryId => planningCategoryReferenceCount(data, categoryId)}
           />
         )}
 

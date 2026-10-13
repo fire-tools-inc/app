@@ -5,6 +5,7 @@ import {
   handler, resolveUserId, apiError, bool01, fromBool01, nowIso,
   parsePagination, nextCursor, parseYearMonth, parseBody,
 } from '../http.js';
+import { scheduleReferenceSchema } from './expensePlanning.js';
 
 const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
 const EXPENSE_TYPES = new Set(['NEED', 'WANT']);
@@ -32,11 +33,13 @@ interface ExpenseRow {
   id: number; user_id: number; expense_month_id: number; external_id: string;
   date: string; amount: number; description: string; currency: string | null;
   category: string; sub_category: string | null; expense_type: string; is_recurring: number;
+  schedule_id: string | null; scheduled_date: string | null;
 }
 interface IncomeRow {
   id: number; user_id: number; expense_month_id: number; external_id: string;
   date: string; amount: number; description: string; currency: string | null;
   source: string; is_recurring: number;
+  schedule_id: string | null; scheduled_date: string | null;
 }
 interface BudgetRow {
   id: number; user_id: number; expense_month_id: number | null;
@@ -99,12 +102,41 @@ const mapExpense = (r: ExpenseRow) => ({
   date: r.date, amount: r.amount, description: r.description,
   currency: r.currency, category: r.category, subCategory: r.sub_category,
   expenseType: r.expense_type, isRecurring: fromBool01(r.is_recurring),
+  ...(r.schedule_id ? { scheduleId: r.schedule_id, scheduledDate: r.scheduled_date } : {}),
 });
 const mapIncome = (r: IncomeRow) => ({
   id: r.id, externalId: r.external_id, type: 'income',
   date: r.date, amount: r.amount, description: r.description,
   currency: r.currency, source: r.source, isRecurring: fromBool01(r.is_recurring),
+  ...(r.schedule_id ? { scheduleId: r.schedule_id, scheduledDate: r.scheduled_date } : {}),
 });
+
+const scheduleValues = (body: Record<string, unknown>): [string | null, string | null] => [
+  body.scheduleId != null ? String(body.scheduleId) : null,
+  body.scheduledDate != null ? String(body.scheduledDate) : null,
+];
+
+const validateOccurrence = (body: Record<string, unknown>): void => {
+  const reference = parseBody(scheduleReferenceSchema, body);
+  if (reference.scheduleId && bool01(body.isRecurring)) {
+    throw apiError(400, 'invalid_body', 'Scheduled transactions cannot also use legacy recurring copying.');
+  }
+};
+
+const assertAvailableOccurrence = (
+  db: Database, userId: number, body: Record<string, unknown>,
+  replacing?: { table: 'expense_entries' | 'income_entries'; externalId: string },
+): void => {
+  if (body.scheduleId == null) return;
+  for (const table of ['expense_entries', 'income_entries'] as const) {
+    const excluded = replacing?.table === table ? replacing.externalId : null;
+    const existing = db.prepare(`SELECT id FROM ${table}
+      WHERE user_id = ? AND schedule_id = ? AND scheduled_date = ?
+      AND (? IS NULL OR external_id != ?)`)
+      .get(userId, ...scheduleValues(body), excluded, excluded);
+    if (existing) throw apiError(409, 'conflict', 'This scheduled occurrence is already recorded.');
+  }
+};
 
 const mapBudgetWithMonth = (db: Database, userId: number, r: BudgetRow) => {
   let monthKey: string | undefined;
@@ -138,6 +170,7 @@ const validateExpense = (body: Record<string, unknown>) => {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
   parseBody(transactionValues, body);
+  validateOccurrence(body);
   if (!EXPENSE_TYPES.has(String(body.expenseType))) {
     throw apiError(400, 'invalid_body', `Invalid expenseType: ${body.expenseType}`);
   }
@@ -150,6 +183,7 @@ const validateIncome = (body: Record<string, unknown>) => {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
   parseBody(transactionValues, body);
+  validateOccurrence(body);
   if (!INCOME_SOURCES.has(String(body.source))) {
     throw apiError(400, 'invalid_body', `Invalid source: ${body.source}`);
   }
@@ -212,8 +246,8 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const userId = resolveUserId(req);
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const body = (req.body ?? {}) as Record<string, unknown>;
-    const m = ensureMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const m = ensureMonth(db, userId, year, month);
       db.prepare('DELETE FROM expense_entries WHERE user_id = ? AND expense_month_id = ?').run(userId, m.id);
       db.prepare('DELETE FROM income_entries WHERE user_id = ? AND expense_month_id = ?').run(userId, m.id);
       db.prepare('DELETE FROM category_budgets WHERE user_id = ? AND expense_month_id = ?').run(userId, m.id);
@@ -222,27 +256,31 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
       const budgets = Array.isArray(body.budgets) ? (body.budgets as Record<string, unknown>[]) : [];
       const expIns = db.prepare(
         `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, category, sub_category, expense_type, is_recurring)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            currency, category, sub_category, expense_type, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
       for (const e of expenses) {
         validateExpense(e);
+        assertAvailableOccurrence(db, userId, e);
         expIns.run(
           userId, m.id, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
           e.currency != null ? String(e.currency) : null, String(e.category),
           e.subCategory != null ? String(e.subCategory) : null, String(e.expenseType), bool01(e.isRecurring),
+          ...scheduleValues(e),
         );
       }
       const incIns = db.prepare(
         `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, source, is_recurring)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            currency, source, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       );
       for (const e of incomes) {
         validateIncome(e);
+        assertAvailableOccurrence(db, userId, e);
         incIns.run(
           userId, m.id, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
           e.currency != null ? String(e.currency) : null, String(e.source), bool01(e.isRecurring),
+          ...scheduleValues(e),
         );
       }
       const budIns = db.prepare(
@@ -254,7 +292,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
           b.currency != null ? String(b.currency) : null);
       }
     });
-    tx();
+    tx.immediate();
     res.json(getMonthData(userId, year, month));
   }));
 
@@ -304,16 +342,20 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const existing = db.prepare('SELECT id FROM expense_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, String(body.externalId));
     if (existing) throw apiError(409, 'conflict', `Expense ${body.externalId} already exists`);
-    const m = ensureMonthByDate(db, userId, String(body.date));
-    const info = db.prepare(
-      `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
-          currency, category, sub_category, expense_type, is_recurring)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-      body.currency != null ? String(body.currency) : null, String(body.category),
-      body.subCategory != null ? String(body.subCategory) : null, String(body.expenseType), bool01(body.isRecurring),
-    );
+    const info = db.transaction(() => {
+      assertAvailableOccurrence(db, userId, body);
+      const m = ensureMonthByDate(db, userId, String(body.date));
+      return db.prepare(
+        `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
+            currency, category, sub_category, expense_type, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
+        body.currency != null ? String(body.currency) : null, String(body.category),
+        body.subCategory != null ? String(body.subCategory) : null, String(body.expenseType), bool01(body.isRecurring),
+        ...scheduleValues(body),
+      );
+    }).immediate();
     const row = db.prepare('SELECT * FROM expense_entries WHERE id = ?').get(info.lastInsertRowid) as ExpenseRow;
     res.status(201).json(mapExpense(row));
   }));
@@ -323,19 +365,21 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const body = (req.body ?? {}) as Record<string, unknown>;
     body.externalId = req.params.externalId;
     validateExpense(body);
-    const m = ensureMonthByDate(db, userId, String(body.date));
     db.transaction(() => {
+      assertAvailableOccurrence(db, userId, body, { table: 'expense_entries', externalId: req.params.externalId });
+      const m = ensureMonthByDate(db, userId, String(body.date));
       db.prepare('DELETE FROM expense_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
       db.prepare(
         `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, category, sub_category, expense_type, is_recurring)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            currency, category, sub_category, expense_type, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(
         userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
         body.currency != null ? String(body.currency) : null, String(body.category),
         body.subCategory != null ? String(body.subCategory) : null, String(body.expenseType), bool01(body.isRecurring),
+        ...scheduleValues(body),
       );
-    })();
+    }).immediate();
     const row = db.prepare('SELECT * FROM expense_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as ExpenseRow;
     res.json(mapExpense(row));
@@ -376,15 +420,19 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const existing = db.prepare('SELECT id FROM income_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, String(body.externalId));
     if (existing) throw apiError(409, 'conflict', `Income ${body.externalId} already exists`);
-    const m = ensureMonthByDate(db, userId, String(body.date));
-    const info = db.prepare(
-      `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-          currency, source, is_recurring)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ).run(
-      userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-      body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
-    );
+    const info = db.transaction(() => {
+      assertAvailableOccurrence(db, userId, body);
+      const m = ensureMonthByDate(db, userId, String(body.date));
+      return db.prepare(
+        `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
+            currency, source, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).run(
+        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
+        body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
+        ...scheduleValues(body),
+      );
+    }).immediate();
     const row = db.prepare('SELECT * FROM income_entries WHERE id = ?').get(info.lastInsertRowid) as IncomeRow;
     res.status(201).json(mapIncome(row));
   }));
@@ -394,18 +442,20 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const body = (req.body ?? {}) as Record<string, unknown>;
     body.externalId = req.params.externalId;
     validateIncome(body);
-    const m = ensureMonthByDate(db, userId, String(body.date));
     db.transaction(() => {
+      assertAvailableOccurrence(db, userId, body, { table: 'income_entries', externalId: req.params.externalId });
+      const m = ensureMonthByDate(db, userId, String(body.date));
       db.prepare('DELETE FROM income_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
       db.prepare(
         `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, source, is_recurring)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            currency, source, is_recurring, schedule_id, scheduled_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(
         userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
         body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
+        ...scheduleValues(body),
       );
-    })();
+    }).immediate();
     const row = db.prepare('SELECT * FROM income_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as IncomeRow;
     res.json(mapIncome(row));

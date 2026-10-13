@@ -207,6 +207,25 @@ export function HomePage() {
           ) : <EmptyPanel icon="pie_chart" message={t('dashboard.emptyAllocation')} to="/asset-allocation" action={t('dashboard.addAssets')} />}
           {data.allocation.hasNegativeBalances && <p className="dashboard-caption">{t('dashboard.negativeBalances')}</p>}
         </section>
+        <section className="dashboard-panel" aria-labelledby="dashboard-upcoming-title">
+          <PanelHeader id="dashboard-upcoming-title" title={t('planning.homeUpcoming')} to="/expense-tracker?tab=planning" action={t('planning.openPlanning')} />
+          {data.planning.invalid ? <p className="dashboard-error" role="alert">{t('planning.invalidSaved')}</p>
+            : data.planning.upcoming.length ? <ul className="dashboard-planning-list">
+              {data.planning.upcoming.map(item => <li key={`${item.scheduleId}:${item.scheduledDate}`}>
+                <div><strong>{item.schedule.name}</strong><span>{item.scheduledDate}</span></div>
+                <span>{value(item.schedule.amount, item.schedule.currency)} {item.schedule.currency}</span>
+              </li>)}
+            </ul> : <p className="dashboard-caption">{t('planning.homeEmpty')}</p>}
+        </section>
+        <section className="dashboard-panel" aria-labelledby="dashboard-goals-title">
+          <PanelHeader id="dashboard-goals-title" title={t('planning.goals')} to="/expense-tracker?tab=planning" action={t('planning.openGoals')} />
+          {data.planning.goals.length ? <ul className="dashboard-planning-list">
+            {data.planning.goals.map(goal => <li key={goal.id}>
+              <strong>{goal.name}</strong><span>{value(goal.savedAmount, goal.currency)} / {value(goal.targetAmount, goal.currency)} {goal.currency}</span>
+            </li>)}
+          </ul> : <p className="dashboard-caption">{t('planning.noGoals')}</p>}
+          <p className="dashboard-caption">{t('planning.goalHelp')}</p>
+        </section>
       </div>
 
       <footer className="dashboard-footer">

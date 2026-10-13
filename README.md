@@ -35,6 +35,9 @@ This software is for **educational and planning purposes only** — not financia
 | 💵 **DCA Helper** | Dollar-cost averaging planning |
 | 💳 **Debt Payoff Calculator** | Snowball/avalanche strategies, fixed-budget or fixed-timeline modes, repayment timeline chart |
 | 💰 **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis, YTD/yearly/custom-range expense totals and averages |
+| 🗓️ **Cashflow Planning** | Dated recurring bills/income, explicit payment confirmation, and 30/90/365-day cashflow forecasts — [guide](docs/user/cashflow-planning.md) |
+| 🎯 **Savings Goals** | Manually earmarked sinking funds, deadlines and required monthly contributions, without changing net worth |
+| 🏷️ **Offline Import Rules** | Review-first local categorization rules; manual overrides win and matched rows need no AI |
 | 📈 **Net Worth Tracker** | Monthly snapshots of assets, cash, pensions with historical charts |
 | 📥 **CSV Export / Import** | Full data backup and restore |
 | 🌍 **Multi-language** | English, Italian, French, German, Spanish — change in Settings |

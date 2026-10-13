@@ -24,17 +24,18 @@ describe('migration runner', () => {
     try {
       db.pragma('foreign_keys = ON');
       runMigrations(db, path);
-      rollbackMigrations(db, path, 1);
+      const aiAndLater = listMigrations(path).filter(migration => migration.id >= '0005');
+      rollbackMigrations(db, path, aiAndLater.length);
       db.prepare(`INSERT INTO user_settings (user_id, llm_base_url, llm_api_key, llm_model, experimental_features_json)
         VALUES (1, 'http://localhost:11434/v1', '', 'synthetic', '{"pdfImport":true}')`).run();
       const original = Buffer.from('synthetic receipt bytes');
       db.prepare(`INSERT INTO receipts (user_id, file_name, mime_type, content, sha256)
         VALUES (1, 'synthetic.png', 'image/png', ?, ?)`).run(original, 'a'.repeat(64));
-      expect(runMigrations(db, path).migrationsApplied).toEqual(['0005_ai_features']);
+      expect(runMigrations(db, path).migrationsApplied).toEqual(aiAndLater.map(migration => `${migration.id}_${migration.name}`));
       expect(db.prepare('SELECT ai_features_enabled FROM user_settings WHERE user_id = 1').get()).toEqual({ ai_features_enabled: 1 });
       db.prepare('UPDATE user_settings SET ai_features_enabled = 0 WHERE user_id = 1').run();
       expect(() => db.prepare('UPDATE user_settings SET ai_features_enabled = 2 WHERE user_id = 1').run()).toThrow();
-      rollbackMigrations(db, path, 1);
+      rollbackMigrations(db, path, aiAndLater.length);
       expect(db.prepare('SELECT llm_base_url, llm_api_key, llm_model, experimental_features_json FROM user_settings WHERE user_id = 1').get()).toEqual({
         llm_base_url: 'http://localhost:11434/v1', llm_api_key: '', llm_model: 'synthetic', experimental_features_json: '{"pdfImport":true}',
       });

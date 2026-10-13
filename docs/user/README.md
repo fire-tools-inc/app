@@ -1,8 +1,9 @@
 # Fire Tools — User guide
 
 Welcome. Fire Tools is a free, open-source planner that helps you reason about
-your path to financial independence. Everything runs on your device — no
-accounts, no servers in the loop, no analytics tracking you.
+your path to financial independence. It is local-first, without mandatory
+accounts or analytics. Optional market/model requests and local OCR/backend
+features have their own explicit configuration.
 
 This guide walks through every tool in the app. Each page below has a short
 walkthrough and a screenshot so you can see exactly what to expect.
@@ -16,6 +17,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - [Asset allocation manager](./asset-allocation.md)
 - [Portfolio backtest](./backtesting.md)
 - [Expense tracker](./expense-tracker.md)
+- [Cashflow planning, savings goals and offline rules](./cashflow-planning.md)
 - [Net-worth tracker](./net-worth-tracker.md)
 - [Questionnaire (guided setup)](./questionnaire.md)
 - [Settings, language, data export](./settings.md)
@@ -33,11 +35,13 @@ walkthrough and a screenshot so you can see exactly what to expect.
 
 ## Where your data lives
 
-- **Desktop app (Electron)** — your inputs are stored in a local SQLite database
-  inside the OS-managed `userData` directory (e.g. `~/Library/Application
-  Support/Fire Tools/firetools.db` on macOS). Nothing leaves the machine.
-- **Self-hosted** — the Docker Compose stack keeps everything in a volume-backed
-  SQLite (or Postgres) database on your own server. Nothing leaves your hardware.
+- **Renderer financial stores** — existing encrypted SafeCookies/localStorage
+  stores remain authoritative for the tools. Cashflow history and planning use
+  encrypted localStorage, including in Electron.
+- **Local backend** — SQLite inside the desktop's `userData` directory or a
+  self-hosted volume owns receipt originals and its API records. Its planning
+  API is separate from the renderer snapshot; a PostgreSQL driver is not
+  implemented.
 
 The hosted [web demo](https://fire-tools-inc.github.io/app/demo/) is read-only:
 it loads sample data and doesn't persist anything you type. Use the desktop app
