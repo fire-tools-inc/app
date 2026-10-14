@@ -1,9 +1,11 @@
 import { describe, expect, it, beforeEach } from 'vitest';
+import { encryptData } from '../../../src/utils/cookieEncryption';
 import {
   loadQuestionnairePromptDismissed,
   saveQuestionnairePromptDismissed,
   clearQuestionnairePromptPreference,
 } from '../../../src/utils/questionnairePromptPreferences';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 // Mock document.cookie
 const cookieMock = (() => {
@@ -55,8 +57,9 @@ describe('Questionnaire prompt preferences', () => {
   });
 
   it('should handle corrupted data gracefully', () => {
-    document.cookie = 'fire-tools-questionnaire-prompt-dismissed=invalid';
+    document.cookie = `fire-tools-questionnaire-prompt-dismissed=${encryptData('invalid')}`;
     expect(loadQuestionnairePromptDismissed()).toBe(false);
+    expectDiagnostic('error', '[load-failed]: failed to load questionnaire prompt preference');
   });
 
   it('should clear preference', () => {

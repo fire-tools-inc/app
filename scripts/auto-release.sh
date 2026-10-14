@@ -54,6 +54,8 @@ fi
 TAG="v$VERSION"
 PUSH_MAIN=0
 STEP="preparing the release version and tag"
+git config --local user.name "github-actions[bot]"
+git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
 if git show-ref --verify --quiet "refs/tags/$TAG"; then
   [[ "$(git rev-parse "refs/tags/$TAG^{commit}")" == "$(git rev-parse HEAD)" ]] ||
     fail "Tag '$TAG' already belongs to a different commit; it will not be moved."
@@ -63,8 +65,6 @@ else
   if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
     node scripts/bump-version.mjs "$VERSION"
     node scripts/release-version.mjs verify "$VERSION"
-    git config user.name "github-actions[bot]"
-    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     git add -- package.json package-lock.json server/package.json server/package-lock.json tests/setup.ts
     VALIDATED_TREE="$(git write-tree)"
     git commit --no-gpg-sign -m "chore: bump version to $VERSION [skip ci]"
