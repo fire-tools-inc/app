@@ -305,10 +305,11 @@ jobs:
           ### macOS
           1. Download the arm64 DMG for Apple Silicon Macs, or the x64 DMG for Intel Macs.
           2. Open the DMG and drag **Fire Tools** to Applications.
-          3. If macOS blocks the app because it isn't notarized yet, run:
+          3. If macOS blocks the app, first verify that your download came from this official release and that you trust it. Only then open Terminal and remove the quarantine attribute for this app only:
              ```sh
-             xattr -cr "/Applications/Fire Tools.app"
+             xattr -dr com.apple.quarantine "/Applications/Fire Tools.app"
              ```
+          4. Reopen **Fire Tools** from Applications. Never use this command for an untrusted download or disable Gatekeeper globally.
 
           ### Windows
           1. Download the `Fire Tools Setup` `.exe`.

@@ -39,6 +39,13 @@ ELECTRON_RENDERER_URL=http://127.0.0.1:5190 node scripts/electron-dev.mjs
 
 ## Startup troubleshooting
 
+If macOS Gatekeeper blocks a downloaded release, follow the
+[macOS installation instructions](../docs/user/README.md#macos-gatekeeper)
+to move **Fire Tools.app** into Applications and remove its quarantine
+attribute only after verifying that you trust the official download.
+Reopen the app afterward. This is separate from the native startup failures
+described below.
+
 Electron 44.7.0 is the minimum selected runtime in this repository. It includes
 the fix shipped in 44.6.0 for a native macOS startup crash when
 `IORegisterForSystemPower` fails:

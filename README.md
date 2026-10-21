@@ -45,6 +45,27 @@ This software is for **educational and planning purposes only** — not financia
 
 ---
 
+## Install on macOS
+
+Download the macOS `.dmg` or `.zip` from the
+[official releases](https://github.com/fire-tools-inc/app/releases). Open the
+DMG or extract the ZIP, then move **Fire Tools.app** into **Applications**
+before opening it.
+
+If macOS Gatekeeper blocks the app, first verify that your download came from
+the official releases above and that you trust it. Only then open **Terminal**
+and run:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Fire Tools.app"
+```
+
+Reopen **Fire Tools** from Applications. This removes the quarantine attribute
+from this app only, bypassing its downloaded-app quarantine checks. Never use
+this command for an untrusted download or disable Gatekeeper globally.
+
+---
+
 ## Quick Start
 
 ```bash

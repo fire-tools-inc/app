@@ -261,6 +261,18 @@ main { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
   font-size: 0.9em;
 }
 
+.macos-install { margin-top: 2rem; }
+.macos-install h3 { font-family: 'Sora', sans-serif; font-size: 1.15rem; }
+.macos-install p { color: var(--muted); margin: 0.75rem 0; }
+.macos-install pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--panel-2);
+  font-size: 0.9rem;
+}
+.macos-install pre:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
 .badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
