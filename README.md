@@ -21,6 +21,10 @@ services. See [Security & Privacy](#security--privacy) for the boundaries.
 > data and do not persist financial edits. Running a backend does not turn the
 > browser demo into the full desktop app.
 
+![Fire Tools dashboard showing net worth history, portfolio value and FIRE progress](docs/user/screenshots/homepage.png)
+
+*Dashboard preview with synthetic demo data.*
+
 ## Disclaimer
 
 This software is for **educational and planning purposes only**, not financial,
