@@ -33,6 +33,24 @@ walkthrough and a screenshot so you can see exactly what to expect.
   with sample data (nothing you type is saved) — install the desktop app or
   self-host to keep your own data.
 
+### macOS Gatekeeper
+
+Download the macOS DMG or ZIP from the
+[official releases](https://github.com/fire-tools-inc/app/releases). Open the
+DMG or extract the ZIP, then move **Fire Tools.app** into **Applications**
+before opening it.
+
+If macOS blocks the app, verify that your download came from the official
+releases above and that you trust it. Only then open **Terminal** and run:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Fire Tools.app"
+```
+
+Reopen **Fire Tools** from Applications. This removes the quarantine attribute
+from this app only, bypassing its downloaded-app quarantine checks. Never use
+this command for an untrusted download or disable Gatekeeper globally.
+
 ## Where your data lives
 
 - **Renderer financial stores** — existing encrypted SafeCookies/localStorage

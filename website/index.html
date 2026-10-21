@@ -206,6 +206,13 @@
             <button class="btn primary is-disabled" type="button" disabled aria-disabled="true" title="Coming soon">Planned · coming soon</button>
           </article>
         </div>
+        <div class="macos-install">
+          <h3>macOS: if the app is blocked</h3>
+          <p>Download the macOS DMG or ZIP from the <a href="https://github.com/fire-tools-inc/app/releases">official releases</a>. Open the DMG or extract the ZIP, then move <strong>Fire Tools.app</strong> into <strong>Applications</strong> before opening it.</p>
+          <p>If macOS Gatekeeper blocks the app, first verify that your download came from the official releases above and that you trust it. Only then open <strong>Terminal</strong> and run:</p>
+          <pre tabindex="0" role="region" aria-label="macOS quarantine removal command"><code>xattr -dr com.apple.quarantine "/Applications/Fire Tools.app"</code></pre>
+          <p>Reopen <strong>Fire Tools</strong> from Applications. This removes the quarantine attribute from this app only, bypassing its downloaded-app quarantine checks. Never use this command for an untrusted download or disable Gatekeeper globally.</p>
+        </div>
       </section>
     </main>
 
