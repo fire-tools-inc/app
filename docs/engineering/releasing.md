@@ -12,6 +12,22 @@ Every build checks out the exact verified tag commit, not whichever commit is
 currently on `main`. Finishing an older build after a newer release does not
 force the older version to become GitHub's latest release.
 
+Each platform restores the root dependencies once. `build:electron` performs
+the single locked server install with `npm ci --prefix server`, then compiles
+the embedded backend and verifies both SQLite bindings with Electron.
+The npm download cache includes both lockfiles; dependency directories and
+signed build outputs are not cached.
+
+DMGs and macOS ZIPs are already compressed, so their short-lived Actions
+artifacts use compression level zero. Windows artifacts use level one rather
+than disabling compression: the current upload includes unpacked executables
+alongside the compressed installer. Publication downloads the three named
+artifacts in parallel into separate directories, requires all three and fails
+on an artifact digest mismatch before staging assets. Manifest merging, update
+payload checksums, signing hooks and all supported release targets are unchanged.
+The macOS matrix intentionally keeps `fail-fast: false` so successful sibling
+artifacts remain available when retrying a failed architecture.
+
 If the tag and `package.json` disagree, the `verify` job fails with:
 
 > Tag 'vX.Y.Z' does not match package.json version '...'.
@@ -132,6 +148,33 @@ gh workflow run release.yml --repo fire-tools-inc/app --ref main -f tag=v2.4.1
 ```
 
 The dispatch builds the existing tag; it does not create or retarget one.
+
+## Build-only validation
+
+Use the optional `build_only` input to exercise every installer build, artifact
+transfer, manifest merge and staged-asset check without creating or modifying
+a GitHub Release:
+
+```sh
+gh workflow run release.yml --repo fire-tools-inc/app --ref your-workflow-branch \
+  -f tag=v2.4.8 -f build_only=true
+```
+
+Select an existing tag appropriate to the check. The workflow definition comes
+from `--ref`, but application sources and build scripts still come from the
+verified tag commit. This does not validate application changes that only exist
+on the workflow branch. Validate those locally with locked installs, tests and
+`npm run electron:dist -- --publish never` for the desired platform.
+
+Build-only runs skip release-note generation and publication, retain the
+per-platform artifacts for one day, and use a separate concurrency group so
+they cannot replace a pending publication. `build_only` defaults to `false`;
+normal tag pushes, automatic releases and manual recovery still publish.
+
+Automatic version preparation is not a benchmark path: it can create commits
+and tags. Keep its full-history checkout, serialization and atomic pushes.
+Exercise its ordering and recovery behavior using the isolated synthetic
+repositories in `tests/shared/releaseScript.test.ts`, not a production bump.
 
 ## What `scripts/bump-version.mjs` updates
 

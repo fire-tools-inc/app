@@ -15,7 +15,7 @@
     "build": "rm -rf dist && tsc && vite build",
     "build:self-hosted": "npm run build -- --mode self-hosted",
     "postbuild": "node scripts/build-landing.mjs && node scripts/build-docs.mjs",
-    "build:electron": "tsc && vite build --mode electron && npm install --prefix server && npm --prefix server run build && node scripts/ensure-native-modules.mjs && node scripts/gen-build-meta.mjs",
+    "build:electron": "tsc && vite build --mode electron && npm ci --prefix server && npm --prefix server run build && node scripts/ensure-native-modules.mjs && node scripts/gen-build-meta.mjs",
     "build:landing": "node scripts/build-landing.mjs",
     "build:docs": "node scripts/build-docs.mjs",
     "docs:screenshots": "node scripts/take-screenshots.mjs",
