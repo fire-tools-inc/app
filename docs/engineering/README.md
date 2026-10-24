@@ -185,6 +185,31 @@ synthetic data and mocked external responses. Its CI job verifies navigation,
 plot and label bounds, usable chart height and local-only overflow across
 desktop/mobile routes.
 
+## Continuous integration
+
+The [Tests workflow](../../.github/workflows/tests.yml) runs on every pull
+request update, including drafts, and every push to `main`. A newer run cancels
+obsolete work for the same pull request. Each `main` push has its own
+concurrency group, so integration validation is not canceled by a later push.
+Deployment, version preparation and release concurrency are unchanged.
+
+The existing path filters select page-specific tests unless shared inputs
+require the full renderer suite. Only changed pages enter the test matrix;
+docs-only and backend-only changes do not allocate empty page-test runners.
+The page matrix stops remaining siblings on failure. Every `main` push still
+runs the full renderer, backend, browser and uncached Docker health checks.
+
+Node-based test jobs use locked installs with `--ignore-scripts` to avoid
+downloading Electron and rebuilding SQLite for the wrong runtime. The test
+commands still run their pretest hooks, which verify and, if needed, rebuild
+SQLite for plain Node. Jobs installing both dependency trees key the npm
+download cache from both lockfiles; installed dependencies are not cached.
+
+Browser CI uses two Playwright workers across isolated spec files while tests
+within each file stay sequential. It still builds the backend and self-hosted
+frontend and runs every browser regression. Local runs keep the one-worker
+default; use `npm run test:browser -- --workers=2` to reproduce CI concurrency.
+
 ## Related links
 
 - [Project README](https://github.com/fire-tools-inc/app)

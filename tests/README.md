@@ -99,3 +99,7 @@ shared/, types/, or config changes. See that workflow for the path filters.
 Shared test setup changes also trigger the full renderer suite.
 Shared diagnostic helper changes trigger the backend suite as well.
 UI-related changes also run the **Browser UI regressions** job.
+Only changed pages enter the page-test matrix; unchanged pages do not allocate
+runners. Browser CI uses two workers without parallelizing tests inside a
+spec file. See [continuous integration](../docs/engineering/README.md#continuous-integration)
+for cancellation, install and full-suite behavior.
