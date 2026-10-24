@@ -170,10 +170,11 @@ npm --prefix server test -- test/migrate.test.ts
 
 ## Development and validation
 
-Use Node.js >=22.22.0. Install/restore dependencies when manifests change or a
-selected command reports missing packages, not before every edit. Audit both
-dependency trees after changes; avoid forced major upgrades merely to silence
-warnings.
+Use the Node.js version pinned in `.nvmrc` (26.12.1) for development and CI;
+the supported minimum remains >=22.22.0. Install/restore dependencies when
+manifests change or a selected command reports missing packages, not before
+every edit. Audit both dependency trees after changes; avoid forced major
+upgrades merely to silence warnings.
 
 | Purpose | Command |
 | --- | --- |

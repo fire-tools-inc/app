@@ -1,7 +1,7 @@
 # Multi-stage build for the SPA + landing page served via nginx-alpine.
 # Build context MUST be the repo root (see docker-compose.yml).
 
-FROM node:22-bookworm-slim AS build
+FROM node:26.12.1-bookworm-slim AS build
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 ARG GIT_COMMIT_HASH=unknown
 ARG BUILD_TIME

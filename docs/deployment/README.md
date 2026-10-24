@@ -19,7 +19,8 @@ and run automatically on boot (also runnable via `npm run migrate`).
   Proxies `/api/*` to the backend on the internal network.
 - `postgres` *(profile)* — Postgres 17 for users who don't want SQLite.
 
-The backend image uses Node.js 22 on Debian Bookworm. SQLite 13's bundled
+The frontend build and backend images use Node.js 26.12.1 on Debian Bookworm,
+matching the development and CI pin in `.nvmrc`. SQLite 13's bundled
 Node-API binary needs no compiler toolchain or APT install during the build,
 avoiding the old debconf and missing-manpage notices. The production image
 keeps only its Linux architecture's binary and production dependencies.

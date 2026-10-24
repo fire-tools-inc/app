@@ -77,7 +77,8 @@ validates the release locally, commits and pushes the tag in one command:
 ./scripts/release.sh --bump 2.4.1
 ```
 
-Prerequisites: Git, Node.js >=22.22.0, npm, a clean `main` checkout synchronized
+Prerequisites: Git, Node.js 26.12.1 (pinned in `.nvmrc`; minimum >=22.22.0),
+npm, a clean `main` checkout synchronized
 with `origin/main`, and permission to push both the release commit and tag.
 Merge the intended changes and wait for the automatic version-bump workflow
 before synchronizing your release checkout. The script never switches branches,
