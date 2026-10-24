@@ -9,18 +9,16 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   changes:
     name: Detect changed paths
     runs-on: ubuntu-latest
     outputs:
-      asset_allocation: ${{ steps.filter.outputs.asset_allocation }}
-      expense_tracker: ${{ steps.filter.outputs.expense_tracker }}
-      fire_calculator: ${{ steps.filter.outputs.fire_calculator }}
-      homepage: ${{ steps.filter.outputs.homepage }}
-      net_worth_tracker: ${{ steps.filter.outputs.net_worth_tracker }}
-      questionnaire: ${{ steps.filter.outputs.questionnaire }}
-      settings: ${{ steps.filter.outputs.settings }}
+      pages: ${{ steps.pages.outputs.pages }}
       server: ${{ steps.filter.outputs.server }}
       full: ${{ steps.filter.outputs.full }}
       browser: ${{ steps.filter.outputs.browser }}
@@ -114,6 +112,23 @@ jobs:
               - 'electron-builder.yml'
               - 'tsconfig*.json'
               - '.github/workflows/tests.yml'
+      - name: Select changed page jobs
+        id: pages
+        env:
+          CHANGED_FILTERS: ${{ steps.filter.outputs.changes }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const changed = JSON.parse(process.env.CHANGED_FILTERS);
+          if (!Array.isArray(changed) || changed.some(name => typeof name !== 'string')) {
+            throw new Error('Path filters must emit an array of filter names.');
+          }
+          const pages = [
+            'asset_allocation', 'expense_tracker', 'fire_calculator', 'homepage',
+            'net_worth_tracker', 'questionnaire', 'settings',
+          ].filter(page => changed.includes(page)).map(page => page.replaceAll('_', '-'));
+          appendFileSync(process.env.GITHUB_OUTPUT, `pages=${JSON.stringify(pages)}\n`);
+          NODE
 
   full:
     name: Full FE test suite
@@ -141,57 +156,33 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm --prefix server ci --ignore-scripts
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:browser
+      - run: npm run test:browser -- --workers=2
 
   page:
     name: Page tests
     needs: changes
-    if: ${{ needs.changes.outputs.full != 'true' && github.event_name == 'pull_request' }}
+    if: ${{ needs.changes.outputs.full != 'true' && needs.changes.outputs.pages != '[]' && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        include:
-          - page: asset-allocation
-            changed: ${{ needs.changes.outputs.asset_allocation }}
-          - page: expense-tracker
-            changed: ${{ needs.changes.outputs.expense_tracker }}
-          - page: fire-calculator
-            changed: ${{ needs.changes.outputs.fire_calculator }}
-          - page: homepage
-            changed: ${{ needs.changes.outputs.homepage }}
-          - page: net-worth-tracker
-            changed: ${{ needs.changes.outputs.net_worth_tracker }}
-          - page: questionnaire
-            changed: ${{ needs.changes.outputs.questionnaire }}
-          - page: settings
-            changed: ${{ needs.changes.outputs.settings }}
+        page: ${{ fromJSON(needs.changes.outputs.pages) }}
     steps:
-      - name: Skip if page not changed
-        if: ${{ matrix.changed != 'true' }}
-        run: echo "No changes for ${{ matrix.page }}, skipping." && exit 0
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: ${{ matrix.changed == 'true' }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: ${{ matrix.changed == 'true' }}
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-        if: ${{ matrix.changed == 'true' }}
+      - run: npm ci --ignore-scripts
       - name: Run tests for ${{ matrix.page }}
-        if: ${{ matrix.changed == 'true' }}
-        run: |
-          if [ -z "$(ls -A tests/pages/${{ matrix.page }} 2>/dev/null)" ]; then
-            echo "tests/pages/${{ matrix.page }} is empty, nothing to run."
-            exit 0
-          fi
-          npm test -- --run tests/pages/${{ matrix.page }}/
-          
-# 3) Append this job at the bottom of the file:
+        run: npm test -- --run tests/pages/${{ matrix.page }}/
+
   server-tests:
     name: Server test suite
     needs: changes
@@ -203,10 +194,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      # Skip root postinstall (electron-rebuild) so better-sqlite3 keeps the
-      # Node-ABI prebuild — server tests run under plain Node, not Electron.
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
+      # Keep bundled SQLite prebuilds; the pretest hook verifies plain Node.
       - run: npm ci --ignore-scripts
-      - run: npm --prefix server ci
+      - run: npm --prefix server ci --ignore-scripts
       - run: npm --prefix server test
 
   docker-stack:
@@ -223,7 +216,7 @@ jobs:
       - name: Wait for backend to become healthy
         run: |
           for i in $(seq 1 30); do
-            status=$(docker inspect --format '{{.State.Health.Status}}' $(docker compose ps -q backend) 2>/dev/null || echo "starting")
+            status=$(docker inspect --format '{{.State.Health.Status}}' "$(docker compose ps -q backend)" 2>/dev/null || echo "starting")
             echo "attempt $i: backend health = $status"
             if [ "$status" = "healthy" ]; then exit 0; fi
             sleep 2
@@ -239,7 +232,7 @@ jobs:
           grep -q '"status":"ok"' /tmp/health.json
       - name: Probe frontend on host port
         run: |
-          for i in $(seq 1 20); do
+          for _ in $(seq 1 20); do
             if curl --fail --silent --show-error http://localhost:8080/ -o /dev/null; then
               echo "frontend reachable"; exit 0
             fi
