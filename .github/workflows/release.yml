@@ -10,18 +10,26 @@ on:
         description: Existing release tag to build and publish
         required: true
         type: string
+      build_only:
+        description: Build and validate artifacts without publishing a release
+        default: false
+        type: boolean
   workflow_dispatch:
     inputs:
       tag:
         description: Existing release tag to build or retry
         required: true
         type: string
+      build_only:
+        description: Build and validate artifacts without publishing a release
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: ${{ inputs.build_only && 'release-build-only' || 'release' }}-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -66,6 +74,7 @@ jobs:
     needs: verify
     runs-on: macos-latest
     strategy:
+      # Keep successful architecture artifacts available for failed-job retries.
       fail-fast: false
       matrix:
         arch: [arm64, x64]
@@ -78,9 +87,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
 
       - run: npm ci
-      - run: npm ci --prefix server
 
       - name: Verify macOS arch is concrete
         run: |
@@ -124,6 +135,7 @@ jobs:
             release/**/*.blockmap
           if-no-files-found: error
           retention-days: 1
+          compression-level: 0
 
   build-windows:
     name: Build Windows Installer
@@ -138,9 +150,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
 
       - run: npm ci
-      - run: npm ci --prefix server
 
       - name: Build Fire Tools and create Windows installer
         run: npm run electron:dist -- --publish never --win nsis --x64
@@ -172,33 +186,34 @@ jobs:
             release/**/*.blockmap
           if-no-files-found: error
           retention-days: 1
+          compression-level: 1
 
   release:
     name: Publish GitHub Release
     needs: [verify, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - name: Download macOS arm64 artifacts
+      - name: Download release artifacts in parallel
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: macos-artifacts-arm64
-          path: artifacts/macos/arm64
-
-      - name: Download macOS x64 artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: macos-artifacts-x64
-          path: artifacts/macos/x64
-
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: windows-artifacts
-          path: artifacts/windows
+          pattern: '{macos-artifacts-arm64,macos-artifacts-x64,windows-artifacts}'
+          path: artifacts
+          merge-multiple: false
+          digest-mismatch: error
 
       - name: Stage release assets
         run: |
           set -euo pipefail
+          for artifact in macos-artifacts-arm64 macos-artifacts-x64 windows-artifacts; do
+            if [ ! -d "artifacts/$artifact" ]; then
+              echo "::error::Missing required release artifact: $artifact"
+              exit 1
+            fi
+          done
+          mkdir -p artifacts/macos
+          mv artifacts/macos-artifacts-arm64 artifacts/macos/arm64
+          mv artifacts/macos-artifacts-x64 artifacts/macos/x64
+          mv artifacts/windows-artifacts artifacts/windows
           rm -rf dist-assets
           mkdir -p dist-assets
           # Real download/update payloads (unique per-arch / per-OS names).
@@ -282,6 +297,7 @@ jobs:
           PY
 
       - name: Build release notes (changelog + installation)
+        if: ${{ !inputs.build_only }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.verify.outputs.tag }}
@@ -321,6 +337,7 @@ jobs:
           cat release-notes.md
 
       - name: Create GitHub Release
+        if: ${{ !inputs.build_only }}
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ needs.verify.outputs.tag }}
@@ -330,3 +347,7 @@ jobs:
           files: |
             dist-assets/*
           body_path: release-notes.md
+
+      - name: Summarize build-only validation
+        if: ${{ inputs.build_only }}
+        run: echo "Built all release targets and verified their update manifests. No GitHub Release was created or changed." >> "$GITHUB_STEP_SUMMARY"
