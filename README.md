@@ -130,7 +130,8 @@ this command for an untrusted download or disable Gatekeeper globally.
 
 ### Prerequisites for source development
 
-- **Node.js >=22.22.0**, **npm** and **Git**.
+- **Node.js 26.12.1** (recommended; pinned in `.nvmrc`), **npm** and **Git**.
+  The supported minimum remains **Node.js 22.22.0**.
 - A graphical desktop session for Electron. Linux native SQLite binaries need
   **glibc >=2.35**.
 - **Docker Engine + Compose** only if using the container deployment.
@@ -138,6 +139,7 @@ this command for an untrusted download or disable Gatekeeper globally.
 Use the committed lockfiles to restore the root and backend dependencies
 separately. Installation downloads Electron and verifies the native SQLite
 bindings; Node.js and Electron share the bundled Node-API binaries.
+If using nvm, run `nvm install` and `nvm use` from the repository root first.
 
 ### Run the desktop app from source
 

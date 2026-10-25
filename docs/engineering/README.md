@@ -70,6 +70,12 @@ instead.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   supported storage driver; the schema is Postgres-compatible, but the
   Postgres driver remains deferred.
+- **Node.js runtime** - `.nvmrc` pins Node.js 26.12.1 for local development, CI
+  and Pages deployment. Release jobs pin the same version explicitly so retries
+  can check out older tags without `.nvmrc`. Both Dockerfiles use the matching
+  Debian Bookworm image. The root and backend manifests retain the supported
+  minimum of Node.js 22.22.0. Electron uses its own bundled Node.js runtime,
+  not the host runtime pin.
 - **Native startup** — Electron 44.7.0 includes the macOS unavailable
   sleep/wake-registration fix. The development launcher owns the actual Vite
   and Electron processes and reports native signal failures. See

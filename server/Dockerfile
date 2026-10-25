@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:22-bookworm-slim AS build
+FROM node:26.12.1-bookworm-slim AS build
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 WORKDIR /app
 COPY server/package.json server/package-lock.json* ./
@@ -13,7 +13,7 @@ COPY server/scripts ./scripts
 RUN npm run build && npm prune --omit=dev --ignore-scripts --no-audit --no-fund \
     && node -e "const fs = require('node:fs'); const dir = 'node_modules/better-sqlite3/prebuilds'; const keep = 'linux-' + process.arch + '.node'; for (const file of fs.readdirSync(dir)) { if (file !== keep) fs.unlinkSync(dir + '/' + file); } const Database = require('better-sqlite3'); const db = new Database(':memory:'); db.close();"
 
-FROM node:22-bookworm-slim AS runtime
+FROM node:26.12.1-bookworm-slim AS runtime
 ARG GIT_COMMIT_HASH=unknown
 ARG BUILD_TIME
 ENV NODE_ENV=production \
