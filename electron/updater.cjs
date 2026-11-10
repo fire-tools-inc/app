@@ -7,7 +7,6 @@
 //   * Forwards lifecycle events to the renderer on `fire-tools:updater-event`.
 
 const { app } = require('electron');
-const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
@@ -228,13 +227,16 @@ async function setupUpdater({ getWindow, notify } = {}) {
     return { skipped: true, reason: 'missing-dep' };
   }
 
-  autoUpdater = mod.autoUpdater;
+  autoUpdater = process.platform === 'darwin'
+    ? new (require('./mac-updater.cjs').MacUpdater)()
+    : mod.autoUpdater;
   if (!app.isPackaged && forceDev) {
     autoUpdater.forceDevUpdateConfig = true;
     console.log('[fire-tools] auto-updater forced ON in dev (FIRETOOLS_UPDATER_FORCE_DEV=1)');
   }
   autoUpdater.autoDownload = false; // we drive downloads ourselves based on prefs
-  autoUpdater.autoInstallOnAppQuit = true;
+  // Every installation must pass through quitAndInstall() and its backup gate.
+  autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.allowPrerelease = false;
   autoUpdater.logger = {
     info: (...args) => console.log('[fire-tools][updater]', ...args),
@@ -274,6 +276,19 @@ async function setupUpdater({ getWindow, notify } = {}) {
   autoUpdater.on('error', (err) => {
     emit({ status: 'error', error: err && err.message ? err.message : String(err) });
   });
+
+  if (process.platform === 'darwin') {
+    try {
+      const error = await require('./mac-install.cjs').readInstallError(app.getPath('userData'));
+      if (error) {
+        console.error('[fire-tools] previous macOS update failed:', error);
+        emit({ status: 'error', error });
+      }
+    } catch (err) {
+      console.error('[fire-tools] failed to read macOS update result:', err);
+      emit({ status: 'error', error: err && err.message ? err.message : String(err) });
+    }
+  }
 
   const prefs = await loadPrefs();
   if (prefs.autoCheck) {
@@ -330,9 +345,9 @@ async function quitAndInstall() {
   try {
     // isSilent=false so the user can see the install screen on Windows.
     // forceRunAfter=true to relaunch automatically after the new version installs.
-    autoUpdater.quitAndInstall(false, true);
-    return true;
+    return await autoUpdater.quitAndInstall(false, true) !== false;
   } catch (err) {
+    console.error('[fire-tools] update installation failed:', err);
     emit({ status: 'error', error: err && err.message ? err.message : String(err) });
     return false;
   }
@@ -368,6 +383,3 @@ module.exports = {
     prefsPath,
   },
 };
-
-// Silence unused-binding warnings for transitive requires.
-void fs;

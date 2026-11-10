@@ -1,6 +1,6 @@
 # Electron — Fire Tools desktop wrapper
 
-Wraps the existing React SPA so it ships as a signed binary on macOS,
+Wraps the existing React SPA so it ships as a desktop app on macOS,
 Windows and Linux. Tracks issue
 [#132](https://github.com/fire-tools-inc/app/issues/132).
 
@@ -82,20 +82,36 @@ architectures.
 
 ## Signing & notarization
 
-Env vars (set in CI secrets — never commit):
+macOS releases deliberately use **ad-hoc signing**, not a Developer ID
+certificate or Apple notarization. No Apple account, paid membership or Apple
+Actions secrets are needed. `electron-builder.yml` sets `identity: "-"` and
+`notarize: false`; CI disables certificate auto-discovery. The `afterSign` hook
+keeps the correct bundle identifier for native notifications. Release checks
+extract the actual updater ZIP and verify its bundle identity and intact
+ad-hoc signature, without invoking Gatekeeper or Apple's notarization service.
 
-| Var                          | Purpose                                    |
-|------------------------------|--------------------------------------------|
-| `CSC_LINK`                   | Path/URL to `.p12` macOS signing cert      |
-| `CSC_KEY_PASSWORD`           | Password for the `.p12`                    |
-| `APPLE_ID`                   | Apple ID for notarization                  |
-| `APPLE_APP_SPECIFIC_PASSWORD`| App-specific password                      |
-| `APPLE_TEAM_ID`              | Apple Developer team id                    |
-| `WINDOWS_CERTIFICATE_LINK`   | Path/URL to Windows code-signing cert      |
-| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows cert            |
+The macOS updater downloads directly from the **public
+`fire-tools-inc/app` GitHub Releases**, with no user token. It checks SHA-512,
+bundle identity and version, then replaces the app after the old process has
+exited. It does not use Squirrel.Mac's Developer ID signature matching. The
+existing pre-install backup remains mandatory; ordinary app quits never
+install an update behind that backup gate.
 
-Set `notarize: true` in [`../electron-builder.yml`](../electron-builder.yml)
-once macOS notarization credentials are wired into CI.
+First-time downloads may still be quarantined by macOS. Follow the
+[trusted-download installation instructions](../docs/user/README.md#macos-gatekeeper)
+for this app only. The updater does not disable Gatekeeper globally or request
+administrator access; the installed app must be in a writable Applications
+folder. See [the updater design](../docs/engineering/auto-updater.md#macos-without-apple-signing)
+for the trust model, installation sequence and recovery logs.
+
+### Existing unsigned installs
+
+Older installs still using Squirrel.Mac cannot accept a different ad-hoc
+signature and fail with `code failed to satisfy specified code requirement(s)`.
+Download and replace the app manually **once** with the first release carrying
+the new updater. Changing release metadata cannot repair updater code already
+installed on a user's machine. Subsequent releases update in-app without
+Developer ID signing or notarization.
 
 ## Security posture
 

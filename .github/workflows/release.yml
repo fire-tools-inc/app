@@ -110,6 +110,7 @@ jobs:
           APP_VERSION: ${{ needs.verify.outputs.tag }}
           NODE_NO_WARNINGS: '1'
           DEBUG: electron-builder
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
       - name: Verify build output exists
         run: |
@@ -120,6 +121,34 @@ jobs:
           fi
           echo "release/ contents:"
           find release -maxdepth 4 -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) -print
+
+      - name: Verify macOS updater payload
+        run: |
+          set -eu
+          ZIP_LIST="$RUNNER_TEMP/fire-tools-update-zips.txt"
+          find release -type f -name 'Fire.Tools-*-${{ matrix.arch }}-mac.zip' -print > "$ZIP_LIST"
+          ZIP_COUNT=$(wc -l < "$ZIP_LIST" | tr -d '[:space:]')
+          if [ "$ZIP_COUNT" -ne 1 ]; then
+            echo "::error::Expected exactly one ${{ matrix.arch }} macOS updater ZIP, found $ZIP_COUNT."
+            cat "$ZIP_LIST"
+            exit 1
+          fi
+
+          IFS= read -r ZIP_PATH < "$ZIP_LIST"
+          VERIFY_DIR=$(mktemp -d "$RUNNER_TEMP/verify-macos-${{ matrix.arch }}.XXXXXX")
+          ditto -x -k "$ZIP_PATH" "$VERIFY_DIR"
+          APP_PATH="$VERIFY_DIR/Fire Tools.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "::error::Updater ZIP does not contain Fire Tools.app."
+            exit 1
+          fi
+
+          codesign --verify --deep --strict --verbose=4 "$APP_PATH"
+          BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")
+          if [ "$BUNDLE_ID" != "dev.mb-consulting.firetools" ]; then
+            echo "::error::Updater ZIP has an unexpected bundle identifier: $BUNDLE_ID."
+            exit 1
+          fi
 
       - name: Clear quarantine attributes
         run: |
@@ -327,6 +356,7 @@ jobs:
              xattr -dr com.apple.quarantine "/Applications/Fire Tools.app"
              ```
           4. Reopen **Fire Tools** from Applications. Never use this command for an untrusted download or disable Gatekeeper globally.
+          5. Updates download directly from this public repository and verify the release checksum. No Apple account or notarization is required. Older installs using Squirrel.Mac need this manual replacement once.
 
           ### Windows
           1. Download the `Fire Tools Setup` `.exe`.

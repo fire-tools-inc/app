@@ -184,9 +184,11 @@ npm run electron:dist        # desktop packages in release/<version>/
 ```
 
 The self-hosted build uses fingerprinted asset filenames for cache-safe
-updates. Desktop packaging uses [`electron-builder.yml`](electron-builder.yml);
-signing/notarization requires additional
-[platform configuration](electron/README.md#signing--notarization).
+updates. Desktop packaging uses [`electron-builder.yml`](electron-builder.yml).
+macOS releases use ad-hoc signing and update directly from this public
+repository without an Apple account or notarization. See
+[desktop distribution](electron/README.md#signing--notarization) for first-run
+and older-install requirements.
 
 Dependency lifecycle approvals are version-pinned in both package manifests.
 After changing dependencies, review `npm install-scripts ls` in the root and

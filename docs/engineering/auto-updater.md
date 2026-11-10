@@ -30,13 +30,21 @@ on reload and ignores `settings.updater.*`.
 ```
 
 - **`electron/updater.cjs`** wraps `autoUpdater` from `electron-updater`.
+  macOS uses our `MacUpdater` subclass instead of its Squirrel.Mac installer.
   - Forces `autoDownload = false` so we always show the banner first.
+  - Disables installation on ordinary app quit on every platform, so every
+    install must go through the backup gate and **Install & restart**.
   - Emits `update-available`, `download-progress`, `update-downloaded`,
     `error` to all renderer `webContents`.
   - Exposes `checkForUpdates`, `downloadUpdate`, and `quitAndInstall`.
   - `quitAndInstall` calls `backup.createBackup` + `backup.rotateBackups`
     **before** handing control to the installer. If the backup fails we
     surface `backupFailed` and refuse to install.
+- **`electron/mac-updater.cjs`** extends the exported `AppUpdater` class:
+  reuses its public GitHub provider, version checks, download cache, progress
+  and SHA-512 validation, and selects the ZIP matching the running architecture.
+- **`electron/mac-install.cjs`** verifies and stages the macOS bundle, then runs
+  a standalone helper outside the installed app to replace it after shutdown.
 - **`electron/backup.cjs`** is a pure-Node module (no Electron imports) so
   it can be unit-tested under vitest with `@vitest-environment node`. See
   [Manifest schema](#manifest-schema) below.
@@ -158,7 +166,8 @@ UI can disable Restore.
 | Network error during check    | Logged, banner not shown, user can retry from Settings           |
 | Download error                | `updater:error` event → banner shows retry option                |
 | Backup fails before install   | Install **aborted**, banner shows "Backup failed" with details   |
-| Install fails after backup    | App relaunches old version; snapshot still on disk for rollback  |
+| macOS staging fails           | Error shown before quitting; original app remains untouched     |
+| macOS replace/relaunch fails  | Original bundle restored when possible; failure logged and shown on next launch |
 | DB corrupted after update     | Settings → Backups → Restore previous snapshot (one click)       |
 | User aborts restore midway    | Pre-restore safety snapshot is intact; Restore is rename-based   |
 
@@ -166,6 +175,12 @@ UI can disable Restore.
 
 - `tests/shared/electron-backup.test.ts` (node env) — backup/list/rotate
   /restore including the min-1 invariant and `.tmp-` cleanup.
+- `tests/shared/electron-mac-updater.test.ts` covers public release selection,
+  checksum rejection, helper handoff, shutdown ordering, bundle replacement,
+  rollback and persisted errors. Its native ZIP/signature and real-Electron
+  ASAR cleanup cases also run in the path-scoped macOS CI job.
+- `tests/shared/electron-updater.test.ts` covers the mandatory backup gate and
+  awaiting asynchronous installation failures.
 - `tests/pages/settings/cookieSettings.test.ts` — `mergeUpdaterSettings`
   defaults, clamping, NaN handling, and round-trip through save/load.
 - `tests/shared/i18n.test.ts` — strict parity across the 5 locales for
@@ -185,6 +200,68 @@ publish:
 `.github/workflows/release.yml` uploads the `*.yml` and `*.blockmap`
 files alongside the installer so `electron-updater` can resolve the
 latest version.
+
+### macOS without Apple signing
+
+The app and its updates are ad-hoc signed, with **no Developer ID, Apple
+account, notarization or Gatekeeper assessment required by the release
+pipeline**. Ad-hoc signatures keep the bundle executable on macOS and preserve
+its notification identity; they do not establish publisher trust.
+
+Squirrel.Mac matches an update against the installed app's designated
+requirement. An ad-hoc requirement is tied to a build-specific `cdhash`, so a
+different build cannot satisfy it. Our macOS updater therefore uses the
+exported `electron-updater.AppUpdater` download infrastructure but never hands
+the ZIP to Squirrel or ShipIt. Windows and Linux retain their existing
+`electron-updater` installers.
+
+The macOS flow is:
+
+1. Check stable releases in the public `fire-tools-inc/app` repository over
+   HTTPS. Select `Fire.Tools-<version>-<running-arch>-mac.zip`; an Intel process
+   under Rosetta keeps using the compatible Intel build.
+2. Reject a missing architecture, foreign download source or missing SHA-512.
+   Download with the manifest checksum and retain the standard progress events.
+3. On **Install & restart**, take and rotate the existing database backup.
+   Re-hash the cached ZIP to detect changes since download.
+4. Extract into a private staging directory alongside the installed app, on
+   the same volume. `ditto --noqtn` does not propagate archive quarantine.
+   Reject unexpected archive paths, bundle identifiers, versions, executables
+   or damaged ad-hoc signatures before quitting.
+5. Copy the standalone helper outside the old app and wait for its startup
+   acknowledgement. Quit normally, allowing the embedded backend to close.
+6. The helper waits for the old PID to exit, moves the original bundle aside,
+   atomically renames the staged bundle into place and relaunches it. If
+   replacement or launching fails, it attempts to restore the previous app.
+   No user-data directory is replaced.
+
+Physical bundle operations use Electron's `original-fs`; its ASAR-aware
+filesystem can otherwise leave `app.asar` behind during recursive cleanup.
+Only reading the packaged helper source uses the ASAR-aware API.
+
+The app folder must be writable by the current user; updating from a read-only
+DMG or an administrator-owned location is refused before shutdown. There is
+no privilege escalation. If the running app does not exit within two minutes,
+the helper leaves it unchanged.
+
+Post-shutdown failures are written to `<userData>/mac-update-install.log` and
+`mac-update-error.json`. The next launch consumes that error record and shows
+the failure in the existing update UI. A failed rollback preserves the staging
+directory and reports its recovery path.
+
+**Trust boundary:** HTTPS and SHA-512 protect transport and payload integrity,
+not an independent publisher identity. The checksum and payload come from the
+same GitHub release, so trusting updates means trusting this repository, its
+release maintainers and GitHub. Protect release-writing access accordingly.
+No GitHub token is required on the user's machine.
+
+**First install and migration:** macOS can still quarantine a manually
+downloaded app. Follow the
+[app-local Gatekeeper instructions](../user/README.md#macos-gatekeeper)
+only after trusting the official download; never disable Gatekeeper globally.
+Older installs that still use Squirrel.Mac require one manual replacement with
+the first release containing this updater. Subsequent updates use the flow
+above without Apple credentials.
 
 ### Artifact naming (do not break the updater)
 

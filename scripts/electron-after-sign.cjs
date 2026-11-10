@@ -13,7 +13,8 @@
 // on the .app bundle so the signature carries the right identifier. This
 // is a no-op on non-macOS platforms or when a real signing identity was
 // already used (CSC_LINK / CSC_NAME set), which already supplies a proper
-// identifier.
+// identifier. The macOS updater replaces verified bundles without Squirrel.Mac,
+// whose signature matching cannot accept a different ad-hoc build.
 
 const { execFileSync } = require('node:child_process');
 const path = require('node:path');
@@ -24,7 +25,7 @@ module.exports = async function afterSign(context) {
   if (electronPlatformName !== 'darwin') {
     return;
   }
-  if (process.env.CSC_LINK || process.env.CSC_NAME) {
+  if (packager.config?.mac?.identity !== '-' && (process.env.CSC_LINK || process.env.CSC_NAME)) {
     // Real Developer ID signing — leave the signature alone.
     return;
   }

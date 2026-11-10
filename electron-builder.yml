@@ -58,6 +58,7 @@ mac:
   gatekeeperAssess: false
   entitlements: electron/build/entitlements.mac.plist
   entitlementsInherit: electron/build/entitlements.mac.plist
+  identity: "-"
   target:
     - target: dmg
       arch:
@@ -67,9 +68,8 @@ mac:
       arch:
         - x64
         - arm64
-  # Code-signing & notarization driven via env:
-  #   CSC_LINK, CSC_KEY_PASSWORD (signing cert)
-  #   APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID (notarization)
+  # Ad-hoc signing supports local execution without an Apple Developer account.
+  # macOS updates use our bundle installer, not Squirrel.Mac signature matching.
   notarize: false
 
 win:

@@ -22,6 +22,7 @@ jobs:
       server: ${{ steps.filter.outputs.server }}
       full: ${{ steps.filter.outputs.full }}
       browser: ${{ steps.filter.outputs.browser }}
+      macos: ${{ steps.filter.outputs.macos }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -71,6 +72,18 @@ jobs:
               - 'src/utils/expensePlanning.ts'
               - 'src/types/{expensePlanning,expenseTracker}.ts'
               - 'tests/pages/expense-tracker/planningFixtures.ts'
+            macos:
+              - 'electron/{updater,mac-updater,mac-install,backup}.cjs'
+              - 'scripts/electron-after-sign.cjs'
+              - 'scripts/ensure-electron.mjs'
+              - 'tests/shared/electron-{mac-updater,updater,backup}.test.ts'
+              - 'tests/{setup.ts,shared/diagnostics.ts}'
+              - 'electron-builder.yml'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.nvmrc'
+              - 'vite.config.ts'
+              - '.github/workflows/{tests,release}.yml'
             browser:
               - 'tests/browser/**'
               - 'playwright.config.ts'
@@ -98,6 +111,7 @@ jobs:
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
             full:
+              - 'electron/{updater,mac-updater,mac-install,backup}.cjs'
               - 'scripts/{release.sh,auto-release.sh,release-version.mjs,bump-version.mjs}'
               - '.github/workflows/{release,version-bump}.yml'
               - 'tests/setup.ts'
@@ -148,6 +162,22 @@ jobs:
       # Skip root postinstall (electron/native rebuild) in FE-only CI jobs.
       - run: npm ci --ignore-scripts
       - run: npm test -- --run
+
+  macos-updater:
+    name: macOS updater regression tests
+    needs: changes
+    if: ${{ needs.changes.outputs.macos == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node scripts/ensure-electron.mjs
+      - name: Exercise native ZIP preparation and updater recovery
+        run: npx vitest run tests/shared/electron-mac-updater.test.ts tests/shared/electron-updater.test.ts tests/shared/electron-backup.test.ts
 
   browser-tests:
     name: Browser UI regressions
