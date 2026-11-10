@@ -30,6 +30,7 @@ export const InvestmentGrowthChart: React.FC<InvestmentGrowthChartProps> = ({
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
         <XAxis
           dataKey="year"
+          padding={{ left: 10, right: 10 }}
           stroke="var(--text-secondary)"
           tick={{ fill: 'var(--text-secondary)' }}
           label={{ value: 'Years', position: 'insideBottom', offset: -4, fill: 'var(--text-secondary)' }}

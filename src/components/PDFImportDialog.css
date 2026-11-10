@@ -20,6 +20,10 @@
   align-items: stretch;
 }
 
+.dialog.pdf-import-dialog .dialog-form > * {
+  flex-shrink: 0;
+}
+
 /* Controls stack vertically — same pattern as the rest of the app's
    dialogs. No grid, no flex-wrap surprises on narrow viewports. */
 .pdf-import-controls {
@@ -55,7 +59,7 @@
 }
 
 .pdf-import-llm-toggle.is-disabled {
-  opacity: 0.6;
+  background: var(--bg-secondary);
 }
 
 .pdf-import-llm-toggle.is-disabled label,
@@ -154,7 +158,7 @@
 }
 
 .pdf-import-table tr.excluded td {
-  opacity: 0.45;
+  color: var(--text-secondary);
 }
 
 .pdf-import-table tr.low-confidence td {
@@ -218,4 +222,113 @@
   justify-content: flex-end;
   gap: 0.5rem;
   padding-top: 0.5rem;
+}
+
+.pdf-import-dialog .receipt-panel {
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  min-width: 0;
+}
+
+.pdf-import-dialog .receipt-panel h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.pdf-import-dialog .receipt-panel label {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.pdf-import-dialog .receipt-panel input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.pdf-import-dialog .receipt-panel .action-btn,
+.pdf-import-dialog .pdf-import-actions .action-btn,
+.pdf-import-dialog .pdf-import-controls input,
+.pdf-import-dialog .pdf-import-controls select,
+.pdf-import-dialog .pdf-import-table input:not([type="checkbox"]),
+.pdf-import-dialog .pdf-import-table select {
+  min-height: 44px;
+}
+
+.pdf-import-dialog .dialog-close,
+.pdf-import-dialog .pdf-import-table input[type="checkbox"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.pdf-import-dialog .receipt-inbox-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
+.pdf-import-dialog .receipt-panel [role="alert"] {
+  color: var(--error);
+}
+
+.receipt-inbox-list {
+  list-style: none;
+  padding: 0;
+}
+
+.receipt-inbox-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-wrap: anywhere;
+}
+
+.receipt-inbox-list li > span {
+  min-width: 0;
+}
+
+.receipt-inbox-list small {
+  color: var(--text-secondary);
+}
+
+.receipt-inbox-controls,
+.receipt-inbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.receipt-pairing-link {
+  margin-bottom: 0.75rem;
+}
+
+.receipt-preview {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.pdf-import-table-wrapper .pdf-import-table {
+  min-width: 900px;
+}
+
+.pdf-import-dialog :focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
 }

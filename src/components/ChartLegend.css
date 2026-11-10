@@ -1,0 +1,43 @@
+.chart-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 0.1rem 1rem;
+  list-style: none;
+  min-width: 0;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
+
+.chart-legend li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.4rem 0;
+  font-size: 0.8rem;
+}
+
+.chart-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.chart-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+
+.chart-legend-label .material-symbols-outlined {
+  flex-shrink: 0;
+}
+
+.chart-legend-value {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

@@ -11,9 +11,12 @@ import { buildCalculatorRouter } from './routes/calculator.js';
 import { buildMonteCarloRouter } from './routes/monteCarlo.js';
 import { buildAssetAllocationRouter } from './routes/assetAllocation.js';
 import { buildExpenseTrackerRouter } from './routes/expenseTracker.js';
+import { buildExpensePlanningRouter } from './routes/expensePlanning.js';
 import { buildNetWorthRouter } from './routes/netWorth.js';
 import { buildQuestionnaireRouter } from './routes/questionnaire.js';
 import { buildPdfImportsRouter } from './routes/pdfImports.js';
+import { buildReceiptsRouter } from './routes/receipts.js';
+import type { extractDocumentText } from './documentParser.js';
 import { buildPortfolioBreakdownRouter } from './routes/portfolioBreakdown.js';
 import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
@@ -34,9 +37,10 @@ export interface BuildAppOptions {
    * `Boolean(env.passphrase)`.
    */
   adminState?: AdminState;
+  documentExtractor?: typeof extractDocumentText;
 }
 
-export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: BuildAppOptions) => {
+export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor }: BuildAppOptions) => {
   const corsOptions: CorsOptions = {
     origin: (origin, cb) => {
       if (!origin) {
@@ -97,9 +101,12 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: Buil
   v1.use(buildMonteCarloRouter(db));
   v1.use(buildAssetAllocationRouter(db));
   v1.use(buildExpenseTrackerRouter(db));
+  v1.use(buildExpensePlanningRouter(db));
   v1.use(buildNetWorthRouter(db));
   v1.use(buildQuestionnaireRouter(db));
   v1.use(buildPdfImportsRouter(db));
+  const receipts = buildReceiptsRouter(db, documentExtractor);
+  v1.use(receipts.router);
   v1.use(buildPortfolioBreakdownRouter(db));
   v1.use(buildBanksRouter(db));
   v1.use(buildUiPreferencesRouter(db));
@@ -121,11 +128,19 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState }: Buil
       res.status(403).json({ error: { code: 'cors_denied', message: err.message } });
       return;
     }
+    if ('type' in err && err.type === 'entity.parse.failed') {
+      res.status(400).json({ error: { code: 'invalid_body', message: 'Request body must be valid JSON.' } });
+      return;
+    }
+    if ('type' in err && err.type === 'entity.too.large') {
+      res.status(413).json({ error: { code: 'payload_too_large', message: 'Request body exceeds the 2 MB limit.' } });
+      return;
+    }
     logger.error('express', 'unhandled-error', err.message, { pii: { stack: err.stack } });
     res.status(500).json({
-      error: { code: 'internal_error', message: err.message },
+      error: { code: 'internal_error', message: 'An unexpected server error occurred. Check the server logs for details.' },
     });
   });
 
-  return app;
+  return Object.assign(app, { closeReceiptUploads: receipts.close });
 };

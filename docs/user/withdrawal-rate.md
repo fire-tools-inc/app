@@ -26,6 +26,10 @@ For typical inputs the ordering always holds: **PWR ≤ LTWR ≤ SWR**.
 3. Adjust the **retirement horizon** — it is the horizon used for SWR. LTWR
    uses a fixed 50-year long-term horizon.
 
+The rate sweep and focused slider result run in background workers. Changing
+the controls cancels outdated work, and leaving the page releases its workers.
+Simulation errors appear in the page rather than silently hiding the result.
+
 ## How the conversion works (assumptions)
 
 The conversion uses a **deterministic amortization model**, separate from the

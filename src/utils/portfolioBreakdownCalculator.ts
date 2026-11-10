@@ -19,21 +19,7 @@ import {
 } from '../types/portfolioBreakdown';
 import { getContinent, getRegion } from './countryToRegion';
 import { formatAssetName } from './allocationCalculator';
-
-const GOLDEN_ANGLE_DEGREES = 137.5;
-
-/** Stable color per asset class — mirrors `prepareAssetClassChartData`. */
-const ASSET_CLASS_COLORS: Record<AssetClass, string> = {
-  STOCKS: '#5568d4',
-  BONDS: '#764ba2',
-  CASH: '#4CAF50',
-  CRYPTO: '#FF9800',
-  REAL_ESTATE: '#9C27B0',
-  COMMODITIES: '#FFC107',
-  VEHICLE: '#607D8B',
-  COLLECTIBLE: '#E91E63',
-  ART: '#00BCD4',
-};
+import { ASSET_CLASS_CHART_COLORS as ASSET_CLASS_COLORS, getChartColor } from './chartColors';
 
 function assetClassLabel(cls: AssetClass): string {
   return formatAssetName(cls);
@@ -80,29 +66,18 @@ function bucketsToEntries(
   totalValue: number,
   colorFor?: (label: string, index: number) => string,
 ): BreakdownEntry[] {
-  const entries = [...buckets.entries()].map(([label, b], index) => {
-    const percentage = totalValue > 0 ? (b.value / totalValue) * 100 : 0;
-    return {
-      label,
-      value: b.value,
-      percentage,
-      color: colorFor
-        ? colorFor(label, index)
-        : `hsl(${(index * GOLDEN_ANGLE_DEGREES) % 360}, 70%, 60%)`,
-      ticker: b.ticker,
-    };
-  });
-
-  // Sort by value desc for readability
-  entries.sort((a, b) => b.value - a.value);
-  // Re-assign colors based on final order if using golden-angle scheme
-  if (!colorFor) {
-    entries.forEach((e, i) => {
-      e.color = `hsl(${(i * GOLDEN_ANGLE_DEGREES) % 360}, 70%, 60%)`;
+  return [...buckets.entries()]
+    .sort(([, left], [, right]) => right.value - left.value)
+    .map(([label, b], index) => {
+      const percentage = totalValue > 0 ? (b.value / totalValue) * 100 : 0;
+      return {
+        label,
+        value: b.value,
+        percentage,
+        color: colorFor ? colorFor(label, index) : getChartColor(index),
+        ticker: b.ticker,
+      };
     });
-  }
-
-  return entries;
 }
 
 // -- Dimension breakdowns ---------------------------------------------------
@@ -265,7 +240,7 @@ export function computeBreakdown(opts: ComputeBreakdownOptions): BreakdownResult
           c => assetClassLabel(c) === label,
         );
         if (knownClassEntry) return ASSET_CLASS_COLORS[knownClassEntry];
-        return `hsl(${(i * GOLDEN_ANGLE_DEGREES) % 360}, 70%, 60%)`;
+        return getChartColor(i);
       };
       break;
   }

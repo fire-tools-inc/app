@@ -210,6 +210,7 @@ interface SettingsRow {
   include_primary_residence_in_fire: number;
   search_threshold: number;
   experimental_features_json: string;
+  ai_features_enabled: number;
   llm_base_url: string | null;
   llm_api_key: string | null;
   llm_model: string | null;
@@ -253,6 +254,7 @@ const rowToSettings = (row: SettingsRow): Record<string, unknown> => {
       lastApiUpdate: row.last_api_update,
     },
     privacyMode: fromBool01(row.privacy_mode),
+    aiFeaturesEnabled: fromBool01(row.ai_features_enabled),
     country: row.country,
     dateFormat: row.date_format,
     fireAssetClassInclusion: safeParseJson<Record<string, boolean>>(
@@ -266,10 +268,10 @@ const rowToSettings = (row: SettingsRow): Record<string, unknown> => {
       {},
     ),
   };
-  if (row.llm_base_url && row.llm_api_key && row.llm_model) {
+  if (row.llm_base_url && row.llm_model) {
     out.llmCategorization = {
       baseUrl: row.llm_base_url,
-      apiKey: row.llm_api_key,
+      apiKey: row.llm_api_key ?? '',
       model: row.llm_model,
     };
   }

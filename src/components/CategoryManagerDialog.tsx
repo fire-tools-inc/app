@@ -25,6 +25,7 @@ interface CategoryManagerDialogProps {
   onUpdateBuiltInCategory?: (override: CategoryOverride) => void;
   onClose: () => void;
   getExpenseCountForCategory?: (categoryId: string) => number;
+  getPlanningReferenceCount?: (categoryId: string) => number;
 }
 
 export function CategoryManagerDialog({
@@ -36,6 +37,7 @@ export function CategoryManagerDialog({
   onUpdateBuiltInCategory,
   onClose,
   getExpenseCountForCategory,
+  getPlanningReferenceCount,
 }: CategoryManagerDialogProps) {
   const { t } = useTranslation();
   const [view, setView] = useState<'list' | 'add' | 'edit' | 'edit-builtin'>('list');
@@ -679,6 +681,8 @@ export function CategoryManagerDialog({
           <div className="confirm-overlay">
             <div className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
               <h3 id="confirm-title">{t('dialogs.categories.deleteCategory')}</h3>
+              {getPlanningReferenceCount && getPlanningReferenceCount(categoryToDelete.id) > 0
+                && <p>{t('planning.categoryReferences', { count: getPlanningReferenceCount(categoryToDelete.id) })}</p>}
               {expenseCount > 0 ? (
                 <div id="confirm-description" className="warning-text" role="alert">
                   <MaterialIcon name="warning" size="small" />

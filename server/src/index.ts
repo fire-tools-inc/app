@@ -40,13 +40,27 @@ const server = app.listen(env.port, env.host, () => {
   );
 });
 
-const shutdown = (signal: string) => {
+let shuttingDown = false;
+const shutdown = async (signal: string) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
   logger.systemEvent('server', 'shutdown', `received ${signal}, shutting down`);
+  try {
+    await app.closeReceiptUploads();
+  } catch (error) {
+    logger.error('server', 'receipt-shutdown-failed', 'Receipt resources could not close.', { pii: { error: String(error) } });
+    process.exitCode = 1;
+  }
   server.close(() => {
-    db.close();
-    process.exit(0);
+    try {
+      db.close();
+    } catch (error) {
+      logger.error('server', 'db-shutdown-failed', 'The database could not close.', { pii: { error: String(error) } });
+      process.exitCode = 1;
+    }
+    process.exit(process.exitCode ?? 0);
   });
 };
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => { void shutdown('SIGTERM').catch(error => logger.error('server', 'shutdown-failed', String(error))); });
+process.on('SIGINT', () => { void shutdown('SIGINT').catch(error => logger.error('server', 'shutdown-failed', String(error))); });

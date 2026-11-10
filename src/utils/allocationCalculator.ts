@@ -9,7 +9,8 @@ import {
   ChartData,
 } from '../types/assetAllocation';
 import { formatDisplayCurrency, formatDisplayPercent } from './numberFormatter';
-import { loadSettings } from './cookieSettings';
+import { loadSettings, type UserSettings } from './cookieSettings';
+import { ASSET_CLASS_CHART_COLORS, getChartColor } from './chartColors';
 
 export interface FIREPortfolioData {
   totalValue: number;
@@ -22,8 +23,10 @@ export interface FIREPortfolioData {
  * Calculate portfolio data for FIRE calculations, respecting asset class inclusion settings
  * and primary residence inclusion setting.
  */
-export function calculateFIREPortfolioData(assets: Asset[]): FIREPortfolioData | undefined {
-  const settings = loadSettings();
+export function calculateFIREPortfolioData(
+  assets: Asset[],
+  settings: Pick<UserSettings, 'fireAssetClassInclusion' | 'includePrimaryResidenceInFIRE'> = loadSettings(),
+): FIREPortfolioData | undefined {
   const inclusion = settings.fireAssetClassInclusion;
   const includePrimaryResidence = settings.includePrimaryResidenceInFIRE;
 
@@ -407,30 +410,15 @@ export function calculatePortfolioAllocation(
  * Prepare data for pie/donut chart by asset class
  */
 export function prepareAssetClassChartData(assetClasses: AssetClassSummary[]): ChartData[] {
-  const colors: Record<AssetClass, string> = {
-    STOCKS: '#5568d4',
-    BONDS: '#764ba2',
-    CASH: '#4CAF50',
-    CRYPTO: '#FF9800',
-    REAL_ESTATE: '#9C27B0',
-    COMMODITIES: '#FFC107',
-    VEHICLE: '#607D8B',
-    COLLECTIBLE: '#E91E63',
-    ART: '#00BCD4',
-  };
-  
   return assetClasses
     .filter(ac => ac.targetMode !== 'OFF' && ac.currentTotal > 0)
     .map(ac => ({
       name: ac.assetClass,
       value: ac.currentTotal,
       percentage: ac.currentPercent,
-      color: colors[ac.assetClass],
+      color: ASSET_CLASS_CHART_COLORS[ac.assetClass],
     }));
 }
-
-// Golden angle for good color distribution in charts
-const GOLDEN_ANGLE_DEGREES = 137.5;
 
 /**
  * Prepare data for pie/donut chart by individual asset within a class
@@ -443,13 +431,11 @@ export function prepareAssetChartData(
     .filter(a => a.targetMode !== 'OFF' && a.currentValue > 0)
     .map((asset, index) => {
       const percentage = classTotal > 0 ? (asset.currentValue / classTotal) * 100 : 0;
-      // Generate colors based on index using golden angle
-      const hue = (index * GOLDEN_ANGLE_DEGREES) % 360;
       return {
         name: asset.name,
         value: asset.currentValue,
         percentage,
-        color: `hsl(${hue}, 70%, 60%)`,
+        color: getChartColor(index),
         // Ticker is used as fallback label when asset name is too long (>10 chars) in chart display
         ticker: asset.ticker,
       };

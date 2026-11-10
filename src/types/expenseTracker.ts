@@ -3,6 +3,7 @@
  */
 
 import { SupportedCurrency } from './currency';
+import type { ExpensePlanningData } from './expensePlanning';
 
 // Transaction categories for expenses
 export type ExpenseCategory = 
@@ -54,6 +55,8 @@ export interface Transaction {
   description: string;
   currency?: SupportedCurrency;
   isRecurring?: boolean; // Whether this is a recurring transaction
+  scheduleId?: string;
+  scheduledDate?: string;
 }
 
 // Income entry
@@ -218,6 +221,7 @@ export interface ExpenseTrackerData {
   globalBudgets: CategoryBudget[]; // Global budgets that apply to all months
   customCategories?: CustomCategory[]; // User-defined custom categories
   categoryOverrides?: CategoryOverride[]; // User customizations of built-in categories
+  planning?: ExpensePlanningData;
 }
 
 // Category display info (supports both built-in and custom categories)

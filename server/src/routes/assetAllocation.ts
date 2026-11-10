@@ -277,13 +277,10 @@ export const buildAssetAllocationRouter = (db: Database): Router => {
       const body = (req.body ?? {}) as Record<string, unknown>;
       body.externalId = req.params.externalId;
       validateAsset(body);
-      const existing = db
-        .prepare('SELECT id FROM assets WHERE user_id = ? AND external_id = ?')
-        .get(userId, req.params.externalId);
-      if (existing) {
+      db.transaction(() => {
         db.prepare('DELETE FROM assets WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-      }
-      db.prepare(`INSERT INTO assets (${ASSET_COLUMNS}) VALUES (${ASSET_PLACEHOLDERS})`).run(...assetParams(userId, body));
+        db.prepare(`INSERT INTO assets (${ASSET_COLUMNS}) VALUES (${ASSET_PLACEHOLDERS})`).run(...assetParams(userId, body));
+      })();
       const row = db
         .prepare('SELECT * FROM assets WHERE user_id = ? AND external_id = ?')
         .get(userId, req.params.externalId) as AssetRow;

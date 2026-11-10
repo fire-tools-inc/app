@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -52,6 +52,16 @@ describe('database encryption', () => {
     const row = reopened.prepare('SELECT v FROM t WHERE k = ?').get('hello') as { v: string };
     expect(row.v).toBe('world');
     reopened.close();
+  });
+
+  it('closes the database handle if startup migrations fail', () => {
+    const close = vi.spyOn(Database.prototype, 'close');
+    try {
+      expect(() => initDb({ ...buildEnv(dbPath), migrationsPath: join(tmp, 'missing-migrations') })).toThrow();
+      expect(close).toHaveBeenCalledOnce();
+    } finally {
+      close.mockRestore();
+    }
   });
 
   it('rekey roundtrip: unencrypted → encrypted → reopen with key → unencrypted', async () => {

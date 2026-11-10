@@ -256,7 +256,7 @@ describe('portfolioBreakdownCalculator', () => {
       const result = computeBreakdown({ assets, metadataByTicker: {}, dimension: 'etfProvider' });
       // 'Real Estate' bucket should use the canonical REAL_ESTATE palette color
       expect(result.entries[0].label).toBe('Real Estate');
-      expect(result.entries[0].color).toBe('#9C27B0');
+      expect(result.entries[0].color).toBe('#C5AF96');
     });
   });
 });

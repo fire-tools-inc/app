@@ -10,6 +10,7 @@ import {
 import { ExpenseTrackerData } from '../types/expenseTracker';
 import { Asset, AssetClass, AllocationMode, SubAssetType } from '../types/assetAllocation';
 import { SupportedCurrency } from '../types/currency';
+import { getDemoExpensePlanning } from './demoExpensePlanning';
 
 // Calculate default savings rate: (income - expenses) / income * 100
 const defaultIncome = 60000;
@@ -476,6 +477,7 @@ export function getDemoCashflowData(): ExpenseTrackerData {
     currentMonth: 1,
     currency: 'EUR',
     globalBudgets: [],
+    planning: getDemoExpensePlanning(),
   };
 }
 

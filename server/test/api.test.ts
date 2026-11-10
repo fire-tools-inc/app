@@ -1,11 +1,10 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { rmSync } from 'node:fs';
 import { makeApp, makeFileApp } from './helpers.js';
 
 describe('GET /api/v1/health', () => {
   it('returns ok when DB reachable', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/health');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
@@ -15,7 +14,7 @@ describe('GET /api/v1/health', () => {
 
 describe('GET /api/v1/users/me', () => {
   it('returns the bootstrap user', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/users/me');
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(1);
@@ -25,7 +24,7 @@ describe('GET /api/v1/users/me', () => {
 
 describe('settings', () => {
   it('GET creates defaults, PATCH applies fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const get = await request(app).get('/api/v1/settings');
     expect(get.status).toBe(200);
     expect(get.body.currencySettings.defaultCurrency).toBe('EUR');
@@ -39,7 +38,7 @@ describe('settings', () => {
   });
 
   it('GET/PUT notifications preferences', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const get = await request(app).get('/api/v1/settings/notifications');
     expect(get.status).toBe(200);
     const put = await request(app)
@@ -66,7 +65,7 @@ describe('settings', () => {
 
 describe('calculator', () => {
   it('GET creates defaults, PUT replaces fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const get = await request(app).get('/api/v1/calculator/inputs');
     expect(get.status).toBe(200);
 
@@ -102,7 +101,7 @@ describe('calculator', () => {
   });
 
   it('rejects PUT with missing field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const put = await request(app).put('/api/v1/calculator/inputs').send({ initialSavings: 1 });
     expect(put.status).toBe(400);
     expect(put.body.error.code).toBe('invalid_body');
@@ -111,7 +110,7 @@ describe('calculator', () => {
 
 describe('notifications', () => {
   it('POST then GET then mark-all-read then DELETE', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const create = await request(app).post('/api/v1/notifications').send({
       type: 'SYSTEM',
       title: 'Hi',
@@ -140,7 +139,7 @@ describe('notifications', () => {
 
 describe('asset allocation', () => {
   it('config + asset CRUD round-trip', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const cfg = await request(app).get('/api/v1/asset-allocation/config');
     expect(cfg.status).toBe(200);
     expect(cfg.body.currency).toBe('EUR');
@@ -165,7 +164,7 @@ describe('asset allocation', () => {
 
 describe('banks', () => {
   it('GET /banks returns array (may be empty), GET unknown returns 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const list = await request(app).get('/api/v1/banks');
     expect(list.status).toBe(200);
     expect(Array.isArray(list.body)).toBe(true);
@@ -176,7 +175,7 @@ describe('banks', () => {
 
 describe('questionnaire', () => {
   it('POST stores a result and latest returns it', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const post = await request(app).post('/api/v1/questionnaire/results').send({
       persona: 'REGULAR_FIRE',
       personaExplanation: 'You are a regular FIRE seeker',
@@ -196,7 +195,7 @@ describe('questionnaire', () => {
 
 describe('portfolio breakdown', () => {
   it('returns array for given dimension', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/asset-allocation/assets').send({
       externalId: 'pb-1',
       name: 'Stock A',
@@ -215,7 +214,7 @@ describe('portfolio breakdown', () => {
 
 describe('ui preferences', () => {
   it('PUT/GET/DELETE round-trips a preference', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
 
     const empty = await request(app).get('/api/v1/ui-preferences');
     expect(empty.status).toBe(200);
@@ -244,7 +243,7 @@ describe('ui preferences', () => {
   });
 
   it('rejects invalid keys and oversized values', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const bad = await request(app)
       .put('/api/v1/ui-preferences/1bad')
       .send({ value: 'x' });
@@ -262,7 +261,7 @@ describe('ui preferences', () => {
 
 describe('unimplemented endpoints', () => {
   it('returns 501 for paths not yet wired', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/some/contract-only/path');
     expect(res.status).toBe(501);
     expect(res.body.error.code).toBe('not_implemented');
@@ -270,25 +269,15 @@ describe('unimplemented endpoints', () => {
 });
 
 describe('admin: db encryption', () => {
-  const dirs: string[] = [];
-  afterEach(() => {
-    while (dirs.length) {
-      const d = dirs.pop();
-      if (d) rmSync(d, { recursive: true, force: true });
-    }
-  });
-
   it('GET /admin/db/encryption reports unencrypted by default', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     const res = await request(app).get('/api/v1/admin/db/encryption');
     expect(res.status).toBe(200);
     expect(res.body.encrypted).toBe(false);
   });
 
   it('set → rotate → remove happy path via HTTP', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
 
     const set = await request(app)
       .post('/api/v1/admin/db/passphrase')
@@ -321,8 +310,7 @@ describe('admin: db encryption', () => {
   });
 
   it('rotate with wrong currentPassphrase returns 401 wrong_passphrase', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     await request(app)
       .post('/api/v1/admin/db/passphrase')
       .send({ action: 'set', newPassphrase: 'right-pass-12345' });
@@ -339,8 +327,7 @@ describe('admin: db encryption', () => {
   });
 
   it('set on already-encrypted DB returns 409', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     await request(app)
       .post('/api/v1/admin/db/passphrase')
       .send({ action: 'set', newPassphrase: 'first-pass-12345' });
@@ -351,8 +338,7 @@ describe('admin: db encryption', () => {
   });
 
   it('remove on unencrypted DB returns 409', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     const res = await request(app)
       .post('/api/v1/admin/db/passphrase')
       .send({ action: 'remove' });
@@ -360,8 +346,7 @@ describe('admin: db encryption', () => {
   });
 
   it('rejects body with missing newPassphrase for set', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     const res = await request(app)
       .post('/api/v1/admin/db/passphrase')
       .send({ action: 'set' });
@@ -370,8 +355,7 @@ describe('admin: db encryption', () => {
   });
 
   it('rejects too-short newPassphrase via zod', async () => {
-    const { app, dir } = makeFileApp();
-    dirs.push(dir);
+    const { app } = await makeFileApp();
     const res = await request(app)
       .post('/api/v1/admin/db/passphrase')
       .send({ action: 'set', newPassphrase: 'short' });

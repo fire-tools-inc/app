@@ -56,6 +56,9 @@ Notes:
 - The line shows projected net worth year by year.
 - The horizontal line is your FIRE target (`expenses / withdrawal_rate`).
 - Where the curve crosses the target is your FIRE date.
+- The income/expenses plot stacks income sources beside expenses for each age,
+  rather than squeezing six separate bars into every group. Negative yields
+  remain below zero; the full legend and hover values identify each source.
 
 ## Sharing a scenario
 

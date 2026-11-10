@@ -11,7 +11,7 @@ Covers issues
 
 ## Stack
 
-- Node.js 22, ESM, TypeScript strict
+- Node.js 26.12.1 (pinned in `../.nvmrc`; minimum >=22.22.0), ESM, TypeScript strict
 - Express 4
 - `better-sqlite3` (synchronous, no native server, perfect for single-user
   local deployments)

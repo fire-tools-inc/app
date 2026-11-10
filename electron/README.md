@@ -1,6 +1,6 @@
 # Electron — Fire Tools desktop wrapper
 
-Wraps the existing React SPA so it ships as a signed binary on macOS,
+Wraps the existing React SPA so it ships as a desktop app on macOS,
 Windows and Linux. Tracks issue
 [#132](https://github.com/fire-tools-inc/app/issues/132).
 
@@ -16,18 +16,55 @@ Windows and Linux. Tracks issue
 
 ## Run in dev
 
-Two terminals:
+The development launcher starts Vite in Electron mode, waits for the renderer
+and launches the locally installed Electron binary. Build the embedded backend
+first:
 
 ```sh
-# 1. Vite dev server (relative-base build for Electron)
-ELECTRON_RENDERER_URL=http://localhost:5173 npm run dev
-
-# 2. Electron, pointed at the Vite dev server
-ELECTRON_RENDERER_URL=http://localhost:5173 npm run electron:dev
+npm --prefix server run build
+npm run electron:dev
 ```
 
-Or one-liner with concurrent processes (your shell of choice — we
-intentionally don't pull in `concurrently` to keep deps lean).
+Do not start a second Vite server on the same port. The launcher owns both child
+processes, stops its renderer when Electron closes, and reports a native signal
+exit as failure instead of returning success.
+
+The normal dev lifecycle stops known development ports. On a shared host,
+prepare the native modules and use a dedicated free port without that stop hook:
+
+```sh
+npm run electron:rebuild
+ELECTRON_RENDERER_URL=http://127.0.0.1:5190 node scripts/electron-dev.mjs
+```
+
+## Startup troubleshooting
+
+If macOS Gatekeeper blocks a downloaded release, follow the
+[macOS installation instructions](../docs/user/README.md#macos-gatekeeper)
+to move **Fire Tools.app** into Applications and remove its quarantine
+attribute only after verifying that you trust the official download.
+Reopen the app afterward. This is separate from the native startup failures
+described below.
+
+Electron 44.7.0 is the minimum selected runtime in this repository. It includes
+the fix shipped in 44.6.0 for a native macOS startup crash when
+`IORegisterForSystemPower` fails:
+[electron/electron#54596](https://github.com/electron/electron/pull/54596).
+That crash happens before app JavaScript, so renderer error handlers cannot
+repair it. Update dependencies and rebuild; do not ship power-monitor shims or
+disable the Electron sandbox as a workaround.
+
+SQLite 13 ships Node-API binaries shared by Node.js and Electron, so running
+plain-Node tests no longer requires switching the native ABI. Linux binaries
+require glibc 2.35 or newer; Node.js >=22.22.0 and Electron 44.7.0 satisfy the
+runtime minimums. Existing plain and passphrase-encrypted databases remain
+compatible.
+
+`npm run electron:rebuild` still probes a real in-memory database in Electron
+for each root/server copy; healthy bundled binaries do not rebuild. If a binding
+fails, check for stale dependencies or an unsupported host before launching.
+If the embedded server entry is missing, use `npm --prefix server run build`.
+Startup diagnostics are written to the normal application log.
 
 ## Build a distributable
 
@@ -38,96 +75,43 @@ npm run electron:dist    # runs electron-builder per electron-builder.yml
 
 Artifacts land in `release/<version>/`. Defaults: `.dmg` (macOS),
 `.exe` NSIS installer (Windows), `.AppImage` (Linux).
+The Electron build rechecks both SQLite bindings after restoring the server's
+dependencies. Packaging uses those Node-API binaries without forcing a
+runtime-specific rebuild and removes prebuilds for unrelated platforms and
+architectures.
 
 ## Signing & notarization
 
-Tagged macOS releases must use a **Developer ID Application** certificate and
-Apple notarization. The release workflow fails before building if any required
-secret is missing, then extracts the updater ZIP and verifies its signature,
-Team ID, designated requirement, stapled notarization ticket, and Gatekeeper
-assessment before upload.
+macOS releases deliberately use **ad-hoc signing**, not a Developer ID
+certificate or Apple notarization. No Apple account, paid membership or Apple
+Actions secrets are needed. `electron-builder.yml` sets `identity: "-"` and
+`notarize: false`; CI disables certificate auto-discovery. The `afterSign` hook
+keeps the correct bundle identifier for native notifications. Release checks
+extract the actual updater ZIP and verify its bundle identity and intact
+ad-hoc signature, without invoking Gatekeeper or Apple's notarization service.
 
-CI does **not** need an `APPLE_ID`, Apple Account password, or app-specific
-password. It authenticates notarization with an App Store Connect API key.
-However, this is not Apple-account-free: obtaining the certificate and API key
-requires an Apple Account enrolled in the paid Apple Developer Program
-(99 USD per membership year, or local equivalent).
+The macOS updater downloads directly from the **public
+`fire-tools-inc/app` GitHub Releases**, with no user token. It checks SHA-512,
+bundle identity and version, then replaces the app after the old process has
+exited. It does not use Squirrel.Mac's Developer ID signature matching. The
+existing pre-install backup remains mandatory; ordinary app quits never
+install an update behind that backup gate.
 
-Configure these repository Actions secrets (never commit their values):
-
-| Secret | Purpose |
-|--------|---------|
-| `CSC_LINK` | Base64-encoded Developer ID Application `.p12` |
-| `CSC_KEY_PASSWORD` | Password for the `.p12` |
-| `APPLE_API_KEY_BASE64` | Base64-encoded App Store Connect API key `.p8` |
-| `APPLE_API_KEY_ID` | App Store Connect API key ID |
-| `APPLE_API_ISSUER` | App Store Connect issuer UUID |
-| `APPLE_TEAM_ID` | Apple Developer Team ID; also checked against the signed app |
-| `WINDOWS_CERTIFICATE_LINK` | Path/URL to the Windows code-signing certificate |
-| `WINDOWS_CERTIFICATE_PASSWORD` | Password for the Windows certificate |
-
-### Create the macOS release secrets
-
-1. Enroll the Apple Account that owns the release identity in the
-   [Apple Developer Program](https://developer.apple.com/programs/enroll/).
-2. In **Keychain Access**, choose **Certificate Assistant → Request a
-   Certificate From a Certificate Authority**, enter the account email and a
-   common name, select **Saved to disk**, and save the CSR.
-3. Open
-   [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/certificates/list),
-   add a certificate, choose **Developer ID Application**, upload the CSR, and
-   download the generated `.cer`.
-4. Open the `.cer` so macOS installs it in the login keychain. Under
-   **My Certificates**, confirm the certificate expands to show its private
-   key.
-5. Select the certificate and private key, export them as a password-protected
-   `.p12`, and retain that export password.
-6. Create the signing secrets:
-
-   - `CSC_LINK`: run `base64 -i DeveloperIDApplication.p12 | pbcopy` and use
-     the clipboard contents.
-   - `CSC_KEY_PASSWORD`: use the `.p12` export password.
-   - `APPLE_TEAM_ID`: use the 10-character Team ID shown in the Apple Developer
-     membership details or in the certificate name's final parentheses.
-
-7. In [App Store Connect](https://appstoreconnect.apple.com/), the Account
-   Holder must first open **Users and Access → Integrations** and request App
-   Store Connect API access if it has not already been enabled.
-8. As an Account Holder or Admin, open **Users and Access → Integrations →
-   Team Keys**, generate a Team Key with **App Manager** access, and download
-   the `.p8` file immediately. Apple allows each private key to be downloaded
-   only once.
-9. Create the notarization secrets:
-
-   - `APPLE_API_KEY_BASE64`: run
-     `base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy` and use the clipboard contents.
-   - `APPLE_API_KEY_ID`: copy the Key ID displayed for that Team Key.
-   - `APPLE_API_ISSUER`: copy the Issuer ID displayed on the Team Keys page.
-
-10. In the GitHub repository, open **Settings → Secrets and variables →
-    Actions**, choose **New repository secret**, and add all six values exactly
-    as named above.
-
-The App Store Connect API key replaces Apple ID/password authentication only
-for automation. Without paid Apple Developer Program membership there is no
-supported way to issue a Developer ID Application certificate or notarize the
-app; macOS distribution must then remain manual and the Squirrel auto-updater
-must stay disabled.
-
-Local `npm run electron:dist` builds can still use the ad-hoc `afterSign`
-fallback when no certificate is configured. Those builds are for development
-only and cannot safely self-update.
+First-time downloads may still be quarantined by macOS. Follow the
+[trusted-download installation instructions](../docs/user/README.md#macos-gatekeeper)
+for this app only. The updater does not disable Gatekeeper globally or request
+administrator access; the installed app must be in a writable Applications
+folder. See [the updater design](../docs/engineering/auto-updater.md#macos-without-apple-signing)
+for the trust model, installation sequence and recovery logs.
 
 ### Existing unsigned installs
 
-Published macOS builds through v2.3.2 were not Developer ID-signed; recent
-versions, including v2.2.1 and v2.3.2, were ad-hoc signed. macOS assigns each
-ad-hoc build a designated requirement tied to its exact code hash, so ShipIt
-rejects the next version with
-`code failed to satisfy specified code requirement(s)`. Users must download
-and install the **first Developer ID-signed release** manually once.
-Auto-update works normally after that; future certificate renewals under the
-same Apple Team ID do not require another manual migration.
+Older installs still using Squirrel.Mac cannot accept a different ad-hoc
+signature and fail with `code failed to satisfy specified code requirement(s)`.
+Download and replace the app manually **once** with the first release carrying
+the new updater. Changing release metadata cannot repair updater code already
+installed on a user's machine. Subsequent releases update in-app without
+Developer ID signing or notarization.
 
 ## Security posture
 
@@ -146,8 +130,8 @@ The Electron build is not just a thin web wrapper:
 
 - **Boots straight into the FIRE Calculator** (`/fire-calculator`) instead
   of the marketing homepage.
-- **Decorative web header is hidden**; the nav bar becomes the OS
-  drag-region.
+- **Branded, collapsible sidebar** preserves page space; a small title region
+  handles window dragging without intercepting navigation controls.
 - **macOS** uses `titleBarStyle: 'hiddenInset'` for a flush, native look
   (traffic-light controls only). About panel data comes from
   `package.json`.

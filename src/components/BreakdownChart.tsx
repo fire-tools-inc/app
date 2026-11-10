@@ -7,7 +7,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { BreakdownResult } from '../types/portfolioBreakdown';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
 import { PrivacyBlur } from './PrivacyBlur';
@@ -31,10 +31,6 @@ interface TooltipPayloadEntry {
 }
 
 const DEFAULT_MAX_ENTRIES = 12;
-
-function truncate(label: string, max = 18): string {
-  return label.length > max ? label.substring(0, max - 1) + '…' : label;
-}
 
 function condense(
   entries: BreakdownResult['entries'],
@@ -103,34 +99,31 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
     return null;
   };
 
-  const renderLegend = (value: string) => truncate(value, 22);
-
   return (
     <div className="chart-container breakdown-chart">
       <h3>{title}</h3>
       {description && <p className="breakdown-chart-description">{description}</p>}
 
-      <ResponsiveContainer width="100%" height={340}>
-        <PieChart>
+      <ResponsiveContainer width="100%" height={240} minWidth={0}>
+        <PieChart aria-label={title}>
           <Pie
             data={entries}
             dataKey="value"
             nameKey="label"
             cx="50%"
             cy="50%"
-            outerRadius={110}
-            innerRadius={55}
+            outerRadius="78%"
+            innerRadius="54%"
             paddingAngle={1}
+            stroke="var(--bg-secondary)"
+            strokeWidth={2}
+            isAnimationActive={false}
           >
             {entries.map((entry, i) => (
-              <Cell key={`cell-${i}`} fill={entry.color || '#5568d4'} />
+              <Cell key={`cell-${i}`} fill={entry.color || 'var(--accent-primary)'} />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
-          <Legend
-            formatter={renderLegend}
-            wrapperStyle={{ paddingTop: '8px', color: '#F8FAFC', fontSize: '12px' }}
-          />
         </PieChart>
       </ResponsiveContainer>
 
@@ -153,7 +146,7 @@ export const BreakdownChart: React.FC<BreakdownChartProps> = ({
                 <span
                   className="breakdown-color-dot"
                   aria-hidden="true"
-                  style={{ background: e.color || '#5568d4' }}
+                  style={{ background: e.color || 'var(--accent-primary)' }}
                 />
                 {e.label}
               </td>

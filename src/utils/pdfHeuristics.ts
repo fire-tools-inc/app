@@ -17,6 +17,7 @@ import {
   PdfDocType,
 } from '../types/pdfImport';
 import type { ExtractedPdf } from './pdfTextExtractor';
+import { isValidCalendarDate } from './dateValidation';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -97,8 +98,7 @@ function isValidYmd(y: number, m: number, d: number): boolean {
   if (m < 1 || m > 12) return false;
   if (d < 1 || d > 31) return false;
   if (y < 1900 || y > 2100) return false;
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+  return isValidCalendarDate(formatYmd(y, m, d));
 }
 
 function formatYmd(y: number, m: number, d: number): string {

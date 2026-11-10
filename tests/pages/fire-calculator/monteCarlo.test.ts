@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { runMonteCarloSimulation, runMonteCarloSimulationWithLogs } from '../../../src/utils/monteCarlo';
 import { CalculatorInputs, MonteCarloInputs } from '../../../src/types/calculator';
 
@@ -130,6 +130,11 @@ describe('Monte Carlo Simulation', () => {
   });
 
   describe('Asset Allocation Validation', () => {
+    it.each([0, -1, 1.5, Number.NaN])('rejects an invalid simulation count: %s', (numSimulations) => {
+      expect(() => runMonteCarloSimulation(baseInputs, { ...baseMcInputs, numSimulations }))
+        .toThrow(/numSimulations/);
+    });
+
     it('should throw error if asset allocation does not sum to 100%', () => {
       const invalidInputs = {
         ...baseInputs,
@@ -156,6 +161,70 @@ describe('Monte Carlo Simulation', () => {
   });
 
   describe('Simulation with Logging', () => {
+    it('can omit detailed logs while retaining every result and fixed parameters', () => {
+      const progress = vi.fn();
+      const result = runMonteCarloSimulationWithLogs(baseInputs, { ...baseMcInputs, numSimulations: 10 }, {
+        captureLogs: false, onProgress: progress,
+      });
+      expect(result.logs).toEqual([]);
+      expect(result.simulations).toHaveLength(10);
+      expect(result.fixedParameters.numSimulations).toBe(10);
+      expect(progress).toHaveBeenLastCalledWith(10, 10);
+    });
+
+    it('respects the selected maximum age', () => {
+      const currentAge = new Date().getFullYear() - baseInputs.yearOfBirth;
+      const result = runMonteCarloSimulationWithLogs(
+        { ...baseInputs, maxAge: currentAge + 2 },
+        { ...baseMcInputs, numSimulations: 1 },
+      );
+      expect(result.logs[0].yearlyData).toHaveLength(2);
+    });
+
+    it('preserves failure reasons in both results and logs', () => {
+      const result = runMonteCarloSimulationWithLogs(
+        { ...baseInputs, initialSavings: 1, annualLaborIncome: 0, savingsRate: 0 },
+        { ...baseMcInputs, numSimulations: 1, blackSwanProbability: 100 },
+      );
+      expect(result.simulations[0].failureReasons).toEqual(result.logs[0].failureReasons);
+      expect(result.simulations[0].failureReasons).toContain('unsustainable_ending');
+    });
+
+    it('marks FIRE lost when the final year ends below the target after a recovery', () => {
+      const random = vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      // Down, up, down. Zero volatility keeps the non-black-swan return deterministic.
+      random.mockReturnValueOnce(0).mockReturnValueOnce(0.5)
+        .mockReturnValueOnce(0.9).mockReturnValueOnce(0.5).mockReturnValueOnce(0.5)
+        .mockReturnValueOnce(0.5).mockReturnValueOnce(0).mockReturnValueOnce(0.5);
+      try {
+        const result = runMonteCarloSimulation({
+          ...baseInputs,
+          initialSavings: 100_000,
+          stocksPercent: 100,
+          bondsPercent: 0,
+          cashPercent: 0,
+          currentAnnualExpenses: 4000,
+          fireAnnualExpenses: 4000,
+          desiredWithdrawalRate: 4,
+          expectedStockReturn: 100,
+          expectedCashReturn: 0,
+          yearOfBirth: new Date().getFullYear() - 97,
+          retirementAge: 100,
+        }, {
+          numSimulations: 1,
+          stockVolatility: 0,
+          bondVolatility: 0,
+          blackSwanProbability: 50,
+          blackSwanImpact: -40,
+        });
+        expect(result.simulations[0].finalPortfolio).toBeLessThan(100_000);
+        expect(result.simulations[0].failureReasons).toContain('fire_lost');
+        expect(result.successCount).toBe(0);
+      } finally {
+        random.mockRestore();
+      }
+    });
+
     it('should return detailed logs for each simulation', () => {
       const mcInputs = { ...baseMcInputs, numSimulations: 10 };
       const result = runMonteCarloSimulationWithLogs(baseInputs, mcInputs);

@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 import type { CalculatorInputs, CalculationResult } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
 import { calculateFIRE } from '../utils/fireCalculator';
@@ -272,7 +272,7 @@ export function FIRECalculatorPage() {
         )}
       </aside>
 
-      <main className="main-content">
+      <main className="main-content" id="main-content" tabIndex={-1}>
         {hasValidationErrors && (
           <div className="validation-error-banner" role="alert" aria-live="polite">
             <strong><MaterialIcon name="warning" /> Validation Error</strong>

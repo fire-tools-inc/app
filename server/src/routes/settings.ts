@@ -22,6 +22,7 @@ interface SettingsRow {
   include_primary_residence_in_fire: number;
   search_threshold: number;
   experimental_features_json: string;
+  ai_features_enabled: number;
   llm_base_url: string | null;
   llm_api_key: string | null;
   llm_model: string | null;
@@ -69,11 +70,12 @@ const mapSettings = (row: SettingsRow) => {
     includePrimaryResidenceInFIRE: fromBool01(row.include_primary_residence_in_fire),
     searchThreshold: row.search_threshold,
     experimentalFeatures: parseJson<Record<string, boolean>>(row.experimental_features_json, {}),
+    aiFeaturesEnabled: fromBool01(row.ai_features_enabled),
   };
-  if (row.llm_base_url && row.llm_api_key && row.llm_model) {
+  if (row.llm_base_url && row.llm_model) {
     out.llmCategorization = {
       baseUrl: row.llm_base_url,
-      apiKey: row.llm_api_key,
+      apiKey: row.llm_api_key ?? '',
       model: row.llm_model,
     };
   }
@@ -121,6 +123,12 @@ const ensureNotifPref = (db: Database, userId: number): NotifPrefRow => {
 type SettingsBody = Record<string, unknown>;
 
 const applySettingsPatch = (db: Database, userId: number, patch: SettingsBody): void => {
+  if (!patch || typeof patch !== 'object' || Array.isArray(patch)) {
+    throw apiError(400, 'invalid_body', 'Settings must be an object.');
+  }
+  if ('aiFeaturesEnabled' in patch && typeof patch.aiFeaturesEnabled !== 'boolean') {
+    throw apiError(400, 'invalid_body', 'aiFeaturesEnabled must be a boolean.');
+  }
   ensureSettings(db, userId);
   const sets: string[] = [];
   const vals: unknown[] = [];
@@ -132,6 +140,7 @@ const applySettingsPatch = (db: Database, userId: number, patch: SettingsBody): 
   if (patch.decimalSeparator === '.' || patch.decimalSeparator === ',') set('decimal_separator', patch.decimalSeparator);
   if (typeof patch.decimalPlaces === 'number') set('decimal_places', patch.decimalPlaces);
   if (typeof patch.privacyMode === 'boolean') set('privacy_mode', bool01(patch.privacyMode));
+  if (typeof patch.aiFeaturesEnabled === 'boolean') set('ai_features_enabled', bool01(patch.aiFeaturesEnabled));
   if (patch.country === null || typeof patch.country === 'string') set('country', patch.country);
   if (typeof patch.dateFormat === 'string') set('date_format', patch.dateFormat);
   if (typeof patch.includePrimaryResidenceInFIRE === 'boolean')
@@ -335,15 +344,17 @@ export const buildSettingsRouter = (db: Database, fileStore?: SettingsFileStore)
           `No settings found for user ${userId} in provided payload`,
         );
       }
-      if (perUser.settings && Object.keys(perUser.settings).length > 0) {
-        applySettingsPatch(db, userId, perUser.settings);
-      }
-      if (
-        perUser.notificationPreferences &&
-        Object.keys(perUser.notificationPreferences).length > 0
-      ) {
-        replaceNotifPref(db, userId, perUser.notificationPreferences);
-      }
+      db.transaction(() => {
+        if (perUser.settings && Object.keys(perUser.settings).length > 0) {
+          applySettingsPatch(db, userId, perUser.settings);
+        }
+        if (
+          perUser.notificationPreferences &&
+          Object.keys(perUser.notificationPreferences).length > 0
+        ) {
+          replaceNotifPref(db, userId, perUser.notificationPreferences);
+        }
+      })();
       mirror();
       res.json({
         settings: mapSettings(ensureSettings(db, userId)),

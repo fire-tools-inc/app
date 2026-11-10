@@ -10,6 +10,7 @@ import itLocale from '../../src/i18n/locales/it.json';
 import fr from '../../src/i18n/locales/fr.json';
 import de from '../../src/i18n/locales/de.json';
 import es from '../../src/i18n/locales/es.json';
+import { expectDiagnostic } from './diagnostics';
 
 type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
 const flatten = (o: Json, p = ''): string[] =>
@@ -90,6 +91,7 @@ describe('i18n setup', () => {
     // @ts-expect-error - intentionally passing an invalid value
     await setLanguage('zz');
     expect(i18n.language).toBe('en');
+    expectDiagnostic('error', '[unsupported-language]: unsupported language requested');
   });
 
   it('falls back to English when a key is missing from the target language', async () => {

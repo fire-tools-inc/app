@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { CalculationResult, CalculatorInputs } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
 import { calculateFIRE, getEffectiveInputs } from '../utils/fireCalculator';

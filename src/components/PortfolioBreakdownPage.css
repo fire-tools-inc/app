@@ -14,7 +14,7 @@
 }
 
 .portfolio-breakdown-page .inline-link {
-  color: var(--accent-color, #5568d4);
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 500;
   display: inline-flex;
@@ -45,8 +45,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(85, 104, 212, 0.12);
-  border: 1px solid rgba(85, 104, 212, 0.35);
+  background: var(--accent-surface);
+  border: 1px solid var(--border-accent);
   color: #F8FAFC;
   border-radius: 8px;
   padding: 0.85rem 1rem;

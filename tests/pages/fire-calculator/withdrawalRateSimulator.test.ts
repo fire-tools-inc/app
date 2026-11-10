@@ -24,6 +24,15 @@ const baseInputs: WithdrawalRateInputs = {
 
 describe('withdrawalRateSimulator', () => {
   describe('runWithdrawalRateSimulation', () => {
+    it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])('rejects invalid simulation count %s', (numSimulations) => {
+      expect(() => runWithdrawalRateSimulation({ ...baseInputs, numSimulations }, 4)).toThrow(/numSimulations/);
+    });
+
+    it('rejects non-finite rates and fractional horizons', () => {
+      expect(() => runWithdrawalRateSimulation(baseInputs, Number.NaN)).toThrow(/withdrawalRate/);
+      expect(() => runWithdrawalRateSimulation({ ...baseInputs, retirementYears: 1.5 }, 4)).toThrow(/retirementYears/);
+    });
+
     it('returns a populated result for a typical 4% withdrawal', () => {
       const r = runWithdrawalRateSimulation(baseInputs, 4);
       expect(r.withdrawalRate).toBe(4);
@@ -94,6 +103,15 @@ describe('withdrawalRateSimulator', () => {
   });
 
   describe('defaultWithdrawalRateRange', () => {
+    it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('rejects invalid range step %s without looping', (step) => {
+      expect(() => defaultWithdrawalRateRange(2, 7, step)).toThrow(/range/);
+    });
+
+    it('rejects unbounded and reversed ranges', () => {
+      expect(() => defaultWithdrawalRateRange(7, 2, 0.5)).toThrow(/range/);
+      expect(() => defaultWithdrawalRateRange(2, 7, 1e-12)).toThrow(/range/);
+    });
+
     it('generates inclusive range with given step', () => {
       const r = defaultWithdrawalRateRange(2, 4, 0.5);
       expect(r).toEqual([2, 2.5, 3, 3.5, 4]);

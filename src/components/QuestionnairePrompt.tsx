@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { loadTourCompleted } from '../utils/tourPreferences';
 import { hasCompletedQuestionnaire } from '../utils/questionnaireStorage';

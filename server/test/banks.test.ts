@@ -14,14 +14,14 @@ const seedBanks = (db: import('better-sqlite3').Database) => {
 
 describe('GET /api/v1/banks', () => {
   it('returns empty array when no banks', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/banks');
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
   });
 
   it('returns seeded banks sorted by name', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks');
     expect(res.status).toBe(200);
@@ -32,7 +32,7 @@ describe('GET /api/v1/banks', () => {
   });
 
   it('filters by countryCode', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks?countryCode=IT');
     expect(res.status).toBe(200);
@@ -41,7 +41,7 @@ describe('GET /api/v1/banks', () => {
   });
 
   it('filters by supportsOpenBanking=true', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks?supportsOpenBanking=true');
     expect(res.status).toBe(200);
@@ -50,7 +50,7 @@ describe('GET /api/v1/banks', () => {
   });
 
   it('filters by supportsOpenBanking=false', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks?supportsOpenBanking=false');
     expect(res.status).toBe(200);
@@ -59,7 +59,7 @@ describe('GET /api/v1/banks', () => {
   });
 
   it('combines filters', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks?countryCode=FR&supportsOpenBanking=true');
     expect(res.status).toBe(200);
@@ -68,7 +68,7 @@ describe('GET /api/v1/banks', () => {
   });
 
   it('ignores invalid supportsOpenBanking value', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks?supportsOpenBanking=maybe');
     expect(res.status).toBe(200);
@@ -78,7 +78,7 @@ describe('GET /api/v1/banks', () => {
 
 describe('GET /api/v1/banks/:code', () => {
   it('returns single bank', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     seedBanks(db);
     const res = await request(app).get('/api/v1/banks/ITALPHA');
     expect(res.status).toBe(200);
@@ -87,7 +87,7 @@ describe('GET /api/v1/banks/:code', () => {
   });
 
   it('returns 404 for unknown code', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/banks/NOPE');
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('not_found');

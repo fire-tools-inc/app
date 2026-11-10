@@ -1,0 +1,13 @@
+.allocation-chart-body {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.allocation-chart .chart-legend {
+  grid-template-columns: 1fr;
+  margin: 0;
+}

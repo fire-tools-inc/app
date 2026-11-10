@@ -7,6 +7,7 @@ import {
 } from '../../../src/utils/exchangeRateApi';
 import { DEFAULT_FALLBACK_RATES } from '../../../src/types/currency';
 import { ExchangeRateFetchResult } from '../../../src/types/priceApi';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 // Mock yahooProxy rate limit and fetch
 vi.mock('../../../src/utils/yahooProxy', () => ({
@@ -19,9 +20,6 @@ vi.mock('../../../src/utils/yahooProxy', () => ({
 
 import { yahooFetch } from '../../../src/utils/yahooProxy';
 const mockYahooFetch = yahooFetch as ReturnType<typeof vi.fn>;
-
-// Mock global fetch (not used directly anymore, but keep for safety)
-const mockFetch = vi.fn();
 
 describe('Exchange Rate API Service', () => {
   beforeEach(() => {
@@ -123,6 +121,7 @@ describe('Exchange Rate API Service', () => {
 
       const result = await fetchExchangeRates();
       expect(result.rates).toHaveLength(0);
+      expectDiagnostic('error', '[pair-fetch-failed]: failed to fetch currency pair', 6);
     });
 
     it('should handle invalid response format', async () => {
@@ -148,6 +147,7 @@ describe('Exchange Rate API Service', () => {
       expect(result.isUsingFallback).toBe(true);
       expect(result.rates.EUR).toBe(1.0);
       expect(result.rates.USD).toBe(DEFAULT_FALLBACK_RATES.USD);
+      expectDiagnostic('error', '[pair-fetch-failed]: failed to fetch currency pair', 6);
     });
 
     it('should return live rates when Yahoo succeeds', async () => {
@@ -169,6 +169,7 @@ describe('Exchange Rate API Service', () => {
       expect(result.lastUpdate).toBeTruthy();
       // Should be a valid ISO date string
       expect(new Date(result.lastUpdate).toISOString()).toBeTruthy();
+      expectDiagnostic('error', '[pair-fetch-failed]: failed to fetch currency pair', 6);
     });
   });
 });

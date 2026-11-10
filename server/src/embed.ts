@@ -111,15 +111,19 @@ export const startEmbeddedServer = async (
   const close = async () => {
     if (closed) return;
     closed = true;
-    await new Promise<void>((resolve) => {
-      server.close(() => resolve());
-    });
     try {
-      db.close();
-    } catch (err) {
-      logger.error('embed', 'db-close-failed', (err as Error).message, {
-        pii: { stack: (err as Error).stack },
+      await app.closeReceiptUploads();
+    } finally {
+      await new Promise<void>((resolve) => {
+        server.close(() => resolve());
       });
+      try {
+        db.close();
+      } catch (err) {
+        logger.error('embed', 'db-close-failed', (err as Error).message, {
+          pii: { stack: (err as Error).stack },
+        });
+      }
     }
   };
 

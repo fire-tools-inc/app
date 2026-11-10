@@ -4,7 +4,7 @@ import { makeApp } from './helpers.js';
 
 describe('GET /api/v1/health', () => {
   it('returns ok shape with db driver and path', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/health');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
@@ -15,7 +15,7 @@ describe('GET /api/v1/health', () => {
   });
 
   it('returns 503 when database is closed', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     db.close();
     const res = await request(app).get('/api/v1/health');
     expect(res.status).toBe(503);

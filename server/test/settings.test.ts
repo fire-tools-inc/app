@@ -37,7 +37,7 @@ const validNotifPref = {
 
 describe('GET /api/v1/settings', () => {
   it('auto-creates and returns default settings', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/settings');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accountName');
@@ -46,12 +46,21 @@ describe('GET /api/v1/settings', () => {
     expect(res.body.currencySettings).toHaveProperty('defaultCurrency');
     expect(typeof res.body.privacyMode).toBe('boolean');
     expect(typeof res.body.includePrimaryResidenceInFIRE).toBe('boolean');
+    expect(res.body.aiFeaturesEnabled).toBe(true);
   });
 });
 
 describe('PUT /api/v1/settings', () => {
+  it('keeps the saved bulk AI permission for legacy clients that omit the new optional field', async () => {
+    const { app } = await makeApp();
+    await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: false });
+    const res = await request(app).put('/api/v1/settings').send(validSettings);
+    expect(res.status).toBe(200);
+    expect(res.body.aiFeaturesEnabled).toBe(false);
+  });
+
   it('replaces all settings fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/settings').send(validSettings);
     expect(res.status).toBe(200);
     expect(res.body.accountName).toBe('Alice');
@@ -62,7 +71,7 @@ describe('PUT /api/v1/settings', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { decimalSeparator: _x, ...partial } = validSettings;
     const res = await request(app).put('/api/v1/settings').send(partial);
     expect(res.status).toBe(400);
@@ -72,22 +81,55 @@ describe('PUT /api/v1/settings', () => {
 });
 
 describe('PATCH /api/v1/settings', () => {
+  it('persists a bulk AI disable while retaining local-model configuration', async () => {
+    const { app } = await makeApp();
+    const llmCategorization = { baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'synthetic' };
+    await request(app).patch('/api/v1/settings').send({ llmCategorization });
+    const disabled = await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: false });
+    expect(disabled.status).toBe(200);
+    expect(disabled.body.aiFeaturesEnabled).toBe(false);
+    expect(disabled.body.llmCategorization).toEqual(llmCategorization);
+    const enabled = await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled: true });
+    expect(enabled.body.aiFeaturesEnabled).toBe(true);
+    expect(enabled.body.llmCategorization).toEqual(llmCategorization);
+  });
+
+  it.each([null, 0, 'true', [], {}])('rejects invalid bulk AI switch %j before applying any partial settings write', async (aiFeaturesEnabled) => {
+    const { app } = await makeApp();
+    await request(app).patch('/api/v1/settings').send({ accountName: 'Synthetic portfolio', aiFeaturesEnabled: false });
+    const invalid = await request(app).patch('/api/v1/settings').send({ aiFeaturesEnabled, accountName: 'Should not save' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe('invalid_body');
+    const settings = await request(app).get('/api/v1/settings');
+    expect(settings.body.aiFeaturesEnabled).toBe(false);
+    expect(settings.body.accountName).toBe('Synthetic portfolio');
+  });
+
+  it('retains a local-model configuration with an empty optional API key', async () => {
+    const { app } = await makeApp();
+    const config = { baseUrl: 'http://localhost:11434/v1', apiKey: '', model: 'local-model' };
+    const saved = await request(app).patch('/api/v1/settings').send({ llmCategorization: config });
+    expect(saved.status).toBe(200);
+    expect(saved.body.llmCategorization).toEqual(config);
+    expect((await request(app).get('/api/v1/settings')).body.llmCategorization).toEqual(config);
+  });
+
   it('applies partial updates', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ accountName: 'Bob' });
     expect(res.status).toBe(200);
     expect(res.body.accountName).toBe('Bob');
   });
 
   it('ignores invalid decimalSeparator silently', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ decimalSeparator: 'X' });
     expect(res.status).toBe(200);
     expect(res.body.decimalSeparator).not.toBe('X');
   });
 
   it('clears llmCategorization when set to null', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app)
       .patch('/api/v1/settings')
       .send({
@@ -103,7 +145,7 @@ describe('PATCH /api/v1/settings', () => {
 
 describe('GET /api/v1/settings/notifications', () => {
   it('returns defaults', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/settings/notifications');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('enableInAppNotifications');
@@ -114,7 +156,7 @@ describe('GET /api/v1/settings/notifications', () => {
 
 describe('PUT /api/v1/settings/notifications', () => {
   it('replaces all fields', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put('/api/v1/settings/notifications').send(validNotifPref);
     expect(res.status).toBe(200);
     expect(res.body.emailAddress).toBe('a@b.com');
@@ -122,7 +164,7 @@ describe('PUT /api/v1/settings/notifications', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { emailAddress: _x, ...partial } = validNotifPref;
     const res = await request(app).put('/api/v1/settings/notifications').send(partial);
     expect(res.status).toBe(400);
@@ -132,14 +174,14 @@ describe('PUT /api/v1/settings/notifications', () => {
 
 describe('settings multi-user isolation', () => {
   it('keeps settings separate per x-user-id', async () => {
-    const { app, db } = makeApp();
+    const { app, db } = await makeApp();
     db.prepare(
       "INSERT INTO users (id, email, created_at) VALUES (2, 'two@x', '2024-01-01T00:00:00Z')",
     ).run();
     await request(app)
       .patch('/api/v1/settings')
       .set('x-user-id', '1')
-      .send({ accountName: 'OneName' });
+      .send({ accountName: 'OneName', aiFeaturesEnabled: false });
     await request(app)
       .patch('/api/v1/settings')
       .set('x-user-id', '2')
@@ -148,5 +190,7 @@ describe('settings multi-user isolation', () => {
     const u2 = await request(app).get('/api/v1/settings').set('x-user-id', '2');
     expect(u1.body.accountName).toBe('OneName');
     expect(u2.body.accountName).toBe('TwoName');
+    expect(u1.body.aiFeaturesEnabled).toBe(false);
+    expect(u2.body.aiFeaturesEnabled).toBe(true);
   });
 });

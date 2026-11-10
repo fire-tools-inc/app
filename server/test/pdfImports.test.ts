@@ -25,7 +25,7 @@ const validImport = {
 
 describe('POST /api/v1/pdf-imports', () => {
   it('creates import with pending status', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/pdf-imports').send(validImport);
     expect(res.status).toBe(201);
     expect(res.body.status).toBe('pending');
@@ -34,13 +34,13 @@ describe('POST /api/v1/pdf-imports', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/pdf-imports').send({ sourceFile: 'a.pdf' });
     expect(res.status).toBe(400);
   });
 
   it('rejects invalid docType', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/pdf-imports')
       .send({ ...validImport, docType: 'bogus' });
@@ -48,7 +48,7 @@ describe('POST /api/v1/pdf-imports', () => {
   });
 
   it('rejects drafts not array', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/pdf-imports')
       .send({ ...validImport, drafts: 'not an array' });
@@ -56,7 +56,7 @@ describe('POST /api/v1/pdf-imports', () => {
   });
 
   it('rejects draft missing field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { id: _omit, ...bad } = validDraft;
     const res = await request(app)
       .post('/api/v1/pdf-imports')
@@ -66,7 +66,7 @@ describe('POST /api/v1/pdf-imports', () => {
   });
 
   it('rejects draft invalid kind', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/pdf-imports')
       .send({ ...validImport, drafts: [{ ...validDraft, kind: 'weird' }] });
@@ -74,7 +74,7 @@ describe('POST /api/v1/pdf-imports', () => {
   });
 
   it('rejects draft invalid docType', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/pdf-imports')
       .send({ ...validImport, drafts: [{ ...validDraft, docType: 'auto' }] });
@@ -84,7 +84,7 @@ describe('POST /api/v1/pdf-imports', () => {
 
 describe('GET /api/v1/pdf-imports', () => {
   it('lists imports paginated', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/pdf-imports').send(validImport);
     await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app).get('/api/v1/pdf-imports');
@@ -93,7 +93,7 @@ describe('GET /api/v1/pdf-imports', () => {
   });
 
   it('filters by status', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post('/api/v1/pdf-imports').send(validImport);
     const list = await request(app).get('/api/v1/pdf-imports?status=pending');
     expect(list.body.items.length).toBe(1);
@@ -102,7 +102,7 @@ describe('GET /api/v1/pdf-imports', () => {
   });
 
   it('rejects invalid status filter', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/pdf-imports?status=weird');
     expect(res.status).toBe(400);
   });
@@ -110,7 +110,7 @@ describe('GET /api/v1/pdf-imports', () => {
 
 describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
   it('GET by id', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app).get(`/api/v1/pdf-imports/${created.body.id}`);
     expect(res.status).toBe(200);
@@ -118,13 +118,13 @@ describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
   });
 
   it('GET 404 missing', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/pdf-imports/9999');
     expect(res.status).toBe(404);
   });
 
   it('PATCH updates status', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app)
       .patch(`/api/v1/pdf-imports/${created.body.id}`)
@@ -134,7 +134,7 @@ describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
   });
 
   it('PATCH rejects invalid status', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app)
       .patch(`/api/v1/pdf-imports/${created.body.id}`)
@@ -143,7 +143,7 @@ describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
   });
 
   it('PATCH updates drafts', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app)
       .patch(`/api/v1/pdf-imports/${created.body.id}`)
@@ -153,7 +153,7 @@ describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
   });
 
   it('DELETE removes import', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const del = await request(app).delete(`/api/v1/pdf-imports/${created.body.id}`);
     expect(del.status).toBe(204);
@@ -164,7 +164,7 @@ describe('GET/PATCH/DELETE /api/v1/pdf-imports/:id', () => {
 
 describe('POST /api/v1/pdf-imports/:id/commit', () => {
   it('commits drafts to expense entries', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     const res = await request(app).post(`/api/v1/pdf-imports/${created.body.id}/commit`);
     expect(res.status).toBe(200);
@@ -176,7 +176,7 @@ describe('POST /api/v1/pdf-imports/:id/commit', () => {
   });
 
   it('commits income drafts to income entries', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send({
       ...validImport,
       drafts: [
@@ -194,7 +194,7 @@ describe('POST /api/v1/pdf-imports/:id/commit', () => {
   });
 
   it('skips drafts with include=false', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send({
       ...validImport,
       drafts: [{ ...validDraft, include: false }],
@@ -204,7 +204,7 @@ describe('POST /api/v1/pdf-imports/:id/commit', () => {
   });
 
   it('returns 409 if already committed', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const created = await request(app).post('/api/v1/pdf-imports').send(validImport);
     await request(app).post(`/api/v1/pdf-imports/${created.body.id}/commit`);
     const res = await request(app).post(`/api/v1/pdf-imports/${created.body.id}/commit`);
@@ -212,7 +212,7 @@ describe('POST /api/v1/pdf-imports/:id/commit', () => {
   });
 
   it('returns 404 for missing', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/pdf-imports/9999/commit');
     expect(res.status).toBe(404);
   });

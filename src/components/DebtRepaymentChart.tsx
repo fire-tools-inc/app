@@ -11,22 +11,12 @@ import {
 } from 'recharts';
 import { DebtMonthSnapshot, Debt } from '../types/debt';
 import { formatDisplayCurrency } from '../utils/numberFormatter';
+import { getChartColor } from '../utils/chartColors';
 
 interface Props {
   timeline: DebtMonthSnapshot[];
   debts: Debt[];
 }
-
-const COLORS = [
-  '#ff7e00',
-  '#0080ff',
-  '#1abc9c',
-  '#9b59b6',
-  '#e74c3c',
-  '#f1c40f',
-  '#34495e',
-  '#2ecc71',
-];
 
 interface TooltipPayloadEntry {
   name?: string;
@@ -115,6 +105,7 @@ export function DebtRepaymentChart({ timeline, debts }: Props) {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
           <XAxis
             dataKey="month"
+            padding={{ left: 10, right: 10 }}
             stroke="var(--text-secondary)"
             label={{ value: 'Month', position: 'insideBottom', offset: -4, fill: 'var(--text-secondary)' }}
           />
@@ -138,7 +129,8 @@ export function DebtRepaymentChart({ timeline, debts }: Props) {
               type="monotone"
               dataKey={d.id}
               name={d.name || `Debt ${i + 1}`}
-              stroke={COLORS[i % COLORS.length]}
+              stroke={getChartColor(i)}
+              isAnimationActive={false}
               dot={false}
             />
           ))}

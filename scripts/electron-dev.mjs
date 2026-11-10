@@ -4,11 +4,13 @@
 // spawns Electron once the renderer URL is reachable. Both children share the
 // terminal; SIGINT propagates to both so Ctrl+C tears the stack down cleanly.
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
+const require = createRequire(import.meta.url);
 const RENDERER_URL = process.env.ELECTRON_RENDERER_URL || 'http://localhost:5173';
 const VITE_PORT = (() => {
   try {
@@ -23,7 +25,7 @@ async function waitForUrl(url, timeoutMs = 30_000, intervalMs = 250) {
   while (Date.now() < deadline) {
     try {
       const res = await fetch(url, { method: 'GET' });
-      if (res.status < 500) return true;
+      if (res.ok) return true;
     } catch {
       // not ready yet
     }
@@ -35,7 +37,11 @@ async function waitForUrl(url, timeoutMs = 30_000, intervalMs = 250) {
 function shutdown(children, code = 0) {
   for (const child of children) {
     if (!child.killed) {
-      try { child.kill('SIGTERM'); } catch { /* noop */ }
+      try {
+        child.kill('SIGTERM');
+      } catch (error) {
+        console.error('[electron:dev] failed to stop child:', error);
+      }
     }
   }
   process.exit(code);
@@ -44,19 +50,23 @@ function shutdown(children, code = 0) {
 async function main() {
   console.log(`[electron:dev] starting vite (mode=electron) on port ${VITE_PORT}…`);
   const vite = spawn(
-    'npx',
-    ['vite', '--mode', 'electron', '--port', VITE_PORT, '--strictPort'],
+    process.execPath,
+    [resolve(repoRoot, 'node_modules/vite/bin/vite.js'), '--mode', 'electron', '--port', VITE_PORT, '--strictPort'],
     { cwd: repoRoot, env: process.env, stdio: 'inherit' }
   );
 
   const children = [vite];
   process.on('SIGINT', () => shutdown(children));
   process.on('SIGTERM', () => shutdown(children));
-  vite.on('exit', (code) => {
-    if (code !== 0 && code !== null) {
-      console.error(`[electron:dev] vite exited with code ${code}`);
-      shutdown(children.filter((c) => c !== vite), code);
+  vite.on('exit', (code, signal) => {
+    if (signal || code !== 0) {
+      console.error(`[electron:dev] vite exited (code=${code}, signal=${signal || 'none'})`);
+      shutdown(children.filter((c) => c !== vite), code ?? 1);
     }
+  });
+  vite.on('error', (error) => {
+    console.error('[electron:dev] vite failed to start:', error);
+    shutdown(children.filter((child) => child !== vite), 1);
   });
 
   const ready = await waitForUrl(RENDERER_URL);
@@ -68,8 +78,8 @@ async function main() {
 
   console.log('[electron:dev] vite is up — launching Electron');
   const electron = spawn(
-    'npx',
-    ['electron', 'electron/main.cjs'],
+    require('electron'),
+    ['electron/main.cjs'],
     {
       cwd: repoRoot,
       env: { ...process.env, ELECTRON_RENDERER_URL: RENDERER_URL },
@@ -78,9 +88,14 @@ async function main() {
   );
   children.push(electron);
 
-  electron.on('exit', (code) => {
-    console.log(`[electron:dev] electron exited (${code ?? 'signal'}) — stopping vite`);
-    shutdown(children.filter((c) => c !== electron), code ?? 0);
+  electron.on('exit', (code, signal) => {
+    const log = signal || code !== 0 ? console.error : console.log;
+    log(`[electron:dev] electron exited (code=${code}, signal=${signal || 'none'}) - stopping vite`);
+    shutdown(children.filter((c) => c !== electron), code ?? 1);
+  });
+  electron.on('error', (error) => {
+    console.error('[electron:dev] electron failed to start:', error);
+    shutdown(children.filter((child) => child !== electron), 1);
   });
 }
 

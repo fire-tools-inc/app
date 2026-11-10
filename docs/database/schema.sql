@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
     include_primary_residence_in_fire INTEGER NOT NULL DEFAULT 1 CHECK (include_primary_residence_in_fire IN (0,1)),
     search_threshold                 INTEGER NOT NULL DEFAULT 8,
     experimental_features_json       TEXT    NOT NULL DEFAULT '{}', -- JSON: ExperimentalFeatures
+    ai_features_enabled              INTEGER NOT NULL DEFAULT 1 CHECK (ai_features_enabled IN (0,1)),
     llm_base_url                     TEXT,
     llm_api_key                      TEXT,                          -- store encrypted server-side
     llm_model                        TEXT,
@@ -250,6 +251,12 @@ CREATE TABLE IF NOT EXISTS expense_tracker_config (
     updated_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS expense_planning (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    payload_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS expense_years (
     id           INTEGER PRIMARY KEY,
     user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -285,6 +292,10 @@ CREATE TABLE IF NOT EXISTS expense_entries (
     sub_category       TEXT,
     expense_type       TEXT    NOT NULL CHECK (expense_type IN ('NEED','WANT')),
     is_recurring       INTEGER NOT NULL DEFAULT 0 CHECK (is_recurring IN (0,1)),
+    schedule_id        TEXT,
+    scheduled_date     TEXT,
+    CHECK ((schedule_id IS NULL AND scheduled_date IS NULL)
+        OR (schedule_id IS NOT NULL AND scheduled_date IS NOT NULL)),
     UNIQUE (user_id, external_id),
     -- Ensure the referenced month belongs to the same user (tenant isolation)
     FOREIGN KEY (user_id, expense_month_id)
@@ -292,6 +303,8 @@ CREATE TABLE IF NOT EXISTS expense_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_expense_entries_month ON expense_entries (expense_month_id, date);
 CREATE INDEX IF NOT EXISTS idx_expense_entries_category ON expense_entries (user_id, category);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_expense_scheduled_occurrence
+    ON expense_entries (user_id, schedule_id, scheduled_date) WHERE schedule_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS income_entries (
     id                 INTEGER PRIMARY KEY,
@@ -307,9 +320,15 @@ CREATE TABLE IF NOT EXISTS income_entries (
         CHECK (source IN ('SALARY','FREELANCE','BUSINESS','INVESTMENTS','RENTAL',
                           'PENSION','SOCIAL_SECURITY','BONUS','GIFT','OTHER')),
     is_recurring       INTEGER NOT NULL DEFAULT 0 CHECK (is_recurring IN (0,1)),
+    schedule_id        TEXT,
+    scheduled_date     TEXT,
+    CHECK ((schedule_id IS NULL AND scheduled_date IS NULL)
+        OR (schedule_id IS NOT NULL AND scheduled_date IS NOT NULL)),
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_income_entries_month ON income_entries (expense_month_id, date);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_income_scheduled_occurrence
+    ON income_entries (user_id, schedule_id, scheduled_date) WHERE schedule_id IS NOT NULL;
 
 -- Per-month budgets (NULL expense_month_id ⇒ global budget)
 CREATE TABLE IF NOT EXISTS category_budgets (
@@ -580,6 +599,20 @@ CREATE TABLE IF NOT EXISTS pdf_imports (
 );
 CREATE INDEX IF NOT EXISTS idx_pdf_imports_user_status
     ON pdf_imports (user_id, status, created_at DESC);
+
+-- Original receipt images are retained independently of financial entries.
+CREATE TABLE IF NOT EXISTS receipts (
+    id              INTEGER PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    file_name       TEXT NOT NULL CHECK (length(file_name) BETWEEN 1 AND 255),
+    mime_type       TEXT NOT NULL CHECK (mime_type IN ('image/jpeg', 'image/png', 'image/webp')),
+    content         BLOB NOT NULL CHECK (length(content) BETWEEN 1 AND 10485760),
+    sha256          TEXT NOT NULL CHECK (length(sha256) = 64),
+    status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed')),
+    created_at      TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, sha256)
+);
+CREATE INDEX IF NOT EXISTS idx_receipts_user_status ON receipts (user_id, status, created_at DESC);
 
 -- -----------------------------------------------------------------------------
 -- 9. Portfolio breakdown metadata cache (experimental)

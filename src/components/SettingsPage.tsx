@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { loadSettings, saveSettings, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, DEFAULT_UPDATER_SETTINGS, MIN_KEEP_BACKUPS, MAX_KEEP_BACKUPS, type UserSettings, type BackendSettings, type UpdaterSettings } from '../utils/cookieSettings';
+import { useNavigate } from 'react-router';
+import { loadSettings, saveSettings, subscribeToSettingsChanges, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, DEFAULT_UPDATER_SETTINGS, MIN_KEEP_BACKUPS, MAX_KEEP_BACKUPS, type UserSettings, type BackendSettings, type UpdaterSettings } from '../utils/cookieSettings';
 import { SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES, type SupportedCurrency } from '../types/currency';
 import { ALL_COUNTRIES, isEUCountry } from '../types/country';
 import { recalculateFallbackRates, convertAssetsToNewCurrency, convertNetWorthDataToNewCurrency, convertExpenseDataToNewCurrency, convertFireCalculatorInputsToNewCurrency } from '../utils/currencyConverter';
 import { exportFireCalculatorToCSV, exportAssetAllocationToCSV, importFireCalculatorFromCSV, importAssetAllocationFromCSV, exportExpenseTrackerToCSV, importExpenseTrackerFromCSV, exportNetWorthTrackerToJSON, importNetWorthTrackerFromJSON } from '../utils/csvExport';
 import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData } from '../utils/cookieStorage';
+import { clearReceiptOriginals } from '../utils/documentImportApi';
 import { DEFAULT_INPUTS, getDemoNetWorthData, getDemoAssetAllocationData } from '../utils/defaults';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
 import { formatWithSeparator, validateNumberInput } from '../utils/inputValidation';
@@ -29,6 +30,7 @@ import { formatAssetName } from '../utils/allocationCalculator';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
 import { fetchExchangeRatesAsMap } from '../utils/exchangeRateApi';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
+import { planningCategoryReferenceCount, prepareExpenseTrackerRestore, removeExpenseCategory } from '../utils/expensePlanning';
 import { SearchableSelect } from './SearchableSelect';
 import { LanguageSelector } from './LanguageSelector';
 import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
@@ -66,6 +68,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     try { return loadSettings(); } catch { return DEFAULT_SETTINGS; }
   });
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const messageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [rateTextValues, setRateTextValues] = useState<Record<string, string>>({});
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
@@ -178,6 +181,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     }
     
     setIsLoading(false);
+  }, []);
+
+  useEffect(() => subscribeToSettingsChanges(() => setSettings(loadSettings())), []);
+
+  useEffect(() => () => {
+    if (messageTimer.current) clearTimeout(messageTimer.current);
   }, []);
 
   // Seed backend draft URL from loaded settings & fetch embedded info
@@ -297,8 +306,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
   // Show temporary message
   const showMessage = (type: 'success' | 'error', text: string) => {
+    if (messageTimer.current) clearTimeout(messageTimer.current);
     setMessage({ type, text });
-    setTimeout(() => setMessage(null), 3000);
+    messageTimer.current = setTimeout(() => {
+      setMessage(null);
+      messageTimer.current = null;
+    }, 3000);
   };
   
   // Open category manager
@@ -342,26 +355,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   // Delete custom category
   const handleDeleteCategory = useCallback((categoryId: string, reassignTo?: string) => {
     if (!expenseData) return;
-    
-    const category = expenseData.customCategories?.find(c => c.id === categoryId);
-    const newData = {
-      ...expenseData,
-      customCategories: (expenseData.customCategories || []).filter(c => c.id !== categoryId),
-      // Also reassign expenses if needed
-      years: reassignTo ? expenseData.years.map(year => ({
-        ...year,
-        months: year.months.map(month => ({
-          ...month,
-          expenses: month.expenses.map(expense =>
-            expense.category === categoryId ? { ...expense, category: reassignTo } : expense
-          ),
-        })),
-      })) : expenseData.years,
-    };
-    setExpenseData(newData);
-    saveExpenseTrackerData(newData);
-    showMessage('success', t('settings.messages.categoryDeleted', { name: category?.name || t('common.unknown') }));
-  }, [expenseData]);
+    try {
+      const current = loadExpenseTrackerData() ?? expenseData;
+      const category = current.customCategories?.find(item => item.id === categoryId);
+      const next = removeExpenseCategory(current, categoryId, reassignTo);
+      saveExpenseTrackerData(next);
+      setExpenseData(next);
+      showMessage('success', t('settings.messages.categoryDeleted', { name: category?.name || t('common.unknown') }));
+    } catch (error) {
+      logger.error('settings', 'category-delete-failed', 'Category deletion could not be saved.', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('planning.saveFailed'));
+    }
+  }, [expenseData, t]);
   
   // Update built-in category override
   const handleUpdateBuiltInCategory = useCallback((override: CategoryOverride) => {
@@ -439,9 +446,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
   // Handle settings change
   const handleSettingChange = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
-    const newSettings = { ...settings, [key]: value };
+    const newSettings = { ...(IS_DEMO_MODE ? settings : loadSettings()), [key]: value };
+    try {
+      saveSettings(newSettings);
+    } catch (error) {
+      logger.error('settings', 'setting-save-failed', 'Could not save the setting.', {
+        pii: { setting: String(key), error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('aiSettings.saveFailed'));
+      return;
+    }
     setSettings(newSettings);
-    saveSettings(newSettings);
     onSettingsChange?.(newSettings);
     logAuditEvent('UPDATE_SETTINGS', { setting: String(key) });
     showMessage('success', t('settings.messages.settingsSaved'));
@@ -867,6 +882,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           settings.currencySettings.defaultCurrency,
           settings.currencySettings.fallbackRates
         );
+        if (imported.expenseTracker) {
+          const current = loadExpenseTrackerData();
+          if (imported.expenseTracker.planning === undefined && current?.planning && !window.confirm(t('planning.legacyImport'))) return;
+          imported.expenseTracker = prepareExpenseTrackerRestore(imported.expenseTracker, current);
+        }
         
         // Save all imported data
         if (imported.fireCalculator) {
@@ -957,7 +977,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       try {
         const csv = e.target?.result as string;
         const imported = importExpenseTrackerFromCSV(csv);
-        saveExpenseTrackerData(imported);
+        const current = loadExpenseTrackerData();
+        if (imported.planning === undefined && current?.planning && !window.confirm(t('planning.legacyImport'))) return;
+        const next = prepareExpenseTrackerRestore(imported, current);
+        saveExpenseTrackerData(next);
+        setExpenseData(next);
         showMessage('success', t('settings.messages.cashflowImported'));
       } catch (error) {
         showMessage('error', t('settings.messages.importFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
@@ -988,10 +1012,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   };
 
   // Reset all data
-  const handleResetAll = () => {
+  const handleResetAll = async () => {
+    if (IS_DEMO_MODE) return;
     if (confirm(t('settings.confirm.resetAll'))) {
-      clearAllData();
-      showMessage('success', t('settings.messages.allDataReset'));
+      try {
+        await clearReceiptOriginals();
+        clearAllData();
+        showMessage('success', t('settings.messages.allDataReset'));
+      } catch (error) {
+        logger.error('settings', 'reset-failed', 'Data reset could not be completed.', { pii: { error: String(error) } });
+        showMessage('error', t('receiptImport.resetFailed'));
+      }
     }
   };
 
@@ -1089,11 +1120,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   };
 
   if (isLoading) {
-    return <div className="settings-page loading">{t('settings.loadingSettings')}</div>;
+    return <main className="settings-page loading" id="main-content" role="status">{t('settings.loadingSettings')}</main>;
   }
 
   return (
-    <div className="settings-page">
+    <main className="settings-page" id="main-content" tabIndex={-1}>
       <div className="settings-container">
         <div className="settings-header">
           <button className="back-button" onClick={() => navigate(-1)}>
@@ -1103,10 +1134,90 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </div>
 
         {message && (
-          <div className={`settings-message ${message.type}`}>
+          <div className={`settings-message ${message.type}`} role={message.type === 'error' ? 'alert' : 'status'}>
             {message.text}
           </div>
         )}
+
+        <section className="settings-section ai-features-settings" aria-labelledby="ai-features-heading">
+          <h2 id="ai-features-heading"><MaterialIcon name="auto_awesome" /> {t('aiSettings.heading')}</h2>
+          <p id="ai-features-help" className="setting-help">{t('aiSettings.help')}</p>
+          <div className="toggle-group" role="group" aria-labelledby="ai-features-heading" aria-describedby="ai-features-help">
+            <button
+              type="button"
+              className={`toggle-btn ${!settings.aiFeaturesEnabled ? 'active' : ''}`}
+              aria-pressed={!settings.aiFeaturesEnabled}
+              disabled={IS_DEMO_MODE}
+              onClick={() => handleSettingChange('aiFeaturesEnabled', false)}
+            >
+              {t('aiSettings.disableAll')}
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn ${settings.aiFeaturesEnabled ? 'active' : ''}`}
+              aria-pressed={settings.aiFeaturesEnabled}
+              disabled={IS_DEMO_MODE}
+              onClick={() => handleSettingChange('aiFeaturesEnabled', true)}
+            >
+              {t('aiSettings.enableAll')}
+            </button>
+          </div>
+          {IS_DEMO_MODE && <p className="setting-help">{t('demo.disabledAction')}</p>}
+          <details className="ai-model-settings">
+            <summary>{t('aiSettings.configuration')}</summary>
+            <div className="setting-item">
+              <h3>{t('settings.aiCategorizationOptional')}</h3>
+              <p className="setting-help">{t('settings.aiCategorizationHelp')}</p>
+              <div className="form-group">
+                <label htmlFor="llmBaseUrl">{t('settings.baseUrl')}</label>
+                <input
+                  id="llmBaseUrl"
+                  type="text"
+                  disabled={IS_DEMO_MODE}
+                  placeholder={t('settings.placeholders.llmBaseUrl')}
+                  value={settings.llmCategorization?.baseUrl ?? ''}
+                  onChange={(e) => handleSettingChange('llmCategorization', {
+                    baseUrl: e.target.value,
+                    apiKey: settings.llmCategorization?.apiKey ?? '',
+                    model: settings.llmCategorization?.model ?? '',
+                  })}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="llmApiKey">{t('settings.apiKey')}</label>
+                <input
+                  id="llmApiKey"
+                  type="password"
+                  disabled={IS_DEMO_MODE}
+                  placeholder={t('settings.placeholders.apiKey')}
+                  value={settings.llmCategorization?.apiKey ?? ''}
+                  onChange={(e) => handleSettingChange('llmCategorization', {
+                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
+                    apiKey: e.target.value,
+                    model: settings.llmCategorization?.model ?? '',
+                  })}
+                />
+                <span className="setting-help">{t('settings.localModelKeyHelp')}</span>
+              </div>
+              <div className="form-group">
+                <label htmlFor="llmModel">{t('settings.model')}</label>
+                <input
+                  id="llmModel"
+                  type="text"
+                  disabled={IS_DEMO_MODE}
+                  placeholder={t('settings.placeholders.llmModel')}
+                  value={settings.llmCategorization?.model ?? ''}
+                  onChange={(e) => handleSettingChange('llmCategorization', {
+                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
+                    apiKey: settings.llmCategorization?.apiKey ?? '',
+                    model: e.target.value,
+                  })}
+                />
+              </div>
+              <span className="setting-help">{t('settings.aiCategorizationStoredHelp')}</span>
+            </div>
+          </details>
+        </section>
 
         {/* Language Settings */}
         <section className="settings-section collapsible-section">
@@ -2202,65 +2313,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </div>
                 <span className="setting-help">{t('settings.pdfImportHelp')}</span>
               </div>
-
-              {settings.experimentalFeatures?.pdfImport && (
-                <div className="setting-item">
-                  <div className="label-with-tooltip">
-                    <label>{t('settings.aiCategorizationOptional')}</label>
-                    <Tooltip content={t('settings.tooltips.aiCategorization')}>
-                      <span className="info-icon" aria-label={t('common.moreInfo')}>i</span>
-                    </Tooltip>
-                  </div>
-                  <p className="setting-help" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
-                    {t('settings.aiCategorizationHelp')}
-                  </p>
-                  <div className="form-group">
-                    <label htmlFor="llmBaseUrl">{t('settings.baseUrl')}</label>
-                    <input
-                      id="llmBaseUrl"
-                      type="text"
-                      placeholder={t('settings.placeholders.llmBaseUrl')}
-                      value={settings.llmCategorization?.baseUrl ?? ''}
-                      onChange={(e) => handleSettingChange('llmCategorization', {
-                        baseUrl: e.target.value,
-                        apiKey: settings.llmCategorization?.apiKey ?? '',
-                        model: settings.llmCategorization?.model ?? '',
-                      })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="llmApiKey">{t('settings.apiKey')}</label>
-                    <input
-                      id="llmApiKey"
-                      type="password"
-                      placeholder={t('settings.placeholders.apiKey')}
-                      value={settings.llmCategorization?.apiKey ?? ''}
-                      onChange={(e) => handleSettingChange('llmCategorization', {
-                        baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                        apiKey: e.target.value,
-                        model: settings.llmCategorization?.model ?? '',
-                      })}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="llmModel">{t('settings.model')}</label>
-                    <input
-                      id="llmModel"
-                      type="text"
-                      placeholder={t('settings.placeholders.llmModel')}
-                      value={settings.llmCategorization?.model ?? ''}
-                      onChange={(e) => handleSettingChange('llmCategorization', {
-                        baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                        apiKey: settings.llmCategorization?.apiKey ?? '',
-                        model: e.target.value,
-                      })}
-                    />
-                  </div>
-                  <span className="setting-help">
-                    {t('settings.aiCategorizationStoredHelp')}
-                  </span>
-                </div>
-              )}
             </div>
           )}
         </section>
@@ -2820,7 +2872,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               <div className="data-management-group danger-zone">
                 <h3><MaterialIcon name="warning" /> {t('settings.dangerZone')}</h3>
                 <p className="setting-help">{t('settings.actionCannotBeUndone')}</p>
-                <button className="danger-btn" onClick={handleResetAll}>
+                <button className="danger-btn" onClick={() => { void handleResetAll(); }}>
                   <MaterialIcon name="delete" /> {t('settings.resetAllData')}
                 </button>
               </div>
@@ -3098,8 +3150,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           onUpdateBuiltInCategory={handleUpdateBuiltInCategory}
           onClose={() => setShowCategoryManager(false)}
           getExpenseCountForCategory={getExpenseCountForCategory}
+          getPlanningReferenceCount={categoryId => planningCategoryReferenceCount(expenseData, categoryId)}
         />
       )}
-    </div>
+    </main>
   );
 };

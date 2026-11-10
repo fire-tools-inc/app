@@ -1,19 +1,20 @@
 {
   "name": "fire-tools-server",
-  "version": "2.3.5",
+  "version": "2.4.14",
   "description": "Local-deployment backend for Fire Tools (SQLite-first, Postgres-compatible). Implements docs/api/openapi.yaml.",
   "private": true,
   "type": "module",
   "engines": {
-    "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+    "node": ">=22.22.0"
   },
   "main": "dist/index.js",
   "scripts": {
+    "predev": "node scripts/bundle-ocr-data.mjs",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node scripts/bundle-ocr-data.mjs",
     "start": "node dist/index.js",
     "lint:tsc": "tsc --noEmit",
-    "pretest": "node ../scripts/ensure-sqlite-for-node.cjs",
+    "pretest": "node ../scripts/ensure-sqlite-for-node.cjs && node scripts/bundle-ocr-data.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate": "tsx src/cli-migrate.ts up",
@@ -21,13 +22,15 @@
     "migrate:status": "tsx src/cli-migrate.ts status"
   },
   "dependencies": {
-    "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^12.11.1",
+    "@llamaindex/liteparse": "^2.15.1",
+    "better-sqlite3": "npm:better-sqlite3-multiple-ciphers@^13.0.3",
     "cors": "^2.8.5",
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
     "@types/better-sqlite3": "^7.6.11",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -36,6 +39,11 @@
     "supertest": "^7.2.2",
     "tsx": "^4.19.1",
     "typescript": "^5.6.2",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.12"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true,
+    "better-sqlite3-multiple-ciphers@13.0.3": true
   }
 }

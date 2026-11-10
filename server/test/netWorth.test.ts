@@ -32,7 +32,7 @@ const op = (o: Record<string, unknown> = {}) => ({
 
 describe('net-worth config', () => {
   it('GET returns defaults', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get(`${base}/config`);
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
@@ -44,7 +44,7 @@ describe('net-worth config', () => {
   });
 
   it('PUT updates config', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put(`${base}/config`).send({
       defaultCurrency: 'USD', currentYear: 2025, currentMonth: 3,
       showPensionInNetWorth: false, includeUnrealizedGains: false,
@@ -56,13 +56,13 @@ describe('net-worth config', () => {
   });
 
   it('PUT missing field → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put(`${base}/config`).send({ defaultCurrency: 'EUR' });
     expect(res.status).toBe(400);
   });
 
   it('PUT invalid currency → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put(`${base}/config`).send({
       defaultCurrency: 'XXX', currentYear: 2024, currentMonth: 1,
       showPensionInNetWorth: true, includeUnrealizedGains: true,
@@ -73,7 +73,7 @@ describe('net-worth config', () => {
 
 describe('net-worth snapshot & months', () => {
   it('GET snapshot returns shell with config', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get(`${base}/snapshot`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('years');
@@ -82,7 +82,7 @@ describe('net-worth snapshot & months', () => {
   });
 
   it('GET month auto-creates empty month', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get(`${base}/months/2024/6`);
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ year: 2024, month: 6, isFrozen: false });
@@ -90,7 +90,7 @@ describe('net-worth snapshot & months', () => {
   });
 
   it('PUT month replaces contents', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).put(`${base}/months/2024/7`).send({
       assets: [holding()],
       cashEntries: [cash()],
@@ -110,7 +110,7 @@ describe('net-worth snapshot & months', () => {
   });
 
   it('PATCH month sets isFrozen', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).get(`${base}/months/2024/8`);
     const res = await request(app).patch(`${base}/months/2024/8`).send({ isFrozen: true });
     expect(res.status).toBe(200);
@@ -119,7 +119,7 @@ describe('net-worth snapshot & months', () => {
   });
 
   it('PATCH monthNote updates note', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).get(`${base}/months/2024/9`);
     const res = await request(app).patch(`${base}/months/2024/9`).send({ monthNote: 'hi' });
     expect(res.body.monthNote).toBe('hi');
@@ -128,26 +128,26 @@ describe('net-worth snapshot & months', () => {
 
 describe('net-worth holdings', () => {
   it('POST creates holding', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(holding());
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ externalId: 'h-1', ticker: 'VOO', assetClass: 'ETF' });
   });
 
   it('POST invalid assetClass → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(holding({ assetClass: 'NOPE' }));
     expect(res.status).toBe(400);
   });
 
   it('POST invalid currency → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(holding({ currency: 'XXX' }));
     expect(res.status).toBe(400);
   });
 
   it('POST missing field → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { shares, ...rest } = holding();
     void shares;
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(rest);
@@ -155,7 +155,7 @@ describe('net-worth holdings', () => {
   });
 
   it('GET lists holdings', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/holdings`).send(holding({ externalId: 'h-a' }));
     await request(app).post(`${base}/months/2024/6/holdings`).send(holding({ externalId: 'h-b' }));
     const res = await request(app).get(`${base}/months/2024/6/holdings`);
@@ -163,7 +163,7 @@ describe('net-worth holdings', () => {
   });
 
   it('PUT upserts holding', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/holdings`).send(holding());
     const res = await request(app).put(`${base}/months/2024/6/holdings/h-1`)
       .send(holding({ shares: 99 }));
@@ -172,20 +172,20 @@ describe('net-worth holdings', () => {
   });
 
   it('DELETE removes holding', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/holdings`).send(holding());
     const res = await request(app).delete(`${base}/months/2024/6/holdings/h-1`);
     expect(res.status).toBe(204);
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/holdings/missing`);
     expect(res.status).toBe(404);
   });
 
   it('POST holding with vehicleDepreciation block', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(holding({
       assetClass: 'VEHICLE',
       vehicleDepreciation: {
@@ -198,7 +198,7 @@ describe('net-worth holdings', () => {
   });
 
   it('POST holding with invalid vehicleDepreciation.method → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/holdings`).send(holding({
       assetClass: 'VEHICLE',
       vehicleDepreciation: {
@@ -212,20 +212,20 @@ describe('net-worth holdings', () => {
 
 describe('net-worth cash entries', () => {
   it('POST creates cash entry', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/cash`).send(cash());
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ externalId: 'c-1', balance: 1000 });
   });
 
   it('POST invalid accountType → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/cash`).send(cash({ accountType: 'BAD' }));
     expect(res.status).toBe(400);
   });
 
   it('PUT upserts cash entry', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/cash`).send(cash());
     const res = await request(app).put(`${base}/months/2024/6/cash/c-1`).send(cash({ balance: 9000 }));
     expect(res.status).toBe(200);
@@ -233,7 +233,7 @@ describe('net-worth cash entries', () => {
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/cash/missing`);
     expect(res.status).toBe(404);
   });
@@ -241,20 +241,20 @@ describe('net-worth cash entries', () => {
 
 describe('net-worth pension entries', () => {
   it('POST creates pension', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/pensions`).send(pension());
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ externalId: 'p-1', pensionType: 'PRIVATE' });
   });
 
   it('POST invalid pensionType → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/pensions`).send(pension({ pensionType: 'NOPE' }));
     expect(res.status).toBe(400);
   });
 
   it('PUT upserts pension', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/pensions`).send(pension());
     const res = await request(app).put(`${base}/months/2024/6/pensions/p-1`)
       .send(pension({ currentValue: 80000 }));
@@ -262,7 +262,7 @@ describe('net-worth pension entries', () => {
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/pensions/missing`);
     expect(res.status).toBe(404);
   });
@@ -270,26 +270,26 @@ describe('net-worth pension entries', () => {
 
 describe('net-worth debt entries', () => {
   it('POST creates debt', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/debts`).send(debt());
     expect(res.status).toBe(201);
   });
 
   it('POST invalid debtType → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/debts`).send(debt({ debtType: 'NOPE' }));
     expect(res.status).toBe(400);
   });
 
   it('PUT upserts debt', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/debts`).send(debt());
     const res = await request(app).put(`${base}/months/2024/6/debts/d-1`).send(debt({ currentBalance: 4500 }));
     expect(res.body.currentBalance).toBe(4500);
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/debts/missing`);
     expect(res.status).toBe(404);
   });
@@ -297,27 +297,27 @@ describe('net-worth debt entries', () => {
 
 describe('net-worth tax entries', () => {
   it('POST creates tax', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/taxes`).send(tax());
     expect(res.status).toBe(201);
     expect(res.body.isPaid).toBe(false);
   });
 
   it('POST invalid taxType → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/taxes`).send(tax({ taxType: 'NOPE' }));
     expect(res.status).toBe(400);
   });
 
   it('PUT upserts tax', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/taxes`).send(tax());
     const res = await request(app).put(`${base}/months/2024/6/taxes/t-1`).send(tax({ isPaid: true }));
     expect(res.body.isPaid).toBe(true);
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/taxes/missing`);
     expect(res.status).toBe(404);
   });
@@ -325,20 +325,20 @@ describe('net-worth tax entries', () => {
 
 describe('net-worth operations (paginated)', () => {
   it('POST creates operation', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/operations`).send(op());
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ externalId: 'o-1', type: 'PURCHASE' });
   });
 
   it('POST invalid type → 400', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post(`${base}/months/2024/6/operations`).send(op({ type: 'NOPE' }));
     expect(res.status).toBe(400);
   });
 
   it('GET returns paginated items', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/operations`).send(op({ externalId: 'o-a' }));
     await request(app).post(`${base}/months/2024/6/operations`).send(op({ externalId: 'o-b' }));
     const res = await request(app).get(`${base}/months/2024/6/operations`);
@@ -348,14 +348,14 @@ describe('net-worth operations (paginated)', () => {
   });
 
   it('PUT upserts operation', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     await request(app).post(`${base}/months/2024/6/operations`).send(op());
     const res = await request(app).put(`${base}/months/2024/6/operations/o-1`).send(op({ amount: 999 }));
     expect(res.body.amount).toBe(999);
   });
 
   it('DELETE missing → 404', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete(`${base}/months/2024/6/operations/missing`);
     expect(res.status).toBe(404);
   });
@@ -363,7 +363,7 @@ describe('net-worth operations (paginated)', () => {
 
 describe('net-worth user scoping', () => {
   it('GET holdings empty after fresh init for user 1', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get(`${base}/months/2024/6/holdings`).set('x-user-id', '1');
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);

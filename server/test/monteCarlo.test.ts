@@ -17,7 +17,7 @@ const fullRun = {
 
 describe('POST /api/v1/calculator/monte-carlo/runs', () => {
   it('creates a run', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).post('/api/v1/calculator/monte-carlo/runs').send(fullRun);
     expect(res.status).toBe(201);
     expect(res.body.successRate).toBe(0.95);
@@ -27,7 +27,7 @@ describe('POST /api/v1/calculator/monte-carlo/runs', () => {
   });
 
   it('accepts null medianYearsToFIRE', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/calculator/monte-carlo/runs')
       .send({ ...fullRun, medianYearsToFIRE: null });
@@ -36,7 +36,7 @@ describe('POST /api/v1/calculator/monte-carlo/runs', () => {
   });
 
   it('accepts optional logs array', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app)
       .post('/api/v1/calculator/monte-carlo/runs')
       .send({ ...fullRun, logs: [{ level: 'info', msg: 'ok' }] });
@@ -45,7 +45,7 @@ describe('POST /api/v1/calculator/monte-carlo/runs', () => {
   });
 
   it('rejects missing required field', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const { numSimulations: _omit, ...partial } = fullRun;
     const res = await request(app).post('/api/v1/calculator/monte-carlo/runs').send(partial);
     expect(res.status).toBe(400);
@@ -56,7 +56,7 @@ describe('POST /api/v1/calculator/monte-carlo/runs', () => {
 
 describe('GET /api/v1/calculator/monte-carlo/runs', () => {
   it('returns empty paginated list', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/calculator/monte-carlo/runs');
     expect(res.status).toBe(200);
     expect(res.body.items).toEqual([]);
@@ -64,7 +64,7 @@ describe('GET /api/v1/calculator/monte-carlo/runs', () => {
   });
 
   it('paginates with limit and cursor', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     for (let i = 0; i < 3; i++) {
       await request(app).post('/api/v1/calculator/monte-carlo/runs').send(fullRun);
     }
@@ -80,7 +80,7 @@ describe('GET /api/v1/calculator/monte-carlo/runs', () => {
   });
 
   it('rejects limit over 500', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/calculator/monte-carlo/runs?limit=501');
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('invalid_param');
@@ -89,7 +89,7 @@ describe('GET /api/v1/calculator/monte-carlo/runs', () => {
 
 describe('GET /api/v1/calculator/monte-carlo/runs/:id', () => {
   it('returns the run', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const create = await request(app).post('/api/v1/calculator/monte-carlo/runs').send(fullRun);
     const res = await request(app).get(`/api/v1/calculator/monte-carlo/runs/${create.body.id}`);
     expect(res.status).toBe(200);
@@ -98,14 +98,14 @@ describe('GET /api/v1/calculator/monte-carlo/runs/:id', () => {
   });
 
   it('returns 404 for unknown id', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/calculator/monte-carlo/runs/99999');
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('not_found');
   });
 
   it('rejects non-positive id', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).get('/api/v1/calculator/monte-carlo/runs/0');
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('invalid_param');
@@ -114,7 +114,7 @@ describe('GET /api/v1/calculator/monte-carlo/runs/:id', () => {
 
 describe('DELETE /api/v1/calculator/monte-carlo/runs/:id', () => {
   it('deletes a run', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const create = await request(app).post('/api/v1/calculator/monte-carlo/runs').send(fullRun);
     const del = await request(app).delete(`/api/v1/calculator/monte-carlo/runs/${create.body.id}`);
     expect(del.status).toBe(204);
@@ -123,7 +123,7 @@ describe('DELETE /api/v1/calculator/monte-carlo/runs/:id', () => {
   });
 
   it('returns 404 when missing', async () => {
-    const { app } = makeApp();
+    const { app } = await makeApp();
     const res = await request(app).delete('/api/v1/calculator/monte-carlo/runs/99999');
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('not_found');

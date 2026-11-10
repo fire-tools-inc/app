@@ -1,7 +1,8 @@
 /**
- * Types for the experimental PDF expense/income import feature.
+ * Types for the experimental document expense/income import feature.
  *
- * All PDF parsing happens client-side. The optional LLM categorization step
+ * PDF.js runs client-side; LiteParse and OCR run on the configured local backend.
+ * The optional LLM categorization step
  * is opt-in and uses a user-supplied OpenAI-compatible endpoint.
  */
 
@@ -69,7 +70,7 @@ export interface ParsedTransactionDraft {
 export interface LlmCategorizationConfig {
   /** Base URL of the OpenAI-compatible API (no trailing /chat/completions). */
   baseUrl: string;
-  /** API key. Stored encrypted with the rest of user settings. */
+  /** API key, or an empty string for unauthenticated local models. */
   apiKey: string;
   /** Model identifier (e.g. "gpt-4o-mini", "llama3:8b"). */
   model: string;

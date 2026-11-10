@@ -11,6 +11,7 @@ import {
   hasCompletedQuestionnaire,
 } from '../../../src/utils/questionnaireStorage';
 import { QuestionnaireResults } from '../../../src/types/questionnaire';
+import { expectDiagnostic } from '../../shared/diagnostics';
 
 // Mock the storage shim (replaces former js-cookie mock)
 vi.mock('../../../src/utils/safeCookies', () => ({
@@ -44,6 +45,7 @@ const mockResults: QuestionnaireResults = {
 describe('questionnaireStorage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(Cookies.set).mockReset();
   });
 
   describe('saveQuestionnaireResults', () => {
@@ -70,6 +72,7 @@ describe('questionnaireStorage', () => {
       expect(() => saveQuestionnaireResults(mockResults)).toThrow(
         'Failed to save questionnaire results.'
       );
+      expectDiagnostic('error', '[save-failed]: failed to save questionnaire results');
     });
   });
 
@@ -108,6 +111,7 @@ describe('questionnaireStorage', () => {
       const result = loadQuestionnaireResults();
 
       expect(result).toBeNull();
+      expectDiagnostic('error', '[load-failed]: failed to load questionnaire results');
     });
   });
 

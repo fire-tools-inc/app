@@ -4,8 +4,19 @@ import App from './App.tsx'
 import './index.css'
 import { i18nReady } from './i18n'
 import { logger } from './utils/logger'
+import materialSymbolsUrl from './assets/fonts/material-symbols.woff2?url'
 
 const root = ReactDOM.createRoot(document.getElementById('root')!)
+const iconFont = new FontFace('Material Symbols Outlined', `url("${materialSymbolsUrl}")`, {
+  weight: '400',
+  display: 'block',
+})
+document.fonts.add(iconFont)
+void iconFont.load().catch((error: unknown) => {
+  logger.error('app', 'icon-font-load-failed', 'failed to load the bundled icon font', {
+    pii: { error: error instanceof Error ? error.message : String(error) },
+  })
+})
 
 void i18nReady
   .then(() => {

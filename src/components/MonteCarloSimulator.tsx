@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router';
 import { Trans, useTranslation } from 'react-i18next';
-import { CalculatorInputs, MonteCarloInputs, MonteCarloResultWithLogs, SimulationLogEntry, MonteCarloFixedParameters } from '../types/calculator';
-import { runMonteCarloSimulationWithLogs } from '../utils/monteCarlo';
+import { CalculatorInputs, MonteCarloInputs } from '../types/calculator';
+import { useSimulationWorker } from '../hooks/useSimulationWorker';
+import { MAX_DETAILED_SIMULATIONS } from '../utils/simulationWorker';
 import { loadSettings, saveSettings } from '../utils/cookieSettings';
 import { NumberInput } from './NumberInput';
 import { MonteCarloChart } from './MonteCarloChart';
@@ -57,13 +59,9 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
     blackSwanImpact: -40,
   });
 
-  const [result, setResult] = useState<MonteCarloResultWithLogs | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
+  const { result, isRunning, error, progress, run, cancel } = useSimulationWorker('monteCarlo');
+  const [captureLogs, setCaptureLogs] = useState(false);
   const [isBaseDataExpanded, setIsBaseDataExpanded] = useState(true);
-  
-  // Simulation logs - stored in state so they reset on page refresh/navigation
-  const [simulationLogs, setSimulationLogs] = useState<SimulationLogEntry[]>([]);
-  const [fixedParameters, setFixedParameters] = useState<MonteCarloFixedParameters | null>(null);
 
   // Calculate derived values for display
   const currentYear = new Date().getFullYear();
@@ -79,6 +77,8 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
       errors.numSimulations = t('monteCarlo.validation.numSimulationsMin');
     } else if (mcInputs.numSimulations > 100000) {
       errors.numSimulations = t('monteCarlo.validation.numSimulationsMax');
+    } else if (captureLogs && mcInputs.numSimulations > MAX_DETAILED_SIMULATIONS) {
+      errors.numSimulations = t('monteCarlo.validation.logsMax');
     }
     
     // Stock volatility: must be positive (> 0)
@@ -106,27 +106,18 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
     }
     
     return errors;
-  }, [mcInputs]);
+  }, [mcInputs, captureLogs, t]);
 
   const hasErrors = Object.keys(validationErrors).length > 0;
 
   const handleInputChange = (field: keyof MonteCarloInputs, value: number) => {
-    setMcInputs({ ...mcInputs, [field]: value });
+    setMcInputs(previous => previous[field] === value ? previous : { ...previous, [field]: value });
   };
 
   const runSimulation = () => {
     if (hasErrors) return;
     
-    setIsRunning(true);
-    // Use setTimeout to allow UI to update
-    setTimeout(() => {
-      const mcResult = runMonteCarloSimulationWithLogs(inputs, mcInputs);
-      setResult(mcResult);
-      // Append new logs to existing logs (logs reset on page refresh/navigation)
-      setSimulationLogs(prevLogs => [...prevLogs, ...mcResult.logs]);
-      setFixedParameters(mcResult.fixedParameters);
-      setIsRunning(false);
-    }, 100);
+    run({ inputs, mcInputs, captureLogs });
   };
 
   return (
@@ -234,11 +225,11 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
                 </div>
                 <div className="mc-data-item">
                   <span className="mc-data-label">{t('monteCarlo.baseData.currentExpenses')}</span>
-                  <span className="mc-data-value">{formatCurrency(inputs.currentAnnualExpenses, defaultCurrency)}</span>
+                  <span className="mc-data-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(inputs.currentAnnualExpenses, defaultCurrency)}</PrivacyBlur></span>
                 </div>
                 <div className="mc-data-item">
                   <span className="mc-data-label">{t('monteCarlo.baseData.fireExpenses')}</span>
-                  <span className="mc-data-value">{formatCurrency(inputs.fireAnnualExpenses, defaultCurrency)}</span>
+                  <span className="mc-data-value"><PrivacyBlur isPrivacyMode={isPrivacyMode}>{formatCurrency(inputs.fireAnnualExpenses, defaultCurrency)}</PrivacyBlur></span>
                 </div>
                 <div className="mc-data-item">
                   <span className="mc-data-label">{t('monteCarlo.baseData.withdrawalRate')}</span>
@@ -253,11 +244,19 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
             <p className="mc-base-data-note">
               <MaterialIcon name="lightbulb" />
               <Trans i18nKey="monteCarlo.baseData.note">
-                These values are loaded from the FIRE Calculator. To modify them, go to the <a href="/fire-calculator">FIRE Calculator</a> page.
+                These values are loaded from the FIRE Calculator. To modify them, go to the <Link to="/fire-calculator">FIRE Calculator</Link> page.
               </Trans>
             </p>
           </div>
         )}
+      </div>
+
+      <div className="simulation-log-option">
+        <label>
+          <input type="checkbox" checked={captureLogs} disabled={isRunning} onChange={event => setCaptureLogs(event.target.checked)} />
+          {t('monteCarlo.captureLogs')}
+        </label>
+        <p>{t('monteCarlo.captureLogsHelp')}</p>
       </div>
 
       <div className="mc-inputs" data-tour="monte-carlo-params">
@@ -266,6 +265,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <NumberInput
             id="num-simulations"
             value={mcInputs.numSimulations}
+            disabled={isRunning}
             onChange={(value) => handleInputChange('numSimulations', value)}
             allowDecimals={false}
           />
@@ -279,6 +279,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <NumberInput
             id="stock-volatility"
             value={mcInputs.stockVolatility}
+            disabled={isRunning}
             onChange={(value) => handleInputChange('stockVolatility', value)}
           />
           {validationErrors.stockVolatility && (
@@ -291,6 +292,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <NumberInput
             id="bond-volatility"
             value={mcInputs.bondVolatility}
+            disabled={isRunning}
             onChange={(value) => handleInputChange('bondVolatility', value)}
           />
           {validationErrors.bondVolatility && (
@@ -303,6 +305,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <NumberInput
             id="black-swan-prob"
             value={mcInputs.blackSwanProbability}
+            disabled={isRunning}
             onChange={(value) => handleInputChange('blackSwanProbability', value)}
           />
           {validationErrors.blackSwanProbability && (
@@ -315,6 +318,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <NumberInput
             id="black-swan-impact"
             value={mcInputs.blackSwanImpact}
+            disabled={isRunning}
             onChange={(value) => handleInputChange('blackSwanImpact', value)}
           />
           {validationErrors.blackSwanImpact && (
@@ -329,7 +333,14 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         </div>
       )}
 
-      <div data-tour="monte-carlo-run-btn">
+      {error && (
+        <div className="validation-error-banner" role="alert">
+          <strong>{t('monteCarlo.simulationFailed')}</strong>
+          <p>{error}</p>
+        </div>
+      )}
+
+      <div className="simulation-actions" data-tour="monte-carlo-run-btn">
         <button 
           className="run-simulation-btn" 
           onClick={runSimulation}
@@ -338,7 +349,15 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
         >
           {isRunning ? <MaterialIcon name="hourglass_empty" /> : <MaterialIcon name="play_arrow" />} {isRunning ? t('monteCarlo.runningSimulation') : t('monteCarlo.runSimulation')}
         </button>
+        {isRunning && <button type="button" className="action-btn reset-btn" onClick={cancel}>{t('common.cancel')}</button>}
       </div>
+
+      {isRunning && (
+        <div className="simulation-progress" role="status">
+          <progress value={progress} max={100} aria-label={t('monteCarlo.runningSimulationAria')} />
+          <span>{progress}%</span>
+        </div>
+      )}
 
       {result && (
         <div className="mc-results" role="region" aria-labelledby="simulation-results-heading" aria-live="polite" data-tour="monte-carlo-results">
@@ -365,7 +384,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
             <div className="result-card" role="listitem">
               <div className="result-label">{t('monteCarlo.results.medianYears')}</div>
               <div className="result-value">
-                {result.medianYearsToFIRE > 0 ? t('monteCarlo.results.medianYearsValue', { value: result.medianYearsToFIRE }) : t('common.notAvailable')}
+                {result.successCount > 0 ? t('monteCarlo.results.medianYearsValue', { value: result.medianYearsToFIRE }) : t('common.notAvailable')}
               </div>
             </div>
           </div>
@@ -376,15 +395,15 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
             </div>
           </div>
 
-          <MonteCarloChart result={result} isPrivacyMode={isPrivacyMode} />
+          <MonteCarloChart yearsDistribution={result.yearsDistribution} portfolioDistribution={result.portfolioDistribution} isPrivacyMode={isPrivacyMode} />
         </div>
       )}
 
       {/* Simulation Logs Section */}
-      {simulationLogs.length > 0 && fixedParameters && (
+      {result && result.logs.length > 0 && (
         <MonteCarloLogs 
-          logs={simulationLogs} 
-          fixedParameters={fixedParameters}
+          logs={result.logs}
+          fixedParameters={result.fixedParameters}
           isPrivacyMode={isPrivacyMode}
         />
       )}

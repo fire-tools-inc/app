@@ -41,6 +41,11 @@ Total Portfolio
 Each band's width is proportional to the euro value it represents. Hover a
 band or node to see the exact amount.
 
+The flow diagram keeps readable labels rather than shrinking them to fit a
+phone. In a narrow window, scroll the diagram horizontally; keyboard users can
+focus it and use the arrow keys. The diagram grows vertically for larger sets
+of asset, cash and pension categories.
+
 **When it won't appear:**
 
 - No snapshot for the current month exists yet, **or**

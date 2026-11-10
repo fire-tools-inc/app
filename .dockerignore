@@ -1,0 +1,12 @@
+.git
+.impeccable
+**/node_modules
+server/tessdata
+dist
+dist-electron
+release
+coverage
+.dev-pages
+test-results.json
+**/*.log
+**/*.tsbuildinfo

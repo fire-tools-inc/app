@@ -6,37 +6,18 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  Legend, 
   ResponsiveContainer,
 } from 'recharts';
-import { CategoryTrendData, getCategoryInfo, ExpenseCategory, CustomCategory } from '../types/expenseTracker';
+import { CategoryTrendData, getCategoryInfo, CustomCategory, CategoryOverride } from '../types/expenseTracker';
+import { getExpenseCategoryColor } from '../utils/expenseChartColors';
 import { MaterialIcon } from './MaterialIcon';
-
-// Color palette for categories
-const CATEGORY_COLORS: Record<string, string> = {
-  HOUSING: '#667eea',
-  UTILITIES: '#764ba2',
-  TRANSPORTATION: '#f093fb',
-  GROCERIES: '#4facfe',
-  DINING_OUT: '#f5576c',
-  HEALTHCARE: '#43e97b',
-  INSURANCE: '#30cfd0',
-  ENTERTAINMENT: '#fa709a',
-  SHOPPING: '#fee140',
-  PERSONAL_CARE: '#a8eb12',
-  EDUCATION: '#8fd3f4',
-  DEBT_PAYMENTS: '#330867',
-  SAVINGS: '#38f9d7',
-  INVESTMENTS: '#00f2fe',
-  GIFTS_DONATIONS: '#fccb90',
-  SUBSCRIPTIONS: '#d57eeb',
-  OTHER: '#e0c3fc',
-};
+import { ChartLegend } from './ChartLegend';
 
 interface SpendingTrendChartProps {
   data: CategoryTrendData[];
   currency: string;
   customCategories?: CustomCategory[];
+  categoryOverrides?: CategoryOverride[];
 }
 
 // Helper to format currency
@@ -64,35 +45,16 @@ function getActiveCategories(data: CategoryTrendData[]): string[] {
   return Array.from(categories);
 }
 
-// Get color for a category (supports custom categories)
-function getCategoryColor(categoryId: string, customCategories?: CustomCategory[]): string {
-  // Check built-in colors first
-  if (CATEGORY_COLORS[categoryId]) {
-    return CATEGORY_COLORS[categoryId];
-  }
-  
-  // Check custom categories
-  if (customCategories) {
-    const customCat = customCategories.find(c => c.id === categoryId);
-    if (customCat && customCat.color) {
-      return customCat.color;
-    }
-  }
-  
-  // Fallback color
-  return '#666666';
-}
-
-// Custom tooltip
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: Array<{ value?: number; dataKey?: string; color?: string }>;
   label?: string;
   currency: string;
   customCategories?: CustomCategory[];
+  categoryOverrides?: CategoryOverride[];
 }
 
-function CustomTooltip({ active, payload, label, currency, customCategories }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, label, currency, customCategories, categoryOverrides }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   // Sort by value descending
@@ -100,18 +62,18 @@ function CustomTooltip({ active, payload, label, currency, customCategories }: C
 
   return (
     <div style={{
-      background: '#1e293b',
+      background: 'var(--bg-elevated)',
       padding: '0.75rem 1rem',
       borderRadius: '8px',
       boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-      border: '1px solid #334155',
+      border: '1px solid var(--border-subtle)',
       maxHeight: '300px',
       overflowY: 'auto',
     }}>
-      <p style={{ margin: 0, fontWeight: 600, color: '#f1f5f9', marginBottom: '0.5rem' }}>{label}</p>
-      {sortedPayload.map((entry: any, index: number) => {
+      <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>{label}</p>
+      {sortedPayload.map((entry, index) => {
         if (!entry.value) return null;
-        const categoryInfo = getCategoryInfo(entry.dataKey as ExpenseCategory | string, customCategories);
+        const categoryInfo = getCategoryInfo(entry.dataKey || 'OTHER', customCategories, categoryOverrides);
         return (
           <p 
             key={index}
@@ -123,7 +85,7 @@ function CustomTooltip({ active, payload, label, currency, customCategories }: C
               fontSize: '0.9rem',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#e2e8f0' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
               <span style={{
                 width: '10px',
                 height: '10px',
@@ -132,7 +94,7 @@ function CustomTooltip({ active, payload, label, currency, customCategories }: C
               }} />
               <MaterialIcon name={categoryInfo.icon} size="small" /> {categoryInfo.name}
             </span>
-            <span style={{ fontWeight: 500, color: entry.color }}>
+            <span style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
               {formatCurrency(entry.value, currency)}
             </span>
           </p>
@@ -142,17 +104,11 @@ function CustomTooltip({ active, payload, label, currency, customCategories }: C
   );
 }
 
-export function SpendingTrendChart({ data, currency, customCategories }: SpendingTrendChartProps) {
+export function SpendingTrendChart({ data, currency, customCategories, categoryOverrides }: SpendingTrendChartProps) {
   const { t } = useTranslation();
   if (data.length === 0) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '3rem', 
-        color: '#666',
-        background: '#f8f9fa',
-        borderRadius: '8px',
-      }}>
+      <div className="empty-chart">
         <p>{t('charts.noTrendData')}</p>
       </div>
     );
@@ -162,59 +118,52 @@ export function SpendingTrendChart({ data, currency, customCategories }: Spendin
 
   if (activeCategories.length === 0) {
     return (
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '3rem', 
-        color: '#666',
-        background: '#f8f9fa',
-        borderRadius: '8px',
-      }}>
+      <div className="empty-chart">
         <p>{t('charts.noCategoryData')}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ width: '100%', height: 400 }}>
-      <ResponsiveContainer>
+    <div>
+      <ResponsiveContainer width="100%" height={320} minWidth={0}>
         <LineChart
           data={data}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          margin={{ top: 16, right: 12, left: 0, bottom: 12 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
           <XAxis 
             dataKey="month" 
-            tick={{ fontSize: 12 }}
-            tickLine={{ stroke: '#ccc' }}
+            tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+            stroke="var(--border-subtle)"
+            padding={{ left: 8, right: 8 }}
           />
           <YAxis 
             tickFormatter={(value) => `${Math.round(value / 1000)}k`}
-            tick={{ fontSize: 12 }}
-            tickLine={{ stroke: '#ccc' }}
+            tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+            stroke="var(--border-subtle)"
           />
-          <Tooltip content={<CustomTooltip currency={currency} customCategories={customCategories} />} />
-          <Legend 
-            formatter={(value) => {
-              const categoryInfo = getCategoryInfo(value as ExpenseCategory | string, customCategories);
-              return <span style={{ color: '#F8FAFC' }}>{categoryInfo.name}</span>;
-            }}
-            wrapperStyle={{ fontSize: '0.85rem', paddingTop: '12px' }}
-          />
+          <Tooltip content={<CustomTooltip currency={currency} customCategories={customCategories} categoryOverrides={categoryOverrides} />} />
           {activeCategories.map((category) => (
             <Line
               key={category}
               type="monotone"
               dataKey={category}
               name={category}
-              stroke={getCategoryColor(category, customCategories)}
+              stroke={getExpenseCategoryColor(category, customCategories, categoryOverrides)}
               strokeWidth={2}
-              dot={{ fill: getCategoryColor(category, customCategories), strokeWidth: 2, r: 4 }}
+              dot={false}
               activeDot={{ r: 6 }}
               connectNulls
+              isAnimationActive={false}
             />
           ))}
         </LineChart>
       </ResponsiveContainer>
+      <ChartLegend ariaLabel={t('expenseTracker.categorySpendingTrends')} items={activeCategories.map(category => {
+        const info = getCategoryInfo(category, customCategories, categoryOverrides);
+        return { label: info.name, icon: info.icon, color: getExpenseCategoryColor(category, customCategories, categoryOverrides) };
+      })} />
     </div>
   );
 }

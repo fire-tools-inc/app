@@ -14,6 +14,7 @@ import { NetWorthTrackerData, AssetHolding, CashEntry, PensionEntry, FinancialOp
 import { ExpenseTrackerData, IncomeEntry, ExpenseEntry } from '../types/expenseTracker';
 import { CalculatorInputs } from '../types/calculator';
 import { logger } from './logger';
+import { parseExpensePlanning } from './expensePlanning';
 
 /**
  * Convert an amount from a given currency to EUR
@@ -414,6 +415,7 @@ export function convertExpenseDataToNewCurrency(
   if (fromCurrency === toCurrency) {
     return data;
   }
+  const planning = data.planning === undefined ? undefined : parseExpensePlanning(data.planning);
 
   return {
     ...data,
@@ -440,6 +442,20 @@ export function convertExpenseDataToNewCurrency(
       monthlyBudget: convertAmount(budget.monthlyBudget, fromCurrency, toCurrency, rates),
       currency: toCurrency,
     })),
+    ...(planning ? { planning: {
+      ...planning,
+      schedules: planning.schedules.map(schedule => ({
+        ...schedule, amount: convertAmount(schedule.amount, schedule.currency, toCurrency, rates), currency: toCurrency,
+      })),
+      goals: planning.goals.map(goal => ({
+        ...goal, targetAmount: convertAmount(goal.targetAmount, goal.currency, toCurrency, rates),
+        savedAmount: convertAmount(goal.savedAmount, goal.currency, toCurrency, rates), currency: toCurrency,
+      })),
+      ...(planning.forecast ? { forecast: {
+        ...planning.forecast, openingBalance: convertAmount(planning.forecast.openingBalance, planning.forecast.currency, toCurrency, rates),
+        currency: toCurrency,
+      } } : {}),
+    } } : {}),
   };
 }
 
