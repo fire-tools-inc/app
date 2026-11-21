@@ -2926,6 +2926,7 @@
     "cashflowEntries": "Revenus : {{incomes}} · Dépenses : {{expenses}}",
     "allocationFound": "Objectifs d'allocation trouvés",
     "fireFound": "Objectifs FIRE trouvés",
+    "pensionsExcluded": "Les retraites sont suivies mais exclues du patrimoine net, comme dans les totaux du classeur.",
     "ignoredSheets": "Feuilles ignorées : {{sheets}}",
     "currencyNote": "Les montants sont convertis en {{currency}} avec les taux de change mensuels du classeur lorsqu'ils existent, sinon avec vos taux de secours.",
     "reconciled": "Les totaux correspondent au classeur pour {{matched}} mois sur {{checked}}.",

@@ -2994,6 +2994,7 @@
     "cashflowEntries": "Income entries: {{incomes}} · Spending entries: {{expenses}}",
     "allocationFound": "Allocation targets found",
     "fireFound": "FIRE targets found",
+    "pensionsExcluded": "Pensions are tracked but left out of net worth, as in the workbook's totals.",
     "ignoredSheets": "Ignored sheets: {{sheets}}",
     "currencyNote": "Amounts are converted to {{currency}} with the workbook's monthly exchange rates when present, otherwise with your fallback rates.",
     "reconciled": "Totals match the workbook for {{matched}} of {{checked}} months.",

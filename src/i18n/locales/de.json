@@ -2926,6 +2926,7 @@
     "cashflowEntries": "Einnahmen: {{incomes}} · Ausgaben: {{expenses}}",
     "allocationFound": "Allokationsziele gefunden",
     "fireFound": "FIRE-Ziele gefunden",
+    "pensionsExcluded": "Renten werden erfasst, aber wie in den Summen der Arbeitsmappe nicht zum Nettovermögen gezählt.",
     "ignoredSheets": "Ignorierte Blätter: {{sheets}}",
     "currencyNote": "Beträge werden mit den monatlichen Wechselkursen der Arbeitsmappe in {{currency}} umgerechnet, sonst mit Ihren Ersatzkursen.",
     "reconciled": "Die Summen stimmen in {{matched}} von {{checked}} Monaten mit der Arbeitsmappe überein.",

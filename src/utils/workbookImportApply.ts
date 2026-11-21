@@ -246,6 +246,8 @@ function mergeNetWorth(
   data.years.sort((a, b) => a.year - b.year);
   for (const year of data.years) year.months.sort((a, b) => a.month - b.month);
   data.defaultCurrency = plan.currency;
+  // Match the workbook's own totals, which may track pensions without counting them.
+  if (plan.pensionsInNetWorth !== null) data.settings = { ...data.settings, showPensionInNetWorth: plan.pensionsInNetWorth };
   return data;
 }
 

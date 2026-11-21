@@ -2926,6 +2926,7 @@
     "cashflowEntries": "Voci di entrata: {{incomes}} · Voci di spesa: {{expenses}}",
     "allocationFound": "Obiettivi di allocazione trovati",
     "fireFound": "Obiettivi FIRE trovati",
+    "pensionsExcluded": "Le pensioni vengono registrate ma escluse dal patrimonio netto, come nei totali della cartella.",
     "ignoredSheets": "Fogli ignorati: {{sheets}}",
     "currencyNote": "Gli importi vengono convertiti in {{currency}} con i tassi di cambio mensili della cartella, se presenti, altrimenti con i tuoi tassi di riserva.",
     "reconciled": "I totali corrispondono alla cartella per {{matched}} mesi su {{checked}}.",

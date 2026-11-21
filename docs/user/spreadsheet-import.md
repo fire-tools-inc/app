@@ -25,7 +25,9 @@ read-only web demo; the template download still works there.
    about skipped rows.
 4. Check **Totals match the workbook for X of Y months**. When a workbook has a
    net worth total row, Fire Tools compares it with the total it will compute
-   and lists the months that differ, as a percentage.
+   and lists the months that differ, as a percentage. If the workbook's totals
+   leave its pensions out, the preview says so and the Net Worth Tracker keeps
+   tracking pensions without adding them to net worth.
 5. Pick what to import and how to treat months that already contain your data,
    then select **Import**. Nothing is saved before this step.
 

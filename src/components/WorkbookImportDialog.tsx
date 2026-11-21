@@ -348,6 +348,7 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
                   )}
                   {plan.allocation && <li>{t('workbookImport.allocationFound')}</li>}
                   {plan.fire && <li>{t('workbookImport.fireFound')}</li>}
+                  {plan.pensionsInNetWorth === false && <li>{t('workbookImport.pensionsExcluded')}</li>}
                   {plan.ignoredSheets.length > 0 && <li>{t('workbookImport.ignoredSheets', { sheets: plan.ignoredSheets.join(', ') })}</li>}
                 </ul>
                 <p className="workbook-import-hint">{t('workbookImport.currencyNote', { currency: plan.currency })}</p>

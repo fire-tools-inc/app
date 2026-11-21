@@ -2926,6 +2926,7 @@
     "cashflowEntries": "Ingresos: {{incomes}} · Gastos: {{expenses}}",
     "allocationFound": "Objetivos de asignación encontrados",
     "fireFound": "Objetivos FIRE encontrados",
+    "pensionsExcluded": "Las pensiones se registran pero quedan fuera del patrimonio neto, como en los totales del libro.",
     "ignoredSheets": "Hojas ignoradas: {{sheets}}",
     "currencyNote": "Los importes se convierten a {{currency}} con los tipos de cambio mensuales del libro cuando existen; si no, con tus tipos de respaldo.",
     "reconciled": "Los totales coinciden con el libro en {{matched}} de {{checked}} meses.",

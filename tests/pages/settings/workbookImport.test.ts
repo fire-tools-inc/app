@@ -192,6 +192,7 @@ describe('month-column workbook parsing', () => {
       .toEqual([[2023, 11, 5300, 'First entry'], [2023, 12, 5400, undefined]]);
     expect(plan.fire).toEqual({ annualExpenses: 24000, withdrawalRate: 3.5 });
     expect(reconcileWorkbookPlan(plan)).toEqual({ checked: 2, mismatches: [] });
+    expect(plan.pensionsInNetWorth).toBe(false);
   });
 
   it('reads class, cash and ticker targets from the allocation sheet', () => {
@@ -282,6 +283,24 @@ describe('review regressions', () => {
     expect(result.assetAllocation?.assetClassTargets.STOCKS).toEqual({ targetMode: 'PERCENTAGE', targetPercent: 85 });
   });
 
+  it('counts pensions in net worth only when the workbook totals do', () => {
+    const workbook = (reported: number) => readXlsxWorkbook(writeXlsxWorkbook([{ name: '2024', rows: [
+      ['Item type', 'Item', 'Curr', 'Prev', ...MONTHS, 'Year'],
+      legacyRow('Cash & liquid savings', null, null),
+      legacyRow(null, 'Demo Bank', 'EUR', 1000),
+      legacyRow('Pensions', null, null),
+      legacyRow('state', 'Public pension (old age)', 'EUR', 4000),
+      legacyRow('Net worth', '(auto calculated)', null),
+      legacyRow('Net worth (EUR)', null, 'EUR', reported),
+    ] }]));
+    const included = parseNetWorthWorkbook(workbook(5000), OPTIONS);
+    expect(included.pensionsInNetWorth).toBe(true);
+    const settings = { showPensionInNetWorth: false, includeUnrealizedGains: true };
+    const current = { ...EMPTY, netWorth: { years: [], currentYear: 2024, currentMonth: 1, defaultCurrency: 'EUR' as const, settings } };
+    expect(applyWorkbookImport(included, current, ALL, NOW).netWorth?.settings).toEqual({ ...settings, showPensionInNetWorth: true });
+    expect(parseNetWorthWorkbook(workbook(1000), OPTIONS).pensionsInNetWorth).toBe(false);
+  });
+
   it('counts cash-flow months that already contain user entries', () => {
     const plan = parseLegacy();
     const expenseTracker = {
@@ -308,6 +327,8 @@ describe('applying an import', () => {
       [2024, [[1, true], [2, true]]],
     ]);
     expect(result.summary).toMatchObject({ monthsAdded: 4, monthsKept: 0, incomesImported: 3, expensesImported: 2, latestMonth: { year: 2024, month: 2 } });
+    // The workbook's totals leave its pension out, so the app must too.
+    expect(result.netWorth?.settings.showPensionInNetWorth).toBe(false);
 
     const allocation = result.assetAllocation;
     const target = (name: string) => allocation?.assets.find((asset) => asset.name === name);

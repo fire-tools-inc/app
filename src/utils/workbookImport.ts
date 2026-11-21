@@ -137,6 +137,8 @@ export interface WorkbookImportPlan {
   allocationSheet: string | null;
   ignoredSheets: string[];
   warnings: WorkbookWarning[];
+  /** Whether the workbook's reported totals count pensions; null when no month shows it. */
+  pensionsInNetWorth: boolean | null;
 }
 
 type RowRole =
@@ -1313,7 +1315,35 @@ export function parseNetWorthWorkbook(workbook: XlsxWorkbook, options: WorkbookP
     allocationSheet,
     ignoredSheets,
     warnings,
+    pensionsInNetWorth: detectPensionsInNetWorth(months),
   };
+}
+
+/** Net worth of a detailed month with and without its pensions. */
+function monthNetWorths(month: WorkbookImportedMonth): { withPension: number; withoutPension: number } {
+  const snapshot: MonthlySnapshot = {
+    year: month.year, month: month.month, assets: month.assets, cashEntries: month.cashEntries,
+    pensions: month.pensions, operations: [], debts: month.debts, taxes: month.taxes, isFrozen: true,
+  };
+  return {
+    withPension: calculateMonthlyNetWorth(snapshot, { includePension: true }).netWorth,
+    withoutPension: calculateMonthlyNetWorth(snapshot, { includePension: false }).netWorth,
+  };
+}
+
+/** Compare reported totals with and without pensions; the closer one wins most months. */
+function detectPensionsInNetWorth(months: WorkbookImportedMonth[]): boolean | null {
+  let included = 0;
+  let excluded = 0;
+  for (const month of months) {
+    if (month.totalOnly || month.reportedNetWorth === undefined || month.pensions.length === 0) continue;
+    const { withPension, withoutPension } = monthNetWorths(month);
+    if (withPension === withoutPension) continue;
+    if (Math.abs(withoutPension - month.reportedNetWorth) < Math.abs(withPension - month.reportedNetWorth)) excluded++;
+    else included++;
+  }
+  if (included + excluded === 0) return null;
+  return excluded <= included;
 }
 
 /** Compare reported workbook totals with the totals the app will compute. */
@@ -1323,12 +1353,7 @@ export function reconcileWorkbookPlan(plan: WorkbookImportPlan): WorkbookReconci
   for (const month of plan.months) {
     if (month.totalOnly || month.reportedNetWorth === undefined || !month.hasBalances) continue;
     checked++;
-    const snapshot: MonthlySnapshot = {
-      year: month.year, month: month.month, assets: month.assets, cashEntries: month.cashEntries,
-      pensions: month.pensions, operations: [], debts: month.debts, taxes: month.taxes, isFrozen: true,
-    };
-    const withPension = calculateMonthlyNetWorth(snapshot, { includePension: true }).netWorth;
-    const withoutPension = calculateMonthlyNetWorth(snapshot, { includePension: false }).netWorth;
+    const { withPension, withoutPension } = monthNetWorths(month);
     const reported = month.reportedNetWorth;
     const tolerance = Math.max(1, Math.abs(reported) * 0.005);
     const closest = Math.abs(withPension - reported) <= Math.abs(withoutPension - reported) ? withPension : withoutPension;
