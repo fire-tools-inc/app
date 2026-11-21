@@ -57,9 +57,11 @@ jobs:
               - 'src/utils/{questionnaire,tourPreferences,notification}*'
             settings:
               - 'tests/pages/settings/**'
-              - 'src/components/{Settings,Cookie,DataManagement,Policy,Language}*'
+              - 'src/components/{Settings,Cookie,DataManagement,Policy,Language,WorkbookImport}*'
               - 'src/utils/{cookie,settings,banner,dataExport,countryToRegion,urlParams}*'
               - 'src/utils/{csvExport,expenseCsv,expensePlanning,currencyConverter}*'
+              - 'src/utils/{workbook,xlsx}*'
+              - 'docs/user/spreadsheet-import-agent-prompt.md'
               - 'src/i18n/**'
               - 'tests/shared/i18n*'
             server:

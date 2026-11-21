@@ -25,6 +25,7 @@ import {
 } from '../types/expenseTracker';
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
+import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
 import { AssetClass } from '../types/assetAllocation';
 import { formatAssetName } from '../utils/allocationCalculator';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
@@ -124,6 +125,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [auditFromDate, setAuditFromDate] = useState<string>('');
   const [auditToDate, setAuditToDate] = useState<string>('');
   const [expandedAuditEntries, setExpandedAuditEntries] = useState<Set<string>>(new Set());
+  const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
   
   // Account section expanded by default, others collapsed
   const [collapsedSections, setCollapsedSections] = useState<Set<SettingsSection>>(
@@ -909,6 +911,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     };
     reader.readAsText(file);
     event.target.value = '';
+  };
+
+  const handleDownloadWorkbookTemplate = async () => {
+    try {
+      await downloadWorkbookTemplateFile();
+      showMessage('success', t('workbookImport.templateDownloaded'));
+    } catch (error) {
+      logger.error('settings', 'template-failed', 'spreadsheet template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    }
   };
 
   // Helper to download file
@@ -2792,6 +2806,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 </label>
               </div>
               )}
+
+              <div className="data-management-group">
+                <div className="subsection-header-with-tooltip">
+                  <h3><MaterialIcon name="table_view" /> {t('workbookImport.title')}</h3>
+                </div>
+                <p className="setting-help">{t('workbookImport.settingsHelp')}</p>
+                <div className="import-buttons">
+                  {!IS_DEMO_MODE && (
+                    <button type="button" className="primary-btn" onClick={() => setIsWorkbookImportOpen(true)}>
+                      <MaterialIcon name="upload_file" /> {t('workbookImport.openButton')}
+                    </button>
+                  )}
+                  <button type="button" className="secondary-btn" onClick={handleDownloadWorkbookTemplate}>
+                    <MaterialIcon name="download" /> {t('workbookImport.downloadTemplate')}
+                  </button>
+                </div>
+                <WorkbookImportDialog isOpen={isWorkbookImportOpen} onClose={() => setIsWorkbookImportOpen(false)} />
+              </div>
 
               {!IS_DEMO_MODE && (
               <div className="data-management-group">

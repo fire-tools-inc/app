@@ -41,6 +41,10 @@ import { createLazyComponent } from '../utils/lazyComponent';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
 import { useDeferredRender } from '../hooks/useDeferredRender';
 import { DataManagement } from './DataManagement';
+import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
+import { IS_DEMO_MODE } from '../utils/demoMode';
+import { logger } from '../utils/logger';
+import type { WorkbookImportSummary } from '../utils/workbookImportApply';
 import type { ChartViewMode } from './HistoricalNetWorthChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { MaterialIcon } from './MaterialIcon';
@@ -172,6 +176,7 @@ export function NetWorthTrackerPage() {
   
   // How to use collapsed state
   const [isHowToUseOpen, setIsHowToUseOpen] = useState(false);
+  const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
   
   // Chart view mode (YTD or All historical data)
   const [chartViewMode, setChartViewMode] = useState<ChartViewMode>('ytd');
@@ -795,6 +800,27 @@ export function NetWorthTrackerPage() {
     event.target.value = '';
   };
 
+  // Reload stores written by the spreadsheet import and show its latest month
+  const handleWorkbookImported = useCallback((summary: WorkbookImportSummary) => {
+    const saved = loadNetWorthTrackerData();
+    if (saved) {
+      setData({ ...saved, defaultCurrency: loadSettings().currencySettings.defaultCurrency });
+    }
+    if (summary.latestMonth) {
+      setSelectedYear(summary.latestMonth.year);
+      setSelectedMonth(summary.latestMonth.month);
+    }
+  }, []);
+
+  const handleDownloadWorkbookTemplate = () => {
+    downloadWorkbookTemplateFile().catch((error: unknown) => {
+      logger.error('net-worth', 'template-failed', 'spreadsheet template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
   // Reset data
   const handleResetData = () => {
     if (confirm(t('netWorth.confirm.reset'))) {
@@ -945,6 +971,33 @@ export function NetWorthTrackerPage() {
           onLoadDemo={handleLoadDemo}
           defaultOpen={false}
           fileFormat="json"
+          extraActions={(
+            <>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsWorkbookImportOpen(true)}
+                >
+                  <MaterialIcon name="table_view" /> {t('workbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadWorkbookTemplate}
+              >
+                <MaterialIcon name="download" /> {t('workbookImport.downloadTemplate')}
+              </button>
+            </>
+          )}
+        />
+        <WorkbookImportDialog
+          isOpen={isWorkbookImportOpen}
+          onClose={() => setIsWorkbookImportOpen(false)}
+          onImported={handleWorkbookImported}
         />
 
         {/* Month/Year Selector */}

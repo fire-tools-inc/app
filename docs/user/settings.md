@@ -61,6 +61,10 @@ self-hosted builds keep them opt-in (all off until you enable them here).
   CSV per tool. Use this for backups.
 - **Import data** — restores a previously exported bundle. Use it on a new
   device or after **Clear all data**.
+- **Import spreadsheet** — backfills net worth history, cash flow, allocation
+  targets and FIRE settings from an `.xlsx` workbook, with a preview first.
+  **Download template** provides the format and an AI assistant prompt. See
+  [Spreadsheet import](./spreadsheet-import.md).
 - **Clear all data** — wipes your local store (SQLite DB on desktop, encrypted
   cookies in browser). The app reloads empty. There is no undo; export first
   if you might want the data back.

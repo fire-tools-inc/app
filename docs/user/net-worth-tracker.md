@@ -26,6 +26,10 @@ Snapshots round-trip via CSV so you can keep a backup outside the local store
 (SQLite on desktop, encrypted cookies in browser). Use the **Export CSV**
 button to grab a snapshot of all entries; use **Import CSV** to restore.
 
+To backfill years of history from a spreadsheet, use **Data Management >
+Import spreadsheet (XLSX)** or **Download template**. See
+[Spreadsheet import](./spreadsheet-import.md).
+
 ## Wealth Flow diagram (Sankey)
 
 Below the historical chart you'll find a **Sankey / flow diagram** that shows
