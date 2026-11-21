@@ -165,6 +165,45 @@ Use the [expenses AI agent prompt](./expense-import-agent-prompt.md) (also in
 the template README and the dialog's **Copy AI prompt**) to turn bank or card
 statements into this format.
 
+## Investment operations workbook
+
+Record your trades and investment cash events: **Net Worth Tracker > Data
+Management > Import operations (XLSX)**, or **Settings > Data**. **Download
+operations template** gives a ledger with README, a fictional example and an
+empty `Operations` sheet.
+
+| Column | Meaning |
+| --- | --- |
+| `Date` | Trade or payment date: a spreadsheet date, `YYYY-MM-DD`, or `DD/MM/YYYY` (read day-first; dates that could be either are listed in the notes). |
+| `Action` | `BUY` (also IPO or subscription), `SELL`, `DIVIDEND`, `FEE`, `TAX` or `TRANSFER`. |
+| `Name`, `Ticker`, `ISIN` | Identify the security. Ticker or ISIN links operations to holdings. |
+| `Quantity`, `Price`, `Fee` | Units, unit price and broker fee. Separate `Price (buy)`/`Price (sell)` and `Fee (buy)`/`Fee (sell)` columns also work. |
+| `Amount` | Total for dividends, fees, taxes and transfers, or instead of quantity × price. |
+| `Currency`, `FX rate` | Currency of price and amount; FX rate is units of your Fire Tools currency per unit of it on that date. Without it your fallback rates are used. |
+| `Broker`, `Exchange`, `Notes` | Optional; kept in the operation note. |
+
+The header row may sit below notes rows, and calculated columns (current
+price, P/L) are ignored.
+
+What the import does:
+
+- Each operation is added to the Net Worth month of its date, as a purchase,
+  sale, dividend, tax paid, transfer or other operation, with quantity, price,
+  fee and broker in its note. Purchases include the fee; sales and dividends
+  are net of it.
+- Operations are only recorded in months that already exist, so import your
+  net worth history first. The preview counts operations without a month.
+- **Update average cost** sets the acquisition price of a holding to the
+  ledger's average cost per unit (fees included, reduced proportionally on
+  sales) when the holding's quantity matches the ledger within 1%. It also
+  fills a missing ISIN, in Net Worth months and in Asset Allocation.
+- Importing again replaces earlier imported operations and keeps operations
+  you entered yourself. A later net worth workbook refresh keeps them too,
+  but resets acquisition prices, so import operations after net worth.
+
+Use the [investment operations AI agent prompt](./operations-import-agent-prompt.md)
+to build the ledger from broker statements.
+
 ## Troubleshooting
 
 | Message | Fix |
@@ -172,5 +211,6 @@ statements into this format.
 | *This file is not an .xlsx workbook* | Save as *Excel Workbook (.xlsx)*; `.xls`, `.ods`, `.numbers` and CSV are not read. |
 | *No year sheets, history or allocation data were found* | Rename year sheets to the year only and check the Jan–Dec header row. |
 | *No month sheets (Jan–Dec) with an Amount column and expenses were found* | For the expenses workbook, name sheets after months and add an `Amount` header. |
+| *No operations found* | For the operations workbook, add `Date` and `Action` headers. |
 | A month differs from the workbook total | Look for typed-in totals, numbers stored as text (for example `1250,40`) or the same money counted twice. Fire Tools imports the number even when the spreadsheet stored it as text. |
 | Unknown category | Use one of the template categories. |

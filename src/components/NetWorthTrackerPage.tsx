@@ -42,6 +42,7 @@ import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from
 import { useDeferredRender } from '../hooks/useDeferredRender';
 import { DataManagement } from './DataManagement';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
+import { OperationsWorkbookImportDialog, downloadOperationsTemplateFile } from './OperationsWorkbookImportDialog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
 import { logger } from '../utils/logger';
 import type { WorkbookImportSummary } from '../utils/workbookImportApply';
@@ -177,6 +178,7 @@ export function NetWorthTrackerPage() {
   // How to use collapsed state
   const [isHowToUseOpen, setIsHowToUseOpen] = useState(false);
   const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
+  const [isOperationsImportOpen, setIsOperationsImportOpen] = useState(false);
   
   // Chart view mode (YTD or All historical data)
   const [chartViewMode, setChartViewMode] = useState<ChartViewMode>('ytd');
@@ -812,6 +814,29 @@ export function NetWorthTrackerPage() {
     }
   }, []);
 
+  // Investment operations: saved immediately so the dialog can report failures.
+  const applyOperationsImport = useCallback((next: NetWorthTrackerData) => {
+    try {
+      saveNetWorthTrackerData(next);
+      setData(next);
+      return true;
+    } catch (error) {
+      logger.error('net-worth', 'operations-save-failed', 'imported operations could not be saved', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      return false;
+    }
+  }, []);
+
+  const handleDownloadOperationsTemplate = () => {
+    downloadOperationsTemplateFile().catch((error: unknown) => {
+      logger.error('net-worth', 'template-failed', 'operations template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
   const handleDownloadWorkbookTemplate = () => {
     downloadWorkbookTemplateFile().catch((error: unknown) => {
       logger.error('net-worth', 'template-failed', 'spreadsheet template could not be created', {
@@ -991,8 +1016,32 @@ export function NetWorthTrackerPage() {
               >
                 <MaterialIcon name="download" /> {t('workbookImport.downloadTemplate')}
               </button>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsOperationsImportOpen(true)}
+                >
+                  <MaterialIcon name="swap_horiz" /> {t('operationsWorkbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadOperationsTemplate}
+              >
+                <MaterialIcon name="download" /> {t('operationsWorkbookImport.downloadTemplate')}
+              </button>
             </>
           )}
+        />
+        <OperationsWorkbookImportDialog
+          isOpen={isOperationsImportOpen}
+          onClose={() => setIsOperationsImportOpen(false)}
+          getCurrent={() => data}
+          onApply={applyOperationsImport}
         />
         <WorkbookImportDialog
           isOpen={isWorkbookImportOpen}

@@ -3003,5 +3003,36 @@
     "errors": {
       "noData": "Keine Monatsblätter (Jan–Dez) mit einer Spalte Betrag und Ausgaben gefunden."
     }
+  },
+  "operationsWorkbookImport": {
+    "title": "Investmentvorgänge importieren",
+    "intro": "Erfassen Sie Käufe, Verkäufe, Dividenden, Gebühren und Steuern aus einer Arbeitsmappe mit einer Zeile pro Vorgang. Gespeichert wird erst nach Ihrer Bestätigung.",
+    "settingsHelp": "Übernehmen Sie Ihr Investmentjournal (Käufe, Verkäufe, Dividenden) aus einer Arbeitsmappe oder laden Sie die Vorlage herunter.",
+    "openButton": "Vorgänge importieren (XLSX)",
+    "downloadTemplate": "Vorgangsvorlage herunterladen",
+    "count": "Vorgänge: {{count}}",
+    "instruments": "Wertpapiere: {{count}}",
+    "withoutMonth": "{{count}} Vorgänge fallen in Monate ohne Vermögens-Snapshot und werden nicht erfasst. Importieren oder erfassen Sie diese Monate zuerst.",
+    "noNetWorth": "Es gibt noch keine Vermögensdaten, daher können keine Vorgänge erfasst werden. Passende Positionen der Asset Allocation können trotzdem ihren Durchschnittspreis erhalten.",
+    "currencyNote": "Beträge werden mit dem Wechselkurs der Zeile in {{currency}} umgerechnet, sonst mit Ihren Ersatzkursen.",
+    "reimportNote": "Vorgänge aus einem früheren Import werden ersetzt; selbst erfasste Vorgänge bleiben erhalten.",
+    "options": {
+      "recordOperations": "Vorgänge in den Vermögensmonaten erfassen",
+      "recordOperationsHelp": "Fügt jeden Vorgang dem Monat seines Datums hinzu, verknüpft mit der passenden Position.",
+      "updateCostBasis": "Durchschnittspreis der Positionen aktualisieren",
+      "updateCostBasisHelp": "Setzt den Kaufpreis (und eine fehlende ISIN) für Positionen, deren Stückzahl zu den Vorgängen passt."
+    },
+    "doneSummary": "Erfasste Vorgänge: {{imported}}. Nicht erfasst (kein passender Monat): {{missing}}. Vermögenspositionen mit aktualisiertem Durchschnittspreis: {{holdings}}. Aktualisierte Positionen der Asset Allocation: {{assets}}.",
+    "warnings": {
+      "unknownAction": "{{sheet}} Zeile {{row}}: Aktion „{{detail}}“ nicht erkannt, Zeile übersprungen.",
+      "invalidDate": "{{sheet}} Zeile {{row}}: Datum „{{detail}}“ nicht erkannt, Zeile übersprungen.",
+      "ambiguousDate": "{{sheet}} Zeile {{row}}: Das Datum kann Tag-Monat oder Monat-Tag sein; gelesen als {{detail}}.",
+      "missingAmount": "{{sheet}} Zeile {{row}}: weder Stückzahl und Preis noch Betrag für „{{detail}}“, Zeile übersprungen.",
+      "unsupportedCurrency": "{{sheet}} Zeile {{row}}: Währung „{{detail}}“ wird nicht unterstützt, Zeile übersprungen.",
+      "fallbackRate": "{{sheet}}: kein Wechselkurs für {{detail}} in einigen Zeilen, Ihre Ersatzkurse wurden verwendet."
+    },
+    "errors": {
+      "noData": "Keine Vorgänge gefunden. Das Blatt benötigt die Spalten Datum und Aktion."
+    }
   }
 }

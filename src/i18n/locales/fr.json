@@ -3003,5 +3003,36 @@
     "errors": {
       "noData": "Aucune feuille mensuelle (janv.–déc.) avec une colonne Montant et des dépenses n'a été trouvée."
     }
+  },
+  "operationsWorkbookImport": {
+    "title": "Importer des opérations d'investissement",
+    "intro": "Enregistrez achats, ventes, dividendes, frais et impôts depuis un classeur avec une ligne par opération. Rien n'est enregistré avant votre confirmation.",
+    "settingsHelp": "Importez votre registre d'investissements (achats, ventes, dividendes) depuis un classeur, ou téléchargez le modèle d'opérations.",
+    "openButton": "Importer des opérations (XLSX)",
+    "downloadTemplate": "Télécharger le modèle d'opérations",
+    "count": "Opérations : {{count}}",
+    "instruments": "Titres : {{count}}",
+    "withoutMonth": "{{count}} opérations tombent dans des mois sans instantané de patrimoine et ne seront pas enregistrées. Importez ou saisissez d'abord ces mois.",
+    "noNetWorth": "Il n'y a pas encore de données de patrimoine : les opérations ne peuvent pas être enregistrées. Les positions correspondantes de l'Asset Allocation peuvent quand même recevoir leur prix moyen.",
+    "currencyNote": "Les montants sont convertis en {{currency}} avec le taux de change de la ligne s'il existe, sinon avec vos taux de secours.",
+    "reimportNote": "Les opérations d'un import précédent sont remplacées ; celles que vous avez saisies sont conservées.",
+    "options": {
+      "recordOperations": "Enregistrer les opérations dans les mois du patrimoine",
+      "recordOperationsHelp": "Ajoute chaque opération au mois de sa date, liée à la position correspondante.",
+      "updateCostBasis": "Mettre à jour le prix moyen des positions",
+      "updateCostBasisHelp": "Définit le prix d'acquisition (et l'ISIN manquant) des positions dont la quantité correspond aux opérations."
+    },
+    "doneSummary": "Opérations enregistrées : {{imported}}. Non enregistrées (aucun mois correspondant) : {{missing}}. Positions du patrimoine avec prix moyen mis à jour : {{holdings}}. Positions de l'Asset Allocation mises à jour : {{assets}}.",
+    "warnings": {
+      "unknownAction": "{{sheet}} ligne {{row}} : action « {{detail}} » non reconnue, ligne ignorée.",
+      "invalidDate": "{{sheet}} ligne {{row}} : date « {{detail}} » non reconnue, ligne ignorée.",
+      "ambiguousDate": "{{sheet}} ligne {{row}} : la date peut être lue jour-mois ou mois-jour ; lue comme {{detail}}.",
+      "missingAmount": "{{sheet}} ligne {{row}} : ni quantité et prix ni montant pour « {{detail}} », ligne ignorée.",
+      "unsupportedCurrency": "{{sheet}} ligne {{row}} : devise « {{detail}} » non prise en charge, ligne ignorée.",
+      "fallbackRate": "{{sheet}} : aucun taux de change pour {{detail}} sur certaines lignes, vos taux de secours ont été utilisés."
+    },
+    "errors": {
+      "noData": "Aucune opération trouvée. La feuille doit contenir les colonnes Date et Action."
+    }
   }
 }

@@ -6,7 +6,7 @@ import { SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES, type SupportedCurrency } 
 import { ALL_COUNTRIES, isEUCountry } from '../types/country';
 import { recalculateFallbackRates, convertAssetsToNewCurrency, convertNetWorthDataToNewCurrency, convertExpenseDataToNewCurrency, convertFireCalculatorInputsToNewCurrency } from '../utils/currencyConverter';
 import { exportFireCalculatorToCSV, exportAssetAllocationToCSV, importFireCalculatorFromCSV, importAssetAllocationFromCSV, exportExpenseTrackerToCSV, importExpenseTrackerFromCSV, exportNetWorthTrackerToJSON, importNetWorthTrackerFromJSON } from '../utils/csvExport';
-import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData, hasStoredExpenseTrackerData } from '../utils/cookieStorage';
+import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData, hasStoredExpenseTrackerData, hasStoredNetWorthTrackerData } from '../utils/cookieStorage';
 import { clearReceiptOriginals } from '../utils/documentImportApi';
 import { DEFAULT_INPUTS, getDemoNetWorthData, getDemoAssetAllocationData } from '../utils/defaults';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
@@ -23,10 +23,12 @@ import {
   CustomCategory, 
   CategoryOverride,
 } from '../types/expenseTracker';
+import type { NetWorthTrackerData } from '../types/netWorthTracker';
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
 import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
+import { OperationsWorkbookImportDialog, downloadOperationsTemplateFile } from './OperationsWorkbookImportDialog';
 import { AssetClass } from '../types/assetAllocation';
 import { formatAssetName } from '../utils/allocationCalculator';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
@@ -128,6 +130,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [expandedAuditEntries, setExpandedAuditEntries] = useState<Set<string>>(new Set());
   const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
   const [isExpenseWorkbookOpen, setIsExpenseWorkbookOpen] = useState(false);
+  const [isOperationsImportOpen, setIsOperationsImportOpen] = useState(false);
   
   // Account section expanded by default, others collapsed
   const [collapsedSections, setCollapsedSections] = useState<Set<SettingsSection>>(
@@ -951,6 +954,38 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       return false;
     }
   }, []);
+
+  const getNetWorthForOperations = useCallback(() => loadNetWorthTrackerData(), []);
+  const openOperationsImport = () => {
+    if (!loadNetWorthTrackerData() && hasStoredNetWorthTrackerData()) {
+      showMessage('error', t('workbookImport.unreadableNetWorth'));
+      return;
+    }
+    setIsOperationsImportOpen(true);
+  };
+  const applyOperationsImport = useCallback((next: NetWorthTrackerData) => {
+    try {
+      if (!loadNetWorthTrackerData() && hasStoredNetWorthTrackerData()) throw new Error('Saved net worth data is unreadable');
+      saveNetWorthTrackerData(next);
+      return true;
+    } catch (error) {
+      logger.error('settings', 'operations-save-failed', 'imported operations could not be saved', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      return false;
+    }
+  }, []);
+  const handleDownloadOperationsTemplate = async () => {
+    try {
+      await downloadOperationsTemplateFile();
+      showMessage('success', t('workbookImport.templateDownloaded'));
+    } catch (error) {
+      logger.error('settings', 'template-failed', 'operations template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    }
+  };
 
   const handleDownloadExpenseTemplate = async () => {
     try {
@@ -2882,6 +2917,23 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   onClose={() => setIsExpenseWorkbookOpen(false)}
                   getCurrent={getExpenseWorkbookData}
                   onApply={applyExpenseWorkbook}
+                />
+                <p className="setting-help">{t('operationsWorkbookImport.settingsHelp')}</p>
+                <div className="import-buttons">
+                  {!IS_DEMO_MODE && (
+                    <button type="button" className="primary-btn" onClick={openOperationsImport}>
+                      <MaterialIcon name="swap_horiz" /> {t('operationsWorkbookImport.openButton')}
+                    </button>
+                  )}
+                  <button type="button" className="secondary-btn" onClick={handleDownloadOperationsTemplate}>
+                    <MaterialIcon name="download" /> {t('operationsWorkbookImport.downloadTemplate')}
+                  </button>
+                </div>
+                <OperationsWorkbookImportDialog
+                  isOpen={isOperationsImportOpen}
+                  onClose={() => setIsOperationsImportOpen(false)}
+                  getCurrent={getNetWorthForOperations}
+                  onApply={applyOperationsImport}
                 />
               </div>
 

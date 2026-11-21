@@ -3003,5 +3003,36 @@
     "errors": {
       "noData": "Nessun foglio mensile (Gen–Dic) con una colonna Importo e delle spese è stato trovato."
     }
+  },
+  "operationsWorkbookImport": {
+    "title": "Importa operazioni di investimento",
+    "intro": "Registra acquisti, vendite, dividendi, commissioni e tasse da una cartella con una riga per operazione. Nulla viene salvato finché non confermi.",
+    "settingsHelp": "Importa il registro degli investimenti (acquisti, vendite, dividendi) da una cartella, oppure scarica il modello delle operazioni.",
+    "openButton": "Importa operazioni (XLSX)",
+    "downloadTemplate": "Scarica modello operazioni",
+    "count": "Operazioni: {{count}}",
+    "instruments": "Titoli: {{count}}",
+    "withoutMonth": "{{count}} operazioni cadono in mesi senza istantanea del patrimonio e non verranno registrate. Importa o registra prima quei mesi.",
+    "noNetWorth": "Non ci sono ancora dati del patrimonio, quindi le operazioni non possono essere registrate. Le posizioni corrispondenti in Asset Allocation possono comunque ricevere il prezzo medio.",
+    "currencyNote": "Gli importi vengono convertiti in {{currency}} con il cambio della riga, se presente, altrimenti con i tuoi tassi di riserva.",
+    "reimportNote": "Le operazioni di una precedente importazione vengono sostituite; quelle inserite da te restano.",
+    "options": {
+      "recordOperations": "Registra le operazioni nei mesi del patrimonio",
+      "recordOperationsHelp": "Aggiunge ogni operazione al mese della sua data, collegata alla posizione corrispondente.",
+      "updateCostBasis": "Aggiorna il prezzo medio delle posizioni",
+      "updateCostBasisHelp": "Imposta il prezzo di acquisto (e l'ISIN mancante) delle posizioni la cui quantità corrisponde alle operazioni."
+    },
+    "doneSummary": "Operazioni registrate: {{imported}}. Non registrate (nessun mese corrispondente): {{missing}}. Posizioni del patrimonio con prezzo medio aggiornato: {{holdings}}. Posizioni di Asset Allocation aggiornate: {{assets}}.",
+    "warnings": {
+      "unknownAction": "{{sheet}} riga {{row}}: azione \"{{detail}}\" non riconosciuta, riga ignorata.",
+      "invalidDate": "{{sheet}} riga {{row}}: data \"{{detail}}\" non riconosciuta, riga ignorata.",
+      "ambiguousDate": "{{sheet}} riga {{row}}: la data può essere giorno-mese o mese-giorno; letta come {{detail}}.",
+      "missingAmount": "{{sheet}} riga {{row}}: mancano quantità e prezzo o importo per \"{{detail}}\", riga ignorata.",
+      "unsupportedCurrency": "{{sheet}} riga {{row}}: valuta \"{{detail}}\" non supportata, riga ignorata.",
+      "fallbackRate": "{{sheet}}: nessun cambio per {{detail}} in alcune righe, sono stati usati i tuoi tassi di riserva."
+    },
+    "errors": {
+      "noData": "Nessuna operazione trovata. Il foglio richiede le colonne Data e Azione."
+    }
   }
 }

@@ -3071,5 +3071,36 @@
     "errors": {
       "noData": "No month sheets (Jan–Dec) with an Amount column and expenses were found."
     }
+  },
+  "operationsWorkbookImport": {
+    "title": "Import investment operations",
+    "intro": "Record buys, sells, dividends, fees and taxes from a workbook with one row per operation. Nothing is saved until you confirm.",
+    "settingsHelp": "Bring in your investment ledger (buys, sells, dividends) from a workbook, or download the operations template.",
+    "openButton": "Import operations (XLSX)",
+    "downloadTemplate": "Download operations template",
+    "count": "Operations: {{count}}",
+    "instruments": "Securities: {{count}}",
+    "withoutMonth": "{{count}} operations fall in months without a Net Worth snapshot and will not be recorded. Import or log those months first.",
+    "noNetWorth": "There is no Net Worth data yet, so operations cannot be recorded. Matching Asset Allocation holdings can still get their average cost.",
+    "currencyNote": "Amounts are converted to {{currency}} with the row's FX rate when present, otherwise with your fallback rates.",
+    "reimportNote": "Operations from an earlier operations import are replaced; operations you entered yourself are kept.",
+    "options": {
+      "recordOperations": "Record operations in Net Worth months",
+      "recordOperationsHelp": "Adds each operation to the month of its date, linked to the matching holding.",
+      "updateCostBasis": "Update average cost of holdings",
+      "updateCostBasisHelp": "Sets the acquisition price (and a missing ISIN) of holdings whose quantity matches the operations."
+    },
+    "doneSummary": "Operations recorded: {{imported}}. Not recorded (no matching month): {{missing}}. Net Worth holdings with updated average cost: {{holdings}}. Asset Allocation holdings updated: {{assets}}.",
+    "warnings": {
+      "unknownAction": "{{sheet}} row {{row}}: action \"{{detail}}\" not recognised, row skipped.",
+      "invalidDate": "{{sheet}} row {{row}}: date \"{{detail}}\" not recognised, row skipped.",
+      "ambiguousDate": "{{sheet}} row {{row}}: the date could be day-first or month-first; read as {{detail}}.",
+      "missingAmount": "{{sheet}} row {{row}}: no quantity and price or amount for \"{{detail}}\", row skipped.",
+      "unsupportedCurrency": "{{sheet}} row {{row}}: currency \"{{detail}}\" is not supported, row skipped.",
+      "fallbackRate": "{{sheet}}: no FX rate for {{detail}} on some rows, your fallback rates were used."
+    },
+    "errors": {
+      "noData": "No operations found. The sheet needs Date and Action columns."
+    }
   }
 }

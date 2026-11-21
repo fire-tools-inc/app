@@ -55,7 +55,7 @@ endpoint. Always verify with your broker. Request limits are shown in
 | **Net Worth Tracker** | Monthly snapshots of assets, cash and pensions with historical charts. [Guide](docs/user/net-worth-tracker.md). |
 | **Guided setup** | A questionnaire that helps populate calculator inputs and allocation targets. [Guide](docs/user/questionnaire.md). |
 | **JSON / CSV Export and Import** | Portable calculator, allocation, cashflow and net-worth data; see [backup limitations](#data-storage-and-backups). |
-| **Spreadsheet Import** | Backfill years of net worth, cash flow, allocation targets and FIRE settings from an `.xlsx` workbook, and detailed expenses from a yearly workbook with a sheet per month. Downloadable templates and AI agent prompts included. [Guide](docs/user/spreadsheet-import.md). |
+| **Spreadsheet Import** | Backfill years of net worth, cash flow, allocation targets and FIRE settings from an `.xlsx` workbook, detailed expenses from a yearly workbook with a sheet per month, and investment operations with average cost. Downloadable templates and AI agent prompts included. [Guide](docs/user/spreadsheet-import.md). |
 | **Languages** | English, Italian, French, German and Spanish, selected in Settings. Sidebar navigation labels remain English. |
 | **Build Info** | Version, commit hash and dependency versions in **Settings > About**. |
 

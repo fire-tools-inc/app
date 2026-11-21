@@ -43,6 +43,7 @@ import { calculateMonthlyNetWorth } from './netWorthCalculator';
 import {
   EXPENSE_WORKBOOK_ID_PREFIX,
   NET_WORTH_WORKBOOK_ID_PREFIX,
+  OPERATIONS_WORKBOOK_ID_PREFIX,
   normalizeText,
   tickerKey,
   type WorkbookImportPlan,
@@ -117,9 +118,11 @@ function periodValue(year: number, month: number): number {
 }
 
 function snapshotHasUserData(snapshot: MonthlySnapshot): boolean {
+  // Operations from the operations workbook are kept on refresh, so they do not block it.
+  const operations = snapshot.operations.filter((op) => !op.id.startsWith(OPERATIONS_WORKBOOK_ID_PREFIX));
   return [
     snapshot.assets, snapshot.cashEntries, snapshot.pensions,
-    snapshot.debts ?? [], snapshot.taxes ?? [], snapshot.operations,
+    snapshot.debts ?? [], snapshot.taxes ?? [], operations,
   ].some((entries) => entries.some((entry) => !isImported(entry)));
 }
 

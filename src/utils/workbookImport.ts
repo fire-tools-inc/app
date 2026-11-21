@@ -46,6 +46,8 @@ import type { AllocationMode, AssetClass, SubAssetType } from '../types/assetAll
 export const NET_WORTH_WORKBOOK_ID_PREFIX = 'wb-';
 /** Ids of entries created by the yearly expenses workbook import. */
 export const EXPENSE_WORKBOOK_ID_PREFIX = 'wbe-';
+/** Ids of operations created by the investment operations workbook import. */
+export const OPERATIONS_WORKBOOK_ID_PREFIX = 'wbo-';
 
 export interface WorkbookParseOptions {
   /** Currency every imported amount is converted into. */

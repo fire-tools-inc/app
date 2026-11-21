@@ -3003,5 +3003,36 @@
     "errors": {
       "noData": "No se encontraron hojas mensuales (ene–dic) con una columna Importe y gastos."
     }
+  },
+  "operationsWorkbookImport": {
+    "title": "Importar operaciones de inversión",
+    "intro": "Registra compras, ventas, dividendos, comisiones e impuestos desde un libro con una fila por operación. No se guarda nada hasta que confirmes.",
+    "settingsHelp": "Trae tu registro de inversiones (compras, ventas, dividendos) desde un libro, o descarga la plantilla de operaciones.",
+    "openButton": "Importar operaciones (XLSX)",
+    "downloadTemplate": "Descargar plantilla de operaciones",
+    "count": "Operaciones: {{count}}",
+    "instruments": "Valores: {{count}}",
+    "withoutMonth": "{{count}} operaciones caen en meses sin instantánea de patrimonio y no se registrarán. Importa o registra antes esos meses.",
+    "noNetWorth": "Todavía no hay datos de patrimonio, así que las operaciones no se pueden registrar. Las posiciones coincidentes de Asset Allocation aún pueden recibir su precio medio.",
+    "currencyNote": "Los importes se convierten a {{currency}} con el tipo de cambio de la fila si existe; si no, con tus tipos de respaldo.",
+    "reimportNote": "Las operaciones de una importación anterior se sustituyen; las que añadiste tú se conservan.",
+    "options": {
+      "recordOperations": "Registrar las operaciones en los meses de patrimonio",
+      "recordOperationsHelp": "Añade cada operación al mes de su fecha, vinculada a la posición correspondiente.",
+      "updateCostBasis": "Actualizar el precio medio de las posiciones",
+      "updateCostBasisHelp": "Establece el precio de adquisición (y el ISIN que falte) de las posiciones cuya cantidad coincide con las operaciones."
+    },
+    "doneSummary": "Operaciones registradas: {{imported}}. No registradas (sin mes correspondiente): {{missing}}. Posiciones de patrimonio con precio medio actualizado: {{holdings}}. Posiciones de Asset Allocation actualizadas: {{assets}}.",
+    "warnings": {
+      "unknownAction": "{{sheet}} fila {{row}}: acción «{{detail}}» no reconocida, fila omitida.",
+      "invalidDate": "{{sheet}} fila {{row}}: fecha «{{detail}}» no reconocida, fila omitida.",
+      "ambiguousDate": "{{sheet}} fila {{row}}: la fecha puede ser día-mes o mes-día; leída como {{detail}}.",
+      "missingAmount": "{{sheet}} fila {{row}}: faltan cantidad y precio o importe para «{{detail}}», fila omitida.",
+      "unsupportedCurrency": "{{sheet}} fila {{row}}: la moneda «{{detail}}» no es compatible, fila omitida.",
+      "fallbackRate": "{{sheet}}: no hay tipo de cambio para {{detail}} en algunas filas, se usaron tus tipos de respaldo."
+    },
+    "errors": {
+      "noData": "No se encontraron operaciones. La hoja necesita las columnas Fecha y Acción."
+    }
   }
 }

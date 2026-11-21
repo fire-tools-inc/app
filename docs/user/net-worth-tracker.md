@@ -27,7 +27,9 @@ Snapshots round-trip via CSV so you can keep a backup outside the local store
 button to grab a snapshot of all entries; use **Import CSV** to restore.
 
 To backfill years of history from a spreadsheet, use **Data Management >
-Import spreadsheet (XLSX)** or **Download template**. See
+Import spreadsheet (XLSX)** or **Download template**. **Import operations
+(XLSX)** adds buys, sells and dividends from an investment ledger and sets the
+average cost of matching holdings. See
 [Spreadsheet import](./spreadsheet-import.md).
 
 ## Wealth Flow diagram (Sankey)
