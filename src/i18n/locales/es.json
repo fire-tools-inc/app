@@ -970,6 +970,7 @@
     "totalAssets": "Total Assets",
     "totalCash": "Efectivo total",
     "totalPension": "Total Pension",
+    "countPensionsInNetWorth": "Incluir las pensiones en el patrimonio neto",
     "type": "Tipo",
     "validation": {
       "accountExists": "An account with this name already exists",

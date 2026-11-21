@@ -27,7 +27,9 @@ read-only web demo; the template download still works there.
    net worth total row, Fire Tools compares it with the total it will compute
    and lists the months that differ, as a percentage. If the workbook's totals
    leave its pensions out, the preview says so and the Net Worth Tracker keeps
-   tracking pensions without adding them to net worth.
+   tracking pensions without adding them to net worth. Only imported months
+   change this; **Count pensions in net worth** below the summary cards turns
+   it back on.
 5. Pick what to import and how to treat months that already contain your data,
    then select **Import**. Nothing is saved before this step.
 

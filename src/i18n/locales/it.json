@@ -970,6 +970,7 @@
     "totalAssets": "Total Assets",
     "totalCash": "Liquidità totale",
     "totalPension": "Total Pension",
+    "countPensionsInNetWorth": "Includi le pensioni nel patrimonio netto",
     "type": "Tipo",
     "validation": {
       "accountExists": "An account with this name already exists",

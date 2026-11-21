@@ -970,6 +970,7 @@
     "totalAssets": "Total Assets",
     "totalCash": "Gesamtbargeld",
     "totalPension": "Total Pension",
+    "countPensionsInNetWorth": "Renten zum Nettovermögen zählen",
     "type": "Typ",
     "validation": {
       "accountExists": "An account with this name already exists",

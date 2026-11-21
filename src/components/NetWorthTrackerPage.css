@@ -42,6 +42,22 @@
   margin-bottom: 1rem;
 }
 
+.net-worth-pension-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  margin-top: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.net-worth-pension-toggle input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-primary);
+}
+
 .net-worth-cards {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

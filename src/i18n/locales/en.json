@@ -1038,6 +1038,7 @@
     "totalAssets": "Total Assets",
     "totalCash": "Total Cash",
     "totalPension": "Total Pension",
+    "countPensionsInNetWorth": "Count pensions in net worth",
     "type": "Type",
     "validation": {
       "accountExists": "An account with this name already exists",

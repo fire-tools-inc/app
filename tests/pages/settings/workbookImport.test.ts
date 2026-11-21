@@ -378,6 +378,14 @@ describe('applying an import', () => {
     expect(kept.netWorth?.years[1].months[0]).toEqual(userMonth);
     expect(kept.summary).toMatchObject({ monthsKept: 1, monthsAdded: 3 });
 
+    // Only imported detailed months may change how pensions count in net worth.
+    const februaryKept = { ...createEmptyMonthlySnapshot(2024, 2), cashEntries: userMonth.cashEntries };
+    const allKept = applyWorkbookImport(plan, {
+      ...current, netWorth: { ...netWorth, years: [{ year: 2024, months: [userMonth, februaryKept] }] },
+    }, ALL, NOW);
+    expect(allKept.summary).toMatchObject({ monthsKept: 2, monthsAdded: 2 });
+    expect(allKept.netWorth?.settings.showPensionInNetWorth).toBe(true);
+
     const replaced = applyWorkbookImport(plan, current, { ...ALL, existingMonths: 'replace' }, NOW);
     const jan = replaced.netWorth?.years[1].months[0];
     expect(jan?.cashEntries.map((entry) => entry.accountName)).toEqual(['Demo Bank', 'Demo Broker EUR']);

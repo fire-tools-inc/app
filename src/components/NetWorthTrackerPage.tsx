@@ -275,15 +275,16 @@ export function NetWorthTrackerPage() {
     return yearData.months.find(m => m.month === selectedMonth);
   }, [data, selectedYear, selectedMonth]);
 
+  const includePension = data.settings.showPensionInNetWorth;
+  const netWorthOptions = useMemo(() => ({ includePension }), [includePension]);
+
   // Calculate net worth for current month
   const netWorthResult = useMemo(() => {
     if (!currentMonthData) {
       return { totalAssetValue: 0, totalCash: 0, totalPension: 0, totalTaxesPaid: 0, netWorth: 0 };
     }
-    return calculateMonthlyNetWorth(currentMonthData, {
-      includePension: data.settings.showPensionInNetWorth,
-    });
-  }, [currentMonthData, data.settings.showPensionInNetWorth]);
+    return calculateMonthlyNetWorth(currentMonthData, netWorthOptions);
+  }, [currentMonthData, netWorthOptions]);
 
   // Get all months data for the selected year (YTD mode)
   const allMonthsData = useMemo(() => {
@@ -311,18 +312,18 @@ export function NetWorthTrackerPage() {
 
   // Calculate monthly variations based on view mode
   const monthlyVariations = useMemo(() => {
-    return calculateMonthlyVariations(chartMonthsData);
-  }, [chartMonthsData]);
+    return calculateMonthlyVariations(chartMonthsData, netWorthOptions);
+  }, [chartMonthsData, netWorthOptions]);
 
   // Calculate YTD summary (always from current year data)
   const ytdSummary = useMemo(() => {
-    return calculateYTDSummary(allMonthsData, selectedMonth);
-  }, [allMonthsData, selectedMonth]);
+    return calculateYTDSummary(allMonthsData, selectedMonth, netWorthOptions);
+  }, [allMonthsData, selectedMonth, netWorthOptions]);
 
   // Calculate forecast based on view mode data
   const forecast = useMemo(() => {
-    return calculateNetWorthForecast(chartMonthsData, 3);
-  }, [chartMonthsData]);
+    return calculateNetWorthForecast(chartMonthsData, 3, netWorthOptions);
+  }, [chartMonthsData, netWorthOptions]);
 
   // Get previous year's December value
   const previousYearEndValue = useMemo(() => {
@@ -330,8 +331,8 @@ export function NetWorthTrackerPage() {
     if (!prevYear) return null;
     const december = prevYear.months.find(m => m.month === 12);
     if (!december) return null;
-    return calculateMonthlyNetWorth(december).netWorth;
-  }, [data, selectedYear]);
+    return calculateMonthlyNetWorth(december, netWorthOptions).netWorth;
+  }, [data, selectedYear, netWorthOptions]);
 
   // Get current month variation
   const currentMonthVariation = useMemo(() => {
@@ -1160,6 +1161,17 @@ export function NetWorthTrackerPage() {
               </div>
             </div>
           </div>
+          <label className="net-worth-pension-toggle">
+            <input
+              type="checkbox"
+              checked={includePension}
+              onChange={(event) => {
+                const showPensionInNetWorth = event.target.checked;
+                setData(prev => ({ ...prev, settings: { ...prev.settings, showPensionInNetWorth } }));
+              }}
+            />
+            <span>{t('netWorth.countPensionsInNetWorth')}</span>
+          </label>
         </section>
 
         {/* Data Entry Section */}

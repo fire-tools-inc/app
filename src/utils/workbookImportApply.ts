@@ -210,6 +210,7 @@ function mergeNetWorth(
     taxes: plan.months.some((month) => month.taxes.length > 0),
   };
   const nowPeriod = periodValue(now.getFullYear(), now.getMonth() + 1);
+  let detailedMonthWritten = false;
 
   for (const month of plan.months) {
     if (!month.hasBalances) continue;
@@ -223,6 +224,7 @@ function mergeNetWorth(
     if (!existing) {
       yearData.months.push(toSnapshot(month, isPast));
       summary.monthsAdded++;
+      detailedMonthWritten ||= !month.totalOnly;
       continue;
     }
     const hasUserData = snapshotHasUserData(existing);
@@ -241,13 +243,14 @@ function mergeNetWorth(
     existing.isFrozen = existing.isFrozen || isPast;
     if (hasUserData) summary.monthsReplaced++;
     else summary.monthsAdded++;
+    detailedMonthWritten ||= !month.totalOnly;
   }
 
   data.years.sort((a, b) => a.year - b.year);
   for (const year of data.years) year.months.sort((a, b) => a.month - b.month);
   data.defaultCurrency = plan.currency;
   // Match the workbook's own totals, which may track pensions without counting them.
-  if (plan.pensionsInNetWorth !== null) data.settings = { ...data.settings, showPensionInNetWorth: plan.pensionsInNetWorth };
+  if (plan.pensionsInNetWorth !== null && detailedMonthWritten) data.settings = { ...data.settings, showPensionInNetWorth: plan.pensionsInNetWorth };
   return data;
 }
 
