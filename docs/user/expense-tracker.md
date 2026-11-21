@@ -68,6 +68,13 @@ parsing. Phone pairing opens a separate, short-lived upload-only Wi-Fi
 listener; an existing HTTPS tunnel is optional. AI categorization supports
 OpenAI-compatible local model endpoints with no mandatory key.
 
+## Importing a yearly expenses spreadsheet
+
+Already track spending in a spreadsheet with one sheet per month? Use
+**Data Management > Import expenses (XLSX)** to bring in a whole year, or
+**Download expenses template** to start one. See
+[Yearly expenses workbook](./spreadsheet-import.md#yearly-expenses-workbook).
+
 ## Linking to the FIRE calculator
 
 The bottom of the page shows the **annualised expenses** derived from the

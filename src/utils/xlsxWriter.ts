@@ -25,8 +25,11 @@ export interface XlsxWriteSheet {
   /** Number of rows to keep visible while scrolling. */
   freezeRows?: number;
   freezeColumns?: number;
-  /** Drop-down lists, e.g. { range: 'A2:A200', source: 'Lists!$A$1:$A$9' } or a quoted CSV list. */
-  listValidations?: Array<{ range: string; source: string }>;
+  /**
+   * Drop-down lists, e.g. { range: 'A2:A200', source: 'Lists!$A$1:$A$9' } or a quoted CSV list.
+   * `strict: false` still offers the list but accepts other values.
+   */
+  listValidations?: Array<{ range: string; source: string; strict?: boolean }>;
 }
 
 const STYLE_INDEX: Record<XlsxWriteStyle, number> = {
@@ -125,7 +128,7 @@ function sheetXml(sheet: XlsxWriteSheet): string {
   }).join('');
 
   const validations = sheet.listValidations?.length
-    ? `<dataValidations count="${sheet.listValidations.length}">${sheet.listValidations.map((validation) => `<dataValidation type="list" allowBlank="1" showErrorMessage="1" sqref="${escapeXml(validation.range)}"><formula1>${escapeXml(validation.source)}</formula1></dataValidation>`).join('')}</dataValidations>`
+    ? `<dataValidations count="${sheet.listValidations.length}">${sheet.listValidations.map((validation) => `<dataValidation type="list" allowBlank="1" showErrorMessage="${validation.strict === false ? 0 : 1}" sqref="${escapeXml(validation.range)}"><formula1>${escapeXml(validation.source)}</formula1></dataValidation>`).join('')}</dataValidations>`
     : '';
 
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

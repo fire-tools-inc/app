@@ -60,6 +60,17 @@ describe('WorkbookImportDialog', () => {
     expect(loadNetWorthTrackerData()).toBeNull();
   });
 
+  it('never imports over saved cash-flow data that cannot be read', async () => {
+    localStorage.setItem('fire-tools-expense-tracker', 'not-decryptable');
+    render(<WorkbookImportDialog isOpen onClose={vi.fn()} />);
+    chooseFile(workbookFile());
+    expect(await screen.findByText(/Saved Expense Tracker data could not be read/)).toBeTruthy();
+    expect(screen.getByRole<HTMLInputElement>('checkbox', { name: /income and spending/i }).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    await screen.findByText('Import complete');
+    expect(localStorage.getItem('fire-tools-expense-tracker')).toBe('not-decryptable');
+  });
+
   it('closes on Escape even when focus has left the dialog', () => {
     const onClose = vi.fn();
     render(<WorkbookImportDialog isOpen onClose={onClose} />);

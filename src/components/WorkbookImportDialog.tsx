@@ -2,8 +2,11 @@ import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { useModalDialog } from '../hooks/useModalDialog';
 import { loadSettings } from '../utils/cookieSettings';
 import {
+  hasStoredExpenseTrackerData,
+  hasStoredNetWorthTrackerData,
   loadAssetAllocation,
   loadExpenseTrackerData,
   loadFireCalculatorInputs,
@@ -21,9 +24,9 @@ import type {
 import './WorkbookImportDialog.css';
 
 export const WORKBOOK_IMPORT_GUIDE_URL = 'https://github.com/fire-tools-inc/app/blob/main/docs/user/spreadsheet-import.md';
-const MAX_WORKBOOK_BYTES = 25 * 1024 * 1024;
+export const MAX_WORKBOOK_BYTES = 25 * 1024 * 1024;
 const MAX_LISTED_NOTES = 50;
-const READ_ERROR_CODES = new Set(['notXlsx', 'tooLarge', 'invalid']);
+export const READ_ERROR_CODES = new Set(['notXlsx', 'tooLarge', 'invalid']);
 
 interface WorkbookImportDialogProps {
   isOpen: boolean;
@@ -32,16 +35,22 @@ interface WorkbookImportDialogProps {
   onImported?: (summary: WorkbookImportSummary) => void;
 }
 
+interface UnreadableStores {
+  netWorth: boolean;
+  cashflow: boolean;
+}
+
 interface LoadedWorkbook {
   fileName: string;
   plan: WorkbookImportPlan;
   preview: WorkbookImportPreview;
   reconciliation: WorkbookReconciliation;
+  unreadable: UnreadableStores;
 }
 
 type Phase = 'idle' | 'reading' | 'preview' | 'importing' | 'done';
 
-function errorMessage(error: unknown): string {
+export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
@@ -56,7 +65,15 @@ function loadCurrentData(): WorkbookImportCurrentData {
   };
 }
 
-function readFileBytes(file: File): Promise<Uint8Array> {
+/** Stores that exist but cannot be read must never be replaced by an import. */
+function findUnreadableStores(current: WorkbookImportCurrentData): UnreadableStores {
+  return {
+    netWorth: !current.netWorth && hasStoredNetWorthTrackerData(),
+    cashflow: !current.expenseTracker && hasStoredExpenseTrackerData(),
+  };
+}
+
+export function readFileBytes(file: File): Promise<Uint8Array> {
   if (typeof file.arrayBuffer === 'function') {
     return file.arrayBuffer().then((buffer) => new Uint8Array(buffer));
   }
@@ -92,7 +109,6 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const doneButtonRef = useRef<HTMLButtonElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [loaded, setLoaded] = useState<LoadedWorkbook | null>(null);
   const [selection, setSelection] = useState<WorkbookImportSelection>({
@@ -106,8 +122,8 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
   const plan = loaded?.plan;
   const reconciliation = loaded?.reconciliation;
   const options: Array<{ key: keyof Omit<WorkbookImportSelection, 'existingMonths'>; available: boolean }> = [
-    { key: 'netWorth', available: Boolean(preview && preview.balanceMonths + preview.totalOnlyMonths > 0) },
-    { key: 'cashflow', available: Boolean(preview && preview.incomes + preview.expenses > 0) },
+    { key: 'netWorth', available: Boolean(preview && !loaded?.unreadable.netWorth && preview.balanceMonths + preview.totalOnlyMonths > 0) },
+    { key: 'cashflow', available: Boolean(preview && !loaded?.unreadable.cashflow && preview.incomes + preview.expenses > 0) },
     { key: 'allocation', available: Boolean(plan?.allocation || preview?.latestBalanceMonth) },
     { key: 'fire', available: Boolean(plan?.fire || preview?.latestBalanceMonth) },
   ];
@@ -125,54 +141,7 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
     onClose();
   }, [busy, onClose]);
 
-  const closeHandlerRef = useRef(handleClose);
-  useEffect(() => {
-    closeHandlerRef.current = handleClose;
-  }, [handleClose]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    restoreFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    closeButtonRef.current?.focus();
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    // Document-level so Escape and the focus trap still work after the
-    // focused control is disabled or replaced (e.g. while reading a file).
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const dialog = dialogRef.current;
-      if (!dialog) return;
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        closeHandlerRef.current();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([disabled]):not([type="file"]), select:not([disabled]), summary, [tabindex]:not([tabindex="-1"])',
-      ));
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-      if (!dialog.contains(active)) {
-        event.preventDefault();
-        (event.shiftKey ? last : first).focus();
-      } else if (event.shiftKey && active === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      restoreFocusRef.current?.focus();
-    };
-  }, [isOpen]);
+  useModalDialog(isOpen, handleClose, dialogRef, closeButtonRef);
 
   useEffect(() => {
     if (phase === 'done') doneButtonRef.current?.focus();
@@ -214,11 +183,13 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
         setError(t('workbookImport.errors.noData'));
         return;
       }
-      const preview = applier.previewWorkbookImport(plan, loadCurrentData());
-      setLoaded({ fileName: file.name, plan, preview, reconciliation: parser.reconcileWorkbookPlan(plan) });
+      const current = loadCurrentData();
+      const unreadable = findUnreadableStores(current);
+      const preview = applier.previewWorkbookImport(plan, current);
+      setLoaded({ fileName: file.name, plan, preview, reconciliation: parser.reconcileWorkbookPlan(plan), unreadable });
       setSelection({
-        netWorth: preview.balanceMonths + preview.totalOnlyMonths > 0,
-        cashflow: preview.incomes + preview.expenses > 0,
+        netWorth: !unreadable.netWorth && preview.balanceMonths + preview.totalOnlyMonths > 0,
+        cashflow: !unreadable.cashflow && preview.incomes + preview.expenses > 0,
         allocation: Boolean(plan.allocation) || preview.latestBalanceMonth !== null,
         fire: Boolean(plan.fire),
         existingMonths: 'keep',
@@ -246,6 +217,9 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
     try {
       const { applyWorkbookImport, commitWorkbookImport } = await import('../utils/workbookImportApply');
       const current = loadCurrentData();
+      const unreadable = findUnreadableStores(current);
+      if (effectiveSelection.netWorth && unreadable.netWorth) throw new Error(t('workbookImport.unreadableNetWorth'));
+      if (effectiveSelection.cashflow && unreadable.cashflow) throw new Error(t('workbookImport.unreadableCashflow'));
       const result = applyWorkbookImport(loaded.plan, current, effectiveSelection);
       commitWorkbookImport(result, current);
       logger.userAction('workbook-import', 'imported', 'spreadsheet imported', { pii: result.summary });
@@ -416,6 +390,8 @@ export function WorkbookImportDialog({ isOpen, onClose, onImported }: WorkbookIm
 
               <fieldset className="workbook-import-section">
                 <legend>{t('workbookImport.whatToImport')}</legend>
+                {loaded.unreadable.netWorth && <p className="workbook-import-warning">{t('workbookImport.unreadableNetWorth')}</p>}
+                {loaded.unreadable.cashflow && <p className="workbook-import-warning">{t('workbookImport.unreadableCashflow')}</p>}
                 {options.map(({ key, available }) => (
                   <label key={key} className="workbook-import-option">
                     <input

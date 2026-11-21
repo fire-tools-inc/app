@@ -6,7 +6,7 @@ import { SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES, type SupportedCurrency } 
 import { ALL_COUNTRIES, isEUCountry } from '../types/country';
 import { recalculateFallbackRates, convertAssetsToNewCurrency, convertNetWorthDataToNewCurrency, convertExpenseDataToNewCurrency, convertFireCalculatorInputsToNewCurrency } from '../utils/currencyConverter';
 import { exportFireCalculatorToCSV, exportAssetAllocationToCSV, importFireCalculatorFromCSV, importAssetAllocationFromCSV, exportExpenseTrackerToCSV, importExpenseTrackerFromCSV, exportNetWorthTrackerToJSON, importNetWorthTrackerFromJSON } from '../utils/csvExport';
-import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData } from '../utils/cookieStorage';
+import { loadFireCalculatorInputs, loadAssetAllocation, saveFireCalculatorInputs, saveAssetAllocation, clearAllData, loadExpenseTrackerData, saveExpenseTrackerData, loadNetWorthTrackerData, saveNetWorthTrackerData, hasStoredExpenseTrackerData } from '../utils/cookieStorage';
 import { clearReceiptOriginals } from '../utils/documentImportApi';
 import { DEFAULT_INPUTS, getDemoNetWorthData, getDemoAssetAllocationData } from '../utils/defaults';
 import { generateDemoExpenseData } from '../utils/demoExpenseData';
@@ -26,6 +26,7 @@ import {
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
+import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { AssetClass } from '../types/assetAllocation';
 import { formatAssetName } from '../utils/allocationCalculator';
 import { fetchAssetPrices } from '../utils/dcaCalculator';
@@ -126,6 +127,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [auditToDate, setAuditToDate] = useState<string>('');
   const [expandedAuditEntries, setExpandedAuditEntries] = useState<Set<string>>(new Set());
   const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
+  const [isExpenseWorkbookOpen, setIsExpenseWorkbookOpen] = useState(false);
   
   // Account section expanded by default, others collapsed
   const [collapsedSections, setCollapsedSections] = useState<Set<SettingsSection>>(
@@ -919,6 +921,43 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       showMessage('success', t('workbookImport.templateDownloaded'));
     } catch (error) {
       logger.error('settings', 'template-failed', 'spreadsheet template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      showMessage('error', t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    }
+  };
+
+  const getExpenseWorkbookData = useCallback(() => loadExpenseTrackerData(), []);
+  // Saved data that cannot be read must not be replaced by an import.
+  const expenseStoreUnreadable = () => !loadExpenseTrackerData() && hasStoredExpenseTrackerData();
+  const openExpenseWorkbookImport = () => {
+    if (expenseStoreUnreadable()) {
+      showMessage('error', t('workbookImport.unreadableCashflow'));
+      return;
+    }
+    setIsExpenseWorkbookOpen(true);
+  };
+  const applyExpenseWorkbook = useCallback((next: ExpenseTrackerData) => {
+    try {
+      if (!loadExpenseTrackerData() && hasStoredExpenseTrackerData()) throw new Error('Saved expense data is unreadable');
+      saveExpenseTrackerData(next);
+      // Category editors on this page save from this state; keep it current.
+      setExpenseData(next);
+      return true;
+    } catch (error) {
+      logger.error('settings', 'expense-workbook-save-failed', 'expenses workbook could not be saved', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      return false;
+    }
+  }, []);
+
+  const handleDownloadExpenseTemplate = async () => {
+    try {
+      await downloadExpenseTemplateFile(new Date().getFullYear(), loadExpenseTrackerData());
+      showMessage('success', t('workbookImport.templateDownloaded'));
+    } catch (error) {
+      logger.error('settings', 'template-failed', 'expenses template could not be created', {
         pii: { error: error instanceof Error ? error.message : String(error) },
       });
       showMessage('error', t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
@@ -2822,7 +2861,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     <MaterialIcon name="download" /> {t('workbookImport.downloadTemplate')}
                   </button>
                 </div>
-                <WorkbookImportDialog isOpen={isWorkbookImportOpen} onClose={() => setIsWorkbookImportOpen(false)} />
+                <WorkbookImportDialog
+                  isOpen={isWorkbookImportOpen}
+                  onClose={() => setIsWorkbookImportOpen(false)}
+                  onImported={() => setExpenseData(loadExpenseTrackerData())}
+                />
+                <p className="setting-help">{t('expenseWorkbookImport.settingsHelp')}</p>
+                <div className="import-buttons">
+                  {!IS_DEMO_MODE && (
+                    <button type="button" className="primary-btn" onClick={openExpenseWorkbookImport}>
+                      <MaterialIcon name="receipt_long" /> {t('expenseWorkbookImport.openButton')}
+                    </button>
+                  )}
+                  <button type="button" className="secondary-btn" onClick={handleDownloadExpenseTemplate}>
+                    <MaterialIcon name="download" /> {t('expenseWorkbookImport.downloadTemplate')}
+                  </button>
+                </div>
+                <ExpenseWorkbookImportDialog
+                  isOpen={isExpenseWorkbookOpen}
+                  onClose={() => setIsExpenseWorkbookOpen(false)}
+                  getCurrent={getExpenseWorkbookData}
+                  onApply={applyExpenseWorkbook}
+                />
               </div>
 
               {!IS_DEMO_MODE && (

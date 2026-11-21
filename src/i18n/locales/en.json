@@ -2970,6 +2970,8 @@
   },
   "workbookImport": {
     "title": "Import spreadsheet",
+    "unreadableNetWorth": "Saved Net Worth Tracker data could not be read, so it is left untouched. Restore or reset it before importing net worth history.",
+    "unreadableCashflow": "Saved Expense Tracker data could not be read, so it is left untouched. Restore or reset it before importing income and spending.",
     "intro": "Backfill your history from an Excel workbook (.xlsx): one sheet per year with Jan–Dec columns, plus optional History and Allocation sheets. Nothing is saved until you confirm.",
     "settingsHelp": "Bring in years of history from a spreadsheet. Download the template to fill it yourself or with an AI assistant.",
     "openButton": "Import spreadsheet (XLSX)",
@@ -3038,6 +3040,36 @@
       "importFailed": "Import failed and your data was left unchanged: {{message}}",
       "templateFailed": "The template could not be created: {{message}}",
       "copyFailed": "Could not copy to the clipboard. Open the format guide to copy the prompt."
+    }
+  },
+  "expenseWorkbookImport": {
+    "title": "Import expenses spreadsheet",
+    "intro": "Import one year of expenses from a workbook with a sheet per month (Jan–Dec): expense name, amount, category and Need/Want. Nothing is saved until you confirm.",
+    "settingsHelp": "Bring in a year of detailed expenses from a workbook with one sheet per month, or download the yearly template.",
+    "openButton": "Import expenses (XLSX)",
+    "downloadTemplate": "Download expenses template",
+    "year": "Year",
+    "yearDetected": "Detected from the file name. Change it if needed.",
+    "yearMissing": "No year found in the file name. Check the year before importing.",
+    "monthSheets": "Month sheets: {{months}}",
+    "months": "Months to import: {{months}}",
+    "futureMonths": "Skipped future months: {{months}}",
+    "entries": "Expenses: {{expenses}} · Income entries: {{incomes}}",
+    "newCategories": "New custom categories: {{names}}",
+    "currencyNote": "Amounts are in {{currency}}; rows with their own Currency are converted with your fallback rates.",
+    "detailNote": "Monthly spending totals from a net worth workbook import are replaced by these detailed expenses.",
+    "existingCount": "{{count}} months already contain expenses you added.",
+    "replaceWarning": "Replacing removes the expenses you added in those months and overwrites their income.",
+    "doneSummary": "Months imported: {{months}}, kept: {{kept}}. Expenses: {{expenses}}. Income entries: {{incomes}}. New categories: {{categories}}.",
+    "incomeSkipped": "Income was left unchanged in {{count}} months that already had income.",
+    "warnings": {
+      "negativeAmount": "{{sheet}} row {{row}}: negative amount for \"{{detail}}\" skipped.",
+      "unsupportedCurrency": "{{sheet}} row {{row}}: currency \"{{detail}}\" is not supported, row skipped.",
+      "duplicateMonthSheet": "{{sheet}}: another sheet already covers this month, sheet skipped.",
+      "invalidDay": "{{sheet}} row {{row}}: day \"{{detail}}\" not recognised, the 1st was used."
+    },
+    "errors": {
+      "noData": "No month sheets (Jan–Dec) with an Amount column and expenses were found."
     }
   }
 }

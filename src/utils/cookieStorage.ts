@@ -604,6 +604,18 @@ export function loadNetWorthTrackerData(): NetWorthTrackerData | null {
   }
 }
 
+/** True when Net Worth data is stored, even if it cannot currently be read. */
+export function hasStoredNetWorthTrackerData(): boolean {
+  try {
+    return Boolean(localStorage.getItem(NET_WORTH_TRACKER_KEY) || SafeCookies.get(NET_WORTH_TRACKER_KEY));
+  } catch (error) {
+    logger.error('cookie-storage', 'storage-check-failed', 'saved net worth storage could not be checked', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+    return true;
+  }
+}
+
 /**
  * Clear Net Worth Tracker data from localStorage
  */

@@ -2902,6 +2902,8 @@
   },
   "workbookImport": {
     "title": "Tabelle importieren",
+    "unreadableNetWorth": "Gespeicherte Net-Worth-Tracker-Daten sind nicht lesbar und bleiben unverändert. Stellen Sie sie wieder her oder setzen Sie sie zurück, bevor Sie den Vermögensverlauf importieren.",
+    "unreadableCashflow": "Gespeicherte Expense-Tracker-Daten sind nicht lesbar und bleiben unverändert. Stellen Sie sie wieder her oder setzen Sie sie zurück, bevor Sie Einnahmen und Ausgaben importieren.",
     "intro": "Übernehmen Sie Ihren Verlauf aus einer Excel-Arbeitsmappe (.xlsx): ein Blatt pro Jahr mit den Spalten Jan–Dez, dazu optional die Blätter History und Allocation. Gespeichert wird erst nach Ihrer Bestätigung.",
     "settingsHelp": "Übernehmen Sie Jahre an Verlauf aus einer Tabelle. Laden Sie die Vorlage herunter und füllen Sie sie selbst oder mit einem KI-Assistenten aus.",
     "openButton": "Tabelle importieren (XLSX)",
@@ -2970,6 +2972,36 @@
       "importFailed": "Import fehlgeschlagen, Ihre Daten wurden nicht verändert: {{message}}",
       "templateFailed": "Die Vorlage konnte nicht erstellt werden: {{message}}",
       "copyFailed": "Kopieren in die Zwischenablage nicht möglich. Öffnen Sie die Formatanleitung, um den Prompt zu kopieren."
+    }
+  },
+  "expenseWorkbookImport": {
+    "title": "Ausgabentabelle importieren",
+    "intro": "Importieren Sie ein Jahr Ausgaben aus einer Arbeitsmappe mit einem Blatt pro Monat (Jan–Dez): Bezeichnung, Betrag, Kategorie und Bedarf/Wunsch. Gespeichert wird erst nach Ihrer Bestätigung.",
+    "settingsHelp": "Übernehmen Sie ein Jahr detaillierter Ausgaben aus einer Arbeitsmappe mit einem Blatt pro Monat oder laden Sie die Jahresvorlage herunter.",
+    "openButton": "Ausgaben importieren (XLSX)",
+    "downloadTemplate": "Ausgabenvorlage herunterladen",
+    "year": "Jahr",
+    "yearDetected": "Aus dem Dateinamen erkannt. Bei Bedarf ändern.",
+    "yearMissing": "Kein Jahr im Dateinamen gefunden. Prüfen Sie das Jahr vor dem Import.",
+    "monthSheets": "Monatsblätter: {{months}}",
+    "months": "Zu importierende Monate: {{months}}",
+    "futureMonths": "Übersprungene zukünftige Monate: {{months}}",
+    "entries": "Ausgaben: {{expenses}} · Einnahmen: {{incomes}}",
+    "newCategories": "Neue eigene Kategorien: {{names}}",
+    "currencyNote": "Beträge sind in {{currency}}; Zeilen mit eigener Währung werden mit Ihren Ersatzkursen umgerechnet.",
+    "detailNote": "Monatliche Ausgabensummen aus einem Vermögens-Import werden durch diese detaillierten Ausgaben ersetzt.",
+    "existingCount": "{{count}} Monate enthalten bereits von Ihnen erfasste Ausgaben.",
+    "replaceWarning": "Beim Ersetzen werden Ihre erfassten Ausgaben in diesen Monaten entfernt und deren Einnahmen überschrieben.",
+    "doneSummary": "Importierte Monate: {{months}}, behalten: {{kept}}. Ausgaben: {{expenses}}. Einnahmen: {{incomes}}. Neue Kategorien: {{categories}}.",
+    "incomeSkipped": "Einnahmen wurden in {{count}} Monaten mit bestehenden Einnahmen nicht verändert.",
+    "warnings": {
+      "negativeAmount": "{{sheet}} Zeile {{row}}: negativer Betrag für „{{detail}}“ übersprungen.",
+      "unsupportedCurrency": "{{sheet}} Zeile {{row}}: Währung „{{detail}}“ wird nicht unterstützt, Zeile übersprungen.",
+      "duplicateMonthSheet": "{{sheet}}: ein anderes Blatt deckt diesen Monat bereits ab, Blatt übersprungen.",
+      "invalidDay": "{{sheet}} Zeile {{row}}: Tag „{{detail}}“ nicht erkannt, der 1. wurde verwendet."
+    },
+    "errors": {
+      "noData": "Keine Monatsblätter (Jan–Dez) mit einer Spalte Betrag und Ausgaben gefunden."
     }
   }
 }

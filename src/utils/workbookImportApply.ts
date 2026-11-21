@@ -41,6 +41,8 @@ import { calculateYearsOfExpenses } from './fireCalculator';
 import { logger } from './logger';
 import { calculateMonthlyNetWorth } from './netWorthCalculator';
 import {
+  EXPENSE_WORKBOOK_ID_PREFIX,
+  NET_WORTH_WORKBOOK_ID_PREFIX,
   normalizeText,
   tickerKey,
   type WorkbookImportPlan,
@@ -101,10 +103,13 @@ export interface WorkbookImportResult {
   summary: WorkbookImportSummary;
 }
 
-const IMPORTED_ID_PREFIX = 'wb-';
-
 function isImported(entry: { id: string }): boolean {
-  return entry.id.startsWith(IMPORTED_ID_PREFIX);
+  return entry.id.startsWith(NET_WORTH_WORKBOOK_ID_PREFIX);
+}
+
+/** Entries from the yearly expenses workbook: detailed, so they outrank monthly totals. */
+function isExpenseWorkbookEntry(entry: { id: string }): boolean {
+  return entry.id.startsWith(EXPENSE_WORKBOOK_ID_PREFIX);
 }
 
 function periodValue(year: number, month: number): number {
@@ -272,21 +277,24 @@ function mergeCashflow(
       yearData.months.push(monthData);
     }
 
-    const userIncomes = monthData.incomes.filter((entry) => !isImported(entry));
+    // Income totals from the expenses workbook give way to these detailed rows.
+    const currentIncomes = monthData.incomes.filter((entry) => !isImported(entry));
+    const userIncomes = currentIncomes.filter((entry) => !isExpenseWorkbookEntry(entry));
     if (month.incomes.length === 0) {
-      monthData.incomes = userIncomes;
+      monthData.incomes = currentIncomes;
     } else if (userIncomes.length > 0 && policy === 'keep') {
-      monthData.incomes = userIncomes;
+      monthData.incomes = currentIncomes;
       keptMonths.add(`${month.year}-${month.month}`);
     } else {
       monthData.incomes = policy === 'replace' ? structuredClone(month.incomes) : [...userIncomes, ...structuredClone(month.incomes)];
       summary.incomesImported += month.incomes.length;
     }
 
+    // Detailed expenses from the expenses workbook always win over a monthly total.
     const userExpenses = monthData.expenses.filter((entry) => !isImported(entry));
     if (month.expenses.length === 0) {
       monthData.expenses = userExpenses;
-    } else if (userExpenses.length > 0 && policy === 'keep') {
+    } else if (userExpenses.some(isExpenseWorkbookEntry) || (userExpenses.length > 0 && policy === 'keep')) {
       monthData.expenses = userExpenses;
       keptMonths.add(`${month.year}-${month.month}`);
     } else {

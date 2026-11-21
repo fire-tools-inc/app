@@ -52,6 +52,7 @@ import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberForm
 import { DataManagement } from './DataManagement';
 import { ValidatedNumberInput } from './ValidatedNumberInput';
 import { MaterialIcon } from './MaterialIcon';
+import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
@@ -772,6 +773,25 @@ export function ExpenseTrackerPage() {
     event.target.value = '';
   };
 
+  // Yearly expenses workbook import and template
+  const [isExpenseWorkbookOpen, setIsExpenseWorkbookOpen] = useState(false);
+  const getExpenseWorkbookData = useCallback(() => stateRef.current.data, []);
+  const applyExpenseWorkbook = useCallback((next: ExpenseTrackerData) => {
+    if (stateRef.current.unreadable) {
+      setSaveError(translation.current('planning.errors.invalidInput'));
+      return false;
+    }
+    return setData(next);
+  }, [setData]);
+  const handleDownloadExpenseTemplate = () => {
+    downloadExpenseTemplateFile(selectedYear, stateRef.current.data).catch((error: unknown) => {
+      logger.error('expense-tracker', 'template-failed', 'expenses template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
   // Reset data
   const handleResetData = () => {
     if (confirm(t('expenseTracker.confirm.reset'))) {
@@ -879,6 +899,36 @@ export function ExpenseTrackerPage() {
           onReset={handleResetData}
           onLoadDemo={handleLoadDemo}
           defaultOpen={false}
+          extraActions={(
+            <>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsExpenseWorkbookOpen(true)}
+                  disabled={dataUnavailable}
+                >
+                  <MaterialIcon name="receipt_long" /> {t('expenseWorkbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadExpenseTemplate}
+              >
+                <MaterialIcon name="download" /> {t('expenseWorkbookImport.downloadTemplate')}
+              </button>
+            </>
+          )}
+        />
+        <ExpenseWorkbookImportDialog
+          isOpen={isExpenseWorkbookOpen}
+          onClose={() => setIsExpenseWorkbookOpen(false)}
+          getCurrent={getExpenseWorkbookData}
+          onApply={applyExpenseWorkbook}
+          onImported={(_summary, year) => setSelectedYear(year)}
         />
 
         {/* Month/Year Selector */}

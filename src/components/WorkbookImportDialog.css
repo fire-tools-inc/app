@@ -193,6 +193,24 @@
   overflow-wrap: anywhere;
 }
 
+.workbook-import-year {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+.workbook-import-year input {
+  width: 7rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font: inherit;
+}
+
 .workbook-import-option {
   display: flex;
   align-items: flex-start;

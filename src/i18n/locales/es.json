@@ -2902,6 +2902,8 @@
   },
   "workbookImport": {
     "title": "Importar hoja de cálculo",
+    "unreadableNetWorth": "Los datos guardados del Net Worth Tracker no se pueden leer y no se modifican. Restáuralos o restablécelos antes de importar el historial de patrimonio.",
+    "unreadableCashflow": "Los datos guardados del Expense Tracker no se pueden leer y no se modifican. Restáuralos o restablécelos antes de importar ingresos y gastos.",
     "intro": "Recupera tu historial desde un libro de Excel (.xlsx): una hoja por año con columnas ene–dic, más las hojas opcionales History y Allocation. No se guarda nada hasta que confirmes.",
     "settingsHelp": "Trae años de historial desde una hoja de cálculo. Descarga la plantilla para rellenarla tú mismo o con un asistente de IA.",
     "openButton": "Importar hoja de cálculo (XLSX)",
@@ -2970,6 +2972,36 @@
       "importFailed": "La importación falló y tus datos no se modificaron: {{message}}",
       "templateFailed": "No se pudo crear la plantilla: {{message}}",
       "copyFailed": "No se pudo copiar al portapapeles. Abre la guía del formato para copiar el prompt."
+    }
+  },
+  "expenseWorkbookImport": {
+    "title": "Importar hoja de gastos",
+    "intro": "Importa un año de gastos desde un libro con una hoja por mes (ene–dic): nombre del gasto, importe, categoría y Necesidad/Deseo. No se guarda nada hasta que confirmes.",
+    "settingsHelp": "Trae un año de gastos detallados desde un libro con una hoja por mes, o descarga la plantilla anual.",
+    "openButton": "Importar gastos (XLSX)",
+    "downloadTemplate": "Descargar plantilla de gastos",
+    "year": "Año",
+    "yearDetected": "Detectado en el nombre del archivo. Cámbialo si hace falta.",
+    "yearMissing": "No se encontró el año en el nombre del archivo. Revisa el año antes de importar.",
+    "monthSheets": "Hojas mensuales: {{months}}",
+    "months": "Meses a importar: {{months}}",
+    "futureMonths": "Meses futuros omitidos: {{months}}",
+    "entries": "Gastos: {{expenses}} · Ingresos: {{incomes}}",
+    "newCategories": "Nuevas categorías personalizadas: {{names}}",
+    "currencyNote": "Los importes están en {{currency}}; las filas con su propia moneda se convierten con tus tipos de respaldo.",
+    "detailNote": "Los totales mensuales de gasto importados desde un libro de patrimonio se sustituyen por estos gastos detallados.",
+    "existingCount": "{{count}} meses ya contienen gastos que añadiste.",
+    "replaceWarning": "Reemplazar elimina los gastos que añadiste en esos meses y sobrescribe sus ingresos.",
+    "doneSummary": "Meses importados: {{months}}, conservados: {{kept}}. Gastos: {{expenses}}. Ingresos: {{incomes}}. Nuevas categorías: {{categories}}.",
+    "incomeSkipped": "Los ingresos no se modificaron en {{count}} meses que ya tenían ingresos.",
+    "warnings": {
+      "negativeAmount": "{{sheet}} fila {{row}}: importe negativo de «{{detail}}» omitido.",
+      "unsupportedCurrency": "{{sheet}} fila {{row}}: la moneda «{{detail}}» no es compatible, fila omitida.",
+      "duplicateMonthSheet": "{{sheet}}: otra hoja ya cubre este mes, hoja omitida.",
+      "invalidDay": "{{sheet}} fila {{row}}: día «{{detail}}» no reconocido, se usó el día 1."
+    },
+    "errors": {
+      "noData": "No se encontraron hojas mensuales (ene–dic) con una columna Importe y gastos."
     }
   }
 }

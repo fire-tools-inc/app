@@ -2902,6 +2902,8 @@
   },
   "workbookImport": {
     "title": "Importer un classeur",
+    "unreadableNetWorth": "Les données enregistrées du Net Worth Tracker sont illisibles et restent intactes. Restaurez-les ou réinitialisez-les avant d'importer l'historique du patrimoine.",
+    "unreadableCashflow": "Les données enregistrées de l'Expense Tracker sont illisibles et restent intactes. Restaurez-les ou réinitialisez-les avant d'importer revenus et dépenses.",
     "intro": "Reconstituez votre historique à partir d'un classeur Excel (.xlsx) : une feuille par année avec les colonnes janv.–déc., plus les feuilles facultatives History et Allocation. Rien n'est enregistré avant votre confirmation.",
     "settingsHelp": "Importez des années d'historique depuis un classeur. Téléchargez le modèle pour le remplir vous-même ou avec un assistant IA.",
     "openButton": "Importer un classeur (XLSX)",
@@ -2970,6 +2972,36 @@
       "importFailed": "L'importation a échoué et vos données n'ont pas été modifiées : {{message}}",
       "templateFailed": "Le modèle n'a pas pu être créé : {{message}}",
       "copyFailed": "Impossible de copier dans le presse-papiers. Ouvrez le guide du format pour copier le prompt."
+    }
+  },
+  "expenseWorkbookImport": {
+    "title": "Importer un classeur de dépenses",
+    "intro": "Importez une année de dépenses depuis un classeur avec une feuille par mois (janv.–déc.) : nom de la dépense, montant, catégorie et Besoin/Envie. Rien n'est enregistré avant votre confirmation.",
+    "settingsHelp": "Importez une année de dépenses détaillées depuis un classeur avec une feuille par mois, ou téléchargez le modèle annuel.",
+    "openButton": "Importer des dépenses (XLSX)",
+    "downloadTemplate": "Télécharger le modèle de dépenses",
+    "year": "Année",
+    "yearDetected": "Détectée dans le nom du fichier. Modifiez-la si nécessaire.",
+    "yearMissing": "Aucune année dans le nom du fichier. Vérifiez l'année avant d'importer.",
+    "monthSheets": "Feuilles mensuelles : {{months}}",
+    "months": "Mois à importer : {{months}}",
+    "futureMonths": "Mois futurs ignorés : {{months}}",
+    "entries": "Dépenses : {{expenses}} · Revenus : {{incomes}}",
+    "newCategories": "Nouvelles catégories personnalisées : {{names}}",
+    "currencyNote": "Les montants sont en {{currency}} ; les lignes avec leur propre devise sont converties avec vos taux de secours.",
+    "detailNote": "Les totaux mensuels de dépenses importés depuis un classeur de patrimoine sont remplacés par ces dépenses détaillées.",
+    "existingCount": "{{count}} mois contiennent déjà des dépenses que vous avez ajoutées.",
+    "replaceWarning": "Le remplacement supprime les dépenses que vous avez ajoutées pour ces mois et écrase leurs revenus.",
+    "doneSummary": "Mois importés : {{months}}, conservés : {{kept}}. Dépenses : {{expenses}}. Revenus : {{incomes}}. Nouvelles catégories : {{categories}}.",
+    "incomeSkipped": "Les revenus n'ont pas été modifiés pour {{count}} mois qui en avaient déjà.",
+    "warnings": {
+      "negativeAmount": "{{sheet}} ligne {{row}} : montant négatif pour « {{detail}} » ignoré.",
+      "unsupportedCurrency": "{{sheet}} ligne {{row}} : devise « {{detail}} » non prise en charge, ligne ignorée.",
+      "duplicateMonthSheet": "{{sheet}} : une autre feuille couvre déjà ce mois, feuille ignorée.",
+      "invalidDay": "{{sheet}} ligne {{row}} : jour « {{detail}} » non reconnu, le 1er a été utilisé."
+    },
+    "errors": {
+      "noData": "Aucune feuille mensuelle (janv.–déc.) avec une colonne Montant et des dépenses n'a été trouvée."
     }
   }
 }

@@ -42,6 +42,11 @@ import {
 } from '../types/expenseTracker';
 import type { AllocationMode, AssetClass, SubAssetType } from '../types/assetAllocation';
 
+/** Ids of entries created by the net worth workbook import. */
+export const NET_WORTH_WORKBOOK_ID_PREFIX = 'wb-';
+/** Ids of entries created by the yearly expenses workbook import. */
+export const EXPENSE_WORKBOOK_ID_PREFIX = 'wbe-';
+
 export interface WorkbookParseOptions {
   /** Currency every imported amount is converted into. */
   targetCurrency: SupportedCurrency;
@@ -300,6 +305,11 @@ function getMonthNameIndex(): Map<string, number> {
   index.set('sept', 9);
   monthNameIndex = index;
   return index;
+}
+
+/** Month number for a month name or abbreviation in any supported UI language. */
+export function monthFromName(value: string): number | null {
+  return getMonthNameIndex().get(stripPeriod(normalizeText(value))) ?? null;
 }
 
 function monthFromHeader(cell: XlsxCell | undefined, date1904: boolean): number | null {
@@ -585,7 +595,7 @@ function roleFromSection(section: Section, label: string, name: string): RowRole
 /** Rows (in the same sheet) referenced by a formula, ignoring other sheets and string literals. */
 const SAME_SHEET_REFERENCE = /(?<![A-Za-z0-9_.$!:])\$?[A-Z]{1,3}\$?(\d+)(?::\$?[A-Z]{1,3}\$?(\d+))?(?![\d(A-Za-z_!])/g;
 
-function referencedRows(formula: string): number[] {
+export function referencedRows(formula: string): number[] {
   const rows: number[] = [];
   formula.split('"').forEach((segment, index) => {
     if (index % 2 === 1) return;

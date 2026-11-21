@@ -127,11 +127,50 @@ Formulas are not recalculated: Fire Tools reads the values your spreadsheet
 application saved. Save the file in Excel, LibreOffice or Numbers, or download
 it from Google Sheets as `.xlsx`, after the values are up to date.
 
+## Yearly expenses workbook
+
+Bring in one year of detailed spending at a time:
+**Expense Tracker > Data Management > Import expenses (XLSX)**, or
+**Settings > Data**. **Download expenses template** creates a workbook for the
+selected year whose README lists your categories, including your own.
+
+| Part | Format |
+| --- | --- |
+| File | One workbook per year. The year is read from the file name (for example `Expenses 2026.xlsx`); you can change it in the preview. |
+| Sheets | One per month named `Jan` … `Dec` (or the month name in another supported language, or `2026-01`). Other sheets, such as summaries and charts, are ignored. |
+| Columns | A header row with `Amount` plus `Expense name` (or the column left of `Amount`), and optional `Category`, `Type`, `Day`, `Currency` and `Notes`. |
+| Type | `Need` or `Want`; empty uses the category default. `Income` rows become income entries. |
+| Income | Without Income rows, a labelled cell beside the table such as `Income` or `Monthly income` with the amount to its right becomes the month's income. |
+
+How rows are imported:
+
+- Rows without a name or with an amount of 0 are skipped; negative amounts
+  are skipped with a note. Amounts are taken as saved, including formulas.
+- Each expense is dated on its `Day`, or the 1st of the month.
+- Categories match your existing categories by name, then common synonyms
+  (for example *Transport*, *Charity*, *Other*). Any other name becomes a custom
+  category with its own color, so your grouping is preserved. The preview
+  lists new categories before you import.
+- Months after the current month are skipped, so prefilled upcoming bills are
+  not recorded as spent.
+- **Keep my data** skips months that contain expenses you entered yourself;
+  **Replace** overwrites them. Income only fills months without income unless
+  you replace, so detailed income from a net worth import is not replaced by
+  a single total.
+- These detailed expenses replace the single monthly spending total that a
+  net worth workbook import adds, and a later net worth import keeps them.
+  Importing the same expenses workbook again refreshes it without duplicates.
+
+Use the [expenses AI agent prompt](./expense-import-agent-prompt.md) (also in
+the template README and the dialog's **Copy AI prompt**) to turn bank or card
+statements into this format.
+
 ## Troubleshooting
 
 | Message | Fix |
 | --- | --- |
 | *This file is not an .xlsx workbook* | Save as *Excel Workbook (.xlsx)*; `.xls`, `.ods`, `.numbers` and CSV are not read. |
 | *No year sheets, history or allocation data were found* | Rename year sheets to the year only and check the Jan–Dec header row. |
+| *No month sheets (Jan–Dec) with an Amount column and expenses were found* | For the expenses workbook, name sheets after months and add an `Amount` header. |
 | A month differs from the workbook total | Look for typed-in totals, numbers stored as text (for example `1250,40`) or the same money counted twice. Fire Tools imports the number even when the spreadsheet stored it as text. |
 | Unknown category | Use one of the template categories. |

@@ -2902,6 +2902,8 @@
   },
   "workbookImport": {
     "title": "Importa foglio di calcolo",
+    "unreadableNetWorth": "I dati salvati del Net Worth Tracker non sono leggibili e non vengono toccati. Ripristinali o azzerali prima di importare lo storico del patrimonio.",
+    "unreadableCashflow": "I dati salvati dell'Expense Tracker non sono leggibili e non vengono toccati. Ripristinali o azzerali prima di importare entrate e spese.",
     "intro": "Recupera lo storico da una cartella Excel (.xlsx): un foglio per anno con colonne Gen–Dic, più i fogli facoltativi History e Allocation. Nulla viene salvato finché non confermi.",
     "settingsHelp": "Importa anni di storico da un foglio di calcolo. Scarica il modello per compilarlo da solo o con un assistente AI.",
     "openButton": "Importa foglio di calcolo (XLSX)",
@@ -2970,6 +2972,36 @@
       "importFailed": "Importazione non riuscita, i tuoi dati non sono stati modificati: {{message}}",
       "templateFailed": "Impossibile creare il modello: {{message}}",
       "copyFailed": "Impossibile copiare negli appunti. Apri la guida al formato per copiare il prompt."
+    }
+  },
+  "expenseWorkbookImport": {
+    "title": "Importa foglio delle spese",
+    "intro": "Importa un anno di spese da una cartella con un foglio per mese (Gen–Dic): nome della spesa, importo, categoria e Bisogno/Desiderio. Nulla viene salvato finché non confermi.",
+    "settingsHelp": "Importa un anno di spese dettagliate da una cartella con un foglio per mese, oppure scarica il modello annuale.",
+    "openButton": "Importa spese (XLSX)",
+    "downloadTemplate": "Scarica modello spese",
+    "year": "Anno",
+    "yearDetected": "Rilevato dal nome del file. Modificalo se necessario.",
+    "yearMissing": "Nessun anno nel nome del file. Controlla l'anno prima di importare.",
+    "monthSheets": "Fogli mensili: {{months}}",
+    "months": "Mesi da importare: {{months}}",
+    "futureMonths": "Mesi futuri ignorati: {{months}}",
+    "entries": "Spese: {{expenses}} · Voci di entrata: {{incomes}}",
+    "newCategories": "Nuove categorie personalizzate: {{names}}",
+    "currencyNote": "Gli importi sono in {{currency}}; le righe con una propria Valuta vengono convertite con i tuoi tassi di riserva.",
+    "detailNote": "I totali mensili di spesa importati da una cartella del patrimonio vengono sostituiti da queste spese dettagliate.",
+    "existingCount": "{{count}} mesi contengono già spese inserite da te.",
+    "replaceWarning": "La sostituzione rimuove le spese che hai inserito in quei mesi e sovrascrive le loro entrate.",
+    "doneSummary": "Mesi importati: {{months}}, mantenuti: {{kept}}. Spese: {{expenses}}. Voci di entrata: {{incomes}}. Nuove categorie: {{categories}}.",
+    "incomeSkipped": "Le entrate non sono state modificate in {{count}} mesi che avevano già entrate.",
+    "warnings": {
+      "negativeAmount": "{{sheet}} riga {{row}}: importo negativo per \"{{detail}}\" ignorato.",
+      "unsupportedCurrency": "{{sheet}} riga {{row}}: valuta \"{{detail}}\" non supportata, riga ignorata.",
+      "duplicateMonthSheet": "{{sheet}}: un altro foglio copre già questo mese, foglio ignorato.",
+      "invalidDay": "{{sheet}} riga {{row}}: giorno \"{{detail}}\" non riconosciuto, usato il giorno 1."
+    },
+    "errors": {
+      "noData": "Nessun foglio mensile (Gen–Dic) con una colonna Importo e delle spese è stato trovato."
     }
   }
 }
