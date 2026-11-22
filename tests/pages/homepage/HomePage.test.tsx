@@ -134,6 +134,13 @@ describe('home dashboard', () => {
     expectDiagnostic('error', '[privacy-save-failed]: failed to save dashboard privacy preference');
   });
 
+  it('offers the optional month log without replacing dashboard sections', () => {
+    mount();
+    expect(screen.getByRole('region', { name: 'Monthly check-in' })).toBeDefined();
+    expect(screen.getByRole('link', { name: /^Log \w+ \d{4}$/ }).getAttribute('href')).toMatch(/^\/log-month\?year=\d{4}&month=\d{1,2}$/);
+    expect(document.querySelectorAll('.dashboard-grid > section')).toHaveLength(6);
+  });
+
   it('removes refresh subscriptions on unmount', () => {
     const { unmount } = mount();
     const calls = mocks.assets.mock.calls.length;

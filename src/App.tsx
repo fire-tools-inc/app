@@ -23,6 +23,7 @@ import {
   LazyExpenseTrackerPage,
   LazyFIRECalculatorPage,
   LazyInvestmentGrowthPage,
+  LazyLogMonthPage,
   LazyMonteCarloPage,
   LazyNetWorthTrackerPage,
   LazyPortfolioBacktestPage,
@@ -232,6 +233,7 @@ function App() {
               <Route path="/portfolio-breakdown" element={settings.experimentalFeatures?.portfolioBreakdown ? <LazyPortfolioBreakdownPage /> : <NotFoundPage />} />
               <Route path="/expense-tracker" element={<LazyExpenseTrackerPage />} />
               <Route path="/net-worth-tracker" element={<LazyNetWorthTrackerPage />} />
+              <Route path="/log-month" element={<LazyLogMonthPage />} />
               <Route path="/debt-payoff" element={<LazyDebtPayoffPage />} />
               <Route path="/questionnaire" element={<LazyQuestionnairePage />} />
               <Route path="/settings" element={<LazySettingsPage onSettingsChange={handleSettingsChange} />} />

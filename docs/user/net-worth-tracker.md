@@ -14,6 +14,11 @@ and shows you how today's reality compares to the
 3. The chart shows your real progression; the dashed line is the projection
    from the FIRE calculator at the same horizon.
 
+**Start Month Log** creates the selected month and copies holdings, cash
+accounts and pensions from the previous snapshot. The dashboard's
+[Log month](./homepage.md#log-month) flow uses the same step, then lets you
+update holdings, cash balances and pension values without leaving the guide.
+
 ## Pensions and net worth
 
 Pensions are always totalled on their own card. **Count pensions in net worth**,

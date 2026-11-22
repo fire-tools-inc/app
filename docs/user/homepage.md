@@ -47,6 +47,47 @@ reachable from the sidebar.
 - **Language and currency** are remembered across sessions and follow you to
   every tool.
 
+## Log month
+
+**Log <month>** in the dashboard header and the **Monthly check-in** card start
+an optional, guided month log. Everything else on the dashboard and in the
+sidebar works as before; you can skip the log entirely.
+
+1. **Income**: review what is already logged, add rows (description, source,
+   amount and a date inside the month) or **Copy from <previous month>**.
+   Copied rows are drafts until you save them; incomes recorded from a planning
+   schedule are not copied, so record those from Cashflow Planning.
+2. **Expenses**: see the month's count, total and top categories, then paste
+   or type new expenses in the quick import.
+3. **Investments**: if the month has no net worth snapshot yet, **Start from
+   <previous month>** copies holdings, cash accounts and pensions, exactly like
+   **Start Month Log** in the Net Worth Tracker. Edit shares, prices and
+   balances in place; each valid value is saved as you type and compared with
+   the previous snapshot. **Fetch month-end prices** is optional and never
+   blocks the flow.
+4. **Pension**: update current values, see the change since the previous
+   snapshot and add a pension. Contributions can still be logged as operations
+   in the Net Worth Tracker.
+5. **Review**: income, expenses, net balance, savings rate, net worth and its
+   change since the previous snapshot. **Finish** returns to the dashboard.
+
+Every step can be skipped with **Skip**, revisited from the step list or with
+**Back**, and links to the full Cashflow or Net Worth page for advanced edits.
+The month and step are part of the address, so refreshing or using the
+browser's back button keeps your place. Use the **Month** menu to log another
+month.
+
+The check-in card derives each step's status from your saved data; it does not
+store anything extra. A step is **Logged** when the month has entries,
+**Same as last month** when copied holdings or pensions still match the
+previous snapshot, and **Nothing to log** when you track no pensions. During
+the first ten days of a month the dashboard suggests the previous month if it
+is still incomplete, because many people log after month end.
+
+If saving fails, the page keeps what you typed, explains the problem and lets
+you try again. The public demo lets you explore every step, but it is
+read-only and nothing is saved.
+
 ## Tips
 
 - Use `Tab` to reach dashboard actions and sidebar links. **View chart data**

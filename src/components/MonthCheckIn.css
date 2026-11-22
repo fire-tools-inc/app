@@ -1,0 +1,119 @@
+.month-check-in {
+  margin-bottom: 1.5rem;
+}
+
+.month-check-in__header {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.month-check-in__month {
+  min-width: 11rem;
+}
+
+.month-check-in__hint {
+  margin: -0.25rem 0 0.875rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.month-check-in__steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.month-check-in__step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.25rem 0.625rem;
+  min-height: 44px;
+  height: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.month-check-in__step:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+}
+
+.month-check-in__step:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.month-check-in__index {
+  display: inline-grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.month-check-in__name {
+  font-size: var(--text-base);
+  font-weight: 550;
+}
+
+.month-check-in__step .badge {
+  justify-self: start;
+  white-space: normal;
+}
+
+.month-check-in__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 1rem;
+}
+
+.month-check-in__progress {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@container dashboard (max-width: 760px) {
+  .month-check-in__steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container dashboard (max-width: 420px) {
+  .month-check-in__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .month-check-in__steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .month-check-in__footer .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .month-check-in__step {
+    transition: none;
+  }
+}
