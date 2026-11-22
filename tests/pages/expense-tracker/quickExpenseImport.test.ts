@@ -42,6 +42,25 @@ describe('quick expense list parser', () => {
     ]);
   });
 
+  it('keeps non-breaking-space thousands, trailing-dot dates and date-first CSV rows intact', () => {
+    const rows = parse([
+      'loyer 1\u202f234,56 €',
+      '2026-11-03\tLoyer\t1\u00a0234,56',
+      '03.11. Rewe 23,40',
+      '2026-11-03,12.50,Rent',
+      '03/11/2026,12.50,Rent',
+      'Rent,12.50,2026-11-04',
+    ].join('\n'));
+    expect(rows.map(({ date, amount, description, error }) => ({ date, amount, description, error }))).toEqual([
+      { date: '2026-11-01', amount: 1234.56, description: 'loyer', error: undefined },
+      { date: '2026-11-03', amount: 1234.56, description: 'Loyer', error: undefined },
+      { date: '2026-11-03', amount: 23.4, description: 'Rewe', error: undefined },
+      { date: '2026-11-03', amount: 12.5, description: 'Rent', error: undefined },
+      { date: '2026-11-03', amount: 12.5, description: 'Rent', error: undefined },
+      { date: '2026-11-04', amount: 12.5, description: 'Rent', error: undefined },
+    ]);
+  });
+
   it('records an amount paid several times', () => {
     expect(summary('coffee 2x3.50\nsessions 45 x 2')).toEqual([
       { date: '2026-11-01', amount: 7, description: 'coffee', currency: 'EUR', quantity: 2, unitAmount: 3.5 },

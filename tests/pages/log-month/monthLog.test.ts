@@ -8,6 +8,7 @@ import {
   createIncomeDraft,
   deriveMonthCheckIn,
   monthLogPath,
+  parseNumberInput,
   parsePeriod,
   validateIncomeDraft,
 } from '../../../src/utils/monthLog';
@@ -147,8 +148,20 @@ describe('income drafts', () => {
     ]);
   });
 
+  it('reads thousands and decimals with the saved decimal separator', () => {
+    expect(parseNumberInput('3,200', { decimalSeparator: '.' })).toBe(3200);
+    expect(parseNumberInput('1,234.56', { decimalSeparator: '.' })).toBe(1234.56);
+    expect(parseNumberInput('23.921', { decimalSeparator: '.' })).toBe(23.921);
+    expect(parseNumberInput('3,2', { decimalSeparator: '.' })).toBeNull();
+    expect(parseNumberInput('3,2', { decimalSeparator: ',' })).toBe(3.2);
+    expect(parseNumberInput('1.234,56', { decimalSeparator: ',' })).toBe(1234.56);
+    expect(parseNumberInput('12\u00a0500', { decimalSeparator: ',' })).toBe(12500);
+    expect(parseNumberInput('-4.5', { decimalSeparator: '.', allowNegative: true })).toBe(-4.5);
+    expect(parseNumberInput('-4.5', { decimalSeparator: '.' })).toBeNull();
+  });
+
   it('accepts only finite non-negative amounts and calendar dates inside the month', () => {
-    const draft = { ...createIncomeDraft(MARCH), description: 'Synthetic', amount: '12,50', date: '2026-03-31' };
+    const draft = { ...createIncomeDraft(MARCH), description: 'Synthetic', amount: '12.50', date: '2026-03-31' };
     expect(validateIncomeDraft(draft, MARCH)).toEqual({});
     expect(validateIncomeDraft({ ...draft, amount: '-1' }, MARCH)).toEqual({ amount: 'invalid' });
     expect(validateIncomeDraft({ ...draft, amount: 'Infinity' }, MARCH)).toEqual({ amount: 'invalid' });

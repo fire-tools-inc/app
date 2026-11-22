@@ -38,12 +38,21 @@ describe('bulk AI feature settings', () => {
     expect(provider.value).toBe('local');
     expect(screen.getByText(/OLLAMA_ORIGINS/)).toBeTruthy();
     fireEvent.change(provider, { target: { value: 'openrouter' } });
-    expect(loadSettings().llmCategorization).toEqual({ ...model, provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1' });
+    expect(loadSettings().llmCategorization).toEqual({ provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', apiKey: '', model: '' });
     expect((screen.getByLabelText('Base URL') as HTMLInputElement).value).toBe('https://openrouter.ai/api/v1');
     expect((screen.getByLabelText('Model') as HTMLInputElement).placeholder).toBe('openai/gpt-4o-mini');
     expect(screen.getByText(/Required by this provider/)).toBeTruthy();
     fireEvent.change(screen.getByLabelText('Base URL'), { target: { value: 'https://gateway.example/v1' } });
     expect(loadSettings().llmCategorization).toMatchObject({ provider: 'openrouter', baseUrl: 'https://gateway.example/v1' });
+  });
+
+  it('never carries an API key or model over to a different provider', () => {
+    saveSettings({ ...loadSettings(), llmCategorization: { provider: 'openai', baseUrl: 'https://api.openai.com/v1', apiKey: 'synthetic-key', model: 'synthetic-model' } });
+    renderSettings();
+    fireEvent.click(screen.getByText('Model configuration'));
+    fireEvent.change(screen.getByLabelText('Provider'), { target: { value: 'gemini' } });
+    expect(loadSettings().llmCategorization).toMatchObject({ provider: 'gemini', apiKey: '', model: '' });
+    expect((screen.getByLabelText('API key') as HTMLInputElement).value).toBe('');
   });
 
   it('reflects preference changes made while Settings remains mounted', () => {

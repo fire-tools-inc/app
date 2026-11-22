@@ -74,7 +74,8 @@ const AMOUNT_PATTERN = new RegExp(
 const QUANTITY_PATTERN = new RegExp(
   `(?<![\\p{L}\\d.,])(?:(\\d{1,3})\\s?[x×*]\\s?(?:(${CURRENCY})\\s?)?(${NUMBER})|(?:(${CURRENCY})\\s?)?(${NUMBER})\\s?(?:(${CURRENCY})\\s?)?[x×*]\\s?(\\d{1,3}))(?:\\s?(${CURRENCY}))?(?![\\p{L}\\d])`, 'iu');
 const ISO_DATE = /(?<!\d)(\d{4})-(\d{1,2})-(\d{1,2})(?!\d)/;
-const SHORT_DATE = /^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2}|\d{4}))?(?=$|[\s,;\t])/;
+const SHORT_DATE = /^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2}|\d{4})|\.)?(?=$|[\s,;\t])/;
+const LEADING_DATE_CELL = /^(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[./-]\d{1,2}(?:[./-](?:\d{4}|\d{2}))?\.?)\s*,/;
 const LEADING_DAY = /^(\d{1,2})(?:st|nd|rd|th|\.)?\s+(?=\p{L})/u;
 const HEADER_WORDS = /^(?:date|data|datum|fecha|day|giorno|tag|jour|dia|description|descrizione|beschreibung|descripcion|amount|importo|betrag|montant|importe|category|categoria|kategorie|categorie)$/;
 
@@ -143,7 +144,10 @@ let rowSequence = 0;
 function normalizeCells(line: string): string {
   return line
     .replace(/[;\t|]/g, '\t')
-    // Commas between digits are decimals or thousands; other commas separate CSV cells.
+    // A comma right after a leading date always separates CSV cells.
+    .replace(LEADING_DATE_CELL, '$1\t')
+    // Commas between digits are decimals or thousands unless a year or date follows.
+    .replace(/(\d),(?=\d{4}-\d|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}(?!\d))/g, '$1\t')
     .replace(/,(?!\d)|(?<!\d),/g, '\t')
     .replace(/"/g, '');
 }
@@ -151,7 +155,8 @@ function normalizeCells(line: string): string {
 function parseLine(rawLine: string, lineIndex: number, opts: QuickParseOptions): QuickImportRow | null {
   const trimmed = rawLine.trim();
   if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) return null;
-  let text = normalizeCells(trimmed).replace(/\s+/g, ' ').trim();
+  // Keep non-breaking spaces: they are thousands separators in French-formatted amounts.
+  let text = normalizeCells(trimmed).replace(/[^\S\u00a0\u202f]+/g, ' ').trim();
   let date = isoDate(opts.year, opts.month, 1);
 
   const iso = ISO_DATE.exec(text);

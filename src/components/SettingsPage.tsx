@@ -476,11 +476,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const llmPreset = getLlmProviderPreset(llmProvider);
   const updateLlmConfig = (patch: Partial<LlmCategorizationConfig>) => {
     const current = settings.llmCategorization;
+    // A key or model entered for one service must never be sent to another one.
+    const providerChanged = patch.provider !== undefined && patch.provider !== llmProvider;
     handleSettingChange('llmCategorization', {
       provider: llmProvider,
       baseUrl: current?.baseUrl ?? '',
-      apiKey: current?.apiKey ?? '',
-      model: current?.model ?? '',
+      apiKey: providerChanged ? '' : current?.apiKey ?? '',
+      model: providerChanged ? '' : current?.model ?? '',
       ...patch,
     });
   };

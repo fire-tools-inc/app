@@ -9,6 +9,9 @@ import {
 import type { MonthlySnapshot, NetWorthTrackerData } from '../types/netWorthTracker';
 import type { SupportedCurrency } from '../types/currency';
 import { isValidCalendarDate } from './dateValidation';
+import { loadSettings } from './cookieSettings';
+import type { DecimalSeparator } from './inputValidation';
+import { logger } from './logger';
 
 export const MONTH_LOG_STEPS = ['income', 'expenses', 'investments', 'pension'] as const;
 export type MonthLogStepId = typeof MONTH_LOG_STEPS[number];
@@ -244,12 +247,33 @@ export function isBlankIncomeDraft(draft: IncomeDraft): boolean {
   return draft.description.trim() === '' && draft.amount.trim() === '';
 }
 
-/** Parse a number typed with a dot or comma decimal separator; null when invalid. */
-export function parseNumberInput(value: string, { allowNegative = false } = {}): number | null {
-  const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
-  const pattern = allowNegative ? /^-?(\d+(\.\d*)?|\.\d+)$/ : /^(\d+(\.\d*)?|\.\d+)$/;
-  if (!pattern.test(normalized)) return null;
-  const parsed = Number(normalized);
+function savedDecimalSeparator(): DecimalSeparator {
+  try {
+    return loadSettings().decimalSeparator;
+  } catch (error) {
+    logger.error('month-log', 'settings-load-failed', 'number format settings could not be read; using a dot', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+    return '.';
+  }
+}
+
+/**
+ * Parse a number typed with the saved decimal separator. The other separator is
+ * accepted only as a thousands separator in groups of three digits, so "3,200"
+ * is 3200 with a dot decimal and "3,2" is rejected rather than misread.
+ */
+export function parseNumberInput(
+  value: string,
+  { allowNegative = false, decimalSeparator = savedDecimalSeparator() }: { allowNegative?: boolean; decimalSeparator?: DecimalSeparator } = {},
+): number | null {
+  const compact = value.trim().replace(/[\s\u00a0\u202f]/g, '');
+  const thousands = decimalSeparator === '.' ? ',' : '.';
+  const pattern = new RegExp(
+    `^${allowNegative ? '-?' : ''}(?:\\d{1,3}(?:\\${thousands}\\d{3})+|\\d+)?(?:\\${decimalSeparator}\\d*)?$`,
+  );
+  if (!/\d/.test(compact) || !pattern.test(compact)) return null;
+  const parsed = Number(compact.split(thousands).join('').replace(decimalSeparator, '.'));
   return Number.isFinite(parsed) ? parsed : null;
 }
 
