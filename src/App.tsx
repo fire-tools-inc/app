@@ -17,6 +17,10 @@ import { loadTourCompleted } from './utils/tourPreferences';
 import { syncPreferencesFromBackend } from './utils/uiPreferencesSync';
 import { loadSidebarCollapsed, saveSidebarCollapsed } from './utils/navigationPreferences';
 import { logger } from './utils/logger';
+import { initBackendStorage, isBackendStorageCandidate } from './utils/backendSync';
+import { useDataEpoch } from './hooks/useBackendSync';
+import { SyncBanner } from './components/SyncStatus';
+import { isSupportedLanguage, setLanguage } from './i18n';
 import {
   LazyAssetAllocationPage,
   LazyDebtPayoffPage,
@@ -122,10 +126,14 @@ function App() {
   const basename = isElectron
     ? '/'
     : import.meta.env.BASE_URL.replace(/\/+$/, '') || '/';
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   // Load settings from localStorage
   const [settings, setSettings] = useState<UserSettings>(() => loadSettings());
+  // With a backend, routes wait until the local cache reflects the database
+  // (or the boot timeout passes and the app continues offline).
+  const [storageReady, setStorageReady] = useState(() => !isBackendStorageCandidate());
+  const dataEpoch = useDataEpoch();
   const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(loadSidebarCollapsed);
   const [uiPreferencesRevision, setUiPreferencesRevision] = useState(0);
@@ -136,6 +144,41 @@ function App() {
   
   // Policy modal state
   const [policyModalType, setPolicyModalType] = useState<PolicyType | null>(null);
+
+  // Reload shell-level settings after the database copy reached the cache.
+  const refreshStoredSettings = useCallback(() => {
+    const next = loadSettings();
+    setSettings(next);
+    if (isSupportedLanguage(next.language) && next.language !== i18n.language) {
+      setLanguage(next.language).catch((error: unknown) => {
+        logger.error('app', 'language-sync-failed', 'The saved language could not be applied.', {
+          pii: { error: error instanceof Error ? error.message : String(error) },
+        });
+      });
+    }
+  }, [i18n]);
+
+  useEffect(() => {
+    if (storageReady) {
+      // No backend: the local stores stay authoritative, nothing to wait for.
+      void initBackendStorage();
+      return;
+    }
+    let cancelled = false;
+    void initBackendStorage().finally(() => {
+      if (cancelled) return;
+      setStorageReady(true);
+      refreshStoredSettings();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [storageReady, refreshStoredSettings]);
+
+  // A remote change remounts the routed page; refresh shell-level settings too.
+  useEffect(() => {
+    if (dataEpoch > 0) refreshStoredSettings();
+  }, [dataEpoch, refreshStoredSettings]);
 
   // Sync optional UI prefs in the background so backend startup never blocks
   // the application shell. The tour and questionnaire prompt wait for the
@@ -208,6 +251,7 @@ function App() {
           <div className="app-workspace" inert={isNavigationOpen}>
           {isElectron && <div className="app-titlebar" aria-hidden="true" />}
           <DemoBanner />
+          <SyncBanner dataEpoch={dataEpoch} />
           {isElectron && (
             <Suspense fallback={null}>
               <UpdateNotification />
@@ -221,7 +265,13 @@ function App() {
               </main>
             )}
           >
-            <Routes>
+            {!storageReady ? (
+              <main className="route-loading" id="main-content" role="status" aria-live="polite">
+                <MaterialIcon name="progress_activity" size="large" />
+                <span>{t('sync.loading')}</span>
+              </main>
+            ) : (
+            <Routes key={dataEpoch}>
               <Route path="/" element={<HomePage />} />
               <Route path="/fire-calculator" element={<LazyFIRECalculatorPage />} />
               <Route path="/reverse-fire-calculator" element={<LazyReverseFIRECalculatorPage />} />
@@ -241,6 +291,7 @@ function App() {
               <Route path="/cookie-policy" element={<PolicyRouteRedirect policyType="cookie" />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+            )}
           </Suspense>
 
           {!isElectron && (

@@ -9,6 +9,8 @@ const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
 const backup = require('./backup.cjs');
 const updater = require('./updater.cjs');
 const logFile = require('./logFile.cjs');
+const agentAccess = require('./agentAccess.cjs');
+const crypto = require('node:crypto');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 const isMac = process.platform === 'darwin';
@@ -56,6 +58,10 @@ let embeddedServerError = null;
 // renderer points at a standalone backend instead of the in-process embedded
 // one. Empty string / unset disables the override.
 const externalBackendUrl = (process.env.FIRETOOLS_BACKEND_URL || '').trim() || null;
+const externalBackendToken = (process.env.FIRETOOLS_BACKEND_TOKEN || '').trim() || null;
+// Every API call to the embedded backend must carry this per-launch token, so
+// other local pages and processes cannot read the database through it.
+const embeddedApiToken = crypto.randomBytes(32).toString('base64url');
 
 // Path where we persist the safeStorage-encrypted passphrase blob. Kept in
 // the same userData dir as the DB so a single backup captures both.
@@ -181,6 +187,7 @@ async function startEmbedded() {
       migrationsPath,
       host: '127.0.0.1',
       corsAllowAll: true,
+      apiToken: embeddedApiToken,
       passphrase: passphrase || undefined,
       // Funnel backend log lines into the same on-disk file the renderer
       // writes to, so bug-report exports contain both sides of the stack.
@@ -276,13 +283,60 @@ function focusMainWindow() {
 
 ipcMain.handle('fire-tools:embedded-backend-info', () => {
   if (externalBackendUrl) {
-    return { url: externalBackendUrl, dbPath: null, error: null };
+    return { url: externalBackendUrl, dbPath: null, error: null, token: externalBackendToken };
   }
   return {
     url: embeddedServer ? embeddedServer.url : null,
     dbPath: embeddedServer ? embeddedServer.dbPath : null,
     error: embeddedServerError,
+    token: embeddedServer ? embeddedApiToken : null,
   };
+});
+
+// Writes or removes the agent discovery file so it always matches the saved
+// preference and the running backend. Returns the state shown in Settings.
+function syncAgentAccess() {
+  const userDataDir = app.getPath('userData');
+  const prefs = agentAccess.readPrefs(userDataDir);
+  if (prefs.error) logWarn('[fire-tools] could not read agent access preference:', prefs.error);
+  const discoveryFile = agentAccess.discoveryPath(userDataDir);
+  const available = Boolean(embeddedServer);
+  try {
+    if (prefs.enabled && embeddedServer) {
+      agentAccess.writeDiscovery(userDataDir, {
+        apiBaseUrl: `${embeddedServer.url}/api/v1`,
+        token: embeddedApiToken,
+        appVersion: app.getVersion(),
+        pid: process.pid,
+        startedAt: new Date().toISOString(),
+      });
+    } else {
+      agentAccess.removeDiscovery(userDataDir);
+    }
+    return { ok: true, enabled: prefs.enabled, available, discoveryFile };
+  } catch (err) {
+    logError('[fire-tools] could not update the agent discovery file:', err);
+    return {
+      ok: false, enabled: prefs.enabled, available, discoveryFile,
+      error: err && err.message ? err.message : String(err),
+    };
+  }
+}
+
+ipcMain.handle('fire-tools:agent-access-get', () => syncAgentAccess());
+
+ipcMain.handle('fire-tools:agent-access-set', (_event, opts) => {
+  if (!opts || typeof opts.enabled !== 'boolean') {
+    return { ok: false, error: 'enabled must be a boolean' };
+  }
+  try {
+    agentAccess.writePrefs(app.getPath('userData'), { enabled: opts.enabled });
+  } catch (err) {
+    logError('[fire-tools] could not save the agent access preference:', err);
+    return { ok: false, error: err && err.message ? err.message : String(err) };
+  }
+  logInfo(`[fire-tools] agent access ${opts.enabled ? 'enabled' : 'disabled'}`);
+  return syncAgentAccess();
 });
 
 ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
@@ -602,6 +656,7 @@ app.whenReady().then(async () => {
   nativeTheme.themeSource = 'dark';
 
   await startEmbedded();
+  syncAgentAccess();
   installMenu();
   createWindow();
 
@@ -626,6 +681,11 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (event) => {
+  try {
+    agentAccess.removeDiscovery(app.getPath('userData'));
+  } catch (err) {
+    console.error('[fire-tools] could not remove the agent discovery file:', err);
+  }
   if (!embeddedServer) return;
   const server = embeddedServer;
   embeddedServer = null;

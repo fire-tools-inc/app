@@ -111,7 +111,11 @@ jobs:
               - 'src/utils/{documentImport,liteParse,pdfImport,expenseStatistics,dateValidation,cookieSettings,llmCategorizer}*'
               - 'src/utils/{expensePlanning,cashflowSchedules,scheduledTransactions,savingsGoals,importCategorizationRules,demoExpensePlanning}*'
               - 'server/src/{documentParser,documentWorker,receiptFiles}.*'
-              - 'server/src/routes/receipts.ts'
+              - 'server/src/routes/{receipts,sync}.ts'
+              - 'server/src/{app,auth,embed}.ts'
+              - 'server/src/sync/**'
+              - 'src/utils/{apiBase,apiClient,cookieStorage}.ts'
+              - 'src/utils/backendSync/**'
               - 'server/public/**'
               - 'src/hooks/**'
               - 'src/workers/**'
@@ -125,7 +129,7 @@ jobs:
             # Full suite when shared utilities/components/types change, or when
             # build config / package files change.
             full:
-              - 'electron/{updater,mac-updater,mac-install,backup}.cjs'
+              - 'electron/{updater,mac-updater,mac-install,backup,agentAccess}.cjs'
               - 'scripts/{release.sh,auto-release.sh,release-version.mjs,bump-version.mjs}'
               - '.github/workflows/{release,version-bump}.yml'
               - 'tests/setup.ts'
@@ -137,6 +141,8 @@ jobs:
               - 'src/types/**'
               - 'src/hooks/**'
               - 'src/utils/cookieSettings.ts'
+              - 'src/utils/{apiBase,apiClient,cookieStorage}.ts'
+              - 'src/utils/backendSync/**'
               - 'package.json'
               - 'package-lock.json'
               - '.nvmrc'

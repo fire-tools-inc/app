@@ -26,6 +26,7 @@ import {
 import type { NetWorthTrackerData } from '../types/netWorthTracker';
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
+import { AgentAccessSection } from './AgentAccessSection';
 import { PageHeader } from './PageHeader';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
 import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
@@ -38,7 +39,9 @@ import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { planningCategoryReferenceCount, prepareExpenseTrackerRestore, removeExpenseCategory } from '../utils/expensePlanning';
 import { SearchableSelect } from './SearchableSelect';
 import { LanguageSelector } from './LanguageSelector';
-import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
+import { getEmbeddedBackendInfo } from '../utils/apiBase';
+import { apiFetch, BackendProbeError, BackendUnavailableError, probeBackend } from '../utils/apiClient';
+import { SyncStatusPanel } from './SyncStatus';
 import {
   checkForUpdates as runUpdateCheck,
   createBackupNow,
@@ -64,7 +67,7 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'auditLog', 'support', 'about'] as const;
+const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'agentAccess', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'auditLog', 'support', 'about'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
@@ -92,6 +95,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
   // Backend connection state
   const [backendDraftUrl, setBackendDraftUrl] = useState<string>('');
+  const [backendDraftToken, setBackendDraftToken] = useState<string>('');
   const [backendTestState, setBackendTestState] = useState<{ status: 'idle' | 'testing' | 'success' | 'error'; message?: string }>({ status: 'idle' });
   const [embeddedBackendUrl, setEmbeddedBackendUrl] = useState<string | null>(null);
   const [embeddedBackendError, setEmbeddedBackendError] = useState<string | null>(null);
@@ -203,6 +207,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     setBackendDraftUrl(settings.backend?.customUrl ?? '');
   }, [settings.backend?.customUrl]);
+
+  useEffect(() => {
+    setBackendDraftToken(settings.backend?.customToken ?? '');
+  }, [settings.backend?.customToken]);
 
   useEffect(() => {
     if (!isElectron) return;
@@ -632,7 +640,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   // Backend mode change
   const handleBackendModeChange = (mode: BackendSettings['mode']) => {
     const next: BackendSettings = mode === 'custom'
-      ? { mode: 'custom', customUrl: settings.backend?.customUrl ?? backendDraftUrl ?? '' }
+      ? {
+          mode: 'custom',
+          customUrl: settings.backend?.customUrl ?? backendDraftUrl ?? '',
+          ...(settings.backend?.customToken ? { customToken: settings.backend.customToken } : {}),
+        }
       : { mode: 'embedded' };
     handleSettingChange('backend', next);
     setBackendTestState({ status: 'idle' });
@@ -651,13 +663,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       showMessage('error', t('settings.backend.urlInvalid'));
       return;
     }
-    handleSettingChange('backend', { mode: 'custom', customUrl: trimmed });
+    const token = backendDraftToken.trim();
+    handleSettingChange('backend', { mode: 'custom', customUrl: trimmed, ...(token ? { customToken: token } : {}) });
   };
 
   // Test backend connection (uses draft URL when in custom mode, else embedded)
   const handleTestBackend = async () => {
     setBackendTestState({ status: 'testing' });
     let origin: string | null = null;
+    let token: string | null = null;
     const mode = settings.backend?.mode ?? 'embedded';
     if (mode === 'custom') {
       const trimmed = backendDraftUrl.trim();
@@ -670,6 +684,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         return;
       }
       origin = trimmed;
+      token = backendDraftToken.trim() || null;
     } else {
       let url = embeddedBackendUrl;
       if (!url) {
@@ -693,12 +708,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         return;
       }
       origin = url;
+      token = (await getEmbeddedBackendInfo())?.token ?? null;
     }
     try {
-      await probeBackend(origin);
+      await probeBackend(origin, { token });
       setBackendTestState({ status: 'success', message: t('settings.backend.testSuccess') });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof BackendProbeError && err.reason === 'unauthorized'
+        ? t('settings.backend.tokenRejected')
+        : err instanceof Error ? err.message : String(err);
       setBackendTestState({ status: 'error', message: `${t('settings.backend.testError')}: ${msg}` });
     }
   };
@@ -720,11 +738,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setApiError(null);
     setApiResponse(null);
     try {
-      const base = await getApiBaseUrl();
-      if (!base) {
-        setApiError(t('settings.advanced.noBackend'));
-        return;
-      }
       const trimmedPath = apiPath.trim();
       if (!trimmedPath.startsWith('/')) {
         setApiError(t('settings.advanced.pathMustStartWithSlash'));
@@ -741,7 +754,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         }
       }
       const started = performance.now();
-      const res = await fetch(`${base}${trimmedPath}`, {
+      const res = await apiFetch(trimmedPath, {
         method: apiMethod,
         headers: bodyPayload ? { 'Content-Type': 'application/json' } : undefined,
         body: bodyPayload,
@@ -756,7 +769,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       }
       setApiResponse({ status: res.status, body: pretty, ms });
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : String(err));
+      setApiError(err instanceof BackendUnavailableError
+        ? t('settings.advanced.noBackend')
+        : err instanceof Error ? err.message : String(err));
     } finally {
       setApiBusy(false);
     }
@@ -1831,12 +1846,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     onChange={(e) => setBackendDraftUrl(e.target.value)}
                     placeholder={t('settings.backend.customUrlPlaceholder')}
                   />
+                  <span className="setting-help">{t('settings.backend.customUrlHelp')}</span>
+                  <div className="label-with-tooltip" style={{ marginTop: '0.75rem' }}>
+                    <label htmlFor="backendCustomToken">{t('settings.backend.accessToken')}</label>
+                  </div>
+                  <input
+                    id="backendCustomToken"
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={backendDraftToken}
+                    onChange={(e) => setBackendDraftToken(e.target.value)}
+                    aria-describedby="backendCustomTokenHelp"
+                  />
+                  <span id="backendCustomTokenHelp" className="setting-help">{t('settings.backend.accessTokenHelp')}</span>
                   <div className="toggle-group" style={{ marginTop: '0.5rem' }}>
                     <button className="toggle-btn" onClick={handleSaveBackendUrl}>
                       <MaterialIcon name="save" size="small" /> {t('common.save')}
                     </button>
                   </div>
-                  <span className="setting-help">{t('settings.backend.customUrlHelp')}</span>
                 </div>
               )}
 
@@ -1864,6 +1892,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             </div>
           )}
         </section>
+
+        <AgentAccessSection
+          collapsed={collapsedSections.has('agentAccess')}
+          onToggle={() => toggleSection('agentAccess')}
+        />
 
         {/* Security — DB encryption (Electron only) */}
         {isElectron && (
@@ -2873,6 +2906,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           </button>
           {!collapsedSections.has('data') && (
             <div id="data-content" className="collapsible-content">
+              <SyncStatusPanel />
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
                   <h3>{t('settings.exportAllData')}</h3>

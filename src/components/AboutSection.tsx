@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { buildInfo, formatCommit, buildCommitUrl } from '../utils/buildInfo';
-import { getApiBaseUrl } from '../utils/apiBase';
+import { apiFetch, BackendUnavailableError } from '../utils/apiClient';
 import { MaterialIcon } from './MaterialIcon';
 import { CopyableValue } from './CopyableValue';
 import './AboutSection.css';
@@ -26,12 +26,7 @@ export const AboutSection: React.FC = () => {
   const loadBackend = async () => {
     setBackend({ state: 'loading' });
     try {
-      const base = await getApiBaseUrl();
-      if (!base) {
-        setBackend({ state: 'unreachable', error: t('about.backendUnreachable') });
-        return;
-      }
-      const res = await fetch(`${base}/health`);
+      const res = await apiFetch('/health');
       if (!res.ok) {
         setBackend({ state: 'unreachable', error: `HTTP ${res.status}` });
         return;
@@ -39,7 +34,10 @@ export const AboutSection: React.FC = () => {
       const info = (await res.json()) as BackendInfo;
       setBackend({ state: 'ok', info });
     } catch (err) {
-      setBackend({ state: 'unreachable', error: (err as Error).message });
+      setBackend({
+        state: 'unreachable',
+        error: err instanceof BackendUnavailableError ? t('about.backendUnreachable') : (err as Error).message,
+      });
     }
   };
 

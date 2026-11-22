@@ -621,7 +621,8 @@
       "advanced": "Avanzate",
       "updater": "Aggiornamenti e Backup",
       "about": "Informazioni",
-      "auditLog": "Registro attività"
+      "auditLog": "Registro attività",
+      "agentAccess": "Accesso agenti"
     },
     "accountName": "Nome account",
     "accountNameHelp": "Questo nome verrà visualizzato in tutta l'applicazione",
@@ -866,7 +867,10 @@
       "test": "Verifica connessione",
       "testing": "Verifica in corso…",
       "testSuccess": "Connessione riuscita",
-      "testError": "Connessione non riuscita"
+      "testError": "Connessione non riuscita",
+      "accessToken": "Token di accesso (facoltativo)",
+      "accessTokenHelp": "Necessario solo se il backend è stato avviato con API_TOKEN. Salvato solo su questo dispositivo.",
+      "tokenRejected": "Il server ha rifiutato il token di accesso."
     },
     "advanced": {
       "description": "Ispeziona o testa l'API REST del backend incorporato. Utile per il debug e la verifica della connettività.",
@@ -926,6 +930,22 @@
         "backupFailed": "Backup non riuscito.",
         "restored": "Backup ripristinato. Riavvia l'app per applicare."
       }
+    },
+    "agentAccess": {
+      "description": "Consenti agli agenti AI su questo computer, come GitHub Copilot CLI o Claude Code, di leggere e aggiornare i tuoi dati di Fire Tools tramite l'API locale. Le loro modifiche compaiono qui entro pochi secondi.",
+      "toggleLabel": "Consenti agenti AI locali",
+      "off": "Disattivato",
+      "on": "Attivo",
+      "warning": "Finché è attivo, qualsiasi programma eseguito con il tuo account utente può leggere e modificare i tuoi dati di Fire Tools, anche quando il database è cifrato. Disattivalo quando hai finito.",
+      "fileLabel": "File di connessione",
+      "fileHelp": "Gli agenti leggono da questo file l'indirizzo locale e un token segreto. Il token cambia a ogni avvio di Fire Tools e il file viene eliminato quando chiudi l'app o disattivi l'accesso. Non incollare mai il token in una chat.",
+      "copyPath": "Copia percorso del file",
+      "copied": "Percorso copiato",
+      "copyError": "Impossibile copiare il percorso. Selezionalo e copialo a mano.",
+      "guide": "Come collegare un agente",
+      "unavailable": "L'accesso agenti richiede il database integrato. Mentre Fire Tools usa un backend personalizzato, fornisci all'agente l'indirizzo e il token di accesso di quel backend.",
+      "loadError": "Impossibile leggere l'impostazione di accesso agenti: {{message}}",
+      "updateError": "Impossibile modificare l'accesso agenti: {{message}}"
     }
   },
   "assetAllocation": {
@@ -3321,6 +3341,56 @@
     },
     "errors": {
       "noData": "Nessuna operazione trovata. Il foglio richiede le colonne Data e Azione."
+    }
+  },
+  "sync": {
+    "loading": "Caricamento dei dati dal database",
+    "updated": "Aggiornato con le modifiche dal database.",
+    "bannerLabel": "Sincronizzazione del database",
+    "domains": {
+      "settings": "Impostazioni",
+      "calculator": "Calcolatore FIRE",
+      "assetAllocation": "Allocazione degli asset",
+      "expenseTracker": "Flussi di cassa",
+      "netWorth": "Patrimonio netto"
+    },
+    "status": {
+      "title": "Sincronizzazione del database",
+      "description": "I tuoi dati sono salvati nel database usato da questa app e dalla sua API. Le modifiche restano su questo dispositivo finché il database non le conferma.",
+      "starting": "Connessione al database in corso",
+      "saving_one": "Salvataggio di {{count}} modifica nel database",
+      "saving_other": "Salvataggio di {{count}} modifiche nel database",
+      "saved": "Tutte le modifiche sono salvate nel database",
+      "offline": "Offline. Le modifiche verranno salvate quando il database sarà raggiungibile.",
+      "offlinePending_one": "Offline. {{count}} modifica è in attesa di essere salvata.",
+      "offlinePending_other": "Offline. {{count}} modifiche sono in attesa di essere salvate.",
+      "unauthorized": "Il database ha rifiutato il token di accesso. Controlla Impostazioni > Backend.",
+      "lastSaved": "Ultimo salvataggio alle {{time}}",
+      "retry": "Riprova ora",
+      "needsChoice": "Alcuni dati non vengono sincronizzati finché non scegli quale copia mantenere."
+    },
+    "conflict": {
+      "title": "Questo dispositivo e il database contengono dati diversi",
+      "message": "Scegli quale copia mantenere per {{domains}}. La copia non scelta viene sostituita.",
+      "useDatabase": "Usa la copia del database",
+      "useDevice": "Sostituisci il database con i dati di questo dispositivo",
+      "working": "Applicazione della scelta in corso"
+    },
+    "rejected": {
+      "title_one": "{{count}} modifica non è stata salvata",
+      "title_other": "{{count}} modifiche non sono state salvate",
+      "message": "Il database ha rifiutato queste modifiche, quindi l'app mostra i dati salvati. Le modifiche rifiutate sono elencate nei dettagli.",
+      "showDetails": "Mostra dettagli",
+      "location": "Elemento: {{collection}} {{key}}",
+      "when": "Rifiutata il {{time}}",
+      "dismiss": "Ignora",
+      "dismissOne": "Ignora la modifica rifiutata in {{domain}}",
+      "dismissAll": "Ignora tutte"
+    },
+    "issues": {
+      "backupFailed": "{{domain}}: i dati di questo dispositivo non sono stati copiati nel database perché prima non è stato possibile creare un backup. {{message}}",
+      "loadFailed": "{{domain}}: non è stato possibile caricare su questo dispositivo i dati del database. {{message}}",
+      "saveFailed": "{{domain}}: non è stato possibile copiare nel database i dati di questo dispositivo. {{message}}"
     }
   }
 }

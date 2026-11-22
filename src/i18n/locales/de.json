@@ -621,7 +621,8 @@
       "advanced": "Erweitert",
       "updater": "Updates & Sicherungen",
       "about": "Info",
-      "auditLog": "Aktivitätsprotokoll"
+      "auditLog": "Aktivitätsprotokoll",
+      "agentAccess": "Agentenzugriff"
     },
     "accountName": "Kontoname",
     "accountNameHelp": "Dieser Name wird in der gesamten App angezeigt",
@@ -866,7 +867,10 @@
       "test": "Verbindung testen",
       "testing": "Test läuft…",
       "testSuccess": "Verbindung erfolgreich",
-      "testError": "Verbindung fehlgeschlagen"
+      "testError": "Verbindung fehlgeschlagen",
+      "accessToken": "Zugriffstoken (optional)",
+      "accessTokenHelp": "Nur nötig, wenn das Backend mit API_TOKEN gestartet wurde. Wird nur auf diesem Gerät gespeichert.",
+      "tokenRejected": "Der Server hat das Zugriffstoken abgelehnt."
     },
     "advanced": {
       "description": "Inspizieren oder testen Sie die REST-API des eingebetteten Backends. Nützlich zum Debuggen und Überprüfen der Konnektivität.",
@@ -926,6 +930,22 @@
         "backupFailed": "Sicherung fehlgeschlagen.",
         "restored": "Sicherung wiederhergestellt. App neu starten, um die Änderungen zu übernehmen."
       }
+    },
+    "agentAccess": {
+      "description": "Erlauben Sie KI-Agenten auf diesem Computer, etwa GitHub Copilot CLI oder Claude Code, Ihre Fire-Tools-Daten über die lokale API zu lesen und zu aktualisieren. Ihre Änderungen erscheinen hier innerhalb weniger Sekunden.",
+      "toggleLabel": "Lokale KI-Agenten erlauben",
+      "off": "Aus",
+      "on": "An",
+      "warning": "Solange dies aktiviert ist, kann jedes Programm, das unter Ihrem Benutzerkonto läuft, Ihre Fire-Tools-Daten lesen und ändern, auch wenn die Datenbank verschlüsselt ist. Schalten Sie es aus, wenn Sie fertig sind.",
+      "fileLabel": "Verbindungsdatei",
+      "fileHelp": "Agenten lesen aus dieser Datei die lokale Adresse und ein geheimes Token. Das Token ändert sich bei jedem Start von Fire Tools, und die Datei wird gelöscht, wenn Sie die App beenden oder den Zugriff ausschalten. Fügen Sie das Token niemals in einen Chat ein.",
+      "copyPath": "Dateipfad kopieren",
+      "copied": "Pfad kopiert",
+      "copyError": "Der Pfad konnte nicht kopiert werden. Markieren Sie ihn und kopieren Sie ihn manuell.",
+      "guide": "So verbinden Sie einen Agenten",
+      "unavailable": "Der Agentenzugriff benötigt die integrierte Datenbank. Solange Fire Tools ein eigenes Backend nutzt, geben Sie Ihrem Agenten stattdessen dessen Adresse und Zugriffstoken.",
+      "loadError": "Die Einstellung für den Agentenzugriff konnte nicht gelesen werden: {{message}}",
+      "updateError": "Der Agentenzugriff konnte nicht geändert werden: {{message}}"
     }
   },
   "assetAllocation": {
@@ -3321,6 +3341,56 @@
     },
     "errors": {
       "noData": "Keine Vorgänge gefunden. Das Blatt benötigt die Spalten Datum und Aktion."
+    }
+  },
+  "sync": {
+    "loading": "Ihre Daten werden aus der Datenbank geladen",
+    "updated": "Mit Änderungen aus der Datenbank aktualisiert.",
+    "bannerLabel": "Datenbank-Synchronisierung",
+    "domains": {
+      "settings": "Einstellungen",
+      "calculator": "FIRE-Rechner",
+      "assetAllocation": "Vermögensaufteilung",
+      "expenseTracker": "Cashflow",
+      "netWorth": "Nettovermögen"
+    },
+    "status": {
+      "title": "Datenbank-Synchronisierung",
+      "description": "Ihre Daten werden in der Datenbank gespeichert, die diese App und ihre API verwenden. Änderungen bleiben auf diesem Gerät, bis die Datenbank sie bestätigt.",
+      "starting": "Verbindung zur Datenbank wird hergestellt",
+      "saving_one": "{{count}} Änderung wird in der Datenbank gespeichert",
+      "saving_other": "{{count}} Änderungen werden in der Datenbank gespeichert",
+      "saved": "Alle Änderungen sind in der Datenbank gespeichert",
+      "offline": "Offline. Änderungen werden gespeichert, sobald die Datenbank erreichbar ist.",
+      "offlinePending_one": "Offline. {{count}} Änderung wartet auf das Speichern.",
+      "offlinePending_other": "Offline. {{count}} Änderungen warten auf das Speichern.",
+      "unauthorized": "Die Datenbank hat das Zugriffstoken abgelehnt. Prüfen Sie Einstellungen > Backend.",
+      "lastSaved": "Zuletzt gespeichert um {{time}}",
+      "retry": "Jetzt erneut versuchen",
+      "needsChoice": "Einige Daten werden erst synchronisiert, wenn Sie auswählen, welche Kopie behalten wird."
+    },
+    "conflict": {
+      "title": "Dieses Gerät und die Datenbank enthalten unterschiedliche Daten",
+      "message": "Wählen Sie, welche Kopie für {{domains}} behalten werden soll. Die nicht gewählte Kopie wird ersetzt.",
+      "useDatabase": "Kopie aus der Datenbank verwenden",
+      "useDevice": "Datenbank durch die Daten dieses Geräts ersetzen",
+      "working": "Ihre Auswahl wird angewendet"
+    },
+    "rejected": {
+      "title_one": "{{count}} Änderung konnte nicht gespeichert werden",
+      "title_other": "{{count}} Änderungen konnten nicht gespeichert werden",
+      "message": "Die Datenbank hat diese Änderungen abgelehnt, daher zeigt die App die gespeicherten Daten an. Die abgelehnten Änderungen stehen in den Details.",
+      "showDetails": "Details anzeigen",
+      "location": "Eintrag: {{collection}} {{key}}",
+      "when": "Abgelehnt am {{time}}",
+      "dismiss": "Ausblenden",
+      "dismissOne": "Abgelehnte Änderung in {{domain}} ausblenden",
+      "dismissAll": "Alle ausblenden"
+    },
+    "issues": {
+      "backupFailed": "{{domain}}: Die Daten dieses Geräts wurden nicht in die Datenbank kopiert, weil vorher keine Sicherung erstellt werden konnte. {{message}}",
+      "loadFailed": "{{domain}}: Die Daten aus der Datenbank konnten nicht auf diesem Gerät geladen werden. {{message}}",
+      "saveFailed": "{{domain}}: Die Daten dieses Geräts konnten nicht in die Datenbank kopiert werden. {{message}}"
     }
   }
 }

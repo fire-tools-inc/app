@@ -1,21 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearReceiptOriginals, extractDocumentTextWithLiteParse, getReceiptFile, saveReceipt, startReceiptPairing } from '../../../src/utils/documentImportApi';
-import { getApiBaseUrl } from '../../../src/utils/apiBase';
+import { getApiBackend } from '../../../src/utils/apiBase';
 import { expectDiagnostic } from '../../shared/diagnostics';
 
-vi.mock('../../../src/utils/apiBase', () => ({ getApiBaseUrl: vi.fn() }));
+vi.mock('../../../src/utils/apiBase', () => ({ getApiBackend: vi.fn() }));
 const receipt = {
   id: 1, fileName: 'synthetic.png', mimeType: 'image/png', byteLength: 3,
   sha256: 'a'.repeat(64), status: 'pending', createdAt: '2026-01-01 00:00:00',
 };
 afterEach(() => vi.unstubAllGlobals());
-beforeEach(() => vi.mocked(getApiBaseUrl).mockResolvedValue('http://localhost:8787/api/v1'));
+beforeEach(() => vi.mocked(getApiBackend).mockResolvedValue({ baseUrl: 'http://localhost:8787/api/v1', token: null, mode: 'embedded' }));
 
 describe('documentImportApi', () => {
   it('fails explicitly instead of claiming an unavailable desktop backend was reset', async () => {
     const previous = window.fireTools;
     window.fireTools = { platform: 'synthetic' };
-    vi.mocked(getApiBaseUrl).mockResolvedValue(null);
+    vi.mocked(getApiBackend).mockResolvedValue(null);
     try {
       await expect(clearReceiptOriginals()).rejects.toThrow('backend is unavailable');
     } finally {

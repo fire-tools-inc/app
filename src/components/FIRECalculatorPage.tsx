@@ -4,7 +4,8 @@ import type { CalculatorInputs, CalculationResult } from '../types/calculator';
 import { DEFAULT_INPUTS } from '../utils/defaults';
 import { calculateFIRE } from '../utils/fireCalculator';
 import { calculateFIREPortfolioData } from '../utils/allocationCalculator';
-import { serializeInputsToURL, deserializeInputsFromURL, hasURLParams } from '../utils/urlParams';
+import { rememberCalculatorQuery, selectInitialCalculatorInputs, serializeInputsToURL } from '../utils/urlParams';
+import { isDomainSynced } from '../utils/backendSync';
 import {
   saveFireCalculatorInputs,
   loadFireCalculatorInputs,
@@ -42,16 +43,9 @@ export function FIRECalculatorPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { logAuditEvent } = useAuditLog();
 
-  const [inputs, setInputs] = useState<CalculatorInputs>(() => {
-    if (hasURLParams(searchParams)) {
-      return deserializeInputsFromURL(searchParams);
-    }
-    const saved = loadFireCalculatorInputs();
-    if (saved) {
-      return saved;
-    }
-    return DEFAULT_INPUTS;
-  });
+  const [inputs, setInputs] = useState<CalculatorInputs>(() => (
+    selectInitialCalculatorInputs(searchParams, loadFireCalculatorInputs(), isDomainSynced('calculator'))
+  ));
 
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [zoomYears, setZoomYears] = useState<number | 'all'>(30);
@@ -75,6 +69,7 @@ export function FIRECalculatorPage() {
 
   useEffect(() => {
     const params = serializeInputsToURL(inputs);
+    rememberCalculatorQuery(params);
     setSearchParams(params, { replace: true });
   }, [inputs, setSearchParams]);
 

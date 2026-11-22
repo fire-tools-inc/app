@@ -1,4 +1,17 @@
-import { Asset } from '../types/assetAllocation';
+import { AllocationMode, Asset, AssetClass } from '../types/assetAllocation';
+
+/** Asset class targets the Asset Allocation page starts with. */
+export const DEFAULT_ALLOCATION_PAGE_TARGETS: Record<AssetClass, { targetMode: AllocationMode; targetPercent?: number }> = {
+  STOCKS: { targetMode: 'PERCENTAGE', targetPercent: 60 },
+  BONDS: { targetMode: 'PERCENTAGE', targetPercent: 40 },
+  CASH: { targetMode: 'SET', targetPercent: 0 },
+  CRYPTO: { targetMode: 'OFF', targetPercent: 0 },
+  REAL_ESTATE: { targetMode: 'OFF', targetPercent: 0 },
+  COMMODITIES: { targetMode: 'OFF', targetPercent: 0 },
+  VEHICLE: { targetMode: 'OFF', targetPercent: 0 },
+  COLLECTIBLE: { targetMode: 'OFF', targetPercent: 0 },
+  ART: { targetMode: 'OFF', targetPercent: 0 },
+};
 
 // Default portfolio value is calculated from non-cash assets (65k)
 // Total holdings including cash = 70k

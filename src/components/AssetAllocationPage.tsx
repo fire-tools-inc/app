@@ -2,7 +2,7 @@ import { Suspense, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
-import { DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
+import { DEFAULT_ALLOCATION_PAGE_TARGETS, DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
 import {
   saveAssetAllocation,
   loadAssetAllocation,
@@ -72,17 +72,7 @@ export const AssetAllocationPage: React.FC = () => {
   // Per-asset debounce timers so rapid field edits coalesce into one audit
   // entry instead of one per keystroke.
   const assetUpdateAuditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const defaultTargets = {
-    STOCKS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 60 },
-    BONDS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 40 },
-    CASH: { targetMode: 'SET' as AllocationMode, targetPercent: 0 },
-    CRYPTO: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    REAL_ESTATE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    COMMODITIES: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    VEHICLE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    COLLECTIBLE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    ART: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-  };
+  const defaultTargets = structuredClone(DEFAULT_ALLOCATION_PAGE_TARGETS);
 
   // Initialize from localStorage if available, otherwise use defaults
   const [assets, setAssets] = useState<Asset[]>(() => {

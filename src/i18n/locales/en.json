@@ -689,7 +689,8 @@
       "advanced": "Advanced",
       "updater": "Updater & Backups",
       "about": "About",
-      "auditLog": "Audit Log"
+      "auditLog": "Audit Log",
+      "agentAccess": "Agent access"
     },
     "accountName": "Account Name",
     "accountNameHelp": "This name will be displayed throughout the app",
@@ -934,7 +935,10 @@
       "test": "Test connection",
       "testing": "Testing…",
       "testSuccess": "Connection successful",
-      "testError": "Connection failed"
+      "testError": "Connection failed",
+      "accessToken": "Access token (optional)",
+      "accessTokenHelp": "Needed only when the backend was started with API_TOKEN. Stored on this device only.",
+      "tokenRejected": "The server rejected the access token."
     },
     "advanced": {
       "description": "Inspect or smoke-test the embedded backend's REST API. Useful for debugging and verifying connectivity.",
@@ -994,6 +998,22 @@
         "backupFailed": "Backup failed.",
         "restored": "Backup restored. Restart the app to apply."
       }
+    },
+    "agentAccess": {
+      "description": "Let AI agents on this computer, such as GitHub Copilot CLI or Claude Code, read and update your Fire Tools data through the local API. Their changes appear here within a few seconds.",
+      "toggleLabel": "Allow local AI agents",
+      "off": "Off",
+      "on": "On",
+      "warning": "While this is on, any program running under your user account can read and change your Fire Tools data, even when the database is encrypted. Turn it off when you are done.",
+      "fileLabel": "Connection file",
+      "fileHelp": "Agents read the local address and a secret token from this file. The token changes every time Fire Tools starts, and the file is deleted when you quit or turn access off. Never paste the token into a chat.",
+      "copyPath": "Copy file path",
+      "copied": "Path copied",
+      "copyError": "Could not copy the path. Select it and copy it manually.",
+      "guide": "How to connect an agent",
+      "unavailable": "Agent access needs the built-in database. While Fire Tools uses a custom backend, give your agent that backend's address and access token instead.",
+      "loadError": "Could not read the agent access setting: {{message}}",
+      "updateError": "Could not change agent access: {{message}}"
     }
   },
   "assetAllocation": {
@@ -3389,6 +3409,56 @@
     },
     "errors": {
       "noData": "No operations found. The sheet needs Date and Action columns."
+    }
+  },
+  "sync": {
+    "loading": "Loading your data from the database",
+    "updated": "Updated with changes from the database.",
+    "bannerLabel": "Database sync",
+    "domains": {
+      "settings": "Settings",
+      "calculator": "FIRE calculator",
+      "assetAllocation": "Asset allocation",
+      "expenseTracker": "Cashflow",
+      "netWorth": "Net worth"
+    },
+    "status": {
+      "title": "Database sync",
+      "description": "Your data is stored in the database used by this app and its API. Changes stay on this device until the database confirms them.",
+      "starting": "Connecting to the database",
+      "saving_one": "Saving {{count}} change to the database",
+      "saving_other": "Saving {{count}} changes to the database",
+      "saved": "All changes are saved in the database",
+      "offline": "Offline. Changes will be saved when the database is reachable.",
+      "offlinePending_one": "Offline. {{count}} change is waiting to be saved.",
+      "offlinePending_other": "Offline. {{count}} changes are waiting to be saved.",
+      "unauthorized": "The database rejected the access token. Check Settings > Backend.",
+      "lastSaved": "Last saved at {{time}}",
+      "retry": "Retry now",
+      "needsChoice": "Some data is not synced until you choose which copy to keep."
+    },
+    "conflict": {
+      "title": "This device and the database have different data",
+      "message": "Choose which copy to keep for {{domains}}. The copy you do not choose is replaced.",
+      "useDatabase": "Use the database copy",
+      "useDevice": "Replace the database with this device's data",
+      "working": "Applying your choice"
+    },
+    "rejected": {
+      "title_one": "{{count}} change could not be saved",
+      "title_other": "{{count}} changes could not be saved",
+      "message": "The database refused these changes, so the app shows the saved data instead. The refused changes are listed in the details.",
+      "showDetails": "Show details",
+      "location": "Item: {{collection}} {{key}}",
+      "when": "Refused on {{time}}",
+      "dismiss": "Dismiss",
+      "dismissOne": "Dismiss the refused {{domain}} change",
+      "dismissAll": "Dismiss all"
+    },
+    "issues": {
+      "backupFailed": "{{domain}}: this device's data was not copied to the database because a backup could not be created first. {{message}}",
+      "loadFailed": "{{domain}}: data from the database could not be loaded on this device. {{message}}",
+      "saveFailed": "{{domain}}: this device's data could not be copied to the database. {{message}}"
     }
   }
 }

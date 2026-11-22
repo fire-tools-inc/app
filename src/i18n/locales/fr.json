@@ -621,7 +621,8 @@
       "advanced": "Avancé",
       "updater": "Mises à jour & Sauvegardes",
       "about": "À propos",
-      "auditLog": "Journal d'activité"
+      "auditLog": "Journal d'activité",
+      "agentAccess": "Accès des agents"
     },
     "accountName": "Nom de compte",
     "accountNameHelp": "Ce nom sera affiché dans toute l'application",
@@ -866,7 +867,10 @@
       "test": "Tester la connexion",
       "testing": "Test en cours…",
       "testSuccess": "Connexion réussie",
-      "testError": "Échec de la connexion"
+      "testError": "Échec de la connexion",
+      "accessToken": "Jeton d'accès (facultatif)",
+      "accessTokenHelp": "Nécessaire uniquement si le backend a été démarré avec API_TOKEN. Enregistré uniquement sur cet appareil.",
+      "tokenRejected": "Le serveur a refusé le jeton d'accès."
     },
     "advanced": {
       "description": "Inspectez ou testez l'API REST du backend embarqué. Utile pour le débogage et la vérification de la connectivité.",
@@ -926,6 +930,22 @@
         "backupFailed": "Échec de la sauvegarde.",
         "restored": "Sauvegarde restaurée. Redémarrez l'application pour appliquer."
       }
+    },
+    "agentAccess": {
+      "description": "Autorisez les agents IA de cet ordinateur, comme GitHub Copilot CLI ou Claude Code, à lire et mettre à jour vos données Fire Tools via l'API locale. Leurs modifications apparaissent ici en quelques secondes.",
+      "toggleLabel": "Autoriser les agents IA locaux",
+      "off": "Désactivé",
+      "on": "Activé",
+      "warning": "Tant que cette option est activée, tout programme exécuté sous votre compte utilisateur peut lire et modifier vos données Fire Tools, même lorsque la base de données est chiffrée. Désactivez-la quand vous avez terminé.",
+      "fileLabel": "Fichier de connexion",
+      "fileHelp": "Les agents lisent dans ce fichier l'adresse locale et un jeton secret. Le jeton change à chaque démarrage de Fire Tools et le fichier est supprimé lorsque vous quittez l'application ou désactivez l'accès. Ne collez jamais le jeton dans une conversation.",
+      "copyPath": "Copier le chemin du fichier",
+      "copied": "Chemin copié",
+      "copyError": "Impossible de copier le chemin. Sélectionnez-le et copiez-le manuellement.",
+      "guide": "Comment connecter un agent",
+      "unavailable": "L'accès des agents nécessite la base de données intégrée. Tant que Fire Tools utilise un backend personnalisé, donnez plutôt à votre agent l'adresse et le jeton d'accès de ce backend.",
+      "loadError": "Impossible de lire le réglage d'accès des agents : {{message}}",
+      "updateError": "Impossible de modifier l'accès des agents : {{message}}"
     }
   },
   "assetAllocation": {
@@ -3321,6 +3341,56 @@
     },
     "errors": {
       "noData": "Aucune opération trouvée. La feuille doit contenir les colonnes Date et Action."
+    }
+  },
+  "sync": {
+    "loading": "Chargement de vos données depuis la base de données",
+    "updated": "Mis à jour avec les modifications de la base de données.",
+    "bannerLabel": "Synchronisation de la base de données",
+    "domains": {
+      "settings": "Paramètres",
+      "calculator": "Calculateur FIRE",
+      "assetAllocation": "Allocation d'actifs",
+      "expenseTracker": "Flux de trésorerie",
+      "netWorth": "Patrimoine net"
+    },
+    "status": {
+      "title": "Synchronisation de la base de données",
+      "description": "Vos données sont enregistrées dans la base de données utilisée par cette application et son API. Les modifications restent sur cet appareil jusqu'à ce que la base de données les confirme.",
+      "starting": "Connexion à la base de données",
+      "saving_one": "Enregistrement de {{count}} modification dans la base de données",
+      "saving_other": "Enregistrement de {{count}} modifications dans la base de données",
+      "saved": "Toutes les modifications sont enregistrées dans la base de données",
+      "offline": "Hors ligne. Les modifications seront enregistrées lorsque la base de données sera accessible.",
+      "offlinePending_one": "Hors ligne. {{count}} modification attend d'être enregistrée.",
+      "offlinePending_other": "Hors ligne. {{count}} modifications attendent d'être enregistrées.",
+      "unauthorized": "La base de données a refusé le jeton d'accès. Vérifiez Paramètres > Backend.",
+      "lastSaved": "Dernier enregistrement à {{time}}",
+      "retry": "Réessayer maintenant",
+      "needsChoice": "Certaines données ne sont pas synchronisées tant que vous n'avez pas choisi la copie à conserver."
+    },
+    "conflict": {
+      "title": "Cet appareil et la base de données contiennent des données différentes",
+      "message": "Choisissez la copie à conserver pour {{domains}}. La copie non choisie est remplacée.",
+      "useDatabase": "Utiliser la copie de la base de données",
+      "useDevice": "Remplacer la base de données par les données de cet appareil",
+      "working": "Application de votre choix"
+    },
+    "rejected": {
+      "title_one": "{{count}} modification n'a pas pu être enregistrée",
+      "title_other": "{{count}} modifications n'ont pas pu être enregistrées",
+      "message": "La base de données a refusé ces modifications ; l'application affiche donc les données enregistrées. Les modifications refusées sont listées dans les détails.",
+      "showDetails": "Afficher les détails",
+      "location": "Élément : {{collection}} {{key}}",
+      "when": "Refusée le {{time}}",
+      "dismiss": "Ignorer",
+      "dismissOne": "Ignorer la modification refusée de {{domain}}",
+      "dismissAll": "Tout ignorer"
+    },
+    "issues": {
+      "backupFailed": "{{domain}} : les données de cet appareil n'ont pas été copiées dans la base de données, car une sauvegarde n'a pas pu être créée au préalable. {{message}}",
+      "loadFailed": "{{domain}} : les données de la base de données n'ont pas pu être chargées sur cet appareil. {{message}}",
+      "saveFailed": "{{domain}} : les données de cet appareil n'ont pas pu être copiées dans la base de données. {{message}}"
     }
   }
 }

@@ -30,7 +30,7 @@ import { extractPdfText } from '../utils/pdfTextExtractor';
 import { IS_DEMO_MODE } from '../utils/demoMode';
 import { parsePdf } from '../utils/pdfHeuristics';
 import { categorizeWithLlm, isLlmConfigured } from '../utils/llmCategorizer';
-import { getApiBaseUrl } from '../utils/apiBase';
+import { isBackendConfigured } from '../utils/apiClient';
 import { isValidCalendarDate } from '../utils/dateValidation';
 import { extractDocumentTextWithLiteParse, getReceiptFile, markReceiptReviewed, saveReceipt } from '../utils/documentImportApi';
 import type { ReceiptDocument } from '../types/receiptImport';
@@ -126,7 +126,7 @@ export function PDFImportDialog({
 
   useEffect(() => {
     let mounted = true;
-    if (!IS_DEMO_MODE) void getApiBaseUrl().then(url => { if (mounted) setBackendAvailable(Boolean(url)); }).catch(error => {
+    if (!IS_DEMO_MODE) void isBackendConfigured().then(available => { if (mounted) setBackendAvailable(available); }).catch(error => {
       logger.error('document-import', 'backend-resolution-failed', 'Receipt backend could not be resolved.', { pii: { error: String(error) } });
     });
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;

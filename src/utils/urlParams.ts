@@ -151,3 +151,61 @@ export function deserializeInputsFromURL(params: URLSearchParams): CalculatorInp
 export function hasURLParams(params: URLSearchParams): boolean {
   return params.size > 0;
 }
+
+const CALCULATOR_QUERY_MARK_KEY = 'fire-tools-calculator-query';
+let lastWrittenQueryMark: string | null = null;
+
+/** Short, order-independent fingerprint of a query (FNV-1a), so the query itself is not stored. */
+function queryMark(params: URLSearchParams): string {
+  const canonical = [...params.entries()]
+    .map(([key, value]) => `${key}=${value}`)
+    .sort()
+    .join('&');
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < canonical.length; index += 1) {
+    hash ^= canonical.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${canonical.length}:${(hash >>> 0).toString(16)}`;
+}
+
+/**
+ * Remembers the query the calculator itself wrote to the address bar
+ * (per tab, surviving reloads), to tell it apart from a shared link.
+ */
+export function rememberCalculatorQuery(params: URLSearchParams): void {
+  lastWrittenQueryMark = queryMark(params);
+  try {
+    sessionStorage.setItem(CALCULATOR_QUERY_MARK_KEY, lastWrittenQueryMark);
+  } catch {
+    // Without session storage the in-memory mark still covers remounts.
+  }
+}
+
+function isRememberedCalculatorQuery(params: URLSearchParams): boolean {
+  let remembered = lastWrittenQueryMark;
+  try {
+    remembered ??= sessionStorage.getItem(CALCULATOR_QUERY_MARK_KEY);
+  } catch {
+    // Fall back to the in-memory mark.
+  }
+  return remembered !== null && remembered === queryMark(params);
+}
+
+/**
+ * Initial calculator inputs. A shared link's query wins as before. When the
+ * inputs are stored in the backend, a query the calculator wrote earlier is
+ * only a stale echo of its own state, so the stored inputs (which may hold a
+ * newer remote change) win instead of being overwritten by it.
+ */
+export function selectInitialCalculatorInputs(
+  params: URLSearchParams,
+  saved: CalculatorInputs | null,
+  preferSavedOverOwnQuery: boolean,
+): CalculatorInputs {
+  if (hasURLParams(params)) {
+    if (preferSavedOverOwnQuery && saved && isRememberedCalculatorQuery(params)) return saved;
+    return deserializeInputsFromURL(params);
+  }
+  return saved ?? DEFAULT_INPUTS;
+}
