@@ -7,11 +7,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
 import { MonthlyVariation, NetWorthForecast } from '../types/netWorthTracker';
+import { ChartLegend } from './ChartLegend';
 import { MaterialIcon } from './MaterialIcon';
 import { SupportedCurrency, SUPPORTED_CURRENCIES, DEFAULT_FALLBACK_RATES } from '../types/currency';
 import { 
@@ -422,7 +422,7 @@ export function HistoricalNetWorthChart({
       </div>
 
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={combinedData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
+        <LineChart data={combinedData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
           <XAxis
             dataKey="month"
@@ -497,23 +497,6 @@ export function HistoricalNetWorthChart({
               color: CHART_THEME.textStrong,
             }}
             itemStyle={{ color: CHART_THEME.textStrong }}
-          />
-          <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-            formatter={(value) => {
-              const valueStr = String(value);
-              if (valueStr === 'netWorth') return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency })}</span>;
-              if (valueStr === 'forecast') return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.forecastCurrency', { currency })}</span>;
-              if (valueStr.startsWith('netWorth_')) {
-                const curr = valueStr.replace('netWorth_', '');
-                return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency: curr })}</span>;
-              }
-              if (valueStr.startsWith('forecast_')) {
-                const curr = valueStr.replace('forecast_', '');
-                return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.forecastCurrency', { currency: curr })}</span>;
-              }
-              return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{value}</span>;
-            }}
           />
           
           {/* Previous year end reference line */}
@@ -593,6 +576,20 @@ export function HistoricalNetWorthChart({
           ))}
         </LineChart>
       </ResponsiveContainer>
+
+      <ChartLegend
+        ariaLabel={t('netWorth.historicalNetWorth')}
+        items={[
+          { label: t('charts.netWorthCurrency', { currency }), color: 'var(--accent-primary)' },
+          ...(showForecast && forecastData.length > 0
+            ? [{ label: t('charts.forecastCurrency', { currency }), color: 'var(--chart-bonds)' }]
+            : []),
+          ...additionalCurrencies.flatMap(curr => [
+            { label: t('charts.netWorthCurrency', { currency: curr }), color: ADDITIONAL_CURRENCY_COLORS[curr] },
+            ...(showForecast ? [{ label: t('charts.forecastCurrency', { currency: curr }), color: ADDITIONAL_CURRENCY_COLORS[curr] }] : []),
+          ]),
+        ]}
+      />
 
       {/* Forecast confidence indicator */}
       {showForecast && forecast.length > 0 && (
