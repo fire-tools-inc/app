@@ -57,7 +57,7 @@ endpoint. Always verify with your broker. Request limits are shown in
 | **Net Worth Tracker** | Monthly snapshots of assets, cash and pensions with historical charts. [Guide](docs/user/net-worth-tracker.md). |
 | **Guided setup** | A questionnaire that helps populate calculator inputs and allocation targets. [Guide](docs/user/questionnaire.md). |
 | **JSON / CSV Export and Import** | Portable calculator, allocation, cashflow and net-worth data; see [backup limitations](#data-storage-and-backups). |
-| **AI agents** | Let a local AI agent (GitHub Copilot CLI, Claude Code and others) onboard you or log a month through the local API; its changes appear in the app within seconds. Off by default, with a published [agent skill](.github/skills/using-fire-tools/SKILL.md). [Guide](docs/user/ai-agents.md). |
+| **Local API** | Read and update your data from scripts, other apps or AI agents (GitHub Copilot CLI, Claude Code and others) through a stable local address and token; changes appear in the app within seconds. Off by default, with a published [agent skill](.github/skills/using-fire-tools/SKILL.md) for onboarding and monthly logging. [Guide](docs/user/api-access.md). |
 | **Spreadsheet Import** | Backfill years of net worth, cash flow, allocation targets and FIRE settings from an `.xlsx` workbook, detailed expenses from a yearly workbook with a sheet per month, and investment operations with average cost. Downloadable templates and AI agent prompts included. [Guide](docs/user/spreadsheet-import.md). |
 | **Languages** | English, Italian, French, German and Spanish, selected in Settings. Sidebar navigation labels remain English. |
 | **Build Info** | Version, commit hash and dependency versions in **Settings > About**. |
@@ -125,7 +125,7 @@ this command for an untrusted download or disable Gatekeeper globally.
 | Setting | Behavior |
 |---------|----------|
 | **Backend** | Uses the embedded desktop backend by default. **Custom URL** connects backend-supported features to your own server; enter its origin, such as `http://localhost:8080`, without `/api/v1`, then test the connection, plus its access token when the server sets `API_TOKEN`. The connected database becomes the source of truth for your data. |
-| **Agent access** | Desktop only, off by default. Publishes the local API address and a separate agent token, revoked when you turn access off, to AI agents running as your user. [Details](docs/engineering/agent-api.md). |
+| **API access** | Desktop only, off by default. Serves the local API on a fixed loopback port (47820, changeable) with a token that lasts until you regenerate it or turn access off, for any app, script or agent running as your user. [Details](docs/user/api-access.md). |
 | **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. Choose a provider preset (local model, OpenRouter, OpenAI, Gemini, Anthropic or a custom OpenAI-compatible endpoint). No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing, paste-expense matching and ordinary imports work with AI disabled. [Details](docs/user/settings.md). |
 | **Experimental features** | Opt in to Portfolio Breakdown and document/receipt imports. |
 | **Security** | Optional desktop SQLite passphrase encryption uses the OS secure store; Linux needs an available keyring. It does not encrypt renderer storage or exports. [Details](docs/security/passphrase.md). |
@@ -259,7 +259,7 @@ Financial data is local-first, but **not all desktop data lives in SQLite**:
 
 | Store | Current responsibility |
 |-------|------------------------|
-| **Backend SQLite** | Source of truth for preferences, FIRE calculator inputs, asset allocation, cashflow and net worth whenever a backend is reachable, plus receipt originals. Desktop uses `firetools.db` in the OS user-data directory; Docker uses the `firetools-data` volume. The first start after upgrading backs up the database and moves existing device data into it. [How sync works](docs/engineering/agent-api.md#storage-model). |
+| **Backend SQLite** | Source of truth for preferences, FIRE calculator inputs, asset allocation, cashflow and net worth whenever a backend is reachable, plus receipt originals. Desktop uses `firetools.db` in the OS user-data directory; Docker uses the `firetools-data` volume. The first start after upgrading backs up the database and moves existing device data into it. [How sync works](docs/engineering/local-api.md#storage-model). |
 | **Renderer stores** | Encrypted SafeCookies/localStorage keep a cache of those domains and an outbox of unsent changes. They stay authoritative only in a browser without a backend, and for scenarios, debt payoff, notifications and device settings. |
 
 Settings' combined JSON export covers **FIRE calculator inputs, asset

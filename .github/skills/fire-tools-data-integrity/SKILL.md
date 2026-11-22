@@ -24,7 +24,7 @@ Never hide a write failure behind a default object or silently switch stores.
 | Browser/Electron storage precedence | `src/utils/safeCookies.ts` |
 | Backend preference mirroring | `src/utils/uiPreferencesSync.ts`, `src/utils/apiBase.ts` |
 | Backend-authoritative domain sync and outbox | `src/utils/backendSync/`, `server/src/routes/sync.ts`, `server/src/sync/` |
-| API auth and agent discovery | `src/utils/apiClient.ts`, `server/src/auth.ts`, `electron/agentAccess.cjs` |
+| API auth and local API access | `src/utils/apiClient.ts`, `server/src/auth.ts`, `server/src/embed.ts`, `electron/apiAccess.cjs` |
 | Asset Allocation / Net Worth conversion | `src/utils/dataSync.ts` |
 | Imports and exports | `src/utils/dataExportImport.ts`, `src/utils/csvExport.ts` |
 | Spreadsheet (.xlsx) backfill | `src/utils/xlsxReader.ts`, `src/utils/workbookImport.ts`, `src/utils/workbookImportApply.ts` (ids `wb-`), `src/utils/expenseWorkbook.ts` (ids `wbe-`, detail outranks `wb-` monthly totals), `src/utils/operationsWorkbook.ts` (operation ids `wbo-`, average cost only when quantities match) |

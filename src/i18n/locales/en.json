@@ -670,6 +670,15 @@
   "settings": {
     "language": "Language",
     "languageHelp": "Choose the language for the user interface. This does not affect your currency.",
+    "search": {
+      "label": "Search settings",
+      "placeholder": "Search by name or description",
+      "clear": "Clear search",
+      "results_one": "{{count}} section matches",
+      "results_other": "{{count}} sections match",
+      "noResults": "No settings match “{{query}}”",
+      "noResultsHelp": "Try another word, or clear the search to see every setting."
+    },
     "sections": {
       "account": "Account",
       "fire": "FIRE Calculation",
@@ -690,7 +699,7 @@
       "updater": "Updater & Backups",
       "about": "About",
       "auditLog": "Audit Log",
-      "agentAccess": "Agent access"
+      "apiAccess": "API access"
     },
     "accountName": "Account Name",
     "accountNameHelp": "This name will be displayed throughout the app",
@@ -999,21 +1008,37 @@
         "restored": "Backup restored. Restart the app to apply."
       }
     },
-    "agentAccess": {
-      "description": "Let AI agents on this computer, such as GitHub Copilot CLI or Claude Code, read and update your Fire Tools data through the local API. Their changes appear here within a few seconds.",
-      "toggleLabel": "Allow local AI agents",
+    "apiAccess": {
+      "description": "Let other apps, scripts and AI agents on this computer read and update your Fire Tools data through the local API. Their changes appear here within a few seconds.",
+      "toggleLabel": "Allow local API access",
       "off": "Off",
       "on": "On",
-      "warning": "While this is on, any program running under your user account can read and change your Fire Tools data, even when the database is encrypted. Turn it off when you are done.",
+      "warning": "While this is on, any program running under your user account that has the token can read and change your Fire Tools data, even when the database is encrypted. Turn it off when you no longer need it.",
+      "addressLabel": "Address",
+      "addressHelp": "Only programs on this computer can connect. The address stays the same across restarts.",
+      "copyAddress": "Copy address",
+      "portLabel": "Port",
+      "portHelp": "Fixed local port for the API. The default is {{port}}.",
+      "portInvalid": "Enter a whole number between 1024 and 65535.",
+      "portInUse": "Port {{port}} is used by another program. Until you choose another port, clients can use the temporary address above, which changes when Fire Tools restarts.",
+      "portFailed": "The API could not use port {{port}} ({{message}}). Until you choose another port, clients can use the temporary address above.",
+      "savePort": "Use this port",
+      "tokenLabel": "Access token",
+      "tokenHelp": "Send it as \"Authorization: Bearer <token>\". It stays valid across restarts until you regenerate it or turn access off. Keep it secret and never paste it into a chat.",
+      "copyToken": "Copy token",
+      "regenerateToken": "Regenerate token",
+      "regenerated": "New token issued. The old token no longer works.",
       "fileLabel": "Connection file",
-      "fileHelp": "Agents read the local address and their own secret token from this file. A new token is issued each time you turn access on or Fire Tools starts, and it stops working as soon as you turn access off or quit. Never paste the token into a chat.",
+      "fileHelp": "Scripts and agents can read the address and token from this file instead of storing them. It is readable only by your user account and is deleted when you turn access off or quit.",
       "copyPath": "Copy file path",
-      "copied": "Path copied",
-      "copyError": "Could not copy the path. Select it and copy it manually.",
-      "guide": "How to connect an agent",
-      "unavailable": "Agent access needs the built-in database. While Fire Tools uses a custom backend, give your agent that backend's address and access token instead.",
-      "loadError": "Could not read the agent access setting: {{message}}",
-      "updateError": "Could not change agent access: {{message}}"
+      "exampleLabel": "Example request",
+      "copied": "Copied",
+      "copyError": "Could not copy. Select the text and copy it manually.",
+      "guide": "API guide",
+      "reference": "API reference",
+      "unavailable": "API access needs the built-in database. While Fire Tools uses a custom backend, connect clients to that backend's address with its access token instead.",
+      "loadError": "Could not read the API access setting: {{message}}",
+      "updateError": "Could not change API access: {{message}}"
     }
   },
   "assetAllocation": {

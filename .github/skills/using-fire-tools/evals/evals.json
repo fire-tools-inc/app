@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "I just installed Fire Tools. Set me up: I'm 32, I spend about 2,500 EUR a month, I have 40k in an all-world ETF and 10k in savings, and I want to retire around 50.",
-      "expected_output": "Runs the helper script status check first (or explains how to turn on Settings > Agent access), never asks for or prints the token, reads existing state, asks one topic at a time for missing basics, summarizes the planned writes and waits for confirmation, then writes preferences, calculator inputs, the asset allocation holdings and the current net worth month with minted agent ids, and asks the user to verify the Dashboard.",
+      "expected_output": "Runs the helper script status check first (or explains how to turn on Settings > API access), never asks for or prints the token, reads existing state, asks one topic at a time for missing basics, summarizes the planned writes and waits for confirmation, then writes preferences, calculator inputs, the asset allocation holdings and the current net worth month with minted agent ids, and asks the user to verify the Dashboard.",
       "files": []
     },
     {

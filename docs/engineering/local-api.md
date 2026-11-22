@@ -1,8 +1,9 @@
-# Agent API and storage sync
+# Local API and storage sync
 
 Fire Tools exposes one REST API (`/api/v1`, described in
-[OpenAPI](https://fire-tools-inc.github.io/app/api/)) for the app itself, AI
-agents and custom clients. Whatever a client writes through it is what the
+[OpenAPI](https://fire-tools-inc.github.io/app/api/)) for the app itself and
+any other client: scripts, other apps, custom frontends and AI agents.
+Whatever a client writes through it is what the
 app shows: the database is the source of truth whenever a backend is
 reachable.
 
@@ -46,7 +47,7 @@ For each domain the app compares its cache with the database:
   app never displayed database data). With a custom backend that already
   holds data, the app asks which copy to keep.
 - Database not initialized and the device is empty: the database copy is used,
-  so an agent can onboard someone before the app is first opened.
+  so a script or agent can onboard someone before the app is first opened.
 - Database initialized: the database copy wins. If this device holds
   different data it never synchronized with this database, the app asks which
   copy to keep instead of overwriting either.
@@ -55,32 +56,41 @@ For each domain the app compares its cache with the database:
 
 - The desktop app starts its backend on a random loopback port with a random
   bearer token per launch. The renderer gets both through the preload bridge;
-  agents get a separate, revocable token (see below).
+  other local clients use a separate, stable address and token (see below).
 - A standalone backend requires `Authorization: Bearer <API_TOKEN>` when the
   `API_TOKEN` environment variable is set. Set it whenever the backend is
   reachable beyond loopback. In the app, enter the token under
   **Settings > Backend** next to the custom URL.
 - `GET /api/v1/health` stays public for health checks.
 
-## Agent discovery (desktop)
+## API access for other clients (desktop)
 
-**Settings > Agent access** is off by default. When on, the main process mints
-a separate agent token (the embedded backend accepts it next to the app's own
-token) and writes `agent-api.json` (mode `0600`) next to the database:
+**Settings > API access** is off by default. When on, the main process:
+
+- serves the same Express app on a second, fixed loopback listener
+  (`127.0.0.1:47820` by default, changeable in Settings). If the port is taken,
+  Settings says so and clients fall back to the app's temporary address until
+  another port is chosen;
+- issues a client token that the backend accepts next to the app's own token.
+  It is saved in `api-access.json` (mode `0600`, encrypted with the OS keychain
+  through Electron `safeStorage` when available) so it survives restarts. It is
+  revoked the moment access is turned off or **Regenerate token** is used;
+- writes the connection file `local-api.json` (mode `0600`) next to the
+  database, removed when access is turned off or the app quits:
 
 ```json
 { "schemaVersion": 1, "app": "Fire Tools", "appVersion": "x.y.z",
-  "apiBaseUrl": "http://127.0.0.1:53124/api/v1", "token": "<agent secret>",
-  "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
+  "apiBaseUrl": "http://127.0.0.1:47820/api/v1", "token": "<client secret>",
+  "stablePort": true, "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
 ```
 
-Turning access on (or starting the app with it on) issues a new agent token.
-Turning it off or quitting revokes the token at once and removes the file. While
-access is on, any process running as the same OS user can use the API, including
-when the database is passphrase-encrypted; the settings copy says so.
-Code: `electron/agentAccess.cjs`, IPC `fire-tools:agent-access-get|set`.
+**Copy token** writes the token to the clipboard from the main process, so it
+never enters the renderer. While access is on, any process running as the same
+OS user that has the token can use the API, including when the database is
+passphrase-encrypted; the settings copy says so. Code: `electron/apiAccess.cjs`,
+`EmbeddedServer.openPublicListener()`, IPC `fire-tools:api-access-*`.
 
-## Endpoints for agents
+## Endpoints for clients
 
 | Purpose | Route |
 | --- | --- |
@@ -93,8 +103,8 @@ Code: `electron/agentAccess.cjs`, IPC `fire-tools:agent-access-get|set`.
 Changesets have `set` (singletons), `upsert` (collections of records keyed by
 id) and `delete` (keys). Records use the app's own shapes plus `year`/`month`
 for month-scoped records and `position` for list order. The full table of
-collections and a worked onboarding example are in the agent skill's
-[API reference](https://github.com/fire-tools-inc/app/blob/main/.github/skills/using-fire-tools/references/api.md).
+collections and a worked onboarding example are in the
+[API reference for agents](https://github.com/fire-tools-inc/app/blob/main/.github/skills/using-fire-tools/references/api.md).
 
 Routes for questionnaire results, notifications, Monte Carlo runs and portfolio
 metadata are stored in the database but not displayed by the app yet; their
@@ -106,14 +116,14 @@ OpenAPI descriptions say so.
 is an [Agent Skills](https://agentskills.io/specification) package for people
 who want an agent to operate their Fire Tools data. The site publishes it at
 `/agents/using-fire-tools/` and lists it in `/llms.txt`. Its helper script reads
-the discovery file, adds the token and refuses absolute URLs so the token never
-leaves the machine. Install steps for users: [Use Fire Tools with an AI
-agent](../user/ai-agents.md).
+the connection file, adds the token and refuses absolute URLs so the token
+never leaves the machine. Install steps for users:
+[Use the Fire Tools API](../user/api-access.md#connect-an-ai-agent).
 
 ## Try it with curl
 
 ```sh
-file="$HOME/Library/Application Support/Fire Tools/agent-api.json"
+file="$HOME/Library/Application Support/Fire Tools/local-api.json"
 base=$(node -p "require(process.argv[1]).apiBaseUrl" "$file")
 auth="Authorization: Bearer $(node -p "require(process.argv[1]).token" "$file")"
 curl -s -H "$auth" "$base/sync/status"

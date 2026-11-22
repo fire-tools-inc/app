@@ -9,7 +9,7 @@ instead.
 
 - [Backend deployment (Docker Compose)](./backend-deploy.md)
 - [API & custom clients (OpenAPI)](./api-client.md)
-- [Agent API and storage sync](./agent-api.md)
+- [Local API and storage sync](./local-api.md)
 - [Database & schema](./database.md)
 - [Migrations & rollbacks](./migrations.md)
 - [Audit log](./audit-log.md)
@@ -68,7 +68,7 @@ instead.
   of truth for settings, the FIRE calculator, asset allocation, cashflow and
   net worth. The renderer keeps an encrypted cache and an outbox of unsent
   changes, and refreshes when another API client writes. See
-  [Agent API and storage sync](./agent-api.md). Without a backend, encrypted
+  [Local API and storage sync](./local-api.md). Without a backend, encrypted
   cookies/localStorage stay authoritative. The read-only browser demo does
   not require a backend.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the

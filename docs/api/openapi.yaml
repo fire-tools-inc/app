@@ -35,8 +35,8 @@ info:
       `externalId` (client-minted) — clients pass `externalId` on upsert.
     * Auth: without a configured token every request runs unauthenticated as
       the single local user. When the server has a token (`API_TOKEN`, or the
-      desktop app's per-launch token, plus the agent token while agent access
-      is on), every route except `GET /health` needs
+      desktop app's per-launch token, plus the client token while
+      Settings > API access is on), every route except `GET /health` needs
       `Authorization: Bearer <token>`; otherwise it answers
       `401 unauthorized`.
     * Body limits: 2 MB JSON (`413 payload_too_large`); `/state/{domain}`

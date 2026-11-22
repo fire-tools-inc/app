@@ -64,18 +64,29 @@ interface FireToolsBridge {
       error?: string;
     }>;
   };
-  agentAccess?: {
-    get: () => Promise<AgentAccessState>;
-    set: (opts: { enabled: boolean }) => Promise<AgentAccessState>;
+  apiAccess?: {
+    get: () => Promise<ApiAccessState>;
+    set: (opts: { enabled?: boolean; port?: number }) => Promise<ApiAccessState>;
+    regenerateToken: () => Promise<ApiAccessState>;
+    copyToken: () => Promise<{ ok: boolean; error?: string }>;
   };
 }
 
-/** Desktop agent access as reported by the main process. */
-export interface AgentAccessState {
+/** Desktop API access for other local apps, scripts and agents, as reported by the main process. */
+export interface ApiAccessState {
   ok: boolean;
   enabled?: boolean;
   /** False when the embedded backend is not running (e.g. a custom backend is used). */
   available?: boolean;
+  /** Saved fixed port. */
+  port?: number;
+  defaultPort?: number;
+  /** True when the API is served on the fixed port. */
+  listening?: boolean;
+  /** Address clients should use while access is on, including `/api/v1`. */
+  baseUrl?: string | null;
+  /** `in_use` when another program holds the port, otherwise the listen error. */
+  portError?: string | null;
   discoveryFile?: string;
   error?: string;
 }

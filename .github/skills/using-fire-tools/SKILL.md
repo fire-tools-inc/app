@@ -2,7 +2,7 @@
 name: using-fire-tools
 description: Operate a person's Fire Tools personal finance app through its local API. Onboard a new user (preferences, FIRE plan, investments and target allocation, net worth snapshot with cash, pensions and debts, income and expenses), log a month, categorize expenses and read data back. Use when someone asks an agent to set up, fill in, import into, update or review their Fire Tools data, FIRE plan, budget, cashflow or net worth.
 license: MIT
-compatibility: Needs the Fire Tools desktop app running with Settings > Agent access turned on, or a self-hosted Fire Tools backend URL and token. The helper script needs Node.js 18 or newer.
+compatibility: Needs the Fire Tools desktop app running with Settings > API access turned on, or a self-hosted Fire Tools backend URL and token. The helper script needs Node.js 18 or newer.
 metadata:
   version: "1"
 ---
@@ -18,7 +18,7 @@ three seconds, no restart needed.
 
 - **Never print, paste or ask for the access token.** Call the API only through
   [`scripts/fire-tools-api.mjs`](scripts/fire-tools-api.mjs), which reads it
-  from the app's discovery file and refuses to send it anywhere but the local API.
+  from the app's connection file and refuses to send it anywhere but the local API.
 - **Read only what the current step needs.** Everything you read goes to your
   model provider. Ask before reading full histories.
 - **Confirm before writing.** Show a short summary (record counts, totals,
@@ -38,7 +38,7 @@ node scripts/fire-tools-api.mjs status
 A JSON object with `instanceId` and five `domains` (settings, calculator,
 assetAllocation, expenseTracker, netWorth) means you are connected. Otherwise
 the script prints what the person has to do, usually: open Fire Tools, go to
-**Settings > Agent access** and turn it on. A self-hosted backend works with
+**Settings > API access** and turn it on. A self-hosted backend works with
 `FIRE_TOOLS_API_URL=https://host/api/v1` and `FIRE_TOOLS_API_TOKEN` in the
 environment instead.
 
@@ -119,7 +119,7 @@ All errors are `{ "error": { "code", "message", "details"? } }`.
 | Status | Meaning | Do |
 | --- | --- | --- |
 | 400 `invalid_body` | A record failed validation; `details` names the collection, key and reason. Nothing was written. | Fix that record and resend. |
-| 401 `unauthorized` | Token missing or revoked (the app restarted, or agent access was turned off or on again). | Rerun; the script rereads the token. If it persists, ask the person to check Settings > Agent access. |
+| 401 `unauthorized` | Token missing or revoked (API access was turned off, or the token was regenerated). | Rerun; the script rereads the token. If it persists, ask the person to check Settings > API access. |
 | 404 `not_found` | Unknown route or record. | Check the path and id. |
 | 409 `conflict` | The id already exists, or a scheduled occurrence is already recorded. | Update instead of creating. |
 | 413 `payload_too_large` | Body over the limit. | Split the changeset by month. |

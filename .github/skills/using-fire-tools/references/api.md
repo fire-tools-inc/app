@@ -1,30 +1,31 @@
 # Fire Tools API for agents
 
-Base URL: `apiBaseUrl` from the discovery file (desktop) or
-`FIRE_TOOLS_API_URL` (self-hosted), for example `http://127.0.0.1:53124/api/v1`.
+Base URL: `apiBaseUrl` from the connection file (desktop, usually
+`http://127.0.0.1:47820/api/v1`) or `FIRE_TOOLS_API_URL` (self-hosted).
 Every route except `GET /health` needs `Authorization: Bearer <token>`; the
 helper script adds it. Full contract: the OpenAPI document at
 <https://fire-tools-inc.github.io/app/api/>.
 
-## Discovery file (desktop)
+## Connection file (desktop)
 
-Written only while the app runs with **Settings > Agent access** on, readable
+Written only while the app runs with **Settings > API access** on, readable
 by the current OS user only, removed when the app quits or access is turned off.
 
 | OS | Path |
 | --- | --- |
-| macOS | `~/Library/Application Support/Fire Tools/agent-api.json` |
-| Windows | `%APPDATA%\Fire Tools\agent-api.json` |
-| Linux | `~/.config/Fire Tools/agent-api.json` |
+| macOS | `~/Library/Application Support/Fire Tools/local-api.json` |
+| Windows | `%APPDATA%\Fire Tools\local-api.json` |
+| Linux | `~/.config/Fire Tools/local-api.json` |
 
 ```json
 { "schemaVersion": 1, "app": "Fire Tools", "appVersion": "x.y.z",
-  "apiBaseUrl": "http://127.0.0.1:53124/api/v1", "token": "<secret>",
-  "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
+  "apiBaseUrl": "http://127.0.0.1:47820/api/v1", "token": "<secret>",
+  "stablePort": true, "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
 ```
 
-The token is issued for agents when access is turned on or the app starts, and
-stops working when access is turned off or the app quits. Never copy it into
+The address and token stay the same across restarts until the user changes
+the port, regenerates the token or turns access off. `stablePort: false` means
+the fixed port was busy and the address is temporary. Never copy the token into
 chat or files.
 
 ## What the app shows

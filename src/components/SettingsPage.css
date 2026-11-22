@@ -21,6 +21,83 @@
   overflow: hidden;
 }
 
+/* Settings search */
+.settings-search {
+  margin-bottom: 1rem;
+}
+
+.settings-search__control {
+  position: relative;
+  max-width: 36rem;
+}
+
+.settings-search .settings-search__input {
+  padding-inline: 2.25rem calc(var(--control-height) + 0.25rem);
+}
+
+.settings-search__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.settings-search .settings-search__icon {
+  position: absolute;
+  top: 50%;
+  left: 0.625rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 20px;
+  pointer-events: none;
+}
+
+.settings-search .settings-search__clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.settings-search .settings-search__clear:focus-visible {
+  outline-offset: -3px;
+}
+
+.settings-page .settings-section[hidden] {
+  display: none !important;
+}
+
+/* While searching, hidden sections may follow the last visible one. */
+.settings-container.is-searching > .settings-section:not([hidden]):not(:has(~ .settings-section:not([hidden]))) {
+  border-bottom: 0;
+}
+
+.settings-search-empty {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  padding: 1.5rem;
+}
+
+.settings-search-empty > .material-symbols-outlined {
+  color: var(--text-muted);
+}
+
+.settings-search-empty__title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.settings-search-empty .setting-help {
+  margin: 0;
+}
+
+.settings-search-empty .btn {
+  margin-top: 0.5rem;
+}
+
 .settings-message {
   padding: 0.75rem 1.5rem;
   font-size: var(--text-sm);

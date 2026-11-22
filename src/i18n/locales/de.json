@@ -602,6 +602,15 @@
   "settings": {
     "language": "Sprache",
     "languageHelp": "Wähle die Sprache der Benutzeroberfläche. Dies ändert nicht die Währung.",
+    "search": {
+      "label": "Einstellungen durchsuchen",
+      "placeholder": "Nach Name oder Beschreibung suchen",
+      "clear": "Suche löschen",
+      "results_one": "{{count}} passender Abschnitt",
+      "results_other": "{{count}} passende Abschnitte",
+      "noResults": "Keine Einstellung entspricht „{{query}}“",
+      "noResultsHelp": "Versuchen Sie ein anderes Wort oder löschen Sie die Suche, um alle Einstellungen anzuzeigen."
+    },
     "sections": {
       "account": "Konto",
       "fire": "FIRE-Berechnung",
@@ -622,7 +631,7 @@
       "updater": "Updates & Sicherungen",
       "about": "Info",
       "auditLog": "Aktivitätsprotokoll",
-      "agentAccess": "Agentenzugriff"
+      "apiAccess": "API-Zugriff"
     },
     "accountName": "Kontoname",
     "accountNameHelp": "Dieser Name wird in der gesamten App angezeigt",
@@ -931,21 +940,37 @@
         "restored": "Sicherung wiederhergestellt. App neu starten, um die Änderungen zu übernehmen."
       }
     },
-    "agentAccess": {
-      "description": "Erlauben Sie KI-Agenten auf diesem Computer, etwa GitHub Copilot CLI oder Claude Code, Ihre Fire-Tools-Daten über die lokale API zu lesen und zu aktualisieren. Ihre Änderungen erscheinen hier innerhalb weniger Sekunden.",
-      "toggleLabel": "Lokale KI-Agenten erlauben",
+    "apiAccess": {
+      "description": "Erlauben Sie anderen Apps, Skripten und KI-Agenten auf diesem Computer, Ihre Fire-Tools-Daten über die lokale API zu lesen und zu aktualisieren. Ihre Änderungen erscheinen hier innerhalb weniger Sekunden.",
+      "toggleLabel": "Zugriff auf die lokale API erlauben",
       "off": "Aus",
       "on": "An",
-      "warning": "Solange dies aktiviert ist, kann jedes Programm, das unter Ihrem Benutzerkonto läuft, Ihre Fire-Tools-Daten lesen und ändern, auch wenn die Datenbank verschlüsselt ist. Schalten Sie es aus, wenn Sie fertig sind.",
+      "warning": "Solange dies aktiviert ist, kann jedes Programm unter Ihrem Benutzerkonto, das das Token besitzt, Ihre Fire-Tools-Daten lesen und ändern, auch wenn die Datenbank verschlüsselt ist. Schalten Sie es aus, wenn Sie es nicht mehr brauchen.",
+      "addressLabel": "Adresse",
+      "addressHelp": "Nur Programme auf diesem Computer können sich verbinden. Die Adresse bleibt nach einem Neustart gleich.",
+      "copyAddress": "Adresse kopieren",
+      "portLabel": "Port",
+      "portHelp": "Fester lokaler Port für die API. Standard ist {{port}}.",
+      "portInvalid": "Geben Sie eine ganze Zahl zwischen 1024 und 65535 ein.",
+      "portInUse": "Port {{port}} wird von einem anderen Programm verwendet. Bis Sie einen anderen Port wählen, können Clients die temporäre Adresse oben verwenden, die sich beim Neustart von Fire Tools ändert.",
+      "portFailed": "Die API konnte Port {{port}} nicht verwenden ({{message}}). Bis Sie einen anderen Port wählen, können Clients die temporäre Adresse oben verwenden.",
+      "savePort": "Diesen Port verwenden",
+      "tokenLabel": "Zugriffstoken",
+      "tokenHelp": "Senden Sie es als \"Authorization: Bearer <token>\". Es bleibt auch nach Neustarts gültig, bis Sie es neu erzeugen oder den Zugriff ausschalten. Halten Sie es geheim und fügen Sie es niemals in einen Chat ein.",
+      "copyToken": "Token kopieren",
+      "regenerateToken": "Token neu erzeugen",
+      "regenerated": "Neues Token ausgestellt. Das alte Token funktioniert nicht mehr.",
       "fileLabel": "Verbindungsdatei",
-      "fileHelp": "Agenten lesen aus dieser Datei die lokale Adresse und ein eigenes geheimes Token. Bei jedem Einschalten des Zugriffs und jedem Start von Fire Tools wird ein neues Token ausgestellt; es funktioniert nicht mehr, sobald Sie den Zugriff ausschalten oder die App beenden. Fügen Sie das Token niemals in einen Chat ein.",
+      "fileHelp": "Skripte und Agenten können Adresse und Token aus dieser Datei lesen, statt sie zu speichern. Nur Ihr Benutzerkonto kann sie lesen, und sie wird gelöscht, wenn Sie den Zugriff ausschalten oder die App beenden.",
       "copyPath": "Dateipfad kopieren",
-      "copied": "Pfad kopiert",
-      "copyError": "Der Pfad konnte nicht kopiert werden. Markieren Sie ihn und kopieren Sie ihn manuell.",
-      "guide": "So verbinden Sie einen Agenten",
-      "unavailable": "Der Agentenzugriff benötigt die integrierte Datenbank. Solange Fire Tools ein eigenes Backend nutzt, geben Sie Ihrem Agenten stattdessen dessen Adresse und Zugriffstoken.",
-      "loadError": "Die Einstellung für den Agentenzugriff konnte nicht gelesen werden: {{message}}",
-      "updateError": "Der Agentenzugriff konnte nicht geändert werden: {{message}}"
+      "exampleLabel": "Beispielanfrage",
+      "copied": "Kopiert",
+      "copyError": "Kopieren nicht möglich. Markieren Sie den Text und kopieren Sie ihn manuell.",
+      "guide": "API-Leitfaden",
+      "reference": "API-Referenz",
+      "unavailable": "Der API-Zugriff benötigt die integrierte Datenbank. Solange Fire Tools ein eigenes Backend nutzt, verbinden Sie Clients stattdessen mit der Adresse dieses Backends und dessen Zugriffstoken.",
+      "loadError": "Die Einstellung für den API-Zugriff konnte nicht gelesen werden: {{message}}",
+      "updateError": "Der API-Zugriff konnte nicht geändert werden: {{message}}"
     }
   },
   "assetAllocation": {

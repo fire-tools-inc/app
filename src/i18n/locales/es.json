@@ -602,6 +602,15 @@
   "settings": {
     "language": "Idioma",
     "languageHelp": "Elige el idioma de la interfaz. No afecta a la divisa.",
+    "search": {
+      "label": "Buscar en la configuración",
+      "placeholder": "Buscar por nombre o descripción",
+      "clear": "Borrar búsqueda",
+      "results_one": "{{count}} sección coincide",
+      "results_other": "{{count}} secciones coinciden",
+      "noResults": "Ninguna opción de configuración coincide con «{{query}}»",
+      "noResultsHelp": "Prueba con otra palabra o borra la búsqueda para ver toda la configuración."
+    },
     "sections": {
       "account": "Cuenta",
       "fire": "Cálculo FIRE",
@@ -622,7 +631,7 @@
       "updater": "Actualizaciones y Copias",
       "about": "Acerca de",
       "auditLog": "Registro de actividad",
-      "agentAccess": "Acceso de agentes"
+      "apiAccess": "Acceso a la API"
     },
     "accountName": "Nombre de cuenta",
     "accountNameHelp": "Este nombre se mostrará en toda la aplicación",
@@ -931,21 +940,37 @@
         "restored": "Copia restaurada. Reinicia la app para aplicar."
       }
     },
-    "agentAccess": {
-      "description": "Permite que los agentes de IA de este ordenador, como GitHub Copilot CLI o Claude Code, lean y actualicen tus datos de Fire Tools a través de la API local. Sus cambios aparecen aquí en pocos segundos.",
-      "toggleLabel": "Permitir agentes de IA locales",
+    "apiAccess": {
+      "description": "Permite que otras aplicaciones, scripts y agentes de IA de este ordenador lean y actualicen tus datos de Fire Tools a través de la API local. Sus cambios aparecen aquí en pocos segundos.",
+      "toggleLabel": "Permitir el acceso a la API local",
       "off": "Desactivado",
       "on": "Activado",
-      "warning": "Mientras esté activado, cualquier programa que se ejecute con tu cuenta de usuario puede leer y modificar tus datos de Fire Tools, incluso si la base de datos está cifrada. Desactívalo cuando termines.",
+      "warning": "Mientras esté activado, cualquier programa que se ejecute con tu cuenta de usuario y tenga el token puede leer y modificar tus datos de Fire Tools, incluso si la base de datos está cifrada. Desactívalo cuando ya no lo necesites.",
+      "addressLabel": "Dirección",
+      "addressHelp": "Solo pueden conectarse los programas de este ordenador. La dirección se mantiene tras cada reinicio.",
+      "copyAddress": "Copiar dirección",
+      "portLabel": "Puerto",
+      "portHelp": "Puerto local fijo para la API. El valor predeterminado es {{port}}.",
+      "portInvalid": "Introduce un número entero entre 1024 y 65535.",
+      "portInUse": "Otro programa está usando el puerto {{port}}. Hasta que elijas otro puerto, los clientes pueden usar la dirección temporal de arriba, que cambia al reiniciar Fire Tools.",
+      "portFailed": "La API no pudo usar el puerto {{port}} ({{message}}). Hasta que elijas otro puerto, los clientes pueden usar la dirección temporal de arriba.",
+      "savePort": "Usar este puerto",
+      "tokenLabel": "Token de acceso",
+      "tokenHelp": "Envíalo como \"Authorization: Bearer <token>\". Sigue siendo válido tras los reinicios hasta que lo regeneres o desactives el acceso. Mantenlo en secreto y nunca lo pegues en un chat.",
+      "copyToken": "Copiar token",
+      "regenerateToken": "Regenerar token",
+      "regenerated": "Se ha emitido un token nuevo. El anterior ya no funciona.",
       "fileLabel": "Archivo de conexión",
-      "fileHelp": "Los agentes leen de este archivo la dirección local y su propio token secreto. Se emite un token nuevo cada vez que activas el acceso o inicias Fire Tools, y deja de funcionar en cuanto desactivas el acceso o cierras la aplicación. Nunca pegues el token en un chat.",
+      "fileHelp": "Los scripts y agentes pueden leer la dirección y el token de este archivo en lugar de guardarlos. Solo tu cuenta de usuario puede leerlo y se elimina cuando desactivas el acceso o cierras la aplicación.",
       "copyPath": "Copiar ruta del archivo",
-      "copied": "Ruta copiada",
-      "copyError": "No se pudo copiar la ruta. Selecciónala y cópiala manualmente.",
-      "guide": "Cómo conectar un agente",
-      "unavailable": "El acceso de agentes necesita la base de datos integrada. Mientras Fire Tools use un backend personalizado, dale a tu agente la dirección y el token de acceso de ese backend.",
-      "loadError": "No se pudo leer el ajuste de acceso de agentes: {{message}}",
-      "updateError": "No se pudo cambiar el acceso de agentes: {{message}}"
+      "exampleLabel": "Ejemplo de solicitud",
+      "copied": "Copiado",
+      "copyError": "No se pudo copiar. Selecciona el texto y cópialo manualmente.",
+      "guide": "Guía de la API",
+      "reference": "Referencia de la API",
+      "unavailable": "El acceso a la API necesita la base de datos integrada. Mientras Fire Tools use un backend personalizado, conecta los clientes a la dirección de ese backend con su token de acceso.",
+      "loadError": "No se pudo leer el ajuste de acceso a la API: {{message}}",
+      "updateError": "No se pudo cambiar el acceso a la API: {{message}}"
     }
   },
   "assetAllocation": {

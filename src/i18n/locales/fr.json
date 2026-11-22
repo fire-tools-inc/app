@@ -602,6 +602,15 @@
   "settings": {
     "language": "Langue",
     "languageHelp": "Choisissez la langue de l'interface. Cela n'affecte pas la devise.",
+    "search": {
+      "label": "Rechercher dans les paramètres",
+      "placeholder": "Rechercher par nom ou description",
+      "clear": "Effacer la recherche",
+      "results_one": "{{count}} section correspondante",
+      "results_other": "{{count}} sections correspondantes",
+      "noResults": "Aucun paramètre ne correspond à « {{query}} »",
+      "noResultsHelp": "Essayez un autre mot ou effacez la recherche pour afficher tous les paramètres."
+    },
     "sections": {
       "account": "Compte",
       "fire": "Calcul FIRE",
@@ -622,7 +631,7 @@
       "updater": "Mises à jour & Sauvegardes",
       "about": "À propos",
       "auditLog": "Journal d'activité",
-      "agentAccess": "Accès des agents"
+      "apiAccess": "Accès API"
     },
     "accountName": "Nom de compte",
     "accountNameHelp": "Ce nom sera affiché dans toute l'application",
@@ -931,21 +940,37 @@
         "restored": "Sauvegarde restaurée. Redémarrez l'application pour appliquer."
       }
     },
-    "agentAccess": {
-      "description": "Autorisez les agents IA de cet ordinateur, comme GitHub Copilot CLI ou Claude Code, à lire et mettre à jour vos données Fire Tools via l'API locale. Leurs modifications apparaissent ici en quelques secondes.",
-      "toggleLabel": "Autoriser les agents IA locaux",
+    "apiAccess": {
+      "description": "Autorisez d'autres applications, scripts et agents IA de cet ordinateur à lire et mettre à jour vos données Fire Tools via l'API locale. Leurs modifications apparaissent ici en quelques secondes.",
+      "toggleLabel": "Autoriser l'accès à l'API locale",
       "off": "Désactivé",
       "on": "Activé",
-      "warning": "Tant que cette option est activée, tout programme exécuté sous votre compte utilisateur peut lire et modifier vos données Fire Tools, même lorsque la base de données est chiffrée. Désactivez-la quand vous avez terminé.",
+      "warning": "Tant que cette option est activée, tout programme exécuté sous votre compte utilisateur qui possède le jeton peut lire et modifier vos données Fire Tools, même lorsque la base de données est chiffrée. Désactivez-la quand vous n'en avez plus besoin.",
+      "addressLabel": "Adresse",
+      "addressHelp": "Seuls les programmes de cet ordinateur peuvent se connecter. L'adresse reste la même après chaque redémarrage.",
+      "copyAddress": "Copier l'adresse",
+      "portLabel": "Port",
+      "portHelp": "Port local fixe pour l'API. La valeur par défaut est {{port}}.",
+      "portInvalid": "Saisissez un nombre entier entre 1024 et 65535.",
+      "portInUse": "Le port {{port}} est utilisé par un autre programme. Tant que vous n'avez pas choisi un autre port, les clients peuvent utiliser l'adresse temporaire ci-dessus, qui change au redémarrage de Fire Tools.",
+      "portFailed": "L'API n'a pas pu utiliser le port {{port}} ({{message}}). Tant que vous n'avez pas choisi un autre port, les clients peuvent utiliser l'adresse temporaire ci-dessus.",
+      "savePort": "Utiliser ce port",
+      "tokenLabel": "Jeton d'accès",
+      "tokenHelp": "Envoyez-le sous la forme \"Authorization: Bearer <token>\". Il reste valide après les redémarrages jusqu'à ce que vous le régénériez ou désactiviez l'accès. Gardez-le secret et ne le collez jamais dans une conversation.",
+      "copyToken": "Copier le jeton",
+      "regenerateToken": "Régénérer le jeton",
+      "regenerated": "Nouveau jeton émis. L'ancien jeton ne fonctionne plus.",
       "fileLabel": "Fichier de connexion",
-      "fileHelp": "Les agents lisent dans ce fichier l'adresse locale et leur propre jeton secret. Un nouveau jeton est émis chaque fois que vous activez l'accès ou démarrez Fire Tools, et il cesse de fonctionner dès que vous désactivez l'accès ou quittez l'application. Ne collez jamais le jeton dans une conversation.",
+      "fileHelp": "Les scripts et agents peuvent lire l'adresse et le jeton dans ce fichier au lieu de les enregistrer. Il n'est lisible que par votre compte utilisateur et il est supprimé lorsque vous désactivez l'accès ou quittez l'application.",
       "copyPath": "Copier le chemin du fichier",
-      "copied": "Chemin copié",
-      "copyError": "Impossible de copier le chemin. Sélectionnez-le et copiez-le manuellement.",
-      "guide": "Comment connecter un agent",
-      "unavailable": "L'accès des agents nécessite la base de données intégrée. Tant que Fire Tools utilise un backend personnalisé, donnez plutôt à votre agent l'adresse et le jeton d'accès de ce backend.",
-      "loadError": "Impossible de lire le réglage d'accès des agents : {{message}}",
-      "updateError": "Impossible de modifier l'accès des agents : {{message}}"
+      "exampleLabel": "Exemple de requête",
+      "copied": "Copié",
+      "copyError": "Impossible de copier. Sélectionnez le texte et copiez-le manuellement.",
+      "guide": "Guide de l'API",
+      "reference": "Référence de l'API",
+      "unavailable": "L'accès API nécessite la base de données intégrée. Tant que Fire Tools utilise un backend personnalisé, connectez les clients à l'adresse de ce backend avec son jeton d'accès.",
+      "loadError": "Impossible de lire le réglage d'accès API : {{message}}",
+      "updateError": "Impossible de modifier l'accès API : {{message}}"
     }
   },
   "assetAllocation": {

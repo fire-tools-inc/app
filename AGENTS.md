@@ -47,7 +47,7 @@ cache and hand the new document to `src/utils/backendSync/`, which diffs it
 into entity changesets, persists an outbox and sends `PATCH /state/{domain}`.
 Remote writes (any route) bump SQLite revisions; the app polls
 `/sync/status`, rehydrates and remounts the page. See
-[agent API and storage sync](docs/engineering/agent-api.md).
+[local API and storage sync](docs/engineering/local-api.md).
 
 - Keep every save going through those helpers so the outbox sees it; never
   write the cache directly for these domains. Hydration writes the cache with
@@ -60,8 +60,10 @@ Remote writes (any route) bump SQLite revisions; the app polls
 - `SafeCookies` makes `localStorage` authoritative inside Electron, where
   `file://` cookie writes do not work. In browsers, cookies remain authoritative
   with a local-storage fallback.
-- The embedded API requires the per-launch bearer token. Agent access
-  (`electron/agentAccess.cjs`) is opt-in and must stay off by default.
+- The embedded API requires the per-launch bearer token. API access for other
+  local clients (`electron/apiAccess.cjs`, fixed loopback port and persistent
+  client token) is opt-in and must stay off by default; turning it off revokes
+  the client token.
 - `uiPreferencesSync.ts` mirrors supported backend preferences into local
   stores without blocking application startup.
 - The local backend owns its SQLite data and optional passphrase encryption.

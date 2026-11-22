@@ -21,7 +21,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - [Net-worth tracker](./net-worth-tracker.md)
 - [Spreadsheet import and templates](./spreadsheet-import.md) (AI agent prompts: [net worth](./spreadsheet-import-agent-prompt.md), [expenses](./expense-import-agent-prompt.md), [investment operations](./operations-import-agent-prompt.md))
 - [Questionnaire (guided setup)](./questionnaire.md)
-- [Use Fire Tools with an AI agent](./ai-agents.md)
+- [Use the Fire Tools API (scripts, apps and AI agents)](./api-access.md)
 - [Settings, language, data export](./settings.md)
 
 ## How to install
@@ -58,7 +58,7 @@ this command for an untrusted download or disable Gatekeeper globally.
 - **Database** - SQLite inside the desktop's `userData` directory or a
   self-hosted volume holds your settings, FIRE calculator, asset allocation,
   cashflow and net worth, plus receipt originals. Changes made through its API,
-  for example by an [AI agent](./ai-agents.md), appear in the app within
+  for example by a script or an [AI agent](./api-access.md), appear in the app within
   seconds. A PostgreSQL driver is not implemented.
 - **This device** - an encrypted copy of that data and any changes not yet
   saved to the database. In a browser without a backend this copy is the only

@@ -4,6 +4,13 @@ Everything that controls how Fire Tools looks and behaves lives on this page.
 
 ![Settings](./screenshots/settings.png)
 
+## Search
+
+Type in **Search settings** at the top to find a setting by any word it shows,
+such as "decimal", "token" or "backup". Matching sections open and the others
+are hidden; case and accents are ignored and every word must match. Press
+**Escape** or the clear button to return to the sections you had open.
+
 ## AI features
 
 The **AI features** section at the top has **Disable all AI features** and
@@ -94,7 +101,7 @@ self-hosted builds keep them opt-in (all off until you enable them here).
 With the desktop app's embedded backend, or a custom backend under
 **Settings > Backend**, the database is the source of truth for settings, the
 FIRE calculator, asset allocation, cashflow and net worth. Changes made
-through the API (for example by an [AI agent](./ai-agents.md)) appear in the
+through the [API](./api-access.md) (for example by a script or an AI agent) appear in the
 open app within a few seconds. The app opens once your data has loaded, or
 after 8 seconds on the copy kept on this device if the database does not
 answer.
@@ -117,14 +124,15 @@ For a custom backend started with `API_TOKEN`, enter the same value in
 **Access token** next to the backend URL. **Test connection** reports a
 rejected token.
 
-### Agent access
+### API access
 
-Desktop only, off by default. **Settings > Agent access** lets AI agents
-running under your user account, such as GitHub Copilot CLI or Claude Code,
-read and update your data through the local API. While it is on, Fire Tools
-keeps a connection file with the local address and an agent token that is
-renewed when you turn access on or start the app, and revoked when you turn it
-off; **Copy file path** shows where it is. Turn it off when you are done. See [Use Fire Tools with an AI agent](./ai-agents.md).
+Desktop only, off by default. **Settings > API access** lets other apps,
+scripts and AI agents on this computer read and update your data through the
+local API. While it is on, the section shows a stable **Address** (port 47820
+by default, changeable), an **Access token** you can copy or regenerate, and a
+**Connection file** holding both for scripts. The token stays valid across
+restarts until you regenerate it or turn access off. See
+[Use the Fire Tools API](./api-access.md).
 
 ## Audit log
 

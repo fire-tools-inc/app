@@ -1,8 +1,8 @@
-.agent-access-intro {
+.api-access-intro {
   margin: 0 0 1rem;
 }
 
-.agent-access-settings .setting-label {
+.api-access-settings .setting-label {
   display: block;
   margin-bottom: 0.375rem;
   font-size: var(--text-sm);
@@ -10,12 +10,14 @@
   color: var(--text-primary);
 }
 
-.agent-access-settings .label-with-tooltip .setting-label {
+.api-access-settings .label-with-tooltip .setting-label {
   margin-bottom: 0;
 }
 
-.agent-access-path {
+.api-access-value,
+.api-access-example {
   display: block;
+  margin: 0;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -26,13 +28,35 @@
   overflow-wrap: anywhere;
 }
 
-.agent-access-actions {
+.api-access-example {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.api-access-port {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.api-access-settings .api-access-port input[type="number"] {
+  flex: 0 0 8rem;
+  width: 8rem;
+  max-width: 8rem;
+}
+
+.api-access-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
 
-.agent-access-settings .callout {
+.api-access-settings .callout {
   margin: 0.75rem 0 0;
+}
+
+.api-access-settings .callout + .setting-item {
+  margin-top: 1.25rem;
 }

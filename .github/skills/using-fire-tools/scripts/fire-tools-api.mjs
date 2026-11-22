@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-const ENABLE_HINT = 'Ask the user to open Fire Tools and turn on Settings > Agent access, '
+const ENABLE_HINT = 'Ask the user to open Fire Tools and turn on Settings > API access, '
   + 'or set FIRE_TOOLS_API_URL (and FIRE_TOOLS_API_TOKEN) for a self-hosted backend.';
 
 function fail(message, code = 1) {
@@ -24,12 +24,12 @@ function fail(message, code = 1) {
 function discoveryFile() {
   if (process.env.FIRE_TOOLS_DISCOVERY_FILE) return process.env.FIRE_TOOLS_DISCOVERY_FILE;
   const home = homedir();
-  if (platform() === 'darwin') return join(home, 'Library', 'Application Support', 'Fire Tools', 'agent-api.json');
-  if (platform() === 'win32') return join(process.env.APPDATA || join(home, 'AppData', 'Roaming'), 'Fire Tools', 'agent-api.json');
-  return join(process.env.XDG_CONFIG_HOME || join(home, '.config'), 'Fire Tools', 'agent-api.json');
+  if (platform() === 'darwin') return join(home, 'Library', 'Application Support', 'Fire Tools', 'local-api.json');
+  if (platform() === 'win32') return join(process.env.APPDATA || join(home, 'AppData', 'Roaming'), 'Fire Tools', 'local-api.json');
+  return join(process.env.XDG_CONFIG_HOME || join(home, '.config'), 'Fire Tools', 'local-api.json');
 }
 
-// Re-read on every call: the desktop app mints a new token each launch.
+// Re-read on every call: the token changes when the user regenerates it or toggles access.
 function connection() {
   const envUrl = process.env.FIRE_TOOLS_API_URL?.trim();
   if (envUrl) {
@@ -40,7 +40,7 @@ function connection() {
   try {
     parsed = JSON.parse(readFileSync(file, 'utf8'));
   } catch (err) {
-    if (err && err.code === 'ENOENT') fail(`Agent access is off (no ${file}). ${ENABLE_HINT}`);
+    if (err && err.code === 'ENOENT') fail(`API access is off (no ${file}). ${ENABLE_HINT}`);
     fail(`Could not read ${file}: ${err && err.message ? err.message : err}`);
   }
   if (!parsed || typeof parsed.apiBaseUrl !== 'string') fail(`${file} has no apiBaseUrl. ${ENABLE_HINT}`);
@@ -89,7 +89,7 @@ function print(value) {
 }
 
 function rejectToken() {
-  fail(`The token was rejected. Fire Tools may have restarted with agent access turned off. ${ENABLE_HINT}`, 2);
+  fail(`The token was rejected. API access may have been turned off or the token regenerated. ${ENABLE_HINT}`, 2);
 }
 
 async function main() {

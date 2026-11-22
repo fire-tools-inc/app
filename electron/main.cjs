@@ -1,6 +1,6 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeImage, nativeTheme, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, clipboard, shell, ipcMain, nativeImage, nativeTheme, Notification, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -9,7 +9,7 @@ const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
 const backup = require('./backup.cjs');
 const updater = require('./updater.cjs');
 const logFile = require('./logFile.cjs');
-const agentAccess = require('./agentAccess.cjs');
+const apiAccess = require('./apiAccess.cjs');
 const crypto = require('node:crypto');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
@@ -62,10 +62,10 @@ const externalBackendToken = (process.env.FIRETOOLS_BACKEND_TOKEN || '').trim() 
 // Every API call to the embedded backend must carry this per-launch token, so
 // other local pages and processes cannot read the database through it.
 const embeddedApiToken = crypto.randomBytes(32).toString('base64url');
-// Agents get their own token, minted whenever agent access is turned on (or
-// the app starts with it on) and revoked the moment access is turned off.
-let agentApiToken = null;
-const newApiToken = () => crypto.randomBytes(32).toString('base64url');
+// Token for other local apps, scripts and agents while Settings > API access
+// is on. It survives restarts until regenerated, and is revoked (null) as soon
+// as access is turned off.
+let clientApiToken = null;
 
 // Path where we persist the safeStorage-encrypted passphrase blob. Kept in
 // the same userData dir as the DB so a single backup captures both.
@@ -192,7 +192,7 @@ async function startEmbedded() {
       host: '127.0.0.1',
       corsAllowAll: true,
       apiToken: embeddedApiToken,
-      secondaryApiToken: () => agentApiToken,
+      secondaryApiToken: () => clientApiToken,
       passphrase: passphrase || undefined,
       // Funnel backend log lines into the same on-disk file the renderer
       // writes to, so bug-report exports contain both sides of the stack.
@@ -298,55 +298,122 @@ ipcMain.handle('fire-tools:embedded-backend-info', () => {
   };
 });
 
-// Writes or removes the agent discovery file and issues or revokes the agent
-// token so both always match the saved preference and the running backend.
-// `rotate` mints a new token even if one is active. Returns the Settings state.
-function syncAgentAccess({ rotate = false } = {}) {
+const tokenCipher = {
+  isAvailable: () => safeStorage.isEncryptionAvailable(),
+  encrypt: (plain) => safeStorage.encryptString(plain).toString('base64'),
+  decrypt: (encoded) => safeStorage.decryptString(Buffer.from(encoded, 'base64')),
+};
+const messageOf = (err) => (err && err.message ? err.message : String(err));
+
+let apiAccessQueue = Promise.resolve();
+let publicListener = { port: null, error: null };
+
+// API access changes touch the listener, the token and files; run them in order.
+function serializeApiAccess(task) {
+  const run = apiAccessQueue.then(task, task);
+  apiAccessQueue = run.catch(() => {});
+  return run;
+}
+
+function apiAccessState(prefs) {
+  const listening = publicListener.port !== null;
+  const origin = listening ? `http://127.0.0.1:${publicListener.port}` : embeddedServer && embeddedServer.url;
+  return {
+    ok: true,
+    enabled: prefs.enabled,
+    available: Boolean(embeddedServer),
+    port: prefs.port,
+    defaultPort: apiAccess.DEFAULT_PORT,
+    listening,
+    baseUrl: prefs.enabled && origin ? `${origin}/api/v1` : null,
+    portError: publicListener.error,
+    discoveryFile: apiAccess.discoveryPath(app.getPath('userData')),
+  };
+}
+
+// Applies the saved preference: issues or revokes the client token, opens or
+// closes the fixed-port listener and writes or removes the connection file.
+async function applyApiAccess({ regenerate = false } = {}) {
   const userDataDir = app.getPath('userData');
-  const prefs = agentAccess.readPrefs(userDataDir);
-  if (prefs.error) logWarn('[fire-tools] could not read agent access preference:', prefs.error);
-  const discoveryFile = agentAccess.discoveryPath(userDataDir);
-  const available = Boolean(embeddedServer);
+  const prefs = apiAccess.readPrefs(userDataDir, tokenCipher);
+  if (prefs.error) logWarn('[fire-tools] API access preference:', prefs.error);
   try {
-    if (prefs.enabled && embeddedServer) {
-      if (rotate || !agentApiToken) agentApiToken = newApiToken();
-      agentAccess.writeDiscovery(userDataDir, {
-        apiBaseUrl: `${embeddedServer.url}/api/v1`,
-        token: agentApiToken,
-        appVersion: app.getVersion(),
-        pid: process.pid,
-        startedAt: new Date().toISOString(),
-      });
-    } else {
-      agentApiToken = null;
-      agentAccess.removeDiscovery(userDataDir);
+    if (!prefs.enabled || !embeddedServer) {
+      clientApiToken = null;
+      publicListener = { port: null, error: null };
+      if (embeddedServer) await embeddedServer.closePublicListener();
+      apiAccess.removeDiscovery(userDataDir);
+      return apiAccessState(prefs);
     }
-    return { ok: true, enabled: prefs.enabled, available, discoveryFile };
+    if (regenerate || !prefs.token) {
+      prefs.token = apiAccess.newToken();
+      apiAccess.writePrefs(userDataDir, prefs, tokenCipher);
+    }
+    try {
+      await embeddedServer.openPublicListener(prefs.port);
+      publicListener = { port: prefs.port, error: null };
+    } catch (err) {
+      await embeddedServer.closePublicListener();
+      publicListener = { port: null, error: err && err.code === 'EADDRINUSE' ? 'in_use' : messageOf(err) };
+      logWarn(`[fire-tools] API access could not listen on port ${prefs.port}; using the app's own address:`, err);
+    }
+    clientApiToken = prefs.token;
+    const state = apiAccessState(prefs);
+    apiAccess.writeDiscovery(userDataDir, {
+      apiBaseUrl: state.baseUrl,
+      token: prefs.token,
+      stablePort: state.listening,
+      appVersion: app.getVersion(),
+      pid: process.pid,
+      startedAt: new Date().toISOString(),
+    });
+    return state;
   } catch (err) {
-    // Never leave a token active that agents cannot discover or the user cannot see.
-    agentApiToken = null;
-    logError('[fire-tools] could not update the agent discovery file:', err);
-    return {
-      ok: false, enabled: prefs.enabled, available, discoveryFile,
-      error: err && err.message ? err.message : String(err),
-    };
+    // Never leave a token active that clients cannot discover or the user cannot see.
+    clientApiToken = null;
+    logError('[fire-tools] could not apply API access:', err);
+    try { apiAccess.removeDiscovery(userDataDir); } catch { /* reported above */ }
+    return { ...apiAccessState(prefs), ok: false, error: messageOf(err) };
   }
 }
 
-ipcMain.handle('fire-tools:agent-access-get', () => syncAgentAccess());
+ipcMain.handle('fire-tools:api-access-get', () => serializeApiAccess(() => applyApiAccess()));
 
-ipcMain.handle('fire-tools:agent-access-set', (_event, opts) => {
-  if (!opts || typeof opts.enabled !== 'boolean') {
-    return { ok: false, error: 'enabled must be a boolean' };
+ipcMain.handle('fire-tools:api-access-set', (_event, opts) => serializeApiAccess(async () => {
+  if (!opts || typeof opts !== 'object') return { ok: false, error: 'Expected { enabled?, port? }.' };
+  if (opts.enabled !== undefined && typeof opts.enabled !== 'boolean') return { ok: false, error: 'enabled must be a boolean.' };
+  if (opts.port !== undefined && !apiAccess.isValidPort(opts.port)) {
+    return { ok: false, error: 'Port must be a whole number between 1024 and 65535.' };
+  }
+  const userDataDir = app.getPath('userData');
+  const prefs = apiAccess.readPrefs(userDataDir, tokenCipher);
+  const next = { ...prefs };
+  if (opts.port !== undefined) next.port = opts.port;
+  if (opts.enabled !== undefined) {
+    next.enabled = opts.enabled;
+    // Turning access off revokes the token; turning it on again issues a new one.
+    if (!opts.enabled) next.token = null;
   }
   try {
-    agentAccess.writePrefs(app.getPath('userData'), { enabled: opts.enabled });
+    apiAccess.writePrefs(userDataDir, next, tokenCipher);
   } catch (err) {
-    logError('[fire-tools] could not save the agent access preference:', err);
-    return { ok: false, error: err && err.message ? err.message : String(err) };
+    logError('[fire-tools] could not save the API access preference:', err);
+    return { ...apiAccessState(prefs), ok: false, error: messageOf(err) };
   }
-  logInfo(`[fire-tools] agent access ${opts.enabled ? 'enabled' : 'disabled'}`);
-  return syncAgentAccess({ rotate: opts.enabled });
+  logInfo(`[fire-tools] API access ${next.enabled ? 'enabled' : 'disabled'} on port ${next.port}`);
+  return applyApiAccess();
+}));
+
+ipcMain.handle('fire-tools:api-access-regenerate', () => serializeApiAccess(() => {
+  logInfo('[fire-tools] API access token regenerated');
+  return applyApiAccess({ regenerate: true });
+}));
+
+// The token goes straight to the clipboard so it never enters the renderer.
+ipcMain.handle('fire-tools:api-access-copy-token', () => {
+  if (!clientApiToken) return { ok: false, error: 'API access is off.' };
+  clipboard.writeText(clientApiToken);
+  return { ok: true };
 });
 
 ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
@@ -666,7 +733,7 @@ app.whenReady().then(async () => {
   nativeTheme.themeSource = 'dark';
 
   await startEmbedded();
-  syncAgentAccess();
+  await serializeApiAccess(() => applyApiAccess());
   installMenu();
   createWindow();
 
@@ -691,11 +758,11 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (event) => {
-  agentApiToken = null;
+  clientApiToken = null;
   try {
-    agentAccess.removeDiscovery(app.getPath('userData'));
+    apiAccess.removeDiscovery(app.getPath('userData'));
   } catch (err) {
-    console.error('[fire-tools] could not remove the agent discovery file:', err);
+    console.error('[fire-tools] could not remove the API connection file:', err);
   }
   if (!embeddedServer) return;
   const server = embeddedServer;

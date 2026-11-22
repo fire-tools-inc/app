@@ -15,7 +15,7 @@ const isPublicRequest = (req: Request): boolean =>
  * Requires `Authorization: Bearer <token>` on every request it guards except
  * CORS preflights and the health probe. Mount it on the /api/v1 router.
  * `secondaryToken` is read per request, so a revocable token (e.g. desktop
- * agent access) stops working as soon as it returns null.
+ * API access) stops working as soon as it returns null.
  */
 export const requireBearerToken = (token: string, secondaryToken?: () => string | null) =>
   (req: Request, res: Response, next: NextFunction): void => {
