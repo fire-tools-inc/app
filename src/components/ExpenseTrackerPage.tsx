@@ -33,6 +33,7 @@ import {
   calculateQuarterlyBreakdown,
   calculateYearToDateBreakdown,
   copyRecurringTransactionsToNewMonth,
+  multiplyAmount,
 } from '../utils/expenseCalculator';
 import {
   saveExpenseTrackerData,
@@ -52,6 +53,7 @@ import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberForm
 import { DataManagement } from './DataManagement';
 import { ValidatedNumberInput } from './ValidatedNumberInput';
 import { MaterialIcon } from './MaterialIcon';
+import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
@@ -772,6 +774,25 @@ export function ExpenseTrackerPage() {
     event.target.value = '';
   };
 
+  // Yearly expenses workbook import and template
+  const [isExpenseWorkbookOpen, setIsExpenseWorkbookOpen] = useState(false);
+  const getExpenseWorkbookData = useCallback(() => stateRef.current.data, []);
+  const applyExpenseWorkbook = useCallback((next: ExpenseTrackerData) => {
+    if (stateRef.current.unreadable) {
+      setSaveError(translation.current('planning.errors.invalidInput'));
+      return false;
+    }
+    return setData(next);
+  }, [setData]);
+  const handleDownloadExpenseTemplate = () => {
+    downloadExpenseTemplateFile(selectedYear, stateRef.current.data).catch((error: unknown) => {
+      logger.error('expense-tracker', 'template-failed', 'expenses template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
   // Reset data
   const handleResetData = () => {
     if (confirm(t('expenseTracker.confirm.reset'))) {
@@ -879,6 +900,36 @@ export function ExpenseTrackerPage() {
           onReset={handleResetData}
           onLoadDemo={handleLoadDemo}
           defaultOpen={false}
+          extraActions={(
+            <>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsExpenseWorkbookOpen(true)}
+                  disabled={dataUnavailable}
+                >
+                  <MaterialIcon name="receipt_long" /> {t('expenseWorkbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadExpenseTemplate}
+              >
+                <MaterialIcon name="download" /> {t('expenseWorkbookImport.downloadTemplate')}
+              </button>
+            </>
+          )}
+        />
+        <ExpenseWorkbookImportDialog
+          isOpen={isExpenseWorkbookOpen}
+          onClose={() => setIsExpenseWorkbookOpen(false)}
+          getCurrent={getExpenseWorkbookData}
+          onApply={applyExpenseWorkbook}
+          onImported={(_summary, year) => setSelectedYear(year)}
         />
 
         {/* Month/Year Selector */}
@@ -1280,7 +1331,17 @@ export function ExpenseTrackerPage() {
                           {transaction.type === 'income' ? (
                             <PrivacyBlur isPrivacyMode={isPrivacyMode}>+{formatCurrency(transaction.amount, data.currency)}</PrivacyBlur>
                           ) : (
-                            <span>-{formatCurrency(transaction.amount, data.currency)}</span>
+                            <>
+                              <span>-{formatCurrency(transaction.amount, data.currency)}</span>
+                              {(transaction as ExpenseEntry).unitAmount !== undefined && (transaction as ExpenseEntry).quantity !== undefined && (
+                                <span className="amount-breakdown">
+                                  {t('expenseTracker.amountTimes', {
+                                    amount: formatCurrency((transaction as ExpenseEntry).unitAmount as number, data.currency),
+                                    times: (transaction as ExpenseEntry).quantity,
+                                  })}
+                                </span>
+                              )}
+                            </>
                           )}
                         </td>
                         <td>
@@ -1707,10 +1768,25 @@ function TransactionFormDialog({
     getCategoryInfo((initialData as ExpenseEntry)?.category || 'OTHER', customCategories).defaultExpenseType
   );
   
+  // Expense paid several times at the same price (e.g. sessions): amount = each × times
+  const initialExpense = type === 'expense' ? initialData as ExpenseEntry | undefined : undefined;
+  const [isMultiplied, setIsMultiplied] = useState(initialExpense?.quantity !== undefined);
+  const [unitAmount, setUnitAmount] = useState(initialExpense?.unitAmount?.toString() ?? '');
+  const [quantity, setQuantity] = useState(initialExpense?.quantity?.toString() ?? '1');
+  const parsedUnitAmount = parseFloat(unitAmount);
+  const parsedQuantity = parseFloat(quantity);
+  const multipliedTotal = parsedUnitAmount > 0 && parsedQuantity > 0 ? multiplyAmount(parsedUnitAmount, parsedQuantity) : null;
+
   // Recurring state - common for both income and expense
   const [isRecurring, setIsRecurring] = useState<boolean>(
     initialData?.isRecurring ?? false
   );
+
+  const handleMultipliedChange = (checked: boolean) => {
+    setIsMultiplied(checked);
+    if (checked && !unitAmount && amount) setUnitAmount(amount);
+    if (!checked && multipliedTotal !== null) setAmount(multipliedTotal.toString());
+  };
   
   // Build category options for SearchableSelect
   const categoryOptions: SelectOption[] = useMemo(() =>
@@ -1726,8 +1802,13 @@ function TransactionFormDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const parsedAmount = parseFloat(amount);
+
+    const multiplied = type === 'expense' && isMultiplied;
+    if (multiplied && multipliedTotal === null) {
+      alert(t('expenseTracker.validation.multipliedAmount'));
+      return;
+    }
+    const parsedAmount = multiplied ? multipliedTotal as number : parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       alert(t('expenseTracker.validation.amountGreaterThanZero'));
       return;
@@ -1752,6 +1833,9 @@ function TransactionFormDialog({
         expenseType,
         currency,
         isRecurring,
+        // Explicit undefined clears an earlier breakdown when editing.
+        unitAmount: multiplied ? parsedUnitAmount : undefined,
+        quantity: multiplied ? parsedQuantity : undefined,
       });
     }
   };
@@ -1782,19 +1866,68 @@ function TransactionFormDialog({
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="transaction-amount">{t('expenseTracker.amountWithCurrency', { currency })}</label>
-            <input
-              id="transaction-amount"
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              required
-            />
-          </div>
+          {type === 'expense' && isMultiplied ? (
+            <div className="form-row-multiplied">
+              <div className="form-group">
+                <label htmlFor="expense-unit-amount">{t('expenseTracker.amountEachWithCurrency', { currency })}</label>
+                <input
+                  id="expense-unit-amount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={unitAmount}
+                  onChange={(e) => setUnitAmount(e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="expense-quantity">{t('expenseTracker.times')}</label>
+                <input
+                  id="expense-quantity"
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  required
+                />
+              </div>
+              <p className="multiplied-total" aria-live="polite">
+                {t('expenseTracker.multipliedTotal', { total: multipliedTotal === null ? '–' : formatCurrency(multipliedTotal, currency) })}
+              </p>
+            </div>
+          ) : (
+            <div className="form-group">
+              <label htmlFor="transaction-amount">{t('expenseTracker.amountWithCurrency', { currency })}</label>
+              <input
+                id="transaction-amount"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+          )}
+
+          {type === 'expense' && (
+            <div className="form-group form-group-checkbox">
+              <label className="toggle-switch-label">
+                <input
+                  type="checkbox"
+                  checked={isMultiplied}
+                  onChange={(e) => handleMultipliedChange(e.target.checked)}
+                />
+                <span className="toggle-switch"></span>
+                <MaterialIcon name="calculate" size="small" />
+                <span>{t('expenseTracker.multiplyAmount')}</span>
+              </label>
+              <span className="checkbox-hint">{t('expenseTracker.multiplyAmountHint')}</span>
+            </div>
+          )}
           
           <div className="form-group">
             <label htmlFor="transaction-description">{t('expenseTracker.description')}</label>

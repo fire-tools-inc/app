@@ -2423,6 +2423,8 @@ components:
         isRecurring:  { type: boolean }
         scheduleId:   { type: string, description: 'Optional schedule ID; paired with scheduledDate' }
         scheduledDate: { type: string, format: date, description: 'Original occurrence due date, not actual payment date' }
+        unitAmount:   { type: number, minimum: 0, exclusiveMinimum: true, description: 'Price paid each time; paired with quantity, and amount must equal unitAmount × quantity rounded to cents' }
+        quantity:     { type: number, minimum: 0, exclusiveMinimum: true, description: 'Times unitAmount was paid in the month; paired with unitAmount' }
 
     IncomeEntry:
       type: object

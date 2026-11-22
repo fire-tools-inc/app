@@ -13,6 +13,19 @@ annual expenses (the number that drives the FIRE target) instead of guessing.
    currency conversion is optional.
 3. The ledger groups transactions by month and shows totals per category.
 
+### Recurring and repeated expenses
+
+Turn on **Recurring Transaction** for bills you pay every month (rent,
+utilities, insurance). When you open a new month, recurring entries from the
+previous month are copied into it.
+
+For a fixed price paid a varying number of times, such as lessons or classes,
+turn on **Same amount several times** and enter the amount each time and how
+many times. The total is calculated for you and the list shows it as, for
+example, *€45.00 × 2*. Combined with **Recurring Transaction**, next month's
+copy keeps the price, so you only change the number of times. CSV exports
+include the `UnitAmount` and `Quantity` columns.
+
 ## Planning ahead
 
 **Planning** adds scheduled income/bills, explicit record/link confirmation,
@@ -67,6 +80,13 @@ embedded backend, and retains photo originals in the **Receipt inbox** before
 parsing. Phone pairing opens a separate, short-lived upload-only Wi-Fi
 listener; an existing HTTPS tunnel is optional. AI categorization supports
 OpenAI-compatible local model endpoints with no mandatory key.
+
+## Importing a yearly expenses spreadsheet
+
+Already track spending in a spreadsheet with one sheet per month? Use
+**Data Management > Import expenses (XLSX)** to bring in a whole year, or
+**Download expenses template** to start one. See
+[Yearly expenses workbook](./spreadsheet-import.md#yearly-expenses-workbook).
 
 ## Linking to the FIRE calculator
 

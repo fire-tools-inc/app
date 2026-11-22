@@ -41,6 +41,11 @@ import { createLazyComponent } from '../utils/lazyComponent';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
 import { useDeferredRender } from '../hooks/useDeferredRender';
 import { DataManagement } from './DataManagement';
+import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
+import { OperationsWorkbookImportDialog, downloadOperationsTemplateFile } from './OperationsWorkbookImportDialog';
+import { IS_DEMO_MODE } from '../utils/demoMode';
+import { logger } from '../utils/logger';
+import type { WorkbookImportSummary } from '../utils/workbookImportApply';
 import type { ChartViewMode } from './HistoricalNetWorthChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { MaterialIcon } from './MaterialIcon';
@@ -172,6 +177,8 @@ export function NetWorthTrackerPage() {
   
   // How to use collapsed state
   const [isHowToUseOpen, setIsHowToUseOpen] = useState(false);
+  const [isWorkbookImportOpen, setIsWorkbookImportOpen] = useState(false);
+  const [isOperationsImportOpen, setIsOperationsImportOpen] = useState(false);
   
   // Chart view mode (YTD or All historical data)
   const [chartViewMode, setChartViewMode] = useState<ChartViewMode>('ytd');
@@ -268,15 +275,16 @@ export function NetWorthTrackerPage() {
     return yearData.months.find(m => m.month === selectedMonth);
   }, [data, selectedYear, selectedMonth]);
 
+  const includePension = data.settings.showPensionInNetWorth;
+  const netWorthOptions = useMemo(() => ({ includePension }), [includePension]);
+
   // Calculate net worth for current month
   const netWorthResult = useMemo(() => {
     if (!currentMonthData) {
       return { totalAssetValue: 0, totalCash: 0, totalPension: 0, totalTaxesPaid: 0, netWorth: 0 };
     }
-    return calculateMonthlyNetWorth(currentMonthData, {
-      includePension: data.settings.showPensionInNetWorth,
-    });
-  }, [currentMonthData, data.settings.showPensionInNetWorth]);
+    return calculateMonthlyNetWorth(currentMonthData, netWorthOptions);
+  }, [currentMonthData, netWorthOptions]);
 
   // Get all months data for the selected year (YTD mode)
   const allMonthsData = useMemo(() => {
@@ -304,18 +312,18 @@ export function NetWorthTrackerPage() {
 
   // Calculate monthly variations based on view mode
   const monthlyVariations = useMemo(() => {
-    return calculateMonthlyVariations(chartMonthsData);
-  }, [chartMonthsData]);
+    return calculateMonthlyVariations(chartMonthsData, netWorthOptions);
+  }, [chartMonthsData, netWorthOptions]);
 
   // Calculate YTD summary (always from current year data)
   const ytdSummary = useMemo(() => {
-    return calculateYTDSummary(allMonthsData, selectedMonth);
-  }, [allMonthsData, selectedMonth]);
+    return calculateYTDSummary(allMonthsData, selectedMonth, netWorthOptions);
+  }, [allMonthsData, selectedMonth, netWorthOptions]);
 
   // Calculate forecast based on view mode data
   const forecast = useMemo(() => {
-    return calculateNetWorthForecast(chartMonthsData, 3);
-  }, [chartMonthsData]);
+    return calculateNetWorthForecast(chartMonthsData, 3, netWorthOptions);
+  }, [chartMonthsData, netWorthOptions]);
 
   // Get previous year's December value
   const previousYearEndValue = useMemo(() => {
@@ -323,8 +331,8 @@ export function NetWorthTrackerPage() {
     if (!prevYear) return null;
     const december = prevYear.months.find(m => m.month === 12);
     if (!december) return null;
-    return calculateMonthlyNetWorth(december).netWorth;
-  }, [data, selectedYear]);
+    return calculateMonthlyNetWorth(december, netWorthOptions).netWorth;
+  }, [data, selectedYear, netWorthOptions]);
 
   // Get current month variation
   const currentMonthVariation = useMemo(() => {
@@ -795,6 +803,50 @@ export function NetWorthTrackerPage() {
     event.target.value = '';
   };
 
+  // Reload stores written by the spreadsheet import and show its latest month
+  const handleWorkbookImported = useCallback((summary: WorkbookImportSummary) => {
+    const saved = loadNetWorthTrackerData();
+    if (saved) {
+      setData({ ...saved, defaultCurrency: loadSettings().currencySettings.defaultCurrency });
+    }
+    if (summary.latestMonth) {
+      setSelectedYear(summary.latestMonth.year);
+      setSelectedMonth(summary.latestMonth.month);
+    }
+  }, []);
+
+  // Investment operations: saved immediately so the dialog can report failures.
+  const applyOperationsImport = useCallback((next: NetWorthTrackerData) => {
+    try {
+      saveNetWorthTrackerData(next);
+      setData(next);
+      return true;
+    } catch (error) {
+      logger.error('net-worth', 'operations-save-failed', 'imported operations could not be saved', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      return false;
+    }
+  }, []);
+
+  const handleDownloadOperationsTemplate = () => {
+    downloadOperationsTemplateFile().catch((error: unknown) => {
+      logger.error('net-worth', 'template-failed', 'operations template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
+  const handleDownloadWorkbookTemplate = () => {
+    downloadWorkbookTemplateFile().catch((error: unknown) => {
+      logger.error('net-worth', 'template-failed', 'spreadsheet template could not be created', {
+        pii: { error: error instanceof Error ? error.message : String(error) },
+      });
+      alert(t('workbookImport.errors.templateFailed', { message: error instanceof Error ? error.message : t('common.unknownError') }));
+    });
+  };
+
   // Reset data
   const handleResetData = () => {
     if (confirm(t('netWorth.confirm.reset'))) {
@@ -945,6 +997,57 @@ export function NetWorthTrackerPage() {
           onLoadDemo={handleLoadDemo}
           defaultOpen={false}
           fileFormat="json"
+          extraActions={(
+            <>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsWorkbookImportOpen(true)}
+                >
+                  <MaterialIcon name="table_view" /> {t('workbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadWorkbookTemplate}
+              >
+                <MaterialIcon name="download" /> {t('workbookImport.downloadTemplate')}
+              </button>
+              {!IS_DEMO_MODE && (
+                <button
+                  type="button"
+                  className="action-btn"
+                  style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                  onClick={() => setIsOperationsImportOpen(true)}
+                >
+                  <MaterialIcon name="swap_horiz" /> {t('operationsWorkbookImport.openButton')}
+                </button>
+              )}
+              <button
+                type="button"
+                className="action-btn"
+                style={{ width: '100%', marginBottom: '8px', justifyContent: 'center' }}
+                onClick={handleDownloadOperationsTemplate}
+              >
+                <MaterialIcon name="download" /> {t('operationsWorkbookImport.downloadTemplate')}
+              </button>
+            </>
+          )}
+        />
+        <OperationsWorkbookImportDialog
+          isOpen={isOperationsImportOpen}
+          onClose={() => setIsOperationsImportOpen(false)}
+          getCurrent={() => data}
+          onApply={applyOperationsImport}
+        />
+        <WorkbookImportDialog
+          isOpen={isWorkbookImportOpen}
+          onClose={() => setIsWorkbookImportOpen(false)}
+          onImported={handleWorkbookImported}
         />
 
         {/* Month/Year Selector */}
@@ -1058,6 +1161,17 @@ export function NetWorthTrackerPage() {
               </div>
             </div>
           </div>
+          <label className="net-worth-pension-toggle">
+            <input
+              type="checkbox"
+              checked={includePension}
+              onChange={(event) => {
+                const showPensionInNetWorth = event.target.checked;
+                setData(prev => ({ ...prev, settings: { ...prev.settings, showPensionInNetWorth } }));
+              }}
+            />
+            <span>{t('netWorth.countPensionsInNetWorth')}</span>
+          </label>
         </section>
 
         {/* Data Entry Section */}

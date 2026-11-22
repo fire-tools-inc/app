@@ -18,6 +18,11 @@ Occurrence duplication is rejected across income/expense API writes within
 the user's scope. Rolling back removes planning/linkage but preserves recorded
 transaction amounts/history; export a backup before rollback.
 
+`0007_expense_quantity` adds optional `unit_amount`/`quantity` columns to
+expense rows for an amount paid several times (for example sessions at a fixed
+price). The API requires both or neither and checks that `amount` equals their
+product. Rolling back drops the breakdown; every expense keeps its total.
+
 `0005_ai_features` adds the per-user `ai_features_enabled` permission with a
 default of `1`, preserving existing per-action AI opt-in behavior. Its rollback
 removes this permission only; endpoint credentials, model IDs, receipts and

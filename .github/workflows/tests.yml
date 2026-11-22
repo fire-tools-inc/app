@@ -39,6 +39,10 @@ jobs:
               - 'tests/pages/expense-tracker/**'
               - 'src/components/{Expense,Income,Monthly,CategoryManager,PDFImport,Receipt,MassEdit,Cashflow,SavingsGoals,ImportRules}*'
               - 'src/utils/{expense,pdf,liteParse,documentImport,dateValidation,demoExpense,llm,categories,customCategories,cashflowSchedules,scheduledTransactions,savingsGoals,importCategorizationRules}*'
+              - 'src/utils/{workbook,xlsx}*'
+              - 'src/components/WorkbookImportDialog*'
+              - 'src/hooks/useModalDialog*'
+              - 'docs/user/expense-import-agent-prompt.md'
             fire_calculator:
               - 'tests/pages/fire-calculator/**'
               - 'src/components/{Calculator,FIRE,MonteCarlo,Projection}*'
@@ -49,17 +53,23 @@ jobs:
               - 'src/utils/dashboard*'
             net_worth_tracker:
               - 'tests/pages/net-worth-tracker/**'
-              - 'src/components/{NetWorth,Historical}*'
-              - 'src/utils/{netWorth,depreciation,mortgage,dataSync}*'
+              - 'src/components/{NetWorth,Historical,OperationsWorkbook,WorkbookImport}*'
+              - 'src/utils/{netWorth,depreciation,mortgage,dataSync,operationsWorkbook,workbook,xlsx}*'
+              - 'src/hooks/useModalDialog*'
+              - 'docs/user/operations-import-agent-prompt.md'
             questionnaire:
               - 'tests/pages/questionnaire/**'
               - 'src/components/{Questionnaire,GuidedTour}*'
               - 'src/utils/{questionnaire,tourPreferences,notification}*'
             settings:
               - 'tests/pages/settings/**'
-              - 'src/components/{Settings,Cookie,DataManagement,Policy,Language}*'
+              - 'src/components/{Settings,Cookie,DataManagement,Policy,Language,WorkbookImport}*'
               - 'src/utils/{cookie,settings,banner,dataExport,countryToRegion,urlParams}*'
               - 'src/utils/{csvExport,expenseCsv,expensePlanning,currencyConverter}*'
+              - 'src/components/{ExpenseWorkbook,OperationsWorkbook}*'
+              - 'src/utils/{workbook,xlsx,expenseWorkbook,operationsWorkbook}*'
+              - 'src/hooks/useModalDialog*'
+              - 'docs/user/{spreadsheet,expense,operations}-import-agent-prompt.md'
               - 'src/i18n/**'
               - 'tests/shared/i18n*'
             server:

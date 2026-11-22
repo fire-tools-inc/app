@@ -182,6 +182,15 @@ describe('Recurring Transactions', () => {
       expect(salary?.source).toBe('SALARY');
     });
 
+    it('keeps the price and times of an amount paid several times', () => {
+      const sessions: ExpenseEntry = {
+        id: 'exp-sessions', type: 'expense', date: '2024-01-10', amount: 90, unitAmount: 45, quantity: 2,
+        description: 'Sessions', category: 'HEALTHCARE', expenseType: 'NEED', isRecurring: true,
+      };
+      const result = copyRecurringTransactionsToNewMonth({ ...sourceMonth, expenses: [sessions] }, 2024, 2);
+      expect(result.expenses[0]).toMatchObject({ amount: 90, unitAmount: 45, quantity: 2, date: '2024-02-10' });
+    });
+
     it('should return empty arrays when no recurring transactions exist', () => {
       const nonRecurringMonth: MonthData = {
         year: 2024,

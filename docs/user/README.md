@@ -19,6 +19,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - [Expense tracker](./expense-tracker.md)
 - [Cashflow planning, savings goals and offline rules](./cashflow-planning.md)
 - [Net-worth tracker](./net-worth-tracker.md)
+- [Spreadsheet import and templates](./spreadsheet-import.md) (AI agent prompts: [net worth](./spreadsheet-import-agent-prompt.md), [expenses](./expense-import-agent-prompt.md), [investment operations](./operations-import-agent-prompt.md))
 - [Questionnaire (guided setup)](./questionnaire.md)
 - [Settings, language, data export](./settings.md)
 

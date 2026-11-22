@@ -14,6 +14,13 @@ and shows you how today's reality compares to the
 3. The chart shows your real progression; the dashed line is the projection
    from the FIRE calculator at the same horizon.
 
+## Pensions and net worth
+
+Pensions are always totalled on their own card. **Count pensions in net worth**,
+below the summary cards, decides whether they are added to net worth, the
+history chart, year-to-date figures and the forecast. Turn it off when pension
+rights you track cannot be withdrawn like savings.
+
 ## Why bother?
 
 Tracking net worth turns the FIRE plan from a fantasy into a metric. The
@@ -25,6 +32,12 @@ above the trend.
 Snapshots round-trip via CSV so you can keep a backup outside the local store
 (SQLite on desktop, encrypted cookies in browser). Use the **Export CSV**
 button to grab a snapshot of all entries; use **Import CSV** to restore.
+
+To backfill years of history from a spreadsheet, use **Data Management >
+Import spreadsheet (XLSX)** or **Download template**. **Import operations
+(XLSX)** adds buys, sells and dividends from an investment ledger and sets the
+average cost of matching holdings. See
+[Spreadsheet import](./spreadsheet-import.md).
 
 ## Wealth Flow diagram (Sankey)
 
@@ -54,8 +67,8 @@ of asset, cash and pension categories.
 In those cases a friendly placeholder message is shown instead of an empty
 chart.
 
-**Pension toggle**: If you have disabled pension tracking in the settings
-panel, the Pension branch is hidden from the diagram.
+**Pension toggle**: When **Count pensions in net worth** is off, the Pension
+branch is hidden from the diagram.
 
 **Negative balances** (e.g. credit-card debt) are excluded because Sankey
 diagrams cannot represent negative flows. They still count toward your overall

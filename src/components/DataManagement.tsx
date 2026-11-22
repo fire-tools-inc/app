@@ -11,6 +11,8 @@ interface DataManagementProps {
   defaultOpen?: boolean;
   /** File format for import/export - 'csv' or 'json'. Default is 'csv' */
   fileFormat?: 'csv' | 'json';
+  /** Additional page-specific actions shown before the reset button. */
+  extraActions?: React.ReactNode;
 }
 
 export const DataManagement: React.FC<DataManagementProps> = ({
@@ -20,6 +22,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
   onLoadDemo,
   defaultOpen = false,
   fileFormat = 'csv',
+  extraActions,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { t } = useTranslation();
@@ -98,6 +101,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
               />
             </label>
           )}
+          {extraActions}
           {!IS_DEMO_MODE && (
             <button 
               onClick={onReset} 

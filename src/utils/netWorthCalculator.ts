@@ -70,12 +70,10 @@ export function calculateMonthlyNetWorth(
     return sum + entry.balance;
   }, 0);
 
-  // Calculate total pension
-  const totalPension = includePension
-    ? snapshot.pensions.reduce((sum, pension) => {
-        return sum + pension.currentValue;
-      }, 0)
-    : 0;
+  // Pensions are always totalled; the option only decides whether net worth counts them.
+  const totalPension = snapshot.pensions.reduce((sum, pension) => {
+    return sum + pension.currentValue;
+  }, 0);
 
   // Calculate total taxes paid from operations
   const totalTaxesPaid = snapshot.operations
@@ -95,7 +93,7 @@ export function calculateMonthlyNetWorth(
   // Net worth = assets + cash + pension - debt - tax liability
   // Note: Taxes are typically already deducted from cash/income, so we don't subtract again
   // unless tracking separately. For simplicity, net worth = assets + cash + pension - debt - tax liability
-  const netWorth = totalAssetValue + totalCash + totalPension - totalDebt - totalTaxLiability;
+  const netWorth = totalAssetValue + totalCash + (includePension ? totalPension : 0) - totalDebt - totalTaxLiability;
 
   return {
     totalAssetValue,
@@ -113,7 +111,8 @@ export function calculateMonthlyNetWorth(
  */
 export function calculateYTDSummary(
   snapshots: MonthlySnapshot[],
-  upToMonth: number
+  upToMonth: number,
+  options: NetWorthCalculationOptions = {}
 ): YTDSummary {
   if (snapshots.length === 0) {
     return {
@@ -145,7 +144,7 @@ export function calculateYTDSummary(
   }
 
   // Calculate net worth for each month
-  const monthlyNetWorths = relevantSnapshots.map((s) => calculateMonthlyNetWorth(s).netWorth);
+  const monthlyNetWorths = relevantSnapshots.map((s) => calculateMonthlyNetWorth(s, options).netWorth);
 
   // Calculate average
   const averageMonthlyNetWorth =
@@ -201,7 +200,8 @@ export function calculateYTDSummary(
  * Calculate month-over-month variations
  */
 export function calculateMonthlyVariations(
-  snapshots: MonthlySnapshot[]
+  snapshots: MonthlySnapshot[],
+  options: NetWorthCalculationOptions = {}
 ): MonthlyVariation[] {
   if (snapshots.length === 0) {
     return [];
@@ -217,7 +217,7 @@ export function calculateMonthlyVariations(
   let prevResult: MonthlyNetWorthResult | null = null;
 
   for (const snapshot of sorted) {
-    const result = calculateMonthlyNetWorth(snapshot);
+    const result = calculateMonthlyNetWorth(snapshot, options);
     const monthLabel = formatMonthLabel(snapshot.year, snapshot.month);
 
     if (prevResult === null) {
@@ -275,7 +275,8 @@ function formatMonthLabel(year: number, month: number): string {
  */
 export function calculateNetWorthForecast(
   snapshots: MonthlySnapshot[],
-  monthsToForecast: number
+  monthsToForecast: number,
+  options: NetWorthCalculationOptions = {}
 ): NetWorthForecast[] {
   // Need at least 2 months of data for trend calculation
   if (snapshots.length < 2) {
@@ -292,7 +293,7 @@ export function calculateNetWorthForecast(
   const netWorths = sorted.map((s) => ({
     year: s.year,
     month: s.month,
-    netWorth: calculateMonthlyNetWorth(s).netWorth,
+    netWorth: calculateMonthlyNetWorth(s, options).netWorth,
   }));
 
   // Calculate average monthly change (simple linear regression)
@@ -423,7 +424,8 @@ export function calculateFIREProgress(
  */
 export function getPreviousYearEndValue(
   allYears: { year: number; months: MonthlySnapshot[] }[],
-  currentYear: number
+  currentYear: number,
+  options: NetWorthCalculationOptions = {}
 ): number | null {
   const prevYear = allYears.find((y) => y.year === currentYear - 1);
   if (!prevYear) return null;
@@ -431,7 +433,7 @@ export function getPreviousYearEndValue(
   const december = prevYear.months.find((m) => m.month === 12);
   if (!december) return null;
 
-  return calculateMonthlyNetWorth(december).netWorth;
+  return calculateMonthlyNetWorth(december, options).netWorth;
 }
 
 /**

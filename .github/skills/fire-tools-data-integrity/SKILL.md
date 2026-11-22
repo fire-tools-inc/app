@@ -23,6 +23,7 @@ Never hide a write failure behind a default object or silently switch stores.
 | Backend preference mirroring | `src/utils/uiPreferencesSync.ts`, `src/utils/apiBase.ts` |
 | Asset Allocation / Net Worth conversion | `src/utils/dataSync.ts` |
 | Imports and exports | `src/utils/dataExportImport.ts`, `src/utils/csvExport.ts` |
+| Spreadsheet (.xlsx) backfill | `src/utils/xlsxReader.ts`, `src/utils/workbookImport.ts`, `src/utils/workbookImportApply.ts` (ids `wb-`), `src/utils/expenseWorkbook.ts` (ids `wbe-`, detail outranks `wb-` monthly totals), `src/utils/operationsWorkbook.ts` (operation ids `wbo-`, average cost only when quantities match) |
 | API errors, validation and routing | `server/src/http.ts`, `server/src/app.ts`, `server/src/routes/` |
 | SQLite initialization and migrations | `server/src/db.ts`, `server/src/migrate.ts`, `server/migrations/` |
 | Desktop encryption/backups | `electron/main.cjs`, `electron/backup.cjs`, `server/src/rekey.ts` |

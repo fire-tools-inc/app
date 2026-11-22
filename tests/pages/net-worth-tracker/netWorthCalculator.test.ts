@@ -115,9 +115,11 @@ describe('Net Worth Calculator', () => {
     });
 
     it('should exclude pension when setting is disabled', () => {
+      const withPension = calculateMonthlyNetWorth(mockSnapshot);
       const result = calculateMonthlyNetWorth(mockSnapshot, { includePension: false });
-      // Net worth = assets + cash (no pension)
-      expect(result.netWorth).toBeLessThan(70000);
+      // Pensions are still totalled for display; only net worth leaves them out.
+      expect(result.totalPension).toBe(withPension.totalPension);
+      expect(result.netWorth).toBe(withPension.netWorth - withPension.totalPension);
     });
   });
 
@@ -222,6 +224,15 @@ describe('Net Worth Calculator', () => {
       const variations = calculateMonthlyVariations(mockSnapshots);
       // 2000 / 20000 = 10%
       expect(variations[1].changePercent).toBeCloseTo(10, 1);
+    });
+
+    it('should leave pensions out of history and forecasts when asked', () => {
+      const withPensions = mockSnapshots.map((snapshot, index) => ({
+        ...snapshot, pensions: [{ ...mockPensions[0], currentValue: 5000 + index * 1000 }],
+      }));
+      const options = { includePension: false };
+      expect(calculateMonthlyVariations(withPensions, options).map((v) => [v.netWorth, v.pensionChange])).toEqual([[20000, 0], [22000, 1000]]);
+      expect(calculateNetWorthForecast(withPensions, 1, options)[0].projectedNetWorth).toBe(24000);
     });
 
     it('should set first month change to 0', () => {
