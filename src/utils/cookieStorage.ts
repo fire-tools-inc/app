@@ -23,6 +23,8 @@ import {
 } from './demoMode';
 import { logger } from './logger';
 import { validateExpenseTrackerPlanning } from './expensePlanning';
+import { normalizeExpenseTrackerCategories } from './expenseCategoryAliases';
+import { recordLocalChange, recordLocalClear } from './backendSync/localChanges';
 
 // Cookie keys
 const ASSET_ALLOCATION_KEY = 'fire-calculator-asset-allocation';
@@ -88,26 +90,28 @@ function isValidCalculatorInputs(obj: any): obj is CalculatorInputs {
 }
 
 /**
- * Save Asset Allocation data to encrypted cookies
+ * Save Asset Allocation data to encrypted cookies. `null` targets remove the
+ * saved class targets (used when the backend has none).
  */
 export function saveAssetAllocation(
   assets: Asset[],
-  assetClassTargets: Record<AssetClass, { targetMode: AllocationMode; targetPercent?: number }>
+  assetClassTargets: Record<AssetClass, { targetMode: AllocationMode; targetPercent?: number }> | null
 ): void {
   if (IS_DEMO_MODE) return;
   try {
     const assetsJson = JSON.stringify(assets);
-    const targetsJson = JSON.stringify(assetClassTargets);
-    
     const encryptedAssets = encryptData(assetsJson);
-    const encryptedTargets = encryptData(targetsJson);
-    
     SafeCookies.set(ASSET_ALLOCATION_KEY, encryptedAssets, COOKIE_OPTIONS);
-    SafeCookies.set(ASSET_CLASS_TARGETS_KEY, encryptedTargets, COOKIE_OPTIONS);
+    if (assetClassTargets) {
+      SafeCookies.set(ASSET_CLASS_TARGETS_KEY, encryptData(JSON.stringify(assetClassTargets)), COOKIE_OPTIONS);
+    } else {
+      SafeCookies.remove(ASSET_CLASS_TARGETS_KEY, { path: '/' });
+    }
   } catch (error) {
     logger.error('cookie-storage', 'save-failed', 'failed to save asset allocation to cookies', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to cookies. Cookies may be disabled.');
   }
+  recordLocalChange('assetAllocation', { assets, assetClassTargets });
 }
 
 /**
@@ -170,6 +174,7 @@ export function clearAssetAllocation(): void {
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear asset allocation from cookies', { pii: { error: (error as Error)?.message } });
   }
+  if (!IS_DEMO_MODE) recordLocalClear('assetAllocation');
 }
 
 /**
@@ -186,6 +191,7 @@ export function saveFireCalculatorInputs(inputs: CalculatorInputs): void {
     logger.error('cookie-storage', 'save-failed', 'failed to save FIRE calculator inputs to cookies', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to cookies. Cookies may be disabled.');
   }
+  recordLocalChange('calculator', inputs);
 }
 
 /**
@@ -223,6 +229,7 @@ export function clearFireCalculatorInputs(): void {
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear FIRE calculator inputs from cookies', { pii: { error: (error as Error)?.message } });
   }
+  if (!IS_DEMO_MODE) recordLocalClear('calculator');
 }
 
 function isValidScenario(obj: any): obj is FireScenario {
@@ -372,6 +379,20 @@ export function saveExpenseTrackerData(data: ExpenseTrackerData): void {
     });
     throw new Error('Failed to save data to localStorage. Check the input and available storage.');
   }
+  recordLocalChange('expenseTracker', data);
+}
+
+/** Store data whose retired category ids were mapped forward; the migrated copy is still used if the write fails. */
+function persistCategoryMigration(data: ExpenseTrackerData): void {
+  try {
+    validateExpenseTrackerPlanning(data);
+    localStorage.setItem(EXPENSE_TRACKER_KEY, encryptData(JSON.stringify(data)));
+    logger.systemEvent('cookie-storage', 'migrate', 'merged retired expense categories in saved cashflow data');
+  } catch (error) {
+    logger.error('cookie-storage', 'category-migration-failed', 'merged expense categories could not be saved; they will be saved with the next edit', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+  }
 }
 
 /**
@@ -403,7 +424,9 @@ export function loadExpenseTrackerData(): ExpenseTrackerData | null {
       if (decryptedData) {
         const parsed = JSON.parse(decryptedData);
         if (isValidExpenseTrackerData(parsed)) {
-          return parsed;
+          const migrated = normalizeExpenseTrackerCategories(parsed);
+          if (migrated !== parsed) persistCategoryMigration(migrated);
+          return migrated;
         }
       }
     }
@@ -423,6 +446,7 @@ export function clearExpenseTrackerData(): void {
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear expense tracker data from localStorage', { pii: { error: (error as Error)?.message } });
   }
+  if (!IS_DEMO_MODE) recordLocalClear('expenseTracker');
 }
 
 export function hasStoredExpenseTrackerData(): boolean {
@@ -544,6 +568,7 @@ export function saveNetWorthTrackerData(data: NetWorthTrackerData): void {
     logger.error('cookie-storage', 'save-failed', 'failed to save net worth tracker data to localStorage', { pii: { error: (error as Error)?.message } });
     throw new Error('Failed to save data to localStorage. Storage may be full or disabled.');
   }
+  recordLocalChange('netWorth', data);
 }
 
 /**
@@ -627,11 +652,14 @@ export function clearNetWorthTrackerData(): void {
   } catch (error) {
     logger.error('cookie-storage', 'clear-failed', 'failed to clear net worth tracker data from localStorage', { pii: { error: (error as Error)?.message } });
   }
+  if (!IS_DEMO_MODE) recordLocalClear('netWorth');
 }
 
 /**
  * Clear all FIRE Calculator data from cookies and localStorage
- * This includes Asset Allocation, FIRE Calculator inputs, and Expense Tracker data
+ * This includes Asset Allocation, FIRE Calculator inputs, and Expense Tracker data.
+ * With backend storage active, each per-domain clear also empties the
+ * matching backend domain.
  */
 export function clearAllData(): void {
   clearAssetAllocation();

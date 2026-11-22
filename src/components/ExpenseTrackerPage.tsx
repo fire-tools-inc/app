@@ -53,11 +53,14 @@ import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberForm
 import { DataManagement } from './DataManagement';
 import { ValidatedNumberInput } from './ValidatedNumberInput';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
 import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { PDFImportDialog } from './PDFImportDialog';
+import { QuickExpenseImport } from './QuickExpenseImport';
+import { appendExpensesToMonth } from '../utils/quickExpenseImport';
 import { ExpenseStatistics } from './ExpenseStatistics';
 import { mergeImportedTransactions } from '../utils/pdfImportTransactions';
 import type { ParsedTransactionDraft } from '../types/pdfImport';
@@ -218,6 +221,7 @@ export function ExpenseTrackerPage() {
   const [editingTransaction, setEditingTransaction] = useState<IncomeEntry | ExpenseEntry | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [showPdfImport, setShowPdfImport] = useState(false);
+  const [showQuickImport, setShowQuickImport] = useState(false);
   const [pdfImportEnabled, setPdfImportEnabled] = useState<boolean>(() => {
     return Boolean(loadSettings().experimentalFeatures?.pdfImport);
   });
@@ -508,6 +512,14 @@ export function ExpenseTrackerPage() {
   const categoryTrendsData = useMemo(() => {
     return calculateCategoryTrends(filteredMonthsData);
   }, [filteredMonthsData]);
+
+  const handleQuickImportCommit = useCallback((expenses: ExpenseEntry[]) => {
+    if (IS_DEMO_MODE) throw new Error(t('demo.disabledAction'));
+    if (!setData(current => appendExpensesToMonth(current, selectedYear, selectedMonth, expenses))) {
+      throw new Error(t('planning.saveFailed'));
+    }
+    setShowQuickImport(false);
+  }, [setData, selectedYear, selectedMonth, t]);
 
   const handleCommitDrafts = useCallback((drafts: ParsedTransactionDraft[]) => {
     if (IS_DEMO_MODE) throw new Error(t('demo.disabledAction'));
@@ -858,15 +870,8 @@ export function ExpenseTrackerPage() {
         : t('expenseTracker.period.ytdAverage', { year: selectedYear });
 
   return (
-    <div className="expense-tracker-page">
-      <header className="page-header">
-        <div className="page-header-top">
-          <h1><MaterialIcon name="account_balance_wallet" className="page-header-icon" /> {t('expenseTracker.title')}</h1>
-        </div>
-        <p>
-          {t('expenseTracker.subtitle')}
-        </p>
-      </header>
+    <div className="page expense-tracker-page">
+      <PageHeader title={t('expenseTracker.title')} description={t('expenseTracker.subtitle')} />
 
       <main className="expense-tracker-main" id="main-content">
         {dataUnavailable && <p className="planning-warning" role="alert">{t('planning.invalidSaved')}</p>}
@@ -879,7 +884,7 @@ export function ExpenseTrackerPage() {
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> {t('expenseTracker.howItWorks.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('expenseTracker.howItWorks.title')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isHowToUseOpen ? ' is-open' : ''}`} /></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
@@ -965,7 +970,7 @@ export function ExpenseTrackerPage() {
                 className="btn-current-period"
                 onClick={goToCurrentPeriod}
               >
-                <span aria-hidden="true">📅</span> {t('expenseTracker.backToCurrentPeriod')}
+                <MaterialIcon name="today" size="small" /> {t('expenseTracker.backToCurrentPeriod')}
               </button>
             )}
           </div>
@@ -1025,7 +1030,7 @@ export function ExpenseTrackerPage() {
               aria-expanded={isBudgetRuleInfoOpen}
               aria-controls="budget-rule-content"
             >
-              <h3><MaterialIcon name="bar_chart" /> {t('expenseTracker.budgetRule.title')} <span className="collapse-icon-small" aria-hidden="true">{isBudgetRuleInfoOpen ? '▼' : '▶'}</span></h3>
+              <h3><MaterialIcon name="bar_chart" /> {t('expenseTracker.budgetRule.title')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isBudgetRuleInfoOpen ? ' is-open' : ''}`} /></h3>
             </button>
             {isBudgetRuleInfoOpen && (
               <div id="budget-rule-content" className="budget-rule-content">
@@ -1120,6 +1125,15 @@ export function ExpenseTrackerPage() {
                 </button>
                 <button className="btn-add expense" onClick={() => setShowExpenseForm(true)}>
                   <MaterialIcon name="add" /> {t('expenseTracker.addExpense')}
+                </button>
+                <button
+                  type="button"
+                  className="btn-add"
+                  onClick={() => setShowQuickImport(true)}
+                  disabled={dataUnavailable}
+                  title={t('quickImport.openAria')}
+                >
+                  <MaterialIcon name="playlist_add" /> {t('quickImport.openButton')}
                 </button>
                 {pdfImportEnabled && (
                   <button
@@ -1646,6 +1660,17 @@ export function ExpenseTrackerPage() {
             currency={data.currency}
             defaultDate={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`}
             searchThreshold={searchThreshold}
+          />
+        )}
+
+        {showQuickImport && !dataUnavailable && (
+          <QuickExpenseImport
+            variant="dialog"
+            year={selectedYear}
+            month={selectedMonth}
+            data={data}
+            onCommit={handleQuickImportCommit}
+            onCancel={() => setShowQuickImport(false)}
           />
         )}
 

@@ -62,12 +62,17 @@ export interface ParsedTransactionDraft {
   llmEnriched?: boolean;
 }
 
+/** Preset that filled in the OpenAI-compatible endpoint (see src/utils/llmProviders.ts). */
+export type LlmProvider = 'local' | 'openrouter' | 'openai' | 'gemini' | 'anthropic' | 'custom';
+
 /**
  * Optional configuration for the LLM-powered categorization step. The user
- * supplies an OpenAI-compatible endpoint (OpenAI, Azure OpenAI, Ollama,
- * LM Studio, OpenRouter, etc.) and a model name.
+ * picks a provider preset or supplies any OpenAI-compatible endpoint (Ollama,
+ * LM Studio, OpenRouter, OpenAI, Gemini, Anthropic, etc.) and a model name.
  */
 export interface LlmCategorizationConfig {
+  /** Provider preset. Missing in configurations saved before presets existed. */
+  provider?: LlmProvider;
   /** Base URL of the OpenAI-compatible API (no trailing /chat/completions). */
   baseUrl: string;
   /** API key, or an empty string for unauthenticated local models. */

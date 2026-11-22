@@ -39,7 +39,7 @@ export const DataManagement: React.FC<DataManagementProps> = ({
         aria-controls="data-management-content"
       >
         <h4>
-          <MaterialIcon name="save" /> {t('dataManagement.title')} <span className="collapse-icon-small" aria-hidden="true">{isOpen ? '▼' : '▶'}</span>
+          <MaterialIcon name="save" /> {t('dataManagement.title')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isOpen ? ' is-open' : ''}`} />
         </h4>
       </button>
       {isOpen && (

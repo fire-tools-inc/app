@@ -22,8 +22,15 @@ import { buildBanksRouter } from './routes/banks.js';
 import { buildNotImplementedRouter } from './routes/notImplemented.js';
 import { buildUiPreferencesRouter } from './routes/uiPreferences.js';
 import { buildAdminRouter, type AdminState } from './routes/admin.js';
+import { buildSyncRouter } from './routes/sync.js';
+import { requireBearerToken } from './auth.js';
 import { logger } from './logger.js';
 import { createSettingsFileStore, migrateLegacySettingsFile, type SettingsFileStore } from './settingsFile.js';
+
+const MB = 1024 * 1024;
+const DEFAULT_BODY_LIMIT_BYTES = 2 * MB;
+const STATE_BODY_LIMIT_BYTES = 50 * MB;
+const isStateRoute = (path: string): boolean => /^\/api\/v1\/state(\/|$)/i.test(path);
 
 export interface BuildAppOptions {
   db: DB;
@@ -38,9 +45,11 @@ export interface BuildAppOptions {
    */
   adminState?: AdminState;
   documentExtractor?: typeof extractDocumentText;
+  /** Second bearer token, read per request; only used when `env.apiToken` is set. */
+  secondaryApiToken?: () => string | null;
 }
 
-export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor }: BuildAppOptions) => {
+export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor, secondaryApiToken }: BuildAppOptions) => {
   const corsOptions: CorsOptions = {
     origin: (origin, cb) => {
       if (!origin) {
@@ -58,12 +67,19 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
       cb(new Error(`Origin ${origin} not allowed by CORS policy`));
     },
     credentials: false,
+    allowedHeaders: ['Authorization', 'Content-Type', 'x-user-id'],
+    maxAge: 600,
   };
 
   const app = express();
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '2mb' }));
   app.use(cors(corsOptions));
+  // Authenticate before reading bodies; preflights were answered by cors().
+  if (env.apiToken) app.use('/api/v1', requireBearerToken(env.apiToken, secondaryApiToken));
+  // Whole-domain state documents may be large; every other route keeps 2 MB.
+  const stateJson = express.json({ limit: STATE_BODY_LIMIT_BYTES });
+  const defaultJson = express.json({ limit: DEFAULT_BODY_LIMIT_BYTES });
+  app.use((req, res, next) => (isStateRoute(req.path) ? stateJson : defaultJson)(req, res, next));
 
   const v1 = express.Router();
   if (!disableRateLimit) {
@@ -74,6 +90,8 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
         standardHeaders: 'draft-7',
         legacyHeaders: false,
         message: { error: { code: 'rate_limited', message: 'Too many requests, slow down.' } },
+        // Open apps poll this cheap revision check every few seconds.
+        skip: (req) => req.method === 'GET' && req.path === '/sync/status',
       }),
     );
   }
@@ -110,6 +128,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
   v1.use(buildPortfolioBreakdownRouter(db));
   v1.use(buildBanksRouter(db));
   v1.use(buildUiPreferencesRouter(db));
+  v1.use(buildSyncRouter(db, settingsFileStore));
 
   let encryptedFlag = Boolean(env.passphrase);
   const state: AdminState = adminState ?? {
@@ -123,7 +142,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
   v1.use(buildNotImplementedRouter());
   app.use('/api/v1', v1);
 
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     if (err.message?.startsWith('Origin ') && err.message.endsWith(' not allowed by CORS policy')) {
       res.status(403).json({ error: { code: 'cors_denied', message: err.message } });
       return;
@@ -133,7 +152,8 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
       return;
     }
     if ('type' in err && err.type === 'entity.too.large') {
-      res.status(413).json({ error: { code: 'payload_too_large', message: 'Request body exceeds the 2 MB limit.' } });
+      const limitMb = isStateRoute(req.path) ? STATE_BODY_LIMIT_BYTES / MB : DEFAULT_BODY_LIMIT_BYTES / MB;
+      res.status(413).json({ error: { code: 'payload_too_large', message: `Request body exceeds the ${limitMb} MB limit.` } });
       return;
     }
     logger.error('express', 'unhandled-error', err.message, { pii: { stack: err.stack } });

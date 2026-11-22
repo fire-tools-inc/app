@@ -23,6 +23,7 @@ import { addCalendarDays, calendarDate, getScheduleOccurrences, type ScheduleOcc
 import type { SavingsGoal } from '../types/expensePlanning';
 import { validateExpenseTrackerPlanning } from './expensePlanning';
 import { logger } from './logger';
+import { buildMonthLogOverview, type MonthLogOverview } from './monthLog';
 
 export interface DashboardSources {
   assets: Asset[] | null;
@@ -76,6 +77,7 @@ export interface DashboardData {
     goals: SavingsGoal[];
     invalid: boolean;
   };
+  monthLog: MonthLogOverview;
 }
 
 function periodKey(year: number, month: number): string {
@@ -195,6 +197,7 @@ export function buildDashboardData(sources: DashboardSources, now = new Date()):
     fire,
     firePlanInvalid,
     planning,
+    monthLog: buildMonthLogOverview(sources.cashflow, sources.netWorth, now),
   };
 }
 

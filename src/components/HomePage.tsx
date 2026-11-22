@@ -8,6 +8,7 @@ import { logger } from '../utils/logger';
 import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberFormatter';
 import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
 import { MaterialIcon } from './MaterialIcon';
+import { LogMonthLink, MonthCheckIn } from './MonthCheckIn';
 import { PreloadLink } from './PreloadLink';
 import { PrivacyBlur } from './PrivacyBlur';
 import './HomePage.css';
@@ -90,11 +91,11 @@ export function HomePage() {
     <main className="homepage" id="main-content" tabIndex={-1}>
       <header className="dashboard-header">
         <div>
-          <p className="dashboard-eyebrow">{t('app.tagline')}</p>
           <h1>{t('dashboard.title')}</h1>
           <p className="dashboard-description">{t('dashboard.description')}</p>
         </div>
         <div className="dashboard-actions">
+          <LogMonthLink overview={data.monthLog} />
           <button type="button" className="dashboard-privacy" onClick={togglePrivacy} aria-pressed={privacy}>
             <MaterialIcon name={privacy ? 'visibility' : 'visibility_off'} size="small" />
             {t(privacy ? 'common.showValues' : 'common.hideValues')}
@@ -126,6 +127,8 @@ export function HomePage() {
           <span>{fire ? t(`fireCalculator.fireTypes.${fire.fireType}.label`) : t('dashboard.noPlan')}</span>
         </div>
       </dl>
+
+      <MonthCheckIn overview={data.monthLog} />
 
       <div className="dashboard-grid">
         <section className="dashboard-panel" aria-labelledby="dashboard-net-worth-title">

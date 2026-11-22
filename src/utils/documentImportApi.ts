@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ReceiptDocument, ReceiptPairing } from '../types/receiptImport';
-import { getApiBaseUrl } from './apiBase';
+import { apiFetchAt, resolveBackend } from './apiClient';
 import { loadSettings } from './cookieSettings';
 import { IS_DEMO_MODE } from './demoMode';
 import { liteParseResultSchema, liteParseResultToExtractedPdf } from './liteParseResult';
@@ -28,8 +28,8 @@ async function request<T>(
 ): Promise<T> {
   if (IS_DEMO_MODE) throw new Error('Document imports and receipt uploads are disabled in the read-only demo.');
   if (init.signal?.aborted) throw init.signal.reason ?? new Error('Document request was cancelled.');
-  const baseUrl = await getApiBaseUrl();
-  if (!baseUrl) throw new Error('LiteParse and receipt photos require the desktop app or a configured local backend.');
+  const backend = await resolveBackend();
+  if (!backend) throw new Error('LiteParse and receipt photos require the desktop app or a configured local backend.');
   if (init.signal?.aborted) throw init.signal.reason ?? new Error('Document request was cancelled.');
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -37,7 +37,7 @@ async function request<T>(
   if (init.signal?.aborted) abort();
   const timer = setTimeout(abort, 90_000);
   try {
-    const response = await fetch(`${baseUrl}${path}`, { ...init, signal: controller.signal });
+    const response = await apiFetchAt(backend, path, { ...init, signal: controller.signal });
     if (!response.ok && !(allowMissing && response.status === 404)) {
       let message = `The local server request failed (HTTP ${response.status}).`;
       const result = errorSchema.safeParse(await response.json().catch(() => null));
@@ -108,7 +108,7 @@ export async function deleteReceipt(id: number, signal?: AbortSignal): Promise<v
 
 export async function clearReceiptOriginals(): Promise<void> {
   if (IS_DEMO_MODE) throw new Error('Receipt reset is disabled in the read-only demo.');
-  if (!await getApiBaseUrl()) {
+  if (!await resolveBackend()) {
     if (window.fireTools || loadSettings().backend.mode === 'custom') {
       throw new Error('The receipt backend is unavailable. Reconnect before resetting saved data.');
     }

@@ -2,7 +2,7 @@ import { Suspense, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Asset, PortfolioAllocation, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { calculatePortfolioAllocation, prepareAssetClassChartData, prepareAssetChartData, formatAssetName, formatCurrency } from '../utils/allocationCalculator';
-import { DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
+import { DEFAULT_ALLOCATION_PAGE_TARGETS, DEFAULT_ASSETS, DEFAULT_PORTFOLIO_VALUE } from '../utils/defaultAssets';
 import {
   saveAssetAllocation,
   loadAssetAllocation,
@@ -20,6 +20,7 @@ import { useDeferredRender } from '../hooks/useDeferredRender';
 import { useExchangeRates } from '../hooks/useExchangeRates';
 import { useAuditLog } from '../contexts/AuditLogContext';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { EditableAssetClassTable } from './EditableAssetClassTable';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { CollapsibleAllocationTable } from './CollapsibleAllocationTable';
@@ -71,17 +72,7 @@ export const AssetAllocationPage: React.FC = () => {
   // Per-asset debounce timers so rapid field edits coalesce into one audit
   // entry instead of one per keystroke.
   const assetUpdateAuditTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
-  const defaultTargets = {
-    STOCKS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 60 },
-    BONDS: { targetMode: 'PERCENTAGE' as AllocationMode, targetPercent: 40 },
-    CASH: { targetMode: 'SET' as AllocationMode, targetPercent: 0 },
-    CRYPTO: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    REAL_ESTATE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    COMMODITIES: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    VEHICLE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    COLLECTIBLE: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-    ART: { targetMode: 'OFF' as AllocationMode, targetPercent: 0 },
-  };
+  const defaultTargets = structuredClone(DEFAULT_ALLOCATION_PAGE_TARGETS);
 
   // Initialize from localStorage if available, otherwise use defaults
   const [assets, setAssets] = useState<Asset[]>(() => {
@@ -639,15 +630,8 @@ export const AssetAllocationPage: React.FC = () => {
   const isSyncEnabled = netWorthData?.settings.syncWithAssetAllocation || false;
 
   return (
-    <div className="asset-allocation-page">
-      <header className="page-header">
-        <div className="page-header-top">
-          <h1><MaterialIcon name="pie_chart" className="page-header-icon" /> {t('assetAllocation.title')}</h1>
-        </div>
-        <p>
-          {t('assetAllocation.description')}
-        </p>
-      </header>
+    <div className="page asset-allocation-page">
+      <PageHeader title={t('assetAllocation.title')} description={t('assetAllocation.description')} />
 
       <main className="asset-allocation-manager" id="main-content">
         {/* Sync status banner */}
@@ -714,7 +698,7 @@ export const AssetAllocationPage: React.FC = () => {
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> {t('assetAllocation.howToUse.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('assetAllocation.howToUse.title')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isHowToUseOpen ? ' is-open' : ''}`} /></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
@@ -803,7 +787,7 @@ export const AssetAllocationPage: React.FC = () => {
             aria-controls="charts-content"
           >
             <h3 id="charts-heading">{t('assetAllocation.graphs')}</h3>
-            <span className="collapse-icon-small" aria-hidden="true">{isChartsCollapsed ? '▶' : '▼'}</span>
+            <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!isChartsCollapsed ? ' is-open' : ''}`} />
           </button>
           {!isChartsCollapsed && (
             <div id="charts-content" className="charts-row">

@@ -22,6 +22,7 @@ import { computeAllBreakdowns, selectActiveAssets } from '../utils/portfolioBrea
 import { formatCurrency } from '../utils/allocationCalculator';
 import { useAssetMetadata } from '../hooks/useAssetMetadata';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { BreakdownChart } from './BreakdownChart';
 import { PrivacyBlur } from './PrivacyBlur';
 import { ScrollToTopButton } from './ScrollToTopButton';
@@ -118,22 +119,16 @@ export const PortfolioBreakdownPage: React.FC = () => {
   const hasNoTickers = tickerAssetCount === 0;
 
   return (
-    <div className="portfolio-breakdown-page">
-      <header className="page-header">
-        <div className="page-header-top">
-          <h1>
-            <MaterialIcon name="donut_large" className="page-header-icon" /> {t('portfolioBreakdown.title')}
-          </h1>
-        </div>
-        <p>
-          {t('portfolioBreakdown.subtitle')}
-        </p>
-        <p className="page-header-link">
-          <Link to="/asset-allocation" className="action-btn breakdown-page-link">
+    <div className="page portfolio-breakdown-page">
+      <PageHeader
+        title={t('portfolioBreakdown.title')}
+        description={t('portfolioBreakdown.subtitle')}
+        actions={(
+          <Link to="/asset-allocation" className="btn btn--secondary breakdown-page-link">
             <MaterialIcon name="pie_chart" size="small" /> {t('portfolioBreakdown.backToAssetAllocation')}
           </Link>
-        </p>
-      </header>
+        )}
+      />
 
       <main className="portfolio-breakdown-content" id="main-content">
         <section className="portfolio-value-section" aria-labelledby="portfolio-value-heading">

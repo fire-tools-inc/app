@@ -1,0 +1,62 @@
+.api-access-intro {
+  margin: 0 0 1rem;
+}
+
+.api-access-settings .setting-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.api-access-settings .label-with-tooltip .setting-label {
+  margin-bottom: 0;
+}
+
+.api-access-value,
+.api-access-example {
+  display: block;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+
+.api-access-example {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.api-access-port {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.api-access-settings .api-access-port input[type="number"] {
+  flex: 0 0 8rem;
+  width: 8rem;
+  max-width: 8rem;
+}
+
+.api-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.api-access-settings .callout {
+  margin: 0.75rem 0 0;
+}
+
+.api-access-settings .callout + .setting-item {
+  margin-top: 1.25rem;
+}

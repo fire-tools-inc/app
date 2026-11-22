@@ -46,12 +46,19 @@ export interface ServerEnv {
    * Empty / undefined means the database is opened unencrypted.
    */
   passphrase?: string;
+  /**
+   * Optional bearer token. When set, every /api/v1 route except GET /health
+   * requires `Authorization: Bearer <token>`. Sourced from API_TOKEN; the
+   * Electron wrapper passes a per-launch token to `startEmbeddedServer`.
+   */
+  apiToken?: string;
 }
 
 export const loadEnv = (): ServerEnv => {
   const nodeEnv = (process.env.NODE_ENV as ServerEnv['nodeEnv']) ?? 'development';
   const fallbackOrigins = nodeEnv === 'production' ? [] : DEFAULT_DEV_ORIGINS;
   const rawPassphrase = process.env.DB_PASSPHRASE;
+  const rawApiToken = process.env.API_TOKEN;
   return {
     port: num(process.env.PORT, 8787),
     host: process.env.HOST ?? '0.0.0.0',
@@ -66,5 +73,6 @@ export const loadEnv = (): ServerEnv => {
     },
     nodeEnv,
     passphrase: rawPassphrase && rawPassphrase.length > 0 ? rawPassphrase : undefined,
+    apiToken: rawApiToken && rawApiToken.length > 0 ? rawApiToken : undefined,
   };
 };

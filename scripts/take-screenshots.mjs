@@ -33,10 +33,12 @@ const BASE = `http://${HOST}:${PORT}`;
 
 const routes = [
   { slug: 'homepage',           path: '/demo/' },
+  { slug: 'log-month',          path: '/demo/log-month' },
   { slug: 'fire-calculator',    path: '/demo/fire-calculator' },
   { slug: 'monte-carlo',        path: '/demo/monte-carlo' },
   { slug: 'asset-allocation',   path: '/demo/asset-allocation' },
   { slug: 'expense-tracker',    path: '/demo/expense-tracker' },
+  { slug: 'quick-import',       path: '/demo/expense-tracker', selector: '.quick-import--dialog' },
   { slug: 'cashflow-planning',  path: '/demo/expense-tracker?tab=planning', selector: '.cashflow-planning' },
   { slug: 'import-rules',       path: '/demo/expense-tracker?tab=rules', selector: '.cashflow-planning' },
   { slug: 'expense-statistics', path: '/demo/expense-tracker', selector: '.expense-statistics' },
@@ -161,6 +163,17 @@ async function main() {
         await page.locator(r.selector).getByRole('heading', { name: 'Expense statistics' }).hover();
         await page.mouse.move(0, 0);
         await page.locator(r.selector).screenshot({ path: file });
+      } else if (r.slug === 'quick-import') {
+        await page.getByRole('button', { name: 'Paste expenses' }).click();
+        await page.locator(r.selector).waitFor({ state: 'visible' });
+        await page.getByLabel('Expenses, one per line').fill([
+          'cinema 12.50', '03/11 Albert Heijn 54,20', 'uber 15.30', 'coffee 2x3.50',
+          'Spotify 10.99', 'zara jacket 89', 'pharmacy 7.40',
+        ].join('\n'));
+        await page.getByRole('button', { name: 'Match expenses' }).click();
+        await page.locator(`${r.selector} tbody tr`).first().waitFor({ state: 'visible' });
+        await sleep(300);
+        await page.screenshot({ path: file, fullPage: false });
       } else if (r.slug === 'cashflow-planning' || r.slug === 'import-rules') {
         await page.locator(r.selector).waitFor({ state: 'visible' });
         await page.locator(r.selector).screenshot({ path: file });

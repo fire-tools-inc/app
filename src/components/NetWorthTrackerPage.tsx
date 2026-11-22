@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import {
   NetWorthTrackerData,
-  MonthlySnapshot,
   AssetHolding,
   CashEntry,
   PensionEntry,
@@ -29,14 +28,19 @@ import {
   saveNetWorthTrackerData,
   loadNetWorthTrackerData,
   loadAssetAllocation,
-  saveAssetAllocation,
 } from '../utils/cookieStorage';
 import { loadSettings, saveSettings, type DateFormat } from '../utils/cookieSettings';
 import { formatDate } from '../utils/dateFormatter';
 import { generateDemoNetWorthDataForYear } from '../utils/defaults';
-import { syncAssetAllocationToNetWorth, syncNetWorthToAssetAllocation, DEFAULT_ASSET_CLASS_TARGETS } from '../utils/dataSync';
-import { fetchMultipleClosingPricesForMonth } from '../utils/priceApi';
-import { fetchAssetPrices } from '../utils/dcaCalculator';
+import { syncAssetAllocationToNetWorth } from '../utils/dataSync';
+import {
+  applyNetWorthMonthPrices,
+  cloneNetWorthData as deepCloneData,
+  createDefaultNetWorthData,
+  fetchNetWorthMonthPrices,
+  persistNetWorthData,
+  startNetWorthMonth,
+} from '../utils/netWorthMonthLog';
 import { createLazyComponent } from '../utils/lazyComponent';
 import { formatDisplayCurrency, formatDisplayPercent, formatDisplayNumber } from '../utils/numberFormatter';
 import { useDeferredRender } from '../hooks/useDeferredRender';
@@ -49,6 +53,7 @@ import type { WorkbookImportSummary } from '../utils/workbookImportApply';
 import type { ChartViewMode } from './HistoricalNetWorthChart';
 import { SharedAssetDialog } from './SharedAssetDialog';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { SearchableSelect } from './SearchableSelect';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { PrivacyBlur } from './PrivacyBlur';
@@ -91,35 +96,8 @@ function formatPercent(value: number): string {
 
 // Get default data
 function getDefaultData(): NetWorthTrackerData {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-  
   // Load default currency from user settings
-  const settings = loadSettings();
-  const defaultCurrency = settings.currencySettings.defaultCurrency;
-
-  return {
-    years: [
-      {
-        year: currentYear,
-        months: [createEmptyMonthlySnapshot(currentYear, currentMonth)],
-        isArchived: false,
-      },
-    ],
-    currentYear,
-    currentMonth,
-    defaultCurrency,
-    settings: {
-      showPensionInNetWorth: true,
-      includeUnrealizedGains: true,
-    },
-  };
-}
-
-// Deep clone helper for immutable state updates
-function deepCloneData(data: NetWorthTrackerData): NetWorthTrackerData {
-  return JSON.parse(JSON.stringify(data));
+  return createDefaultNetWorthData(loadSettings().currencySettings.defaultCurrency);
 }
 
 export function NetWorthTrackerPage() {
@@ -235,25 +213,10 @@ export function NetWorthTrackerPage() {
     setSearchParams(newParams, { replace: true });
   }, [selectedYear, selectedMonth, setSearchParams, searchParams]);
 
-  // Save data whenever it changes, and sync if enabled
+  // Save data whenever it changes, and sync the current month to Asset Allocation if enabled
   useEffect(() => {
-    saveNetWorthTrackerData(data);
-    
-    // If sync is enabled and we're viewing the current month, sync to Asset Allocation
-    if (data.settings.syncWithAssetAllocation && 
-        selectedYear === currentYear && 
-        selectedMonth === currentMonth) {
-      const yearData = data.years.find(y => y.year === currentYear);
-      const monthData = yearData?.months.find(m => m.month === currentMonth);
-      
-      if (monthData) {
-        // Sync Net Worth → Asset Allocation
-        const syncedAssets = syncNetWorthToAssetAllocation(data);
-        const { assetClassTargets } = loadAssetAllocation();
-        saveAssetAllocation(syncedAssets, assetClassTargets || DEFAULT_ASSET_CLASS_TARGETS);
-      }
-    }
-  }, [data, selectedYear, selectedMonth, currentYear, currentMonth]);
+    persistNetWorthData(data, selectedYear, selectedMonth);
+  }, [data, selectedYear, selectedMonth]);
 
   // Check if we're viewing a past period
   const isViewingPastPeriod = selectedYear < currentYear || 
@@ -340,166 +303,20 @@ export function NetWorthTrackerPage() {
     return monthlyVariations.find(v => v.month === `${SHORT_MONTH_NAMES[selectedMonth - 1]} ${selectedYear}`);
   }, [monthlyVariations, selectedMonth, selectedYear]);
 
-  // Helper to find previous month's data
-  const getPreviousMonthData = useCallback((data: NetWorthTrackerData, year: number, month: number) => {
-    // Calculate previous month
-    let prevYear = year;
-    let prevMonth = month - 1;
-    if (prevMonth < 1) {
-      prevMonth = 12;
-      prevYear = year - 1;
-    }
-
-    // Try to find data from previous month
-    const prevYearData = data.years.find(y => y.year === prevYear);
-    if (prevYearData) {
-      const prevMonthData = prevYearData.months.find(m => m.month === prevMonth);
-      if (prevMonthData) {
-        return prevMonthData;
-      }
-    }
-
-    // If no previous month, find the most recent month with data
-    const allMonths: { year: number; month: number; data: MonthlySnapshot }[] = [];
-    for (const yr of data.years) {
-      for (const mo of yr.months) {
-        if (yr.year < year || (yr.year === year && mo.month < month)) {
-          allMonths.push({ year: yr.year, month: mo.month, data: mo });
-        }
-      }
-    }
-    
-    if (allMonths.length === 0) return null;
-    
-    // Sort by date descending and get the most recent
-    allMonths.sort((a, b) => {
-      if (a.year !== b.year) return b.year - a.year;
-      return b.month - a.month;
-    });
-    
-    return allMonths[0].data;
-  }, []);
-
   // Ensure month exists (for "Log This Month" button), inherit assets from previous period
   // Uses name as unique identifier - won't duplicate assets with the same name
   const handleAddMonth = useCallback(() => {
     setData(prev => {
-      const newData = deepCloneData(prev);
-      
-      // Ensure year exists
-      let yearData = newData.years.find(y => y.year === selectedYear);
-      if (!yearData) {
-        yearData = createEmptyNetWorthYearData(selectedYear);
-        newData.years.push(yearData);
-        newData.years.sort((a, b) => a.year - b.year);
+      const { data: newData, tickersToFetch } = startNetWorthMonth(prev, selectedYear, selectedMonth);
+      // Fetch month-end closing prices (latest prices for the current month) for inherited tickers
+      if (tickersToFetch.length > 0) {
+        void fetchNetWorthMonthPrices(tickersToFetch, selectedYear, selectedMonth).then(prices => {
+          setData(prevData => applyNetWorthMonthPrices(prevData, selectedYear, selectedMonth, prices));
+        });
       }
-      
-      // Check if month already exists
-      let monthData = yearData.months.find(m => m.month === selectedMonth);
-      if (!monthData) {
-        // Create new month with empty data
-        monthData = createEmptyMonthlySnapshot(selectedYear, selectedMonth);
-        yearData.months.push(monthData);
-        yearData.months.sort((a, b) => a.month - b.month);
-      }
-      
-      // Inherit assets, cash, and pensions from previous period
-      // Use name as unique identifier - only add items that don't already exist
-      const prevMonthData = getPreviousMonthData(prev, selectedYear, selectedMonth);
-      if (prevMonthData) {
-        // Get existing names for deduplication
-        const existingAssetNames = new Set(monthData.assets.map(a => a.name.toLowerCase()));
-        const existingCashNames = new Set(monthData.cashEntries.map(c => c.accountName.toLowerCase()));
-        const existingPensionNames = new Set(monthData.pensions.map(p => p.name.toLowerCase()));
-        
-        // Collect tickers for price fetching
-        const tickersToFetch: string[] = [];
-        
-        // Add assets that don't already exist (by name)
-        // Carry forward acquisitionPrice, pricePerShare will be updated by month-end fetch
-        for (const asset of prevMonthData.assets) {
-          if (!existingAssetNames.has(asset.name.toLowerCase())) {
-            monthData.assets.push({
-              ...asset,
-              id: generateNetWorthId(),
-              acquisitionPrice: asset.acquisitionPrice ?? asset.pricePerShare,
-            });
-            existingAssetNames.add(asset.name.toLowerCase());
-            if (asset.ticker && asset.ticker.trim().length > 0) {
-              tickersToFetch.push(asset.ticker.trim().toUpperCase());
-            }
-          }
-        }
-        
-        // Fetch month-end closing prices for inherited ticker-based assets
-        if (tickersToFetch.length > 0) {
-          const isCurrentMonth = selectedYear === currentYear && selectedMonth === currentMonth;
-          if (isCurrentMonth) {
-            // For current month: fetch latest market prices
-            fetchAssetPrices([...new Set(tickersToFetch)]).then(prices => {
-              setData(prevData => {
-                const updated = deepCloneData(prevData);
-                const yr = updated.years.find(y => y.year === selectedYear);
-                const mo = yr?.months.find(m => m.month === selectedMonth);
-                if (mo) {
-                  for (const asset of mo.assets) {
-                    const ticker = asset.ticker?.trim().toUpperCase();
-                    if (ticker && prices[ticker] != null) {
-                      asset.pricePerShare = prices[ticker]!;
-                    }
-                  }
-                }
-                return updated;
-              });
-            });
-          } else {
-            // For past months: fetch closing price for that month's last trading day
-            fetchMultipleClosingPricesForMonth([...new Set(tickersToFetch)], selectedYear, selectedMonth).then(prices => {
-              setData(prevData => {
-                const updated = deepCloneData(prevData);
-                const yr = updated.years.find(y => y.year === selectedYear);
-                const mo = yr?.months.find(m => m.month === selectedMonth);
-                if (mo) {
-                  for (const asset of mo.assets) {
-                    const ticker = asset.ticker?.trim().toUpperCase();
-                    if (ticker && prices[ticker]) {
-                      asset.pricePerShare = prices[ticker]!.price;
-                    }
-                  }
-                }
-                return updated;
-              });
-            });
-          }
-        }
-        
-        // Add cash entries that don't already exist (by account name)
-        for (const cash of prevMonthData.cashEntries) {
-          if (!existingCashNames.has(cash.accountName.toLowerCase())) {
-            monthData.cashEntries.push({
-              ...cash,
-              id: generateNetWorthId(),
-            });
-            existingCashNames.add(cash.accountName.toLowerCase());
-          }
-        }
-        
-        // Add pensions that don't already exist (by name)
-        for (const pension of prevMonthData.pensions) {
-          if (!existingPensionNames.has(pension.name.toLowerCase())) {
-            monthData.pensions.push({
-              ...pension,
-              id: generateNetWorthId(),
-            });
-            existingPensionNames.add(pension.name.toLowerCase());
-          }
-        }
-        // Note: operations are NOT inherited - they are specific to each month
-      }
-      
       return newData;
     });
-  }, [selectedYear, selectedMonth, getPreviousMonthData]);
+  }, [selectedYear, selectedMonth]);
 
   // Check if asset name already exists (for validation)
   const isAssetNameDuplicate = useCallback((name: string, excludeId?: string): boolean => {
@@ -928,15 +745,8 @@ export function NetWorthTrackerPage() {
   const getMonthName = (month: number) => t(`common.months.${MONTH_NAMES[month - 1].toLowerCase()}`);
 
   return (
-    <div className="net-worth-tracker-page">
-      <header className="page-header">
-        <div className="page-header-top">
-          <h1><MaterialIcon name="paid" className="page-header-icon" /> {t('netWorth.title')}</h1>
-        </div>
-        <p>
-          {t('netWorth.subtitle')}
-        </p>
-      </header>
+    <div className="page net-worth-tracker-page">
+      <PageHeader title={t('netWorth.title')} description={t('netWorth.subtitle')} />
 
       <main className="net-worth-tracker-main" id="main-content">
         {/* How to Use Section */}
@@ -947,7 +757,7 @@ export function NetWorthTrackerPage() {
             aria-expanded={isHowToUseOpen}
             aria-controls="how-to-use-content"
           >
-            <h4><MaterialIcon name="lightbulb" /> {t('netWorth.howItWorks.title')} <span className="collapse-icon-small" aria-hidden="true">{isHowToUseOpen ? '▼' : '▶'}</span></h4>
+            <h4><MaterialIcon name="lightbulb" /> {t('netWorth.howItWorks.title')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isHowToUseOpen ? ' is-open' : ''}`} /></h4>
           </button>
           {isHowToUseOpen && (
             <ul id="how-to-use-content" className="how-to-use-content">
@@ -982,7 +792,7 @@ export function NetWorthTrackerPage() {
               </label>
               {data.settings.syncWithAssetAllocation && (
                 <p className="sync-info">
-                  <span aria-hidden="true">ℹ️</span> {t('netWorth.syncInfo')}
+                  <MaterialIcon name="info" size="small" /> {t('netWorth.syncInfo')}
                 </p>
               )}
             </div>

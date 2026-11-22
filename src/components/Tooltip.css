@@ -13,7 +13,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: var(--text-base);
   font-weight: 500;
   line-height: 1.5;
   border-radius: var(--radius-sm);

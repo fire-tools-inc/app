@@ -1,14 +1,17 @@
 import { z } from 'zod';
 import type { ExpensePlanningData, ScheduledOccurrenceReference } from '../types/expensePlanning';
 import {
-  INCOME_SOURCES, getAllCategories, type IncomeSource, type ExpenseTrackerData, type IncomeEntry, type ExpenseEntry,
+  INCOME_SOURCES, getAllCategories, resolveCategoryAlias, type IncomeSource, type ExpenseTrackerData, type IncomeEntry, type ExpenseEntry,
 } from '../types/expenseTracker';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '../types/currency';
 import { isValidCalendarDate } from './dateValidation';
+import { normalizeExpenseTrackerCategories } from './expenseCategoryAliases';
 
 const date = z.string().refine(isValidCalendarDate, 'Invalid calendar date.');
 const id = z.string().min(1).refine(value => value.trim() === value, 'Invalid identifier.');
 const name = z.string().refine(value => value.trim().length > 0, 'A name is required.');
+/** Retired built-in ids are read as the category that absorbed them. */
+const categoryId = id.transform(resolveCategoryAlias);
 const amount = z.number().finite().nonnegative();
 const currency = z.custom<SupportedCurrency>(value =>
   typeof value === 'string' && SUPPORTED_CURRENCIES.some(item => item.code === value),
@@ -27,7 +30,7 @@ const scheduleBase = {
   enabled: z.boolean(), archived: z.boolean(),
 };
 const schedule = z.discriminatedUnion('kind', [
-  z.object({ ...scheduleBase, kind: z.literal('expense'), category: id, expenseType }).strict(),
+  z.object({ ...scheduleBase, kind: z.literal('expense'), category: categoryId, expenseType }).strict(),
   z.object({ ...scheduleBase, kind: z.literal('income'), source }).strict(),
 ]).refine(value => !value.endDate || value.endDate >= value.startDate, {
   message: 'End date must not precede start date.', path: ['endDate'],
@@ -46,7 +49,7 @@ const match = z.object({
 });
 const ruleBase = { id, name, enabled: z.boolean(), priority: z.number().int().nonnegative(), match };
 const rule = z.discriminatedUnion('kind', [
-  z.object({ ...ruleBase, kind: z.literal('expense'), category: id, expenseType }).strict(),
+  z.object({ ...ruleBase, kind: z.literal('expense'), category: categoryId, expenseType }).strict(),
   z.object({ ...ruleBase, kind: z.literal('income'), source }).strict(),
 ]);
 
@@ -146,7 +149,7 @@ export function planningCategoryReferenceCount(data: ExpenseTrackerData, categor
 export function prepareExpenseTrackerRestore(
   imported: ExpenseTrackerData, current: ExpenseTrackerData | null,
 ): ExpenseTrackerData {
-  const next = structuredClone(imported);
+  const next = structuredClone(normalizeExpenseTrackerCategories(imported));
   if (next.planning === undefined && current?.planning !== undefined) {
     next.planning = parseExpensePlanning(current.planning);
     const referenced = new Set([

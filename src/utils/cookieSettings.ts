@@ -11,9 +11,11 @@ import {
 } from '../types/currency';
 import { AssetClass } from '../types/assetAllocation';
 import { LlmCategorizationConfig } from '../types/pdfImport';
+import { isLlmProvider } from './llmProviders';
 import { encryptData, decryptData } from './cookieEncryption';
 import { IS_DEMO_MODE } from './demoMode';
 import { logger } from './logger';
+import { recordLocalChange, recordLocalClear } from './backendSync/localChanges';
 
 export type DateFormat = 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD';
 
@@ -69,10 +71,13 @@ export type BackendMode = 'embedded' | 'custom';
  * - `embedded`: app uses the in-process backend bundled with Electron
  *   (no-op for non-Electron browser builds).
  * - `custom`: app talks to a separately-running backend at `customUrl`.
- *   Useful when running a shared backend on the LAN, in Docker, etc. */
+ *   Useful when running a shared backend on the LAN, in Docker, etc.
+ * Device-local: never synchronized to the backend. */
 export interface BackendSettings {
   mode: BackendMode;
   customUrl?: string;
+  /** Optional bearer token for a custom backend started with `API_TOKEN`. */
+  customToken?: string;
 }
 
 export const DEFAULT_BACKEND_SETTINGS: BackendSettings = {
@@ -171,6 +176,38 @@ export const DEFAULT_SETTINGS: UserSettings = {
   updater: DEFAULT_UPDATER_SETTINGS,
 };
 
+/** Settings stored in the backend (`user_settings`) and shared with API clients. */
+export const SYNCED_SETTINGS_KEYS = [
+  'accountName',
+  'decimalSeparator',
+  'decimalPlaces',
+  'currencySettings',
+  'privacyMode',
+  'country',
+  'dateFormat',
+  'fireAssetClassInclusion',
+  'includePrimaryResidenceInFIRE',
+  'searchThreshold',
+  'experimentalFeatures',
+  'aiFeaturesEnabled',
+  'language',
+] as const satisfies readonly (keyof UserSettings)[];
+
+export type SyncedSettings = Pick<UserSettings, (typeof SYNCED_SETTINGS_KEYS)[number]>;
+
+/**
+ * Settings that never leave this device: backend connection and token,
+ * updater and logging preferences and the model configuration (which can
+ * hold API keys that must stay out of the agent-readable API).
+ */
+export const DEVICE_LOCAL_SETTINGS_KEYS = [
+  'backend',
+  'updater',
+  'loggingPiiEnabled',
+  'maxLogFileSizeMb',
+  'llmCategorization',
+] as const satisfies readonly (keyof UserSettings)[];
+
 const SETTINGS_KEY = 'fire-calculator-settings';
 export const SETTINGS_CHANGED_EVENT = 'fire-tools:settings-changed';
 let cachedCiphertext: string | undefined;
@@ -225,6 +262,19 @@ export function saveSettings(settings: UserSettings): void {
     throw new Error('Failed to save settings.');
   }
   notifySettingsChanged();
+  recordLocalChange('settings', settings);
+}
+
+/** True when settings were saved on this device, even if they cannot be read. */
+export function hasStoredSettings(): boolean {
+  try {
+    return Boolean(SafeCookies.get(SETTINGS_KEY));
+  } catch (error) {
+    logger.error('cookie-settings', 'storage-check-failed', 'saved settings storage could not be checked', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+    return true;
+  }
 }
 
 /**
@@ -245,6 +295,49 @@ export function mergeUpdaterSettings(input: unknown): UpdaterSettings {
     autoDownload: typeof partial.autoDownload === 'boolean' ? partial.autoDownload : DEFAULT_UPDATER_SETTINGS.autoDownload,
     notifyOnly: typeof partial.notifyOnly === 'boolean' ? partial.notifyOnly : DEFAULT_UPDATER_SETTINGS.notifyOnly,
     keepBackups,
+  };
+}
+
+/** Copy a saved model configuration, dropping an unknown provider so the preset is inferred from the URL. */
+function normalizeLlmConfig(config: LlmCategorizationConfig): LlmCategorizationConfig {
+  const { provider, ...rest } = config;
+  return isLlmProvider(provider) ? { ...rest, provider } : { ...rest };
+}
+
+/**
+ * Merge a saved (possibly partial or older) settings payload with defaults so
+ * every field exists. Nested objects are rebuilt, so callers never share them.
+ */
+export function mergeSettingsWithDefaults(parsed: Partial<UserSettings>): UserSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...parsed,
+    aiFeaturesEnabled: parsed.aiFeaturesEnabled === undefined
+      ? DEFAULT_SETTINGS.aiFeaturesEnabled : parsed.aiFeaturesEnabled === true,
+    currencySettings: {
+      ...DEFAULT_SETTINGS.currencySettings,
+      ...(parsed.currencySettings || {}),
+      fallbackRates: {
+        ...DEFAULT_SETTINGS.currencySettings.fallbackRates,
+        ...(parsed.currencySettings?.fallbackRates || {}),
+      },
+    },
+    fireAssetClassInclusion: {
+      ...DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
+      ...(parsed.fireAssetClassInclusion || {}),
+    },
+    experimentalFeatures: IS_DEMO_MODE
+      ? EFFECTIVE_EXPERIMENTAL_DEFAULTS
+      : {
+          ...DEFAULT_EXPERIMENTAL_FEATURES,
+          ...(parsed.experimentalFeatures || {}),
+        },
+    backend: {
+      ...DEFAULT_BACKEND_SETTINGS,
+      ...(parsed.backend || {}),
+    },
+    updater: mergeUpdaterSettings(parsed.updater),
+    llmCategorization: parsed.llmCategorization ? normalizeLlmConfig(parsed.llmCategorization) : undefined,
   };
 }
 
@@ -273,38 +366,7 @@ export function loadSettings(): UserSettings {
         }
       }
       if (cachedPayload) {
-        const parsed = cachedPayload;
-        // Merge with defaults to ensure all fields exist
-        return {
-          ...DEFAULT_SETTINGS,
-          ...parsed,
-          aiFeaturesEnabled: parsed.aiFeaturesEnabled === undefined
-            ? DEFAULT_SETTINGS.aiFeaturesEnabled : parsed.aiFeaturesEnabled === true,
-          currencySettings: {
-            ...DEFAULT_SETTINGS.currencySettings,
-            ...(parsed.currencySettings || {}),
-            fallbackRates: {
-              ...DEFAULT_SETTINGS.currencySettings.fallbackRates,
-              ...(parsed.currencySettings?.fallbackRates || {}),
-            },
-          },
-          fireAssetClassInclusion: {
-            ...DEFAULT_FIRE_ASSET_CLASS_INCLUSION,
-            ...(parsed.fireAssetClassInclusion || {}),
-          },
-          experimentalFeatures: IS_DEMO_MODE
-            ? EFFECTIVE_EXPERIMENTAL_DEFAULTS
-            : {
-                ...DEFAULT_EXPERIMENTAL_FEATURES,
-                ...(parsed.experimentalFeatures || {}),
-              },
-          backend: {
-            ...DEFAULT_BACKEND_SETTINGS,
-            ...(parsed.backend || {}),
-          },
-          updater: mergeUpdaterSettings(parsed.updater),
-          llmCategorization: parsed.llmCategorization ? { ...parsed.llmCategorization } : undefined,
-        };
+        return mergeSettingsWithDefaults(cachedPayload);
       }
     }
     cachedCiphertext = undefined;
@@ -328,6 +390,7 @@ export function clearSettings(): void {
     logger.error('cookie-settings', 'clear-failed', 'failed to clear settings', { pii: { error: (error as Error)?.message } });
   }
   notifySettingsChanged();
+  recordLocalClear('settings');
 }
 
 /**
@@ -412,10 +475,16 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
   if (settings.aiFeaturesEnabled !== undefined && typeof settings.aiFeaturesEnabled !== 'boolean') {
     errors.push('aiFeaturesEnabled must be a boolean');
   }
+  if (settings.llmCategorization?.provider !== undefined && !isLlmProvider(settings.llmCategorization.provider)) {
+    errors.push('AI provider must be one of the listed presets');
+  }
 
   if (settings.backend !== undefined) {
     if (settings.backend.mode !== 'embedded' && settings.backend.mode !== 'custom') {
       errors.push('Backend mode must be "embedded" or "custom"');
+    }
+    if (settings.backend.customToken !== undefined && typeof settings.backend.customToken !== 'string') {
+      errors.push('Custom backend access token must be a string');
     }
     if (settings.backend.mode === 'custom') {
       const url = settings.backend.customUrl;

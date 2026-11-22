@@ -7,6 +7,7 @@ import { loadSettings, saveSettings } from '../utils/cookieSettings';
 import { DEFAULT_ASSETS } from '../utils/defaultAssets';
 import { formatDisplayCurrency } from '../utils/numberFormatter';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { BacktestSection } from './BacktestSection';
 import { PrivacyBlur } from './PrivacyBlur';
 import './AssetAllocationManager.css';
@@ -32,13 +33,8 @@ export const PortfolioBacktestPage: React.FC = () => {
   };
 
   return (
-    <div className="asset-allocation-page">
-      <header className="page-header">
-        <div className="page-header-top">
-          <h1><MaterialIcon name="analytics" className="page-header-icon" /> {t('backtest.pageTitle')}</h1>
-        </div>
-        <p>{t('backtest.pageDescription')}</p>
-      </header>
+    <div className="page asset-allocation-page">
+      <PageHeader title={t('backtest.pageTitle')} description={t('backtest.pageDescription')} />
 
       <main className="asset-allocation-manager" id="main-content">
         <section className="portfolio-value-section" aria-labelledby="backtest-source-heading">

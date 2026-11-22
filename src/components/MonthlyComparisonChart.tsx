@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { MonthlyComparisonData } from '../types/expenseTracker';
+import { CHART_THEME } from '../utils/chartColors';
 
 interface MonthlyComparisonChartProps {
   data: MonthlyComparisonData[];
@@ -47,7 +48,7 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
       boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
       border: '1px solid var(--border-subtle)',
     }}>
-      <p style={{ margin: 0, fontWeight: 600, color: '#f1f5f9' }}>{label}</p>
+      <p style={{ margin: 0, fontWeight: 600, color: CHART_THEME.textStrong }}>{label}</p>
       {payload.map((entry: any, index: number) => (
         <p 
           key={index}
@@ -59,15 +60,15 @@ function CustomTooltip({ active, payload, label, currency }: CustomTooltipProps)
             gap: '1rem',
           }}
         >
-          <span style={{ color: '#e2e8f0' }}>{entry.name}:</span>
+          <span style={{ color: CHART_THEME.textStrong }}>{entry.name}:</span>
           <span style={{ fontWeight: 500 }}>{formatCurrency(entry.value, currency)}</span>
         </p>
       ))}
       {typeof payload[0]?.payload?.average === 'number' && (
         <p style={{ 
           margin: '0.5rem 0 0', 
-          color: '#94a3b8', 
-          borderTop: '1px solid #334155',
+          color: CHART_THEME.text, 
+          borderTop: `1px solid ${CHART_THEME.grid}`,
           paddingTop: '0.5rem',
           fontSize: '0.85rem',
         }}>

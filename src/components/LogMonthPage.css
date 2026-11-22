@@ -1,0 +1,556 @@
+.log-month {
+  width: min(100%, var(--page-max-width));
+  min-width: 0;
+  margin: 0 auto;
+  padding: 1.5rem var(--page-gutter) 2.5rem;
+  container: log-month / inline-size;
+}
+
+.log-month :where(a:not(.btn, .log-month-stepper__link)) {
+  color: var(--accent-primary);
+  text-underline-offset: 2px;
+}
+
+.log-month :where(a:not(.btn, .log-month-stepper__link)):hover {
+  color: var(--accent-primary-light);
+}
+
+.log-month .page-head__actions {
+  align-items: flex-end;
+}
+
+.log-month-month-field {
+  min-width: 11rem;
+}
+
+.log-month-notice {
+  margin-bottom: 1rem;
+}
+
+.log-month-notice__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+/* Stepper */
+.log-month-stepper {
+  margin-bottom: 1rem;
+}
+
+.log-month-stepper__compact {
+  display: none;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-month-stepper__compact strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.log-month-stepper__list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log-month-stepper__item {
+  min-width: 0;
+}
+
+.log-month-stepper__link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  height: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.log-month-stepper__link:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.log-month-stepper__link:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.log-month-stepper__link[aria-current="step"] {
+  border-color: var(--border-accent-strong);
+  background: var(--accent-surface);
+  color: var(--text-primary);
+}
+
+.log-month-stepper__marker {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.625rem;
+  height: 1.625rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-month-stepper__marker .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.log-month-stepper__item.is-done .log-month-stepper__marker {
+  border-color: rgba(127, 203, 164, 0.4);
+  color: var(--success);
+}
+
+.log-month-stepper__item.is-unchanged .log-month-stepper__marker {
+  border-color: rgba(232, 176, 127, 0.4);
+  color: var(--warning);
+}
+
+.log-month-stepper__item.is-none .log-month-stepper__marker {
+  color: var(--text-muted);
+}
+
+.log-month-stepper__link[aria-current="step"] .log-month-stepper__marker {
+  border-color: var(--accent-primary);
+}
+
+.log-month-stepper__label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Step panel */
+.log-month-panel__header {
+  flex-wrap: wrap;
+}
+
+.log-month-panel__header h2:focus {
+  outline: none;
+}
+
+.log-month-panel__header h2:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.log-month-step-body {
+  display: grid;
+  gap: 1.75rem;
+  min-width: 0;
+}
+
+.log-month-section {
+  min-width: 0;
+}
+
+.log-month-section > * + * {
+  margin-top: 0.75rem;
+}
+
+/* Empty live regions stay in the DOM for announcements without adding space. */
+.log-month-section > .log-month-live:empty {
+  margin-top: 0;
+}
+
+.log-month-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.log-month-section__header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.log-month-total,
+.log-month-empty,
+.log-month-muted {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.log-month-total strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.log-month-empty,
+.log-month-muted {
+  color: var(--text-muted);
+}
+
+.log-month-success {
+  color: var(--success);
+  font-size: var(--text-sm);
+}
+
+.log-month .callout p {
+  line-height: 1.5;
+}
+
+/* Tables */
+.log-month-table-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.log-month-table-scroll:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.log-month-table {
+  font-variant-numeric: tabular-nums;
+}
+
+.log-month-table tbody tr:last-child td,
+.log-month-table tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+.log-month-table tbody th {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: left;
+}
+
+.log-month-table tfoot th,
+.log-month-table tfoot td {
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: left;
+}
+
+.log-month-table tfoot td.num {
+  text-align: right;
+}
+
+.log-month-row-name {
+  min-width: 9rem;
+}
+
+.log-month-table .log-month-nowrap {
+  white-space: nowrap;
+}
+
+.log-month-row-name > span {
+  display: block;
+}
+
+.log-month-number {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+
+.log-month-number .field__error {
+  white-space: normal;
+  text-align: right;
+}
+
+.log-month .log-month-number-input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-month-number .log-month-number-input {
+  width: 8.5rem;
+}
+
+/* Income drafts */
+.log-month-drafts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log-month-draft + .log-month-draft {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.log-month-draft fieldset {
+  display: grid;
+  grid-template-columns: minmax(10rem, 2fr) minmax(8rem, 1fr) minmax(7rem, 1fr) minmax(9rem, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.log-month-draft__remove {
+  margin-top: calc(var(--text-sm) * 1.5 + 0.375rem);
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.log-month-draft__note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+}
+
+.log-month-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Summaries */
+.log-month-summary,
+.log-month-review {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.log-month-summary > div,
+.log-month-review > div {
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+}
+
+.log-month-summary dt,
+.log-month-review dt {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.log-month-summary dd,
+.log-month-review dd {
+  margin: 0.375rem 0 0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.log-month-summary__wide {
+  grid-column: 1 / -1;
+}
+
+.log-month-categories {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+
+.log-month-categories li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.log-month-review-steps {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.log-month-review-steps li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  min-height: 44px;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.log-month-review-steps a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Net worth snapshot start and pension form */
+.log-month-start {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
+.log-month-pension-form {
+  display: grid;
+  grid-template-columns: minmax(10rem, 2fr) minmax(9rem, 1fr) minmax(8rem, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem 0.75rem;
+}
+
+.log-month-pension-form > .btn {
+  margin-top: calc(var(--text-sm) * 1.5 + 0.375rem);
+}
+
+/* Footer navigation */
+.log-month-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+@container log-month (max-width: 900px) {
+  .log-month-draft fieldset {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  }
+
+  .log-month-draft__description {
+    grid-column: 1 / 3;
+  }
+
+  .log-month-draft__remove {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .log-month-pension-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .log-month-pension-form > .field:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .log-month-pension-form > .btn {
+    margin-top: 0;
+    justify-self: start;
+  }
+}
+
+@container log-month (max-width: 720px) {
+  .log-month-stepper__compact {
+    display: block;
+  }
+
+  .log-month-stepper__list {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .log-month-stepper__item {
+    flex: 0 0 auto;
+  }
+
+  .log-month-stepper__item.is-active {
+    flex: 1 1 auto;
+  }
+
+  .log-month-stepper__link {
+    justify-content: center;
+    min-width: 44px;
+    padding: 0.5rem;
+  }
+
+  .log-month-stepper__item:not(.is-active) .log-month-stepper__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .log-month-stepper__item.is-active .log-month-stepper__link {
+    justify-content: flex-start;
+    padding-inline: 0.75rem;
+  }
+}
+
+@container log-month (max-width: 520px) {
+  .log-month-panel {
+    padding: 1rem;
+  }
+
+  .log-month-draft fieldset,
+  .log-month-pension-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .log-month-draft__description,
+  .log-month-pension-form > .field:first-child {
+    grid-column: auto;
+  }
+
+  .log-month-draft__remove {
+    grid-column: auto;
+    grid-row: auto;
+    justify-self: end;
+    margin-top: 0;
+  }
+
+  .log-month-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .log-month {
+    padding: 1.25rem 1rem 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .log-month-stepper__link {
+    transition: none;
+  }
+}

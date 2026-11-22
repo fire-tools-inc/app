@@ -1,6 +1,6 @@
 // Electron main process. Plain CommonJS so it loads cleanly even though
 // the root package.json declares "type": "module" for Vite.
-const { app, BrowserWindow, shell, ipcMain, nativeImage, nativeTheme, Notification, safeStorage } = require('electron');
+const { app, BrowserWindow, clipboard, shell, ipcMain, nativeImage, nativeTheme, Notification, safeStorage } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -9,6 +9,8 @@ const { installMenu, DOCS_URL, REPO_URL } = require('./menu.cjs');
 const backup = require('./backup.cjs');
 const updater = require('./updater.cjs');
 const logFile = require('./logFile.cjs');
+const apiAccess = require('./apiAccess.cjs');
+const crypto = require('node:crypto');
 
 const isDev = !app.isPackaged && Boolean(process.env.ELECTRON_RENDERER_URL);
 const isMac = process.platform === 'darwin';
@@ -17,6 +19,15 @@ const isMac = process.platform === 'darwin';
 // in dev mode, where the bundle id is Electron's default) attributes
 // notifications, the menu bar, and About panel to "Fire Tools".
 app.setName('Fire Tools');
+
+// Unpackaged runs can point at a separate profile so experiments with a branch
+// never migrate or overwrite the real desktop data. Set before the single
+// instance lock so the isolated run does not collide with the installed app.
+const isolatedUserData = !app.isPackaged ? process.env.FIRE_TOOLS_USER_DATA_DIR?.trim() : '';
+if (isolatedUserData) {
+  app.setPath('userData', path.resolve(isolatedUserData));
+  console.log(`[fire-tools] using isolated profile ${app.getPath('userData')}`);
+}
 
 // Resolve the brand icon once. Used for native notifications and the macOS
 // Dock so the user always sees the Fire Tools logo regardless of how the
@@ -47,6 +58,14 @@ let embeddedServerError = null;
 // renderer points at a standalone backend instead of the in-process embedded
 // one. Empty string / unset disables the override.
 const externalBackendUrl = (process.env.FIRETOOLS_BACKEND_URL || '').trim() || null;
+const externalBackendToken = (process.env.FIRETOOLS_BACKEND_TOKEN || '').trim() || null;
+// Every API call to the embedded backend must carry this per-launch token, so
+// other local pages and processes cannot read the database through it.
+const embeddedApiToken = crypto.randomBytes(32).toString('base64url');
+// Token for other local apps, scripts and agents while Settings > API access
+// is on. It survives restarts until regenerated, and is revoked (null) as soon
+// as access is turned off.
+let clientApiToken = null;
 
 // Path where we persist the safeStorage-encrypted passphrase blob. Kept in
 // the same userData dir as the DB so a single backup captures both.
@@ -172,6 +191,8 @@ async function startEmbedded() {
       migrationsPath,
       host: '127.0.0.1',
       corsAllowAll: true,
+      apiToken: embeddedApiToken,
+      secondaryApiToken: () => clientApiToken,
       passphrase: passphrase || undefined,
       // Funnel backend log lines into the same on-disk file the renderer
       // writes to, so bug-report exports contain both sides of the stack.
@@ -267,13 +288,132 @@ function focusMainWindow() {
 
 ipcMain.handle('fire-tools:embedded-backend-info', () => {
   if (externalBackendUrl) {
-    return { url: externalBackendUrl, dbPath: null, error: null };
+    return { url: externalBackendUrl, dbPath: null, error: null, token: externalBackendToken };
   }
   return {
     url: embeddedServer ? embeddedServer.url : null,
     dbPath: embeddedServer ? embeddedServer.dbPath : null,
     error: embeddedServerError,
+    token: embeddedServer ? embeddedApiToken : null,
   };
+});
+
+const tokenCipher = {
+  isAvailable: () => safeStorage.isEncryptionAvailable(),
+  encrypt: (plain) => safeStorage.encryptString(plain).toString('base64'),
+  decrypt: (encoded) => safeStorage.decryptString(Buffer.from(encoded, 'base64')),
+};
+const messageOf = (err) => (err && err.message ? err.message : String(err));
+
+let apiAccessQueue = Promise.resolve();
+let publicListener = { port: null, error: null };
+
+// API access changes touch the listener, the token and files; run them in order.
+function serializeApiAccess(task) {
+  const run = apiAccessQueue.then(task, task);
+  apiAccessQueue = run.catch(() => {});
+  return run;
+}
+
+function apiAccessState(prefs) {
+  const listening = publicListener.port !== null;
+  const origin = listening ? `http://127.0.0.1:${publicListener.port}` : embeddedServer && embeddedServer.url;
+  return {
+    ok: true,
+    enabled: prefs.enabled,
+    available: Boolean(embeddedServer),
+    port: prefs.port,
+    defaultPort: apiAccess.DEFAULT_PORT,
+    listening,
+    baseUrl: prefs.enabled && origin ? `${origin}/api/v1` : null,
+    portError: publicListener.error,
+    discoveryFile: apiAccess.discoveryPath(app.getPath('userData')),
+  };
+}
+
+// Applies the saved preference: issues or revokes the client token, opens or
+// closes the fixed-port listener and writes or removes the connection file.
+async function applyApiAccess({ regenerate = false } = {}) {
+  const userDataDir = app.getPath('userData');
+  const prefs = apiAccess.readPrefs(userDataDir, tokenCipher);
+  if (prefs.error) logWarn('[fire-tools] API access preference:', prefs.error);
+  try {
+    if (!prefs.enabled || !embeddedServer) {
+      clientApiToken = null;
+      publicListener = { port: null, error: null };
+      if (embeddedServer) await embeddedServer.closePublicListener();
+      apiAccess.removeDiscovery(userDataDir);
+      return apiAccessState(prefs);
+    }
+    if (regenerate || !prefs.token) {
+      prefs.token = apiAccess.newToken();
+      apiAccess.writePrefs(userDataDir, prefs, tokenCipher);
+    }
+    try {
+      await embeddedServer.openPublicListener(prefs.port);
+      publicListener = { port: prefs.port, error: null };
+    } catch (err) {
+      await embeddedServer.closePublicListener();
+      publicListener = { port: null, error: err && err.code === 'EADDRINUSE' ? 'in_use' : messageOf(err) };
+      logWarn(`[fire-tools] API access could not listen on port ${prefs.port}; using the app's own address:`, err);
+    }
+    clientApiToken = prefs.token;
+    const state = apiAccessState(prefs);
+    apiAccess.writeDiscovery(userDataDir, {
+      apiBaseUrl: state.baseUrl,
+      token: prefs.token,
+      stablePort: state.listening,
+      appVersion: app.getVersion(),
+      pid: process.pid,
+      startedAt: new Date().toISOString(),
+    });
+    return state;
+  } catch (err) {
+    // Never leave a token active that clients cannot discover or the user cannot see.
+    clientApiToken = null;
+    logError('[fire-tools] could not apply API access:', err);
+    try { apiAccess.removeDiscovery(userDataDir); } catch { /* reported above */ }
+    return { ...apiAccessState(prefs), ok: false, error: messageOf(err) };
+  }
+}
+
+ipcMain.handle('fire-tools:api-access-get', () => serializeApiAccess(() => applyApiAccess()));
+
+ipcMain.handle('fire-tools:api-access-set', (_event, opts) => serializeApiAccess(async () => {
+  if (!opts || typeof opts !== 'object') return { ok: false, error: 'Expected { enabled?, port? }.' };
+  if (opts.enabled !== undefined && typeof opts.enabled !== 'boolean') return { ok: false, error: 'enabled must be a boolean.' };
+  if (opts.port !== undefined && !apiAccess.isValidPort(opts.port)) {
+    return { ok: false, error: 'Port must be a whole number between 1024 and 65535.' };
+  }
+  const userDataDir = app.getPath('userData');
+  const prefs = apiAccess.readPrefs(userDataDir, tokenCipher);
+  const next = { ...prefs };
+  if (opts.port !== undefined) next.port = opts.port;
+  if (opts.enabled !== undefined) {
+    next.enabled = opts.enabled;
+    // Turning access off revokes the token; turning it on again issues a new one.
+    if (!opts.enabled) next.token = null;
+  }
+  try {
+    apiAccess.writePrefs(userDataDir, next, tokenCipher);
+  } catch (err) {
+    logError('[fire-tools] could not save the API access preference:', err);
+    return { ...apiAccessState(prefs), ok: false, error: messageOf(err) };
+  }
+  logInfo(`[fire-tools] API access ${next.enabled ? 'enabled' : 'disabled'} on port ${next.port}`);
+  return applyApiAccess();
+}));
+
+ipcMain.handle('fire-tools:api-access-regenerate', () => serializeApiAccess(() => {
+  logInfo('[fire-tools] API access token regenerated');
+  return applyApiAccess({ regenerate: true });
+}));
+
+// The token goes straight to the clipboard so it never enters the renderer.
+ipcMain.handle('fire-tools:api-access-copy-token', () => {
+  if (!clientApiToken) return { ok: false, error: 'API access is off.' };
+  clipboard.writeText(clientApiToken);
+  return { ok: true };
 });
 
 ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
@@ -593,6 +733,7 @@ app.whenReady().then(async () => {
   nativeTheme.themeSource = 'dark';
 
   await startEmbedded();
+  await serializeApiAccess(() => applyApiAccess());
   installMenu();
   createWindow();
 
@@ -617,6 +758,12 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (event) => {
+  clientApiToken = null;
+  try {
+    apiAccess.removeDiscovery(app.getPath('userData'));
+  } catch (err) {
+    console.error('[fire-tools] could not remove the API connection file:', err);
+  }
   if (!embeddedServer) return;
   const server = embeddedServer;
   embeddedServer = null;

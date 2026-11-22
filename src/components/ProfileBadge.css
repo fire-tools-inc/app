@@ -18,7 +18,7 @@
   background: var(--accent-surface);
   border: 1px solid var(--border-accent);
   color: var(--accent-primary);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -27,7 +27,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
 }

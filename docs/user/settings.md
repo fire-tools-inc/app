@@ -4,6 +4,13 @@ Everything that controls how Fire Tools looks and behaves lives on this page.
 
 ![Settings](./screenshots/settings.png)
 
+## Search
+
+Type in **Search settings** at the top to find a setting by any word it shows,
+such as "decimal", "token" or "backup". Matching sections open and the others
+are hidden; case and accents are ignored and every word must match. Press
+**Escape** or the clear button to return to the sections you had open.
+
 ## AI features
 
 The **AI features** section at the top has **Disable all AI features** and
@@ -12,17 +19,35 @@ the model is local or hosted. Disabling cancels pending categorization and
 retains endpoint URLs, API keys and model IDs. Local OCR, PDF.js/LiteParse
 parsing, receipt capture/pairing and ordinary imports remain available.
 
-Enabling AI does not send data automatically: each import still requires
-**Use AI categorization** consent. New and legacy settings preserve this
-per-import opt-in behavior; no model is configured by default.
-Expand **Model configuration** here to configure an
-[OpenAI-compatible local or hosted endpoint](../pdf-import.md#optional-openai-compatible-categorization),
-even when experimental document imports or AI are currently disabled.
+Enabling AI does not send data automatically: each document import still
+requires **Use AI categorization** consent, and the Cashflow quick add asks for
+confirmation before **Improve with AI** sends anything. New and legacy settings
+preserve this per-action opt-in behavior; no model is configured by default.
 
-The master preference is saved with the renderer's encrypted settings and
-applies immediately in that app/browser profile. The backend settings API and
-`settings.json` sidecar also retain `aiFeaturesEnabled` on export/import, but
-do not automatically synchronize it with renderer settings.
+Expand **Model configuration** here to choose a **Provider**, even when
+experimental document imports or AI are currently disabled:
+
+- **Local model** (Ollama, LM Studio, llama.cpp, vLLM): runs on your computer
+  and needs no key. Ollama's address is prefilled; LM Studio uses
+  `http://localhost:1234/v1`. If requests are blocked, allow the app in the
+  server's CORS settings (`OLLAMA_ORIGINS`, or **Enable CORS** in LM Studio).
+- **OpenRouter**, **OpenAI**, **Google Gemini** and **Anthropic Claude**:
+  hosted services that need an API key. Fire Tools calls their
+  OpenAI-compatible endpoints directly from this device.
+- **Other OpenAI-compatible endpoint**: any server that implements the
+  chat/completions API and allows requests from the app.
+
+Selecting a provider fills in its base URL, which you can still edit, and
+shows an example model ID. Settings saved before providers existed keep
+working. Hosted providers receive only the descriptions, amounts and
+currencies you choose to send, never your history, files or other data. See
+[AI categorization](../pdf-import.md#optional-openai-compatible-categorization)
+for the endpoint details.
+
+The master preference applies immediately and is saved with your other
+settings in the database, so the backend settings API and `settings.json`
+sidecar show the same value. Model configuration, including API keys, stays on
+this device.
 
 ## Currency
 
@@ -70,6 +95,44 @@ self-hosted builds keep them opt-in (all off until you enable them here).
 - **Clear all data** — wipes your local store (SQLite DB on desktop, encrypted
   cookies in browser). The app reloads empty. There is no undo; export first
   if you might want the data back.
+
+### Database sync
+
+With the desktop app's embedded backend, or a custom backend under
+**Settings > Backend**, the database is the source of truth for settings, the
+FIRE calculator, asset allocation, cashflow and net worth. Changes made
+through the [API](./api-access.md) (for example by a script or an AI agent) appear in the
+open app within a few seconds. The app opens once your data has loaded, or
+after 8 seconds on the copy kept on this device if the database does not
+answer.
+
+- **Database sync** in **Settings > Data** shows whether changes are being
+  saved, are all saved, or are waiting offline, with a **Retry now** button.
+  Changes made offline stay on this device and are sent when the database is
+  reachable again.
+- If this device and the database hold different data, a banner asks which
+  copy to keep: **Use the database copy** or **Replace the database with this
+  device's data**. Nothing is overwritten until you choose. The first time the
+  desktop app syncs data that already exists on this device, it backs up the
+  database before copying the device's data into it.
+- If the database refuses a change (for example an invalid amount), the app
+  shows the saved data again and lists the refused change with the reason.
+- Backend connection settings, the access token, update, logging and AI model
+  settings stay on this device and are never sent to the database.
+
+For a custom backend started with `API_TOKEN`, enter the same value in
+**Access token** next to the backend URL. **Test connection** reports a
+rejected token.
+
+### API access
+
+Desktop only, off by default. **Settings > API access** lets other apps,
+scripts and AI agents on this computer read and update your data through the
+local API. While it is on, the section shows a stable **Address** (port 47820
+by default, changeable), an **Access token** you can copy or regenerate, and a
+**Connection file** holding both for scripts. The token stays valid across
+restarts until you regenerate it or turn access off. See
+[Use the Fire Tools API](./api-access.md).
 
 ## Audit log
 

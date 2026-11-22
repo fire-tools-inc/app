@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { BreakdownResult } from '../types/portfolioBreakdown';
 import { formatCurrency, formatPercent } from '../utils/allocationCalculator';
 import { PrivacyBlur } from './PrivacyBlur';
+import { CHART_THEME } from '../utils/chartColors';
 
 interface BreakdownChartProps {
   title: string;
@@ -47,7 +48,7 @@ function condense(
       label: `Other (${tail.length})`,
       value: otherValue,
       percentage: otherPercent,
-      color: '#9ca3af',
+      color: CHART_THEME.text,
     },
   ];
 }

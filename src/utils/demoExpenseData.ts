@@ -22,6 +22,8 @@ const EXPENSE_TEMPLATES: Array<{
   variance: number; // +/- percentage
   descriptions: string[];
   frequency: 'monthly' | 'occasional' | 'rare';
+  /** More likely around the end-of-year holidays. */
+  seasonal?: boolean;
 }> = [
   {
     category: 'HOUSING',
@@ -90,11 +92,10 @@ const EXPENSE_TEMPLATES: Array<{
     baseAmount: 60,
     variance: 100,
     descriptions: [
-      'Movie tickets - Avoiding spoilers is priceless',
-      'Concert - Live music > Spotify',
       'Gaming - New DLC just dropped',
-      'Museum entry - Culture is important',
-      'Theater tickets - Supporting the arts',
+      'Board game - Family strategy night',
+      'E-books - Knowledge is wealth',
+      'Movie rental - Cinema night at home',
     ],
     frequency: 'occasional',
   },
@@ -107,23 +108,45 @@ const EXPENSE_TEMPLATES: Array<{
       'Netflix + Spotify - The essentials',
       'Streaming services - All of them somehow',
       'Cloud storage - Digital hoarder problems',
-      'Gym membership - Used it twice this month!',
+      'Music streaming - Budgeting soundtrack',
     ],
     frequency: 'monthly',
   },
   {
     category: 'SHOPPING',
     type: 'WANT',
-    baseAmount: 100,
+    baseAmount: 45,
     variance: 80,
     descriptions: [
-      'New clothes - Old ones still work but...',
       'Amazon impulse buy - It was on sale!',
-      'Bookstore haul - Knowledge is wealth',
-      'Tech gadget - Will help with productivity',
+      'Household supplies - Stocking up again',
       'Home decor - Making the space nice',
     ],
     frequency: 'occasional',
+  },
+  {
+    category: 'CLOTHING',
+    type: 'WANT',
+    baseAmount: 35,
+    variance: 60,
+    descriptions: [
+      'New clothes - Old ones still work but...',
+      'Running shoes - Training for the FIRE marathon',
+      'Winter jacket - Layering up to save on heating',
+    ],
+    frequency: 'occasional',
+  },
+  {
+    category: 'ELECTRONICS',
+    type: 'WANT',
+    baseAmount: 120,
+    variance: 70,
+    descriptions: [
+      'Tech gadget - Will help with productivity',
+      'Headphones - Noise cancelling for deep work',
+      'Phone charger - Lost the last one again',
+    ],
+    frequency: 'rare',
   },
   {
     category: 'HEALTHCARE',
@@ -158,6 +181,7 @@ const EXPENSE_TEMPLATES: Array<{
       'Haircut - Looking sharp for Zoom calls',
       'Spa day - Self-care Sunday',
       'Beauty products - Gotta look presentable',
+      'Gym membership - Used it twice this month!',
     ],
     frequency: 'occasional',
   },
@@ -201,17 +225,18 @@ const EXPENSE_TEMPLATES: Array<{
     frequency: 'rare',
   },
   {
-    category: 'HOLIDAYS',
+    category: 'TRAVEL',
     type: 'WANT',
     baseAmount: 400,
     variance: 30,
     descriptions: [
-      'Christmas shopping - Tis the season',
-      'Holiday decorations - Making it festive',
-      'Thanksgiving dinner - Family feast',
-      'New Year celebration - Ringing it in right',
+      'Holiday trip - Home for the festive season',
+      'Holiday train tickets - Booked late again',
+      'Winter holiday - Ski week on a budget',
+      'New Year trip - Ringing it in abroad',
     ],
     frequency: 'rare',
+    seasonal: true,
   },
   {
     category: 'COLLECTIBLES',
@@ -222,7 +247,7 @@ const EXPENSE_TEMPLATES: Array<{
       'Limited edition vinyl - Collector mode activated',
       'Trading cards - Investment strategy?',
       'Comic books - Original issues!',
-      'Vintage poster - Wall needs decoration',
+      'Hobby supplies - Craft time',
     ],
     frequency: 'rare',
   },
@@ -245,9 +270,10 @@ const EXPENSE_TEMPLATES: Array<{
     baseAmount: 70,
     variance: 80,
     descriptions: [
-      'Hobby supplies - Craft time',
-      'Sports equipment - Getting fit',
-      'Photography gear - Capturing memories',
+      'Movie tickets - Avoiding spoilers is priceless',
+      'Museum entry - Culture is important',
+      'Theater tickets - Supporting the arts',
+      'Drinks with friends - Cheaper than therapy',
       'Cooking class - Master chef dreams',
     ],
     frequency: 'occasional',
@@ -266,7 +292,7 @@ const EXPENSE_TEMPLATES: Array<{
     frequency: 'rare',
   },
   {
-    category: 'FEES',
+    category: 'BUSINESS',
     type: 'NEED',
     baseAmount: 30,
     variance: 50,
@@ -414,7 +440,7 @@ function generateMonthlyExpenses(year: number, month: number, useSeed: boolean =
     let shouldInclude = shouldIncludeRand < 0.35;
     
     // Special handling for holiday expenses
-    if (template.category === 'HOLIDAYS') {
+    if (template.seasonal) {
       // Higher chance in December, November, January
       if (month === 12) {
         shouldInclude = true;

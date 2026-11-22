@@ -8,7 +8,9 @@ import type { ParsedTransactionDraft } from '../../../src/types/pdfImport';
 import { expectDiagnostic } from '../../shared/diagnostics';
 import { clearSettings, DEFAULT_SETTINGS, saveSettings } from '../../../src/utils/cookieSettings';
 
-vi.mock('../../../src/utils/apiBase', () => ({ getApiBaseUrl: async () => 'http://localhost:8787/api/v1' }));
+vi.mock('../../../src/utils/apiBase', () => ({
+  getApiBackend: async () => ({ baseUrl: 'http://localhost:8787/api/v1', token: null, mode: 'embedded' }),
+}));
 vi.mock('../../../src/utils/documentImportApi', () => ({
   saveReceipt: vi.fn(), getReceiptFile: vi.fn(), markReceiptReviewed: vi.fn(),
   listReceipts: vi.fn(), deleteReceipt: vi.fn(), downloadReceiptFile: vi.fn(),

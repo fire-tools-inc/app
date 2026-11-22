@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NetWorthTrackerPage } from '../../../src/components/NetWorthTrackerPage';
@@ -17,6 +17,11 @@ vi.mock('../../../src/contexts/AuditLogContext', () => ({
 }));
 vi.mock('../../../src/hooks/useDeferredRender', () => ({ useDeferredRender: () => false }));
 vi.mock('../../../src/components/SharedAssetDialog', () => ({ SharedAssetDialog: () => null }));
+const prices = vi.hoisted(() => ({ fetchAssetPrices: vi.fn() }));
+vi.mock('../../../src/utils/dcaCalculator', async importOriginal => ({
+  ...await importOriginal<typeof import('../../../src/utils/dcaCalculator')>(),
+  fetchAssetPrices: prices.fetchAssetPrices,
+}));
 
 describe('Net Worth persistence', () => {
   beforeEach(() => {
@@ -64,5 +69,32 @@ describe('Net Worth persistence', () => {
     fireEvent.click(toggle);
     expect(storage.saveNetWorthTrackerData.mock.lastCall?.[0].settings.showPensionInNetWorth).toBe(true);
     expect(card('total')).toMatch(/5,000/);
+  });
+
+  it('starts the month from the previous snapshot and applies fetched current prices', async () => {
+    let resolvePrices: (value: Record<string, number | null>) => void = () => {};
+    prices.fetchAssetPrices.mockReturnValue(new Promise(resolve => { resolvePrices = resolve; }));
+    storage.loadNetWorthTrackerData.mockReturnValue({
+      currentYear: 2026, currentMonth: 3, defaultCurrency: 'EUR',
+      years: [{ year: 2026, isArchived: false, months: [{
+        ...createEmptyMonthlySnapshot(2026, 2),
+        assets: [{ id: 'a', ticker: 'syn', name: 'Synthetic fund', shares: 2, pricePerShare: 100, currency: 'EUR', assetClass: 'ETF' }],
+        cashEntries: [{ id: 'c', accountName: 'Demo Bank', accountType: 'CHECKING', balance: 1000, currency: 'EUR' }],
+        operations: [{ id: 'o', date: '2026-02-01', type: 'DIVIDEND', description: 'Synthetic', amount: 1, currency: 'EUR' }],
+      }, createEmptyMonthlySnapshot(2026, 3)] }],
+      settings: { showPensionInNetWorth: true, includeUnrealizedGains: true, syncWithAssetAllocation: false },
+    });
+    render(<MemoryRouter><NetWorthTrackerPage /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: /start month log/i }));
+
+    const march = () => storage.saveNetWorthTrackerData.mock.lastCall?.[0].years[0].months[1];
+    expect(march().assets).toEqual([expect.objectContaining({ name: 'Synthetic fund', pricePerShare: 100, acquisitionPrice: 100 })]);
+    expect(march().assets[0].id).not.toBe('a');
+    expect(march().cashEntries).toEqual([expect.objectContaining({ accountName: 'Demo Bank', balance: 1000 })]);
+    expect(march().operations).toEqual([]);
+    expect(prices.fetchAssetPrices).toHaveBeenCalledWith(['SYN']);
+
+    await act(async () => resolvePrices({ SYN: 125 }));
+    expect(march().assets[0].pricePerShare).toBe(125);
   });
 });

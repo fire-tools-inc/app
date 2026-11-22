@@ -8,7 +8,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(5, 9, 10, 0.72);
   backdrop-filter: blur(8px);
   z-index: 10000;
   display: flex;
@@ -30,7 +30,7 @@
 
 .policy-modal-content {
   background: var(--bg-secondary);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
   max-width: 1000px;
   width: 100%;
   max-height: calc(100vh - 4rem);
@@ -67,15 +67,15 @@
 
 .policy-modal-header h1 {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
   color: var(--text-primary);
 }
 
 .policy-modal-close {
   background: transparent;
-  border: 2px solid var(--border-subtle);
+  border: 1px solid var(--border-input);
   color: var(--text-secondary);
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
   cursor: pointer;
   padding: 0;
   width: 44px;
@@ -83,7 +83,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
@@ -91,7 +91,7 @@
 .policy-modal-close:hover {
   background: var(--error);
   border-color: var(--error);
-  color: white;
+  color: var(--text-inverse);
 }
 
 .policy-modal-close:focus {
@@ -108,7 +108,7 @@
 /* Reuse policy page styles within modal */
 .policy-modal-body .last-updated {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--border-subtle);
@@ -120,21 +120,21 @@
 
 .policy-modal-body .policy-section h2 {
   color: var(--text-primary);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
   margin-bottom: 1rem;
   margin-top: 1.5rem;
 }
 
 .policy-modal-body .policy-section h3 {
   color: var(--text-secondary);
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   margin-bottom: 0.75rem;
   margin-top: 1.25rem;
 }
 
 .policy-modal-body .policy-section h4 {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   margin-bottom: 0.5rem;
   margin-top: 1rem;
 }
@@ -143,7 +143,7 @@
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 1rem;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .policy-modal-body .policy-section ul {
@@ -155,7 +155,7 @@
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 0.5rem;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .policy-modal-body .policy-section a,
@@ -185,7 +185,7 @@
 .policy-modal-body .policy-section code {
   background: var(--bg-tertiary);
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 0.9em;
   color: var(--accent-gold);
@@ -202,12 +202,12 @@
   border-collapse: collapse;
   margin: 1.5rem 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .policy-modal-body .policy-table thead {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   color: var(--text-inverse);
 }
 
@@ -215,14 +215,14 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .policy-modal-body .policy-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .policy-modal-body .policy-table tbody tr:hover {
@@ -243,13 +243,13 @@
   width: 100%;
   border-collapse: collapse;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   min-width: 600px;
 }
 
 .policy-modal-body .cookie-table thead {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   color: var(--text-inverse);
 }
 
@@ -257,7 +257,7 @@
   padding: 0.875rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   white-space: nowrap;
 }
 
@@ -265,13 +265,13 @@
   padding: 0.875rem;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   vertical-align: top;
 }
 
 .policy-modal-body .cookie-table td:first-child {
   font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--accent-gold);
 }
 
@@ -289,19 +289,19 @@
   border: 1px solid var(--border-accent);
   padding: 1.5rem;
   margin: 1.5rem 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .policy-modal-body .info-box h4 {
   color: var(--accent-primary);
   margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
 }
 
 .policy-modal-body .info-box p {
   color: var(--text-secondary);
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 /* Responsive design */
@@ -312,7 +312,7 @@
 
   .policy-modal-content {
     max-height: calc(100vh - 2rem);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
   }
 
   .policy-modal-header {
@@ -321,13 +321,13 @@
   }
 
   .policy-modal-header h1 {
-    font-size: 1.4rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-close {
     width: 40px;
     height: 40px;
-    font-size: 1.5rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-body {
@@ -335,16 +335,16 @@
   }
 
   .policy-modal-body .policy-section h2 {
-    font-size: 1.3rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-body .policy-section h3 {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
   .policy-modal-body .policy-section p,
   .policy-modal-body .policy-section li {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
   }
 
   .policy-modal-body .policy-section ul {
@@ -362,13 +362,13 @@
   }
 
   .policy-modal-header h1 {
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-close {
     width: 36px;
     height: 36px;
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-body {
@@ -376,15 +376,15 @@
   }
 
   .policy-modal-body .policy-section h2 {
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
   }
 
   .policy-modal-body .policy-section h3 {
-    font-size: 1rem;
+    font-size: var(--text-md);
   }
 
   .policy-modal-body .last-updated {
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
   }
 }
 
@@ -395,16 +395,16 @@
   }
 
   .policy-modal-header h1 {
-    font-size: 2rem;
+    font-size: var(--text-2xl);
   }
 
   .policy-modal-body .policy-section h2 {
-    font-size: 1.75rem;
+    font-size: var(--text-2xl);
   }
 
   .policy-modal-body .policy-section p,
   .policy-modal-body .policy-section li {
-    font-size: 1.05rem;
+    font-size: var(--text-lg);
   }
 }
 

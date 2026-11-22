@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { categorizeWithLlm } from '../../../src/utils/llmCategorizer';
+import { categorizeWithLlm, isLlmConfigured } from '../../../src/utils/llmCategorizer';
 import type { LlmCategorizationConfig, ParsedTransactionDraft } from '../../../src/types/pdfImport';
 import { EXPENSE_CATEGORIES } from '../../../src/types/expenseTracker';
 import { clearSettings, DEFAULT_SETTINGS, loadSettings, saveSettings } from '../../../src/utils/cookieSettings';
@@ -150,6 +150,25 @@ describe('categorizeWithLlm', () => {
     expect(options.headers).not.toHaveProperty('Authorization');
     expect(JSON.parse(options.body)).not.toHaveProperty('response_format');
     expect(result[0].suggestedCategory).toBe('GROCERIES');
+  });
+
+  it('sends provider headers and requires a key for hosted provider presets', async () => {
+    const anthropic: LlmCategorizationConfig = {
+      provider: 'anthropic', baseUrl: 'https://api.anthropic.com/v1', apiKey: 'synthetic-key', model: 'synthetic-model',
+    };
+    expect(isLlmConfigured({ ...anthropic, apiKey: ' ' })).toBe(false);
+    expect(isLlmConfigured({ ...anthropic, provider: 'local', baseUrl: 'http://localhost:1234/v1', apiKey: '' })).toBe(true);
+    const fetchImpl = vi.fn().mockImplementation(async () => new Response(JSON.stringify({
+      choices: [{ message: { content: '{"results":[]}' } }],
+    })));
+    await categorizeWithLlm([expenseDraft('a', 'Synthetic merchant')], anthropic, EXPENSE_CATEGORIES, { fetchImpl });
+    const [url, options] = fetchImpl.mock.calls[0];
+    expect(url).toBe('https://api.anthropic.com/v1/chat/completions');
+    expect(options.headers).toMatchObject({
+      Authorization: 'Bearer synthetic-key', 'anthropic-dangerous-direct-browser-access': 'true',
+    });
+    await categorizeWithLlm([expenseDraft('a', 'Synthetic merchant')], config, EXPENSE_CATEGORIES, { fetchImpl });
+    expect(fetchImpl.mock.calls[1][1].headers).not.toHaveProperty('anthropic-dangerous-direct-browser-access');
   });
 
   it('preserves endpoint query parameters and accepts a full chat-completions URL', async () => {

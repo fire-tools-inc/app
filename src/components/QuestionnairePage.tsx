@@ -19,6 +19,7 @@ import {
 import { exportQuestionnaireResultsToCSV } from '../utils/csvExport';
 import { QuestionnaireResponse, QuestionnaireResults } from '../types/questionnaire';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import './QuestionnairePage.css';
 
 export const QuestionnairePage: React.FC = () => {
@@ -299,16 +300,7 @@ export const QuestionnairePage: React.FC = () => {
   return (
     <main className="questionnaire-page" id="main-content" tabIndex={-1}>
       <div className="questionnaire-container">
-        {/* Header */}
-        <div className="questionnaire-header">
-          <h1>
-            <MaterialIcon name="quiz" className="page-header-emoji" />
-            {t('questionnaire.title')}
-          </h1>
-          <p className="questionnaire-subtitle">
-            {t('questionnaire.subtitle')}
-          </p>
-        </div>
+        <PageHeader title={t('questionnaire.title')} description={t('questionnaire.subtitle')} />
 
         {/* Progress Bar */}
         <div className="progress-container">
@@ -327,7 +319,7 @@ export const QuestionnairePage: React.FC = () => {
         <div className="question-card" key={animationKey}>
           <div className="question-category">
             <MaterialIcon name="label" />
-            {currentQuestion.category.replace('_', ' ').toUpperCase()}
+            {currentQuestion.category.replace('_', ' ')}
           </div>
           <h2 className="question-text">{currentQuestion.text}</h2>
           {currentQuestion.description && (

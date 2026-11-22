@@ -12,6 +12,7 @@ tests/
 │   ├── homepage/              # Landing page
 │   ├── fire-calculator/       # FIRE calculator, Monte Carlo, projections
 │   ├── asset-allocation/      # Portfolio, rebalancing, price API, Yahoo metadata
+│   ├── log-month/             # Guided month log (income, expenses, net worth)
 │   ├── net-worth-tracker/     # Net worth tracking
 │   ├── expense-tracker/       # Cashflow, PDF import, categories
 │   ├── questionnaire/         # Onboarding questionnaire

@@ -52,15 +52,16 @@ npx @openapitools/openapi-generator-cli generate \
 | **Base path**    | `/api/v1`                                                                                   |
 | **Versioning**   | URL-versioned. Breaking changes bump the major (`/api/v2`).                                 |
 | **Casing**       | camelCase for all JSON keys (matches `src/types/*.ts`)                                      |
-| **IDs**          | Each resource exposes both a server `id` (integer) and a client-minted `externalId` (string). Clients should always upsert by `externalId`. |
+| **IDs**          | Granular routes expose both a server `id` (integer) and a client-minted `externalId` (string); clients upsert by `externalId`. `/state` documents use the client-minted id as `id`. |
 | **Dates**        | ISO-8601 — `YYYY-MM-DD` for `date`, full `date-time` for timestamps                         |
 | **Money**        | `number` (float) in the account's display currency                                          |
 | **Pagination**   | Opaque cursor: `?cursor=&limit=` on list endpoints that can grow large                      |
 | **Errors**       | `{ "error": { "code": string, "message": string, "details"?: object } }`                    |
 | **Empty 204**    | Used for successful DELETEs                                                                 |
 
-Request bodies are limited to **2 MB**. Malformed JSON returns
-`400 invalid_body`; an oversized body returns `413 payload_too_large`.
+Request bodies are limited to **2 MB**, except `/state/{domain}` which
+accepts up to **50 MB**. Malformed JSON returns `400 invalid_body`; an
+oversized body returns `413 payload_too_large`.
 Unexpected failures return a generic `500 internal_error`, with details
 recorded in the server logs. Expense and income amounts must be finite,
 non-negative JSON numbers, and dates must be valid calendar dates.
@@ -72,12 +73,41 @@ attachments.
 Replacing assets, transactions or custom categories is transactional: if an
 insertion fails, the previously saved record is retained.
 
+## What the app shows
+
+When the app is connected to a backend, the database is the source of truth
+for five domains: `settings`, `calculator`, `assetAllocation`,
+`expenseTracker` and `netWorth`. The app polls `GET /sync/status` and reloads
+a domain whose revision changed, so writes through the granular routes or
+`/state/{domain}` appear within about 3 seconds.
+
+| Route | Purpose |
+|-------|---------|
+| `GET /sync/status` | `{ instanceId, domains: { <domain>: { revision, initialized } } }` |
+| `GET /state/{domain}` | `{ domain, instanceId, revision, initialized, data }`; `data` uses the app's own document shape, or `null` when the domain was never written |
+| `PATCH /state/{domain}` | Merge a Changeset (`set`, `upsert`, `delete`, `initialize`) in one transaction |
+| `PUT /state/{domain}` | Replace the domain with a Changeset in one transaction |
+
+Changeset items are the app's entities (string `id`) plus `position` and, for
+monthly items, `year`/`month`. Any invalid item rejects the whole request with
+`400 invalid_body` (or `409 conflict`) and `details: { collection, key, message }`;
+nothing is written. See the `Changeset` schema in [`openapi.yaml`](./openapi.yaml)
+for the collections of each domain.
+
+Questionnaire results, notifications, Monte Carlo runs, portfolio metadata,
+the asset allocation config and users are stored in the database only and are
+not shown in the app.
+
 ## Auth
 
-The spec declares a reserved `bearerAuth` security scheme. **Single-user
-deployments leave it off** — every request runs as the bootstrap user
-(`id = 1`). Multi-tenant deployers can flip it on and the schema is already
-multi-tenant — see [`../database/README.md`](../database/README.md#multi-tenant-migration-path).
+Without a configured token every request runs unauthenticated as the
+bootstrap user (`id = 1`). When the server has a token (`API_TOKEN` for a
+standalone server; the desktop app generates one per launch for its embedded
+backend), every `/api/v1` route except `GET /health` requires
+`Authorization: Bearer <token>` and otherwise answers `401 unauthorized`.
+CORS preflight requests do not need the token. The token is not an account
+system: the schema is multi-tenant ready, see
+[`../database/README.md`](../database/README.md#multi-tenant-migration-path).
 
 ## Mapping to frontend types
 

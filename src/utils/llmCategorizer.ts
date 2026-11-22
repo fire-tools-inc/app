@@ -4,6 +4,7 @@ import type { LlmCategorizationConfig, ParsedTransactionDraft } from '../types/p
 import { logger } from './logger';
 import { loadSettings, subscribeToSettingsChanges } from './cookieSettings';
 import { IS_DEMO_MODE } from './demoMode';
+import { isLlmApiKeyMissing, llmProviderHeaders } from './llmProviders';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const resultItemSchema = z.object({
@@ -22,7 +23,8 @@ const resultsSchema = z.object({ results: z.array(z.unknown()) });
 
 export function isLlmConfigured(config: LlmCategorizationConfig | undefined): config is LlmCategorizationConfig {
   return Boolean(typeof config?.baseUrl === 'string' && config.baseUrl.trim()
-    && typeof config?.model === 'string' && config.model.trim());
+    && typeof config?.model === 'string' && config.model.trim()
+    && !isLlmApiKeyMissing(config));
 }
 
 function completionsUrl(baseUrl: string): string {
@@ -76,7 +78,7 @@ export async function categorizeWithLlm(
 
   try {
     if (!fetchImpl) throw new Error('The model cannot be contacted in this environment.');
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { ...llmProviderHeaders(config), 'Content-Type': 'application/json' };
     if (config.apiKey?.trim()) headers.Authorization = `Bearer ${config.apiKey.trim()}`;
     const response = await fetchImpl(completionsUrl(config.baseUrl), {
       method: 'POST',

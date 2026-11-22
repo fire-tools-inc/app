@@ -21,7 +21,7 @@ services. See [Security & Privacy](#security--privacy) for the boundaries.
 > data and do not persist financial edits. Running a backend does not turn the
 > browser demo into the full desktop app.
 
-![Fire Tools dashboard showing net worth history, portfolio value and FIRE progress](docs/user/screenshots/homepage.png)
+![Fire Tools dashboard showing net worth, portfolio value, monthly balance, FIRE progress and the monthly check-in](docs/user/screenshots/homepage.png)
 
 *Dashboard preview with synthetic demo data.*
 
@@ -38,7 +38,8 @@ endpoint. Always verify with your broker. Request limits are shown in
 | Feature | Description |
 |---------|-------------|
 | **Home dashboard** | Saved net worth history, current allocation, monthly cashflow, FIRE-target progress, upcoming commitments and savings goals. [Guide](docs/user/homepage.md). |
-| **Dark glass workspace** | Branded, collapsible sidebar, teal accents and readable financial data. Collapse to named icons for more page space; dark mode remains the default. |
+| **Log month** | A guided monthly check-in from the dashboard: income, expenses, investments and pension changes, then a review of savings rate and net worth. Every step is optional. [Guide](docs/user/homepage.md#log-month). |
+| **Calm dark workspace** | Consistent page headers, readable tables and tabular figures, a collapsible sidebar and teal accents for actions and state. Dark mode remains the default. |
 | **FIRE Calculator** | Projections based on savings, expenses and expected returns; **Standard, Lean, Fat, Barista and Coast** variants; saved scenarios and shareable input URLs. [Guide](docs/user/fire-calculator.md). |
 | **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age. |
 | **Monte Carlo Simulations** | Up to 100,000 cancellable background-worker runs, volatility, black-swan modelling and opt-in detailed logs. [Guide](docs/user/monte-carlo.md). |
@@ -49,12 +50,14 @@ endpoint. Always verify with your broker. Request limits are shown in
 | **Portfolio Backtest** | Buy-and-hold historical analysis with return, volatility and drawdown metrics. Missing market history uses labelled, deterministic asset-class assumptions. [Guide](docs/user/backtesting.md). |
 | **Debt Payoff Calculator** | Snowball/avalanche strategies, fixed-budget or fixed-timeline modes, and a repayment timeline chart. |
 | **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis, and YTD/yearly/custom-range totals and averages. [Guide](docs/user/expense-tracker.md). |
+| **Paste expenses** | Paste a month of expenses as plain text. A local BM25 matcher suggests categories from your own history and a multilingual vocabulary; AI refinement is optional and per-action. [Guide](docs/user/expense-tracker.md). |
 | **Cashflow Planning** | Recurring bills/income, explicit payment confirmation, and 30/90/365-day cashflow forecasts. [Guide](docs/user/cashflow-planning.md). |
 | **Savings Goals** | Manually earmarked sinking funds, deadlines and required monthly contributions, without changing net worth. |
 | **Offline Import Rules** | Review-first local categorization rules; manual overrides win and matched rows need no AI. |
 | **Net Worth Tracker** | Monthly snapshots of assets, cash and pensions with historical charts. [Guide](docs/user/net-worth-tracker.md). |
 | **Guided setup** | A questionnaire that helps populate calculator inputs and allocation targets. [Guide](docs/user/questionnaire.md). |
 | **JSON / CSV Export and Import** | Portable calculator, allocation, cashflow and net-worth data; see [backup limitations](#data-storage-and-backups). |
+| **Local API** | Read and update your data from scripts, other apps or AI agents (GitHub Copilot CLI, Claude Code and others) through a stable local address and token; changes appear in the app within seconds. Off by default, with a published [agent skill](.github/skills/using-fire-tools/SKILL.md) for onboarding and monthly logging. [Guide](docs/user/api-access.md). |
 | **Spreadsheet Import** | Backfill years of net worth, cash flow, allocation targets and FIRE settings from an `.xlsx` workbook, detailed expenses from a yearly workbook with a sheet per month, and investment operations with average cost. Downloadable templates and AI agent prompts included. [Guide](docs/user/spreadsheet-import.md). |
 | **Languages** | English, Italian, French, German and Spanish, selected in Settings. Sidebar navigation labels remain English. |
 | **Build Info** | Version, commit hash and dependency versions in **Settings > About**. |
@@ -121,8 +124,9 @@ this command for an untrusted download or disable Gatekeeper globally.
 
 | Setting | Behavior |
 |---------|----------|
-| **Backend** | Uses the embedded desktop backend by default. **Custom URL** connects backend-supported features to your own server; enter its origin, such as `http://localhost:8080`, without `/api/v1`, then test the connection. It does not migrate renderer financial stores. |
-| **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing and ordinary imports work with AI disabled. |
+| **Backend** | Uses the embedded desktop backend by default. **Custom URL** connects backend-supported features to your own server; enter its origin, such as `http://localhost:8080`, without `/api/v1`, then test the connection, plus its access token when the server sets `API_TOKEN`. The connected database becomes the source of truth for your data. |
+| **API access** | Desktop only, off by default. Serves the local API on a fixed loopback port (47820, changeable) with a token that lasts until you regenerate it or turn access off, for any app, script or agent running as your user. [Details](docs/user/api-access.md). |
+| **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. Choose a provider preset (local model, OpenRouter, OpenAI, Gemini, Anthropic or a custom OpenAI-compatible endpoint). No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing, paste-expense matching and ordinary imports work with AI disabled. [Details](docs/user/settings.md). |
 | **Experimental features** | Opt in to Portfolio Breakdown and document/receipt imports. |
 | **Security** | Optional desktop SQLite passphrase encryption uses the OS secure store; Linux needs an available keyring. It does not encrypt renderer storage or exports. [Details](docs/security/passphrase.md). |
 | **Updates & Backups** | Packaged desktop apps check GitHub Releases by default; automatic downloads are off. Configure checks, downloads and database snapshots here. [Details](docs/engineering/auto-updater.md). |
@@ -255,8 +259,8 @@ Financial data is local-first, but **not all desktop data lives in SQLite**:
 
 | Store | Current responsibility |
 |-------|------------------------|
-| **Renderer stores** | Calculator, allocation and tracker data use encrypted SafeCookies/localStorage helpers. Electron uses localStorage as authoritative; cashflow and net-worth histories use localStorage rather than size-limited cookies. |
-| **Backend SQLite** | Owns its API records, receipt originals and supported preferences. Desktop uses `firetools.db` in the OS user-data directory; Docker uses the `firetools-data` volume. Existing renderer financial stores are not automatically migrated or synchronized into it. |
+| **Backend SQLite** | Source of truth for preferences, FIRE calculator inputs, asset allocation, cashflow and net worth whenever a backend is reachable, plus receipt originals. Desktop uses `firetools.db` in the OS user-data directory; Docker uses the `firetools-data` volume. The first start after upgrading backs up the database and moves existing device data into it. [How sync works](docs/engineering/local-api.md#storage-model). |
+| **Renderer stores** | Encrypted SafeCookies/localStorage keep a cache of those domains and an outbox of unsent changes. They stay authoritative only in a browser without a backend, and for scenarios, debt payoff, notifications and device settings. |
 
 Settings' combined JSON export covers **FIRE calculator inputs, asset
 allocation, cashflow (including planning/rules) and net worth**. Separate
@@ -264,8 +268,8 @@ CSV/JSON exports are also available. It is not a complete profile backup:
 debts, saved scenarios, app settings and receipt originals are outside that
 combined export. Receipt originals need a backend database backup.
 
-Database snapshots and passphrase encryption do **not** cover renderer
-localStorage. Keep financial exports as well as appropriate profile/database
+Database snapshots and passphrase encryption cover the synchronized domains
+but **not** the renderer-only stores. Keep financial exports as well as appropriate profile/database
 backups; protect exported files because they are not encrypted by the app.
 See [storage details](docs/database/README.md) and
 [receipt retention](docs/pdf-import.md).
@@ -286,8 +290,9 @@ See [storage details](docs/database/README.md) and
 - **External requests:** market prices, metadata, exchange rates and backtests
   use Yahoo Finance; allocation can refresh prices when opened. Packaged market
   requests use the third-party `corsproxy.io` proxy. Model categorization sends
-  selected import data to your configured endpoint only with per-action
-  consent. Packaged desktop update checks contact GitHub by default.
+  selected import data (descriptions, amounts and currencies) to your
+  configured endpoint only with per-action consent; your expense history
+  never leaves the device. Packaged desktop update checks contact GitHub by default.
 - **Encryption boundaries:** renderer AES storage uses a key shipped in the
   app, so it is not protection against JavaScript execution or a compromised
   local account. Optional [desktop passphrase encryption](docs/security/passphrase.md)

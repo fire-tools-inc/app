@@ -69,6 +69,10 @@ CREATE TABLE IF NOT EXISTS user_settings (
     llm_base_url                     TEXT,
     llm_api_key                      TEXT,                          -- store encrypted server-side
     llm_model                        TEXT,
+    llm_provider                     TEXT                           -- LlmProvider preset; NULL for older configs
+        CHECK (llm_provider IS NULL OR llm_provider IN ('local','openrouter','openai','gemini','anthropic','custom')),
+    language                         TEXT                           -- UI language; NULL keeps the client's choice
+        CHECK (language IS NULL OR language IN ('en','it','fr','de','es')),
     updated_at                       TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -149,6 +153,12 @@ CREATE TABLE IF NOT EXISTS calculator_inputs (
     use_asset_allocation_value       INTEGER NOT NULL DEFAULT 0 CHECK (use_asset_allocation_value IN (0,1)),
     use_expense_tracker_expenses     INTEGER NOT NULL DEFAULT 0 CHECK (use_expense_tracker_expenses IN (0,1)),
     use_expense_tracker_income       INTEGER NOT NULL DEFAULT 0 CHECK (use_expense_tracker_income IN (0,1)),
+    fire_type                        TEXT    NOT NULL DEFAULT 'standard'
+        CHECK (fire_type IN ('standard','lean','barista','coast','fat')),
+    lean_expense_multiplier          REAL    NOT NULL DEFAULT 0.7,
+    fat_expense_multiplier           REAL    NOT NULL DEFAULT 2,
+    barista_annual_income            REAL    NOT NULL DEFAULT 20000,
+    coast_target_age                 INTEGER NOT NULL DEFAULT 65,
     updated_at                       TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -232,11 +242,22 @@ CREATE TABLE IF NOT EXISTS assets (
     mortgage_start_date         TEXT,
     mortgage_property_value     REAL,
     mortgage_lender             TEXT,
+    position              INTEGER,                     -- list order in the app; NULL sorts last
     created_at            TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_assets_user_class ON assets (user_id, asset_class);
+
+CREATE TABLE IF NOT EXISTS asset_class_targets (
+    user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    asset_class    TEXT    NOT NULL
+        CHECK (asset_class IN ('STOCKS','BONDS','CASH','CRYPTO','REAL_ESTATE',
+                               'COMMODITIES','VEHICLE','COLLECTIBLE','ART')),
+    target_mode    TEXT    NOT NULL CHECK (target_mode IN ('PERCENTAGE','OFF','SET')),
+    target_percent REAL,
+    PRIMARY KEY (user_id, asset_class)
+);
 
 -- -----------------------------------------------------------------------------
 -- 5. Expense / Income Tracker
@@ -297,6 +318,7 @@ CREATE TABLE IF NOT EXISTS expense_entries (
     -- Optional price × times breakdown; when present, amount = unit_amount × quantity
     unit_amount        REAL CHECK (unit_amount IS NULL OR unit_amount > 0),
     quantity           REAL CHECK (quantity IS NULL OR quantity > 0),
+    position           INTEGER,
     CHECK ((schedule_id IS NULL AND scheduled_date IS NULL)
         OR (schedule_id IS NOT NULL AND scheduled_date IS NOT NULL)),
     UNIQUE (user_id, external_id),
@@ -325,6 +347,7 @@ CREATE TABLE IF NOT EXISTS income_entries (
     is_recurring       INTEGER NOT NULL DEFAULT 0 CHECK (is_recurring IN (0,1)),
     schedule_id        TEXT,
     scheduled_date     TEXT,
+    position           INTEGER,
     CHECK ((schedule_id IS NULL AND scheduled_date IS NULL)
         OR (schedule_id IS NOT NULL AND scheduled_date IS NOT NULL)),
     UNIQUE (user_id, external_id)
@@ -342,6 +365,7 @@ CREATE TABLE IF NOT EXISTS category_budgets (
     monthly_budget     REAL    NOT NULL,
     currency           TEXT
         CHECK (currency IS NULL OR currency IN ('EUR','USD','GBP','CHF','JPY','AUD','CAD')),
+    position           INTEGER,
     UNIQUE (user_id, expense_month_id, category)
 );
 
@@ -353,6 +377,7 @@ CREATE TABLE IF NOT EXISTS custom_categories (
     icon                   TEXT    NOT NULL,
     color                  TEXT    NOT NULL,
     default_expense_type   TEXT    NOT NULL CHECK (default_expense_type IN ('NEED','WANT')),
+    position               INTEGER,
     UNIQUE (user_id, external_id)
 );
 
@@ -363,7 +388,31 @@ CREATE TABLE IF NOT EXISTS category_overrides (
     name         TEXT,
     icon         TEXT,
     color        TEXT,
+    position     INTEGER,
     UNIQUE (user_id, category_id)
+);
+
+-- Values changed by migration 0008 (FEES -> BUSINESS, HOLIDAYS -> TRAVEL), kept
+-- so its rollback can restore rows that were not edited after the merge.
+CREATE TABLE IF NOT EXISTS expense_category_merge_backup (
+    id               INTEGER PRIMARY KEY,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source_table     TEXT    NOT NULL,
+    record_key       TEXT,
+    legacy_row_id    INTEGER,
+    expense_month_id INTEGER,
+    legacy_value     TEXT    NOT NULL,
+    merged_value     TEXT,
+    amount           REAL,
+    currency         TEXT,
+    target_row_id    INTEGER,
+    target_amount    REAL,
+    target_currency  TEXT,
+    merged_amount    REAL,
+    summed           INTEGER NOT NULL DEFAULT 0 CHECK (summed IN (0, 1)),
+    name             TEXT,
+    icon             TEXT,
+    color            TEXT
 );
 
 -- -----------------------------------------------------------------------------
@@ -450,6 +499,7 @@ CREATE TABLE IF NOT EXISTS asset_holdings (
     mortgage_monthly_payment    REAL,
     mortgage_start_date         TEXT,
     mortgage_lender             TEXT,
+    position                    INTEGER,
     UNIQUE (user_id, external_id),
     -- Ensure the referenced month belongs to the same user (tenant isolation)
     FOREIGN KEY (user_id, net_worth_month_id)
@@ -477,6 +527,7 @@ CREATE TABLE IF NOT EXISTS cash_entries (
     target_percent      REAL,
     target_value        REAL,
     sync_sub_asset_type TEXT,
+    position            INTEGER,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_cash_entries_month ON cash_entries (net_worth_month_id);
@@ -493,6 +544,7 @@ CREATE TABLE IF NOT EXISTS pension_entries (
     pension_type        TEXT    NOT NULL
         CHECK (pension_type IN ('STATE','PRIVATE','EMPLOYER','OTHER')),
     note                TEXT,
+    position            INTEGER,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_pension_entries_month ON pension_entries (net_worth_month_id);
@@ -512,6 +564,7 @@ CREATE TABLE IF NOT EXISTS debt_entries (
         CHECK (currency IN ('EUR','USD','GBP','CHF','JPY','AUD','CAD')),
     note                TEXT,
     creditor            TEXT,
+    position            INTEGER,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_debt_entries_month ON debt_entries (net_worth_month_id);
@@ -530,6 +583,7 @@ CREATE TABLE IF NOT EXISTS tax_entries (
         CHECK (currency IN ('EUR','USD','GBP','CHF','JPY','AUD','CAD')),
     note                TEXT,
     is_paid             INTEGER NOT NULL DEFAULT 0 CHECK (is_paid IN (0,1)),
+    position            INTEGER,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_tax_entries_month ON tax_entries (net_worth_month_id);
@@ -551,6 +605,7 @@ CREATE TABLE IF NOT EXISTS financial_operations (
     related_asset_external_id   TEXT,    -- soft FK (client-minted id)
     related_account_external_id TEXT,
     note                TEXT,
+    position            INTEGER,
     UNIQUE (user_id, external_id)
 );
 CREATE INDEX IF NOT EXISTS idx_financial_ops_month_date
@@ -693,6 +748,363 @@ CREATE TABLE IF NOT EXISTS audit_log (
     created_at   TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log (user_id, created_at);
+
+-- -----------------------------------------------------------------------------
+-- 13. Backend synchronization (migration 0010)
+-- -----------------------------------------------------------------------------
+-- The app reads settings, calculator inputs, asset allocation, cashflow and
+-- net worth from these tables through /state/{domain}. Triggers bump the
+-- domain revision on every write so clients can poll /sync/status. The
+-- instance id and triggers use SQLite syntax; see README for PostgreSQL.
+
+CREATE TABLE IF NOT EXISTS sync_meta (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+INSERT INTO sync_meta (key, value)
+SELECT 'instance_id', lower(hex(randomblob(16)))
+WHERE NOT EXISTS (SELECT 1 FROM sync_meta WHERE key = 'instance_id');
+
+CREATE TABLE IF NOT EXISTS sync_domains (
+    user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    domain         TEXT    NOT NULL
+        CHECK (domain IN ('settings','calculator','assetAllocation','expenseTracker','netWorth')),
+    revision       INTEGER NOT NULL DEFAULT 0,
+    initialized_at TEXT,
+    updated_at     TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, domain)
+);
+
+CREATE TRIGGER IF NOT EXISTS sync_user_settings_insert AFTER INSERT ON user_settings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'settings', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_user_settings_update AFTER UPDATE ON user_settings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'settings', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_user_settings_delete AFTER DELETE ON user_settings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'settings', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_calculator_inputs_insert AFTER INSERT ON calculator_inputs BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'calculator', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_calculator_inputs_update AFTER UPDATE ON calculator_inputs BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'calculator', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_calculator_inputs_delete AFTER DELETE ON calculator_inputs BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'calculator', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_assets_insert AFTER INSERT ON assets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_assets_update AFTER UPDATE ON assets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_assets_delete AFTER DELETE ON assets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_class_targets_insert AFTER INSERT ON asset_class_targets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_class_targets_update AFTER UPDATE ON asset_class_targets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_class_targets_delete AFTER DELETE ON asset_class_targets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'assetAllocation', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_tracker_config_insert AFTER INSERT ON expense_tracker_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_tracker_config_update AFTER UPDATE ON expense_tracker_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_tracker_config_delete AFTER DELETE ON expense_tracker_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_planning_insert AFTER INSERT ON expense_planning BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_planning_update AFTER UPDATE ON expense_planning BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_planning_delete AFTER DELETE ON expense_planning BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_years_insert AFTER INSERT ON expense_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_years_update AFTER UPDATE ON expense_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_years_delete AFTER DELETE ON expense_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_months_insert AFTER INSERT ON expense_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_months_update AFTER UPDATE ON expense_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_months_delete AFTER DELETE ON expense_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_entries_insert AFTER INSERT ON expense_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_entries_update AFTER UPDATE ON expense_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_expense_entries_delete AFTER DELETE ON expense_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_income_entries_insert AFTER INSERT ON income_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_income_entries_update AFTER UPDATE ON income_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_income_entries_delete AFTER DELETE ON income_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_budgets_insert AFTER INSERT ON category_budgets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_budgets_update AFTER UPDATE ON category_budgets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_budgets_delete AFTER DELETE ON category_budgets BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_custom_categories_insert AFTER INSERT ON custom_categories BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_custom_categories_update AFTER UPDATE ON custom_categories BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_custom_categories_delete AFTER DELETE ON custom_categories BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_overrides_insert AFTER INSERT ON category_overrides BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_overrides_update AFTER UPDATE ON category_overrides BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_category_overrides_delete AFTER DELETE ON category_overrides BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'expenseTracker', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_config_insert AFTER INSERT ON net_worth_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_config_update AFTER UPDATE ON net_worth_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_config_delete AFTER DELETE ON net_worth_config BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_years_insert AFTER INSERT ON net_worth_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_years_update AFTER UPDATE ON net_worth_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_years_delete AFTER DELETE ON net_worth_years BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_months_insert AFTER INSERT ON net_worth_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_months_update AFTER UPDATE ON net_worth_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_net_worth_months_delete AFTER DELETE ON net_worth_months BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_holdings_insert AFTER INSERT ON asset_holdings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_holdings_update AFTER UPDATE ON asset_holdings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_asset_holdings_delete AFTER DELETE ON asset_holdings BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_cash_entries_insert AFTER INSERT ON cash_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_cash_entries_update AFTER UPDATE ON cash_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_cash_entries_delete AFTER DELETE ON cash_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_pension_entries_insert AFTER INSERT ON pension_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_pension_entries_update AFTER UPDATE ON pension_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_pension_entries_delete AFTER DELETE ON pension_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_debt_entries_insert AFTER INSERT ON debt_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_debt_entries_update AFTER UPDATE ON debt_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_debt_entries_delete AFTER DELETE ON debt_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_tax_entries_insert AFTER INSERT ON tax_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_tax_entries_update AFTER UPDATE ON tax_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_tax_entries_delete AFTER DELETE ON tax_entries BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_financial_operations_insert AFTER INSERT ON financial_operations BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_financial_operations_update AFTER UPDATE ON financial_operations BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT NEW.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
+CREATE TRIGGER IF NOT EXISTS sync_financial_operations_delete AFTER DELETE ON financial_operations BEGIN
+    INSERT INTO sync_domains (user_id, domain, revision)
+    SELECT OLD.user_id, 'netWorth', 1 WHERE EXISTS (SELECT 1 FROM users WHERE id = OLD.user_id)
+    ON CONFLICT (user_id, domain) DO UPDATE SET revision = revision + 1, updated_at = CURRENT_TIMESTAMP;
+END;
 
 -- =============================================================================
 -- End of schema

@@ -52,6 +52,12 @@ contextBridge.exposeInMainWorld('fireTools', {
     create: (opts) => ipcRenderer.invoke('fire-tools:backups-create', opts),
     restore: (opts) => ipcRenderer.invoke('fire-tools:backups-restore', opts),
   },
+  apiAccess: {
+    get: () => ipcRenderer.invoke('fire-tools:api-access-get'),
+    set: (opts) => ipcRenderer.invoke('fire-tools:api-access-set', opts),
+    regenerateToken: () => ipcRenderer.invoke('fire-tools:api-access-regenerate'),
+    copyToken: () => ipcRenderer.invoke('fire-tools:api-access-copy-token'),
+  },
   logs: {
     append: (line) => ipcRenderer.invoke('fire-tools:log-append', line),
     setMaxMb: (mb) => ipcRenderer.invoke('fire-tools:log-set-max-mb', mb),

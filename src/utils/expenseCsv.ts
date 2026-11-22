@@ -6,6 +6,7 @@ import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '../types/currency'
 import { expensePlanningSchema, validateExpenseTrackerPlanning } from './expensePlanning';
 import { isValidCalendarDate } from './dateValidation';
 import { hasValidAmountBreakdown } from './expenseCalculator';
+import { isLegacyCategoryId, normalizeExpenseTrackerCategories } from './expenseCategoryAliases';
 
 const currency = z.custom<SupportedCurrency>(value =>
   typeof value === 'string' && SUPPORTED_CURRENCIES.some(item => item.code === value));
@@ -19,7 +20,8 @@ const metadataSchema = z.object({
     id: z.string().min(1), name: z.string(), icon: z.string(), color: z.string(), defaultExpenseType: z.enum(['NEED', 'WANT']),
   }).strict()).optional(),
   categoryOverrides: z.array(z.object({
-    id: z.custom<ExpenseCategory>(value => typeof value === 'string' && EXPENSE_CATEGORIES.some(item => item.id === value)),
+    id: z.custom<ExpenseCategory>(value => typeof value === 'string'
+      && (EXPENSE_CATEGORIES.some(item => item.id === value) || isLegacyCategoryId(value))),
     name: z.string().optional(), icon: z.string().optional(), color: z.string().optional(),
   }).strict()).optional(),
   planning: expensePlanningSchema.optional(),
@@ -190,6 +192,7 @@ export function importExpenseTrackerFromCSV(csv: string): ExpenseTrackerData {
     ...(metadata?.customCategories ? { customCategories: metadata.customCategories } : {}),
     ...(metadata?.categoryOverrides ? { categoryOverrides: metadata.categoryOverrides } : {}),
   };
-  validateExpenseTrackerPlanning(result);
-  return result;
+  const migrated = normalizeExpenseTrackerCategories(result);
+  validateExpenseTrackerPlanning(migrated);
+  return migrated;
 }

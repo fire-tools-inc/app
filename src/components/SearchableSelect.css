@@ -19,9 +19,9 @@
 .searchable-select-trigger {
   width: 100%;
   padding: 0.6rem;
-  border: 2px solid var(--border-subtle);
-  border-radius: 6px;
-  font-size: 1rem;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   cursor: pointer;
@@ -37,7 +37,7 @@
 
 .searchable-select-trigger.open {
   border-color: var(--accent-primary);
-  box-shadow: var(--glow-primary, 0 0 0 3px rgba(102, 126, 234, 0.25));
+  box-shadow: var(--glow-primary, 0 0 0 3px rgba(101, 212, 196, 0.25));
 }
 
 .searchable-select-trigger:focus {
@@ -63,7 +63,7 @@
 }
 
 .searchable-select-arrow {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   transition: transform 0.2s;
 }
@@ -79,8 +79,8 @@
   right: 0;
   margin-top: 4px;
   background: var(--bg-elevated);
-  border: 2px solid var(--border-subtle);
-  border-radius: 6px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
   z-index: 1100;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
@@ -95,8 +95,8 @@
   width: 100%;
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
   background: var(--bg-tertiary);
   color: var(--text-primary);
   outline: none;
@@ -129,21 +129,20 @@
 }
 
 .searchable-select-option:hover {
-  background: rgba(102, 126, 234, 0.15);
+  background: rgba(101, 212, 196, 0.15);
 }
 
 .searchable-select-option.selected {
-  background: rgba(102, 126, 234, 0.25);
+  background: rgba(101, 212, 196, 0.25);
   color: var(--accent-primary);
 }
 
 .searchable-select-option .material-symbols-outlined {
   color: var(--accent-primary);
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
 }
 
 .searchable-select-option.custom-option {
-  border-left: 3px solid var(--accent-primary);
   padding-left: 0.75rem;
 }
 
@@ -151,5 +150,5 @@
   padding: 0.75rem;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }

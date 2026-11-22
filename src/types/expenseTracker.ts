@@ -10,26 +10,45 @@ export type ExpenseCategory =
   | 'NO_CATEGORY'
   | 'HOUSING'
   | 'UTILITIES'
-  | 'TRANSPORTATION'
   | 'GROCERIES'
   | 'DINING_OUT'
+  | 'TRANSPORTATION'
   | 'HEALTHCARE'
-  | 'INSURANCE'
-  | 'ENTERTAINMENT'
-  | 'SHOPPING'
   | 'PERSONAL_CARE'
-  | 'EDUCATION'
+  | 'INSURANCE'
   | 'DEBT_PAYMENTS'
+  | 'EDUCATION'
   | 'BUSINESS'
-  | 'FEES'
+  | 'SHOPPING'
+  | 'CLOTHING'
+  | 'ELECTRONICS'
+  | 'ENTERTAINMENT'
   | 'LIFESTYLE_LEISURE'
-  | 'COLLECTIBLES'
   | 'MUSIC'
+  | 'COLLECTIBLES'
   | 'TRAVEL'
-  | 'HOLIDAYS'
-  | 'GIFTS_DONATIONS'
   | 'SUBSCRIPTIONS'
+  | 'GIFTS_DONATIONS'
   | 'OTHER';
+
+/** Built-in category ids removed by the category merge, kept for reading older data. */
+export type LegacyExpenseCategory = 'FEES' | 'HOLIDAYS';
+
+/**
+ * Retired built-in ids and the category that absorbed them. Every boundary
+ * that reads saved or imported cashflow data maps these ids forward.
+ */
+export const LEGACY_CATEGORY_ALIASES: Readonly<Record<LegacyExpenseCategory, ExpenseCategory>> = {
+  FEES: 'BUSINESS',
+  HOLIDAYS: 'TRAVEL',
+};
+
+/** Resolve a retired built-in id to its current category; other ids are returned unchanged. */
+export function resolveCategoryAlias(category: string): string {
+  return Object.prototype.hasOwnProperty.call(LEGACY_CATEGORY_ALIASES, category)
+    ? LEGACY_CATEGORY_ALIASES[category as LegacyExpenseCategory]
+    : category;
+}
 
 // Needs vs Wants classification for 50/30/20 rule
 export type ExpenseType = 'NEED' | 'WANT';
@@ -244,26 +263,26 @@ export interface CategoryInfo {
 export const EXPENSE_CATEGORIES: CategoryInfo[] = [
   { id: NO_CATEGORY_ID, name: 'No Category', icon: 'help_outline', defaultExpenseType: 'WANT', isProtected: true },
   { id: 'HOUSING', name: 'Housing', icon: 'home', defaultExpenseType: 'NEED' },
-  { id: 'UTILITIES', name: 'Utilities', icon: 'lightbulb', defaultExpenseType: 'NEED' },
-  { id: 'TRANSPORTATION', name: 'Transportation', icon: 'directions_car', defaultExpenseType: 'NEED' },
+  { id: 'UTILITIES', name: 'Utilities & Bills', icon: 'lightbulb', defaultExpenseType: 'NEED' },
   { id: 'GROCERIES', name: 'Groceries', icon: 'shopping_cart', defaultExpenseType: 'NEED' },
   { id: 'DINING_OUT', name: 'Dining Out', icon: 'restaurant', defaultExpenseType: 'WANT' },
-  { id: 'HEALTHCARE', name: 'Healthcare', icon: 'local_hospital', defaultExpenseType: 'NEED' },
-  { id: 'INSURANCE', name: 'Insurance', icon: 'security', defaultExpenseType: 'NEED' },
-  { id: 'ENTERTAINMENT', name: 'Entertainment', icon: 'movie', defaultExpenseType: 'WANT' },
-  { id: 'SHOPPING', name: 'Shopping', icon: 'shopping_bag', defaultExpenseType: 'WANT' },
+  { id: 'TRANSPORTATION', name: 'Transportation', icon: 'directions_car', defaultExpenseType: 'NEED' },
+  { id: 'HEALTHCARE', name: 'Healthcare & Wellness', icon: 'local_hospital', defaultExpenseType: 'NEED' },
   { id: 'PERSONAL_CARE', name: 'Personal Care', icon: 'spa', defaultExpenseType: 'WANT' },
-  { id: 'EDUCATION', name: 'Education', icon: 'school', defaultExpenseType: 'NEED' },
+  { id: 'INSURANCE', name: 'Insurance', icon: 'security', defaultExpenseType: 'NEED' },
   { id: 'DEBT_PAYMENTS', name: 'Debt Payments', icon: 'credit_card', defaultExpenseType: 'NEED' },
-  { id: 'BUSINESS', name: 'Business', icon: 'work', defaultExpenseType: 'NEED' },
-  { id: 'FEES', name: 'Fees', icon: 'receipt_long', defaultExpenseType: 'NEED' },
+  { id: 'EDUCATION', name: 'Education', icon: 'school', defaultExpenseType: 'NEED' },
+  { id: 'BUSINESS', name: 'Business & Fees', icon: 'work', defaultExpenseType: 'NEED' },
+  { id: 'SHOPPING', name: 'Shopping', icon: 'shopping_bag', defaultExpenseType: 'WANT' },
+  { id: 'CLOTHING', name: 'Clothing & Accessories', icon: 'checkroom', defaultExpenseType: 'WANT' },
+  { id: 'ELECTRONICS', name: 'Electronics & Tech', icon: 'devices', defaultExpenseType: 'WANT' },
+  { id: 'ENTERTAINMENT', name: 'Entertainment', icon: 'movie', defaultExpenseType: 'WANT' },
   { id: 'LIFESTYLE_LEISURE', name: 'Lifestyle & Leisure', icon: 'self_improvement', defaultExpenseType: 'WANT' },
-  { id: 'COLLECTIBLES', name: 'Collectibles', icon: 'emoji_events', defaultExpenseType: 'WANT' },
   { id: 'MUSIC', name: 'Music', icon: 'music_note', defaultExpenseType: 'NEED' },
-  { id: 'TRAVEL', name: 'Travel', icon: 'flight', defaultExpenseType: 'WANT' },
-  { id: 'HOLIDAYS', name: 'Holidays', icon: 'beach_access', defaultExpenseType: 'WANT' },
-  { id: 'GIFTS_DONATIONS', name: 'Gifts & Donations', icon: 'redeem', defaultExpenseType: 'WANT' },
+  { id: 'COLLECTIBLES', name: 'Hobbies & Collectibles', icon: 'emoji_events', defaultExpenseType: 'WANT' },
+  { id: 'TRAVEL', name: 'Travel & Holidays', icon: 'flight', defaultExpenseType: 'WANT' },
   { id: 'SUBSCRIPTIONS', name: 'Subscriptions', icon: 'subscriptions', defaultExpenseType: 'WANT' },
+  { id: 'GIFTS_DONATIONS', name: 'Gifts & Donations', icon: 'redeem', defaultExpenseType: 'WANT' },
   { id: 'OTHER', name: 'Other', icon: 'inventory_2', defaultExpenseType: 'WANT' },
 ];
 
@@ -301,11 +320,12 @@ export function getCategoryInfo(
   customCategories?: CustomCategory[],
   categoryOverrides?: CategoryOverride[]
 ): CategoryInfo {
-  // First check built-in categories
-  const builtIn = EXPENSE_CATEGORIES.find(c => c.id === category);
+  // First check built-in categories (retired ids resolve to the category that absorbed them)
+  const builtInId = resolveCategoryAlias(category);
+  const builtIn = EXPENSE_CATEGORIES.find(c => c.id === builtInId);
   if (builtIn) {
     // Check if there's an override for this built-in category
-    const override = categoryOverrides?.find(o => o.id === category);
+    const override = categoryOverrides?.find(o => o.id === builtInId);
     if (override) {
       return {
         ...builtIn,
@@ -421,7 +441,7 @@ export const AVAILABLE_ICONS: string[] = [
   'sports', 'pool', 'golf_course', 'casino', 'theater_comedy',
   'library_books', 'menu_book', 'newspaper', 'article', 'bookmark',
   'savings', 'account_balance_wallet', 'payments', 'paid', 'price_check',
-  'checkroom', 'dry_cleaning', 'iron', 'cleaning_services', 'plumbing',
+  'dry_cleaning', 'iron', 'cleaning_services', 'plumbing',
   'handyman', 'construction', 'architecture', 'engineering', 'design_services',
   'science', 'biotech', 'psychology', 'medication', 'vaccines',
   'local_pharmacy', 'medical_services', 'healing', 'health_and_safety', 'dentistry',

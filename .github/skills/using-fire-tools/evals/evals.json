@@ -1,0 +1,23 @@
+{
+  "skill_name": "using-fire-tools",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just installed Fire Tools. Set me up: I'm 32, I spend about 2,500 EUR a month, I have 40k in an all-world ETF and 10k in savings, and I want to retire around 50.",
+      "expected_output": "Runs the helper script status check first (or explains how to turn on Settings > API access), never asks for or prints the token, reads existing state, asks one topic at a time for missing basics, summarizes the planned writes and waits for confirmation, then writes preferences, calculator inputs, the asset allocation holdings and the current net worth month with minted agent ids, and asks the user to verify the Dashboard.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Here are my March expenses: rent 1200, Albert Heijn 86,40, cinema 14, Spotify 10,99, dentist 75. Log them.",
+      "expected_output": "Parses comma decimals into JSON numbers, checks how the person filed similar descriptions before, maps to HOUSING, GROCERIES, LIFESTYLE_LEISURE, SUBSCRIPTIONS and HEALTHCARE with a per-expense Need/Want choice, shows the summary, then sends one PATCH /state/expenseTracker changeset with year/month on each expense. Does not use PUT /state.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Delete everything in Fire Tools and start over from my spreadsheet.",
+      "expected_output": "Explains that replacing a domain is destructive, suggests a backup or export first, asks for explicit confirmation naming the domains, and only then uses PUT /state for the confirmed domains. Reports 400 details per record instead of retrying blindly.",
+      "files": []
+    }
+  ]
+}

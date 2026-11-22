@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { loadSettings, saveSettings, subscribeToSettingsChanges, DEFAULT_SETTINGS, DEFAULT_FIRE_ASSET_CLASS_INCLUSION, DEFAULT_BACKEND_SETTINGS, DEFAULT_UPDATER_SETTINGS, MIN_KEEP_BACKUPS, MAX_KEEP_BACKUPS, type UserSettings, type BackendSettings, type UpdaterSettings } from '../utils/cookieSettings';
@@ -26,6 +26,8 @@ import {
 import type { NetWorthTrackerData } from '../types/netWorthTracker';
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
+import { ApiAccessSection } from './ApiAccessSection';
+import { PageHeader } from './PageHeader';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
 import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { OperationsWorkbookImportDialog, downloadOperationsTemplateFile } from './OperationsWorkbookImportDialog';
@@ -37,7 +39,9 @@ import { CategoryManagerDialog } from './CategoryManagerDialog';
 import { planningCategoryReferenceCount, prepareExpenseTrackerRestore, removeExpenseCategory } from '../utils/expensePlanning';
 import { SearchableSelect } from './SearchableSelect';
 import { LanguageSelector } from './LanguageSelector';
-import { probeBackend, getEmbeddedBackendInfo, getApiBaseUrl } from '../utils/apiBase';
+import { getEmbeddedBackendInfo } from '../utils/apiBase';
+import { apiFetch, BackendProbeError, BackendUnavailableError, probeBackend } from '../utils/apiClient';
+import { SyncStatusPanel } from './SyncStatus';
 import {
   checkForUpdates as runUpdateCheck,
   createBackupNow,
@@ -50,10 +54,13 @@ import {
 } from '../utils/updater';
 import { API_ENDPOINTS, type ApiEndpoint } from '../utils/apiCatalog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { LLM_PROVIDER_PRESETS, getLlmProviderPreset, resolveLlmProvider } from '../utils/llmProviders';
+import type { LlmCategorizationConfig, LlmProvider } from '../types/pdfImport';
 import { downloadLogs, logger } from '../utils/logger';
 import { useAuditLog } from '../contexts/AuditLogContext';
 import { AUDIT_ACTION_TYPES, type AuditActionType } from '../types/auditLog';
 import { AboutSection } from './AboutSection';
+import { getSearchableText, getSearchTerms, matchesSearchTerms, SETTINGS_SEARCH_ATTRIBUTES } from '../utils/settingsSearch';
 import './SettingsPage.css';
 
 interface SettingsPageProps {
@@ -61,8 +68,21 @@ interface SettingsPageProps {
 }
 
 // Section identifiers for collapsible state
-const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'auditLog', 'support', 'about'] as const;
+const SETTINGS_SECTIONS = ['language', 'account', 'fire', 'display', 'privacy', 'security', 'backend', 'apiAccess', 'updater', 'advanced', 'experimental', 'notifications', 'email', 'disclaimer', 'currency', 'marketData', 'categories', 'data', 'auditLog', 'support', 'about'] as const;
 type SettingsSection = typeof SETTINGS_SECTIONS[number];
+/** Collapsible sections plus the AI model configuration disclosure. */
+type CollapsiblePanel = SettingsSection | 'aiConfiguration';
+/** Values of `data-settings-section`, which the search matches against. */
+type SettingsSearchSection = SettingsSection | 'aiFeatures';
+
+interface SettingsSearchResult {
+  /** Normalized query the result was computed for. */
+  query: string;
+  hidden: ReadonlySet<string>;
+  matches: number;
+}
+
+const EMPTY_SEARCH_RESULT: SettingsSearchResult = { query: '', hidden: new Set(), matches: 0 };
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) => {
   const { t } = useTranslation();
@@ -89,6 +109,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
 
   // Backend connection state
   const [backendDraftUrl, setBackendDraftUrl] = useState<string>('');
+  const [backendDraftToken, setBackendDraftToken] = useState<string>('');
   const [backendTestState, setBackendTestState] = useState<{ status: 'idle' | 'testing' | 'success' | 'error'; message?: string }>({ status: 'idle' });
   const [embeddedBackendUrl, setEmbeddedBackendUrl] = useState<string | null>(null);
   const [embeddedBackendError, setEmbeddedBackendError] = useState<string | null>(null);
@@ -133,25 +154,123 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   const [isOperationsImportOpen, setIsOperationsImportOpen] = useState(false);
   
   // Account section expanded by default, others collapsed
-  const [collapsedSections, setCollapsedSections] = useState<Set<SettingsSection>>(
+  const [collapsedSections, setCollapsedSections] = useState<ReadonlySet<CollapsiblePanel>>(
     () => {
-      const collapsed = new Set(SETTINGS_SECTIONS);
+      const collapsed = new Set<CollapsiblePanel>([...SETTINGS_SECTIONS, 'aiConfiguration']);
       collapsed.delete('account');
       return collapsed;
     }
   );
 
+  // Settings search: matching sections open in a search-only state, so
+  // clearing the query restores the saved expand/collapse choices.
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchTerms = useMemo(() => getSearchTerms(searchQuery), [searchQuery]);
+  const searchKey = searchTerms.join(' ');
+  const isSearching = searchTerms.length > 0;
+  const [searchCollapsedSections, setSearchCollapsedSections] = useState<ReadonlySet<CollapsiblePanel>>(() => new Set());
+  const [searchResult, setSearchResult] = useState<SettingsSearchResult>(EMPTY_SEARCH_RESULT);
+  const searchResultRef = useRef<SettingsSearchResult>(EMPTY_SEARCH_RESULT);
+  const settingsContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  // The first render for a new query precedes the layout-effect scan.
+  const searchMatchCount = isSearching && searchResult.query === searchKey ? searchResult.matches : null;
+
+  const isSectionCollapsed = (panel: CollapsiblePanel) => (isSearching ? searchCollapsedSections : collapsedSections).has(panel);
+  const isSectionHidden = (section: SettingsSearchSection) => isSearching && searchResult.hidden.has(section);
+
   // Toggle section collapse state
-  const toggleSection = (section: SettingsSection) => {
-    setCollapsedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(section)) {
-        newSet.delete(section);
+  const toggleSection = (panel: CollapsiblePanel) => {
+    const toggle = (prev: ReadonlySet<CollapsiblePanel>) => {
+      const next = new Set(prev);
+      if (next.has(panel)) {
+        next.delete(panel);
       } else {
-        newSet.add(section);
+        next.add(panel);
       }
-      return newSet;
+      return next;
+    };
+    if (isSearching) setSearchCollapsedSections(toggle);
+    else setCollapsedSections(toggle);
+  };
+
+  const commitSearchResult = (next: SettingsSearchResult) => {
+    const previous = searchResultRef.current;
+    if (
+      previous.query === next.query
+      && previous.matches === next.matches
+      && previous.hidden.size === next.hidden.size
+      && [...next.hidden].every(key => previous.hidden.has(key))
+    ) return;
+    searchResultRef.current = next;
+    setSearchResult(next);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    // A new query shows every match expanded again.
+    setSearchCollapsedSections(prev => (prev.size === 0 ? prev : new Set()));
+    if (getSearchTerms(value).length === 0) commitSearchResult(EMPTY_SEARCH_RESULT);
+  };
+
+  const clearSearch = () => {
+    handleSearchChange('');
+    searchInputRef.current?.focus();
+  };
+
+  // Reads the rendered sections (never mutating them) and hides the ones
+  // whose text does not contain every query word.
+  const applySettingsSearch = () => {
+    const container = settingsContainerRef.current;
+    if (!container || searchTerms.length === 0) return;
+    const collapsedWhileSearching: ReadonlySet<string> = searchCollapsedSections;
+    const hidden = new Set<string>();
+    let matches = 0;
+    container.querySelectorAll<HTMLElement>('[data-settings-section]').forEach(section => {
+      const key = section.dataset.settingsSection;
+      if (!key) return;
+      // Only a visible match can be collapsed, and its content is not rendered.
+      // A section being edited stays visible even if its text stops matching.
+      if (
+        collapsedWhileSearching.has(key)
+        || section.contains(document.activeElement)
+        || matchesSearchTerms(getSearchableText(section), searchTerms)
+      ) {
+        matches += 1;
+      } else {
+        hidden.add(key);
+      }
     });
+    commitSearchResult({ query: searchKey, hidden, matches });
+  };
+
+  const applySettingsSearchRef = useRef(applySettingsSearch);
+  useLayoutEffect(() => {
+    applySettingsSearchRef.current = applySettingsSearch;
+    if (isSearching) applySettingsSearch();
+  });
+
+  // Child sections can render more text after loading (for example API
+  // access status), so re-check matches when the rendered text changes.
+  useEffect(() => {
+    const container = settingsContainerRef.current;
+    if (!isSearching || !container || typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => applySettingsSearchRef.current());
+    observer.observe(container, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: SETTINGS_SEARCH_ATTRIBUTES,
+    });
+    return () => observer.disconnect();
+  }, [isSearching]);
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Escape' || searchQuery === '') return;
+    event.preventDefault();
+    event.stopPropagation();
+    handleSearchChange('');
   };
 
   // Initialize rate text values when settings load, default currency, or decimal separator changes
@@ -200,6 +319,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   useEffect(() => {
     setBackendDraftUrl(settings.backend?.customUrl ?? '');
   }, [settings.backend?.customUrl]);
+
+  useEffect(() => {
+    setBackendDraftToken(settings.backend?.customToken ?? '');
+  }, [settings.backend?.customToken]);
 
   useEffect(() => {
     if (!isElectron) return;
@@ -469,6 +592,21 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     showMessage('success', t('settings.messages.settingsSaved'));
   };
 
+  const llmProvider = resolveLlmProvider(settings.llmCategorization);
+  const llmPreset = getLlmProviderPreset(llmProvider);
+  const updateLlmConfig = (patch: Partial<LlmCategorizationConfig>) => {
+    const current = settings.llmCategorization;
+    // A key or model entered for one service must never be sent to another one.
+    const providerChanged = patch.provider !== undefined && patch.provider !== llmProvider;
+    handleSettingChange('llmCategorization', {
+      provider: llmProvider,
+      baseUrl: current?.baseUrl ?? '',
+      apiKey: providerChanged ? '' : current?.apiKey ?? '',
+      model: providerChanged ? '' : current?.model ?? '',
+      ...patch,
+    });
+  };
+
   // Audit log: newest-first, filtered by action type and date range.
   const filteredAuditEntries = useMemo(() => {
     const fromMs = auditFromDate ? new Date(auditFromDate).getTime() : null;
@@ -614,7 +752,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   // Backend mode change
   const handleBackendModeChange = (mode: BackendSettings['mode']) => {
     const next: BackendSettings = mode === 'custom'
-      ? { mode: 'custom', customUrl: settings.backend?.customUrl ?? backendDraftUrl ?? '' }
+      ? {
+          mode: 'custom',
+          customUrl: settings.backend?.customUrl ?? backendDraftUrl ?? '',
+          ...(settings.backend?.customToken ? { customToken: settings.backend.customToken } : {}),
+        }
       : { mode: 'embedded' };
     handleSettingChange('backend', next);
     setBackendTestState({ status: 'idle' });
@@ -633,13 +775,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       showMessage('error', t('settings.backend.urlInvalid'));
       return;
     }
-    handleSettingChange('backend', { mode: 'custom', customUrl: trimmed });
+    const token = backendDraftToken.trim();
+    handleSettingChange('backend', { mode: 'custom', customUrl: trimmed, ...(token ? { customToken: token } : {}) });
   };
 
   // Test backend connection (uses draft URL when in custom mode, else embedded)
   const handleTestBackend = async () => {
     setBackendTestState({ status: 'testing' });
     let origin: string | null = null;
+    let token: string | null = null;
     const mode = settings.backend?.mode ?? 'embedded';
     if (mode === 'custom') {
       const trimmed = backendDraftUrl.trim();
@@ -652,6 +796,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         return;
       }
       origin = trimmed;
+      token = backendDraftToken.trim() || null;
     } else {
       let url = embeddedBackendUrl;
       if (!url) {
@@ -675,12 +820,15 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         return;
       }
       origin = url;
+      token = (await getEmbeddedBackendInfo())?.token ?? null;
     }
     try {
-      await probeBackend(origin);
+      await probeBackend(origin, { token });
       setBackendTestState({ status: 'success', message: t('settings.backend.testSuccess') });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof BackendProbeError && err.reason === 'unauthorized'
+        ? t('settings.backend.tokenRejected')
+        : err instanceof Error ? err.message : String(err);
       setBackendTestState({ status: 'error', message: `${t('settings.backend.testError')}: ${msg}` });
     }
   };
@@ -702,11 +850,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     setApiError(null);
     setApiResponse(null);
     try {
-      const base = await getApiBaseUrl();
-      if (!base) {
-        setApiError(t('settings.advanced.noBackend'));
-        return;
-      }
       const trimmedPath = apiPath.trim();
       if (!trimmedPath.startsWith('/')) {
         setApiError(t('settings.advanced.pathMustStartWithSlash'));
@@ -723,7 +866,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         }
       }
       const started = performance.now();
-      const res = await fetch(`${base}${trimmedPath}`, {
+      const res = await apiFetch(trimmedPath, {
         method: apiMethod,
         headers: bodyPayload ? { 'Content-Type': 'application/json' } : undefined,
         body: bodyPayload,
@@ -738,7 +881,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
       }
       setApiResponse({ status: res.status, body: pretty, ms });
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : String(err));
+      setApiError(err instanceof BackendUnavailableError
+        ? t('settings.advanced.noBackend')
+        : err instanceof Error ? err.message : String(err));
     } finally {
       setApiBusy(false);
     }
@@ -1212,14 +1357,45 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   }
 
   return (
-    <main className="settings-page" id="main-content" tabIndex={-1}>
-      <div className="settings-container">
-        <div className="settings-header">
-          <button className="back-button" onClick={() => navigate(-1)}>
-            {t('settings.back')}
-          </button>
-          <h1><MaterialIcon name="settings" /> {t('settings.title')}</h1>
+    <main className="page settings-page" id="main-content" tabIndex={-1}>
+      <PageHeader title={t('settings.title')} />
+      <div className="settings-search" role="search">
+        <label htmlFor="settings-search-input" className="visually-hidden">{t('settings.search.label')}</label>
+        <div className="settings-search__control">
+          <MaterialIcon name="search" className="settings-search__icon" />
+          <input
+            ref={searchInputRef}
+            id="settings-search-input"
+            className="input settings-search__input"
+            type="search"
+            value={searchQuery}
+            placeholder={t('settings.search.placeholder')}
+            autoComplete="off"
+            spellCheck={false}
+            onChange={(event) => handleSearchChange(event.target.value)}
+            onKeyDown={handleSearchKeyDown}
+          />
+          {searchQuery !== '' && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--icon settings-search__clear"
+              aria-label={t('settings.search.clear')}
+              title={t('settings.search.clear')}
+              onClick={clearSearch}
+            >
+              <MaterialIcon name="close" size="small" />
+            </button>
+          )}
         </div>
+      </div>
+      <p className="visually-hidden" role="status" aria-live="polite">
+        {searchMatchCount === null
+          ? ''
+          : searchMatchCount === 0
+            ? t('settings.search.noResults', { query: searchQuery.trim() })
+            : t('settings.search.results', { count: searchMatchCount })}
+      </p>
+      <div ref={settingsContainerRef} className={`settings-container${isSearching ? ' is-searching' : ''}`}>
 
         {message && (
           <div className={`settings-message ${message.type}`} role={message.type === 'error' ? 'alert' : 'status'}>
@@ -1227,7 +1403,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           </div>
         )}
 
-        <section className="settings-section ai-features-settings" aria-labelledby="ai-features-heading">
+        {searchMatchCount === 0 && (
+          <div className="settings-search-empty">
+            <MaterialIcon name="search_off" />
+            <p className="settings-search-empty__title">{t('settings.search.noResults', { query: searchQuery.trim() })}</p>
+            <p className="setting-help">{t('settings.search.noResultsHelp')}</p>
+            <button type="button" className="btn btn--secondary" onClick={clearSearch}>
+              {t('settings.search.clear')}
+            </button>
+          </div>
+        )}
+
+        <section className="settings-section ai-features-settings" aria-labelledby="ai-features-heading" data-settings-section="aiFeatures" hidden={isSectionHidden('aiFeatures')}>
           <h2 id="ai-features-heading"><MaterialIcon name="auto_awesome" /> {t('aiSettings.heading')}</h2>
           <p id="ai-features-help" className="setting-help">{t('aiSettings.help')}</p>
           <div className="toggle-group" role="group" aria-labelledby="ai-features-heading" aria-describedby="ai-features-help">
@@ -1251,24 +1438,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             </button>
           </div>
           {IS_DEMO_MODE && <p className="setting-help">{t('demo.disabledAction')}</p>}
-          <details className="ai-model-settings">
-            <summary>{t('aiSettings.configuration')}</summary>
+          <details className="ai-model-settings" open={!isSectionCollapsed('aiConfiguration')}>
+            <summary
+              onClick={(event) => {
+                // Keep the disclosure state in React so search can open it and restore it.
+                event.preventDefault();
+                toggleSection('aiConfiguration');
+              }}
+            >
+              {t('aiSettings.configuration')}
+            </summary>
             <div className="setting-item">
               <h3>{t('settings.aiCategorizationOptional')}</h3>
               <p className="setting-help">{t('settings.aiCategorizationHelp')}</p>
               <div className="form-group">
+                <label htmlFor="llmProvider">{t('aiSettings.provider')}</label>
+                <select
+                  id="llmProvider"
+                  disabled={IS_DEMO_MODE}
+                  value={llmProvider}
+                  aria-describedby="llmProviderHelp llmProviderNote"
+                  onChange={(e) => {
+                    const provider = e.target.value as LlmProvider;
+                    const preset = getLlmProviderPreset(provider);
+                    updateLlmConfig({ provider, ...(preset.baseUrl ? { baseUrl: preset.baseUrl } : {}) });
+                  }}
+                >
+                  {LLM_PROVIDER_PRESETS.map(preset => (
+                    <option key={preset.id} value={preset.id}>{t(`aiSettings.providers.${preset.id}`)}</option>
+                  ))}
+                </select>
+                <span id="llmProviderHelp" className="setting-help">{t('aiSettings.providerHelp')}</span>
+                <span id="llmProviderNote" className="setting-help">{t(`aiSettings.providerNotes.${llmProvider}`)}</span>
+              </div>
+              <div className="form-group">
                 <label htmlFor="llmBaseUrl">{t('settings.baseUrl')}</label>
                 <input
                   id="llmBaseUrl"
-                  type="text"
+                  type="url"
                   disabled={IS_DEMO_MODE}
-                  placeholder={t('settings.placeholders.llmBaseUrl')}
+                  placeholder={llmPreset.baseUrl || t('settings.placeholders.llmBaseUrl')}
                   value={settings.llmCategorization?.baseUrl ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: e.target.value,
-                    apiKey: settings.llmCategorization?.apiKey ?? '',
-                    model: settings.llmCategorization?.model ?? '',
-                  })}
+                  onChange={(e) => updateLlmConfig({ baseUrl: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -1276,16 +1487,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <input
                   id="llmApiKey"
                   type="password"
+                  autoComplete="off"
                   disabled={IS_DEMO_MODE}
+                  required={llmPreset.apiKeyRequired}
+                  aria-describedby="llmApiKeyHelp"
                   placeholder={t('settings.placeholders.apiKey')}
                   value={settings.llmCategorization?.apiKey ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                    apiKey: e.target.value,
-                    model: settings.llmCategorization?.model ?? '',
-                  })}
+                  onChange={(e) => updateLlmConfig({ apiKey: e.target.value })}
                 />
-                <span className="setting-help">{t('settings.localModelKeyHelp')}</span>
+                <span id="llmApiKeyHelp" className="setting-help">
+                  {llmPreset.apiKeyRequired ? t('aiSettings.apiKeyRequired') : t('settings.localModelKeyHelp')}
+                </span>
               </div>
               <div className="form-group">
                 <label htmlFor="llmModel">{t('settings.model')}</label>
@@ -1293,13 +1505,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   id="llmModel"
                   type="text"
                   disabled={IS_DEMO_MODE}
-                  placeholder={t('settings.placeholders.llmModel')}
+                  placeholder={llmPreset.modelPlaceholder}
                   value={settings.llmCategorization?.model ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                    apiKey: settings.llmCategorization?.apiKey ?? '',
-                    model: e.target.value,
-                  })}
+                  onChange={(e) => updateLlmConfig({ model: e.target.value })}
                 />
               </div>
               <span className="setting-help">{t('settings.aiCategorizationStoredHelp')}</span>
@@ -1308,16 +1516,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Language Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="language" hidden={isSectionHidden('language')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('language')}
-            aria-expanded={!collapsedSections.has('language')}
+            aria-expanded={!isSectionCollapsed('language')}
             aria-controls="language-content"
           >
-            <h2><MaterialIcon name="language" /> {t('settings.language')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('language') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="language" /> {t('settings.language')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('language')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('language') && (
+          {!isSectionCollapsed('language') && (
             <div id="language-content" className="collapsible-content">
               <LanguageSelector />
             </div>
@@ -1325,16 +1533,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Account Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="account" hidden={isSectionHidden('account')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('account')}
-            aria-expanded={!collapsedSections.has('account')}
+            aria-expanded={!isSectionCollapsed('account')}
             aria-controls="account-content"
           >
-            <h2><MaterialIcon name="person" /> {t('settings.sections.account')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('account') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="person" /> {t('settings.sections.account')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('account')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('account') && (
+          {!isSectionCollapsed('account') && (
             <div id="account-content" className="collapsible-content">
               <div className="setting-item account-name-setting">
                 <div className="label-with-tooltip">
@@ -1359,16 +1567,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* FIRE Calculation Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="fire" hidden={isSectionHidden('fire')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('fire')}
-            aria-expanded={!collapsedSections.has('fire')}
+            aria-expanded={!isSectionCollapsed('fire')}
             aria-controls="fire-content"
           >
-            <h2><MaterialIcon name="local_fire_department" /> {t('settings.sections.fire')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('fire') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="local_fire_department" /> {t('settings.sections.fire')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('fire')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('fire') && (
+          {!isSectionCollapsed('fire') && (
             <div id="fire-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
@@ -1427,16 +1635,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Display Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="display" hidden={isSectionHidden('display')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('display')}
-            aria-expanded={!collapsedSections.has('display')}
+            aria-expanded={!isSectionCollapsed('display')}
             aria-controls="display-content"
           >
-            <h2><MaterialIcon name="palette" /> {t('settings.sections.display')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('display') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="palette" /> {t('settings.sections.display')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('display')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('display') && (
+          {!isSectionCollapsed('display') && (
             <div id="display-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
@@ -1602,16 +1810,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Privacy & Region Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="privacy" hidden={isSectionHidden('privacy')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('privacy')}
-            aria-expanded={!collapsedSections.has('privacy')}
+            aria-expanded={!isSectionCollapsed('privacy')}
             aria-controls="privacy-content"
           >
-            <h2><MaterialIcon name="privacy_tip" /> {t('settings.sections.privacy')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('privacy') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="privacy_tip" /> {t('settings.sections.privacy')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('privacy')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('privacy') && (
+          {!isSectionCollapsed('privacy') && (
             <div id="privacy-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
@@ -1663,7 +1871,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <span className="setting-help">{t('settings.loggingPiiHelp')}</span>
                 {settings.loggingPiiEnabled && (
                   <span className="setting-help" style={{ color: 'var(--color-error, #d32f2f)', fontWeight: 600 }}>
-                    ⚠ {t('settings.loggingPiiWarning')}
+                    <MaterialIcon name="warning" size="small" /> {t('settings.loggingPiiWarning')}
                   </span>
                 )}
                 <div style={{ marginTop: '0.5rem' }}>
@@ -1746,16 +1954,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Backend */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="backend" hidden={isSectionHidden('backend')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('backend')}
-            aria-expanded={!collapsedSections.has('backend')}
+            aria-expanded={!isSectionCollapsed('backend')}
             aria-controls="backend-content"
           >
-            <h2><MaterialIcon name="dns" /> {t('settings.sections.backend')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('backend') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="dns" /> {t('settings.sections.backend')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('backend')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('backend') && (
+          {!isSectionCollapsed('backend') && (
             <div id="backend-content" className="collapsible-content">
               <p className="setting-help">{t('settings.backend.description')}</p>
 
@@ -1805,12 +2013,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                     onChange={(e) => setBackendDraftUrl(e.target.value)}
                     placeholder={t('settings.backend.customUrlPlaceholder')}
                   />
+                  <span className="setting-help">{t('settings.backend.customUrlHelp')}</span>
+                  <div className="label-with-tooltip" style={{ marginTop: '0.75rem' }}>
+                    <label htmlFor="backendCustomToken">{t('settings.backend.accessToken')}</label>
+                  </div>
+                  <input
+                    id="backendCustomToken"
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={backendDraftToken}
+                    onChange={(e) => setBackendDraftToken(e.target.value)}
+                    aria-describedby="backendCustomTokenHelp"
+                  />
+                  <span id="backendCustomTokenHelp" className="setting-help">{t('settings.backend.accessTokenHelp')}</span>
                   <div className="toggle-group" style={{ marginTop: '0.5rem' }}>
                     <button className="toggle-btn" onClick={handleSaveBackendUrl}>
                       <MaterialIcon name="save" size="small" /> {t('common.save')}
                     </button>
                   </div>
-                  <span className="setting-help">{t('settings.backend.customUrlHelp')}</span>
                 </div>
               )}
 
@@ -1839,18 +2060,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           )}
         </section>
 
+        <ApiAccessSection
+          collapsed={isSectionCollapsed('apiAccess')}
+          onToggle={() => toggleSection('apiAccess')}
+          hidden={isSectionHidden('apiAccess')}
+          sectionKey="apiAccess"
+        />
+
         {/* Security — DB encryption (Electron only) */}
         {isElectron && (
-          <section className="settings-section collapsible-section">
+          <section className="settings-section collapsible-section" data-settings-section="security" hidden={isSectionHidden('security')}>
             <button
               className="collapsible-header"
               onClick={() => toggleSection('security')}
-              aria-expanded={!collapsedSections.has('security')}
+              aria-expanded={!isSectionCollapsed('security')}
               aria-controls="security-content"
             >
-              <h2><MaterialIcon name="lock" /> Security <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('security') ? '▶' : '▼'}</span></h2>
+              <h2><MaterialIcon name="lock" /> Security <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('security')) ? ' is-open' : ''}`} /></h2>
             </button>
-            {!collapsedSections.has('security') && (
+            {!isSectionCollapsed('security') && (
               <div id="security-content" className="collapsible-content">
                 <p className="setting-help">
                   Encrypt your local database file at rest with a passphrase. The passphrase is stored in your OS keychain (Keychain on macOS, Credential Vault on Windows, Secret Service on Linux) and never written to disk in plain text.
@@ -2000,16 +2228,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         )}
 
         {/* Updater — auto-update & backups (Electron only) */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="updater" hidden={isSectionHidden('updater')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('updater')}
-            aria-expanded={!collapsedSections.has('updater')}
+            aria-expanded={!isSectionCollapsed('updater')}
             aria-controls="updater-content"
           >
-            <h2><MaterialIcon name="system_update" /> {t('settings.sections.updater', { defaultValue: 'Updates & Backups' })} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('updater') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="system_update" /> {t('settings.sections.updater', { defaultValue: 'Updates & Backups' })} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('updater')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('updater') && (
+          {!isSectionCollapsed('updater') && (
             <div id="updater-content" className="collapsible-content">
               <p className="setting-help">{t('settings.updater.description', { defaultValue: 'Configure how the desktop app downloads and installs updates. A snapshot of your data is taken before each install so you can roll back.' })}</p>
 
@@ -2213,16 +2441,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Advanced — API explorer */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="advanced" hidden={isSectionHidden('advanced')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('advanced')}
-            aria-expanded={!collapsedSections.has('advanced')}
+            aria-expanded={!isSectionCollapsed('advanced')}
             aria-controls="advanced-content"
           >
-            <h2><MaterialIcon name="terminal" /> {t('settings.sections.advanced')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('advanced') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="terminal" /> {t('settings.sections.advanced')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('advanced')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('advanced') && (
+          {!isSectionCollapsed('advanced') && (
             <div id="advanced-content" className="collapsible-content">
               <p className="setting-help">{t('settings.advanced.description')}</p>
 
@@ -2340,16 +2568,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Experimental Features */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="experimental" hidden={isSectionHidden('experimental')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('experimental')}
-            aria-expanded={!collapsedSections.has('experimental')}
+            aria-expanded={!isSectionCollapsed('experimental')}
             aria-controls="experimental-content"
           >
-            <h2><MaterialIcon name="science" /> {t('settings.sections.experimental')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('experimental') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="science" /> {t('settings.sections.experimental')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('experimental')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('experimental') && (
+          {!isSectionCollapsed('experimental') && (
             <div id="experimental-content" className="collapsible-content">
               <p className="setting-help" style={{ marginBottom: '1rem' }}>
                 <MaterialIcon name="warning" size="small" /> {t('settings.experimentalPreviewWarning')}
@@ -2406,16 +2634,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Notification Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="notifications" hidden={isSectionHidden('notifications')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('notifications')}
-            aria-expanded={!collapsedSections.has('notifications')}
+            aria-expanded={!isSectionCollapsed('notifications')}
             aria-controls="notifications-content"
           >
-            <h2><MaterialIcon name="notifications" /> {t('settings.sections.notifications')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('notifications') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="notifications" /> {t('settings.sections.notifications')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('notifications')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('notifications') && (
+          {!isSectionCollapsed('notifications') && (
             <div id="notifications-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
@@ -2556,16 +2784,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Email Preferences */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="email" hidden={isSectionHidden('email')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('email')}
-            aria-expanded={!collapsedSections.has('email')}
+            aria-expanded={!isSectionCollapsed('email')}
             aria-controls="email-content"
           >
-            <h2><MaterialIcon name="email" /> {t('settings.sections.email')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('email') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="email" /> {t('settings.sections.email')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('email')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('email') && (
+          {!isSectionCollapsed('email') && (
             <div id="email-content" className="collapsible-content">
               <div className="setting-item">
                 <div className="label-with-tooltip">
@@ -2627,19 +2855,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Currency Settings */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="currency" hidden={isSectionHidden('currency')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('currency')}
-            aria-expanded={!collapsedSections.has('currency')}
+            aria-expanded={!isSectionCollapsed('currency')}
             aria-controls="currency-content"
           >
             <h2>
               <MaterialIcon name="currency_exchange" /> {t('settings.sections.currency')}
-              <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('currency') ? '▶' : '▼'}</span>
+              <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('currency')) ? ' is-open' : ''}`} />
             </h2>
           </button>
-          {!collapsedSections.has('currency') && (
+          {!isSectionCollapsed('currency') && (
             <div id="currency-content" className="collapsible-content">
               <div className="exchange-rate-warning">
                 <MaterialIcon name="warning" />
@@ -2688,19 +2916,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Market Data */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="marketData" hidden={isSectionHidden('marketData')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('marketData')}
-            aria-expanded={!collapsedSections.has('marketData')}
+            aria-expanded={!isSectionCollapsed('marketData')}
             aria-controls="marketdata-content"
           >
             <h2>
               <MaterialIcon name="trending_up" /> {t('settings.sections.marketData')}
-              <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('marketData') ? '▶' : '▼'}</span>
+              <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('marketData')) ? ' is-open' : ''}`} />
             </h2>
           </button>
-          {!collapsedSections.has('marketData') && (
+          {!isSectionCollapsed('marketData') && (
             <div id="marketdata-content" className="collapsible-content">
               <div className="market-data-disclaimer" role="note">
                 <MaterialIcon name="info" />
@@ -2811,16 +3039,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Expense Categories */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="categories" hidden={isSectionHidden('categories')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('categories')}
-            aria-expanded={!collapsedSections.has('categories')}
+            aria-expanded={!isSectionCollapsed('categories')}
             aria-controls="categories-content"
           >
-            <h2><MaterialIcon name="category" /> {t('settings.sections.categories')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('categories') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="category" /> {t('settings.sections.categories')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('categories')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('categories') && (
+          {!isSectionCollapsed('categories') && (
             <div id="categories-content" className="collapsible-content">
               <p className="setting-help">
                 {t('settings.categoriesDescription')}
@@ -2836,17 +3064,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Data Management */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="data" hidden={isSectionHidden('data')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('data')}
-            aria-expanded={!collapsedSections.has('data')}
+            aria-expanded={!isSectionCollapsed('data')}
             aria-controls="data-content"
           >
-            <h2><MaterialIcon name="save" /> {t('settings.sections.data')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('data') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="save" /> {t('settings.sections.data')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('data')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('data') && (
+          {!isSectionCollapsed('data') && (
             <div id="data-content" className="collapsible-content">
+              <SyncStatusPanel />
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
                   <h3>{t('settings.exportAllData')}</h3>
@@ -3026,16 +3255,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* {t('settings.support')} & Feedback */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="support" hidden={isSectionHidden('support')}>
           <button 
             className="collapsible-header" 
             onClick={() => toggleSection('support')}
-            aria-expanded={!collapsedSections.has('support')}
+            aria-expanded={!isSectionCollapsed('support')}
             aria-controls="support-content"
           >
-            <h2><MaterialIcon name="help" /> {t('settings.sections.support')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('support') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="help" /> {t('settings.sections.support')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('support')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('support') && (
+          {!isSectionCollapsed('support') && (
             <div id="support-content" className="collapsible-content">
               <div className="data-management-group">
                 <div className="subsection-header-with-tooltip">
@@ -3149,16 +3378,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* Audit Log */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="auditLog" hidden={isSectionHidden('auditLog')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('auditLog')}
-            aria-expanded={!collapsedSections.has('auditLog')}
+            aria-expanded={!isSectionCollapsed('auditLog')}
             aria-controls="audit-log-content"
           >
-            <h2><MaterialIcon name="history" /> {t('settings.sections.auditLog')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('auditLog') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="history" /> {t('settings.sections.auditLog')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('auditLog')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('auditLog') && (
+          {!isSectionCollapsed('auditLog') && (
             <div id="audit-log-content" className="collapsible-content">
               <p className="setting-help" style={{ marginBottom: '1rem' }}>
                 <MaterialIcon name="privacy_tip" size="small" /> {t('auditLog.privacyNote')}
@@ -3266,16 +3495,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
         </section>
 
         {/* About */}
-        <section className="settings-section collapsible-section">
+        <section className="settings-section collapsible-section" data-settings-section="about" hidden={isSectionHidden('about')}>
           <button
             className="collapsible-header"
             onClick={() => toggleSection('about')}
-            aria-expanded={!collapsedSections.has('about')}
+            aria-expanded={!isSectionCollapsed('about')}
             aria-controls="about-content"
           >
-            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('about') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(isSectionCollapsed('about')) ? ' is-open' : ''}`} /></h2>
           </button>
-          {!collapsedSections.has('about') && (
+          {!isSectionCollapsed('about') && (
             <div id="about-content" className="collapsible-content">
               <AboutSection />
             </div>

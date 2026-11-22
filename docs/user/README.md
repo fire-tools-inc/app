@@ -21,6 +21,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - [Net-worth tracker](./net-worth-tracker.md)
 - [Spreadsheet import and templates](./spreadsheet-import.md) (AI agent prompts: [net worth](./spreadsheet-import-agent-prompt.md), [expenses](./expense-import-agent-prompt.md), [investment operations](./operations-import-agent-prompt.md))
 - [Questionnaire (guided setup)](./questionnaire.md)
+- [Use the Fire Tools API (scripts, apps and AI agents)](./api-access.md)
 - [Settings, language, data export](./settings.md)
 
 ## How to install
@@ -54,13 +55,14 @@ this command for an untrusted download or disable Gatekeeper globally.
 
 ## Where your data lives
 
-- **Renderer financial stores** — existing encrypted SafeCookies/localStorage
-  stores remain authoritative for the tools. Cashflow history and planning use
-  encrypted localStorage, including in Electron.
-- **Local backend** — SQLite inside the desktop's `userData` directory or a
-  self-hosted volume owns receipt originals and its API records. Its planning
-  API is separate from the renderer snapshot; a PostgreSQL driver is not
-  implemented.
+- **Database** - SQLite inside the desktop's `userData` directory or a
+  self-hosted volume holds your settings, FIRE calculator, asset allocation,
+  cashflow and net worth, plus receipt originals. Changes made through its API,
+  for example by a script or an [AI agent](./api-access.md), appear in the app within
+  seconds. A PostgreSQL driver is not implemented.
+- **This device** - an encrypted copy of that data and any changes not yet
+  saved to the database. In a browser without a backend this copy is the only
+  store. Scenarios, debt payoff plans and notifications stay on the device.
 
 The hosted [web demo](https://fire-tools-inc.github.io/app/demo/) is read-only:
 it loads sample data and doesn't persist anything you type. Use the desktop app

@@ -6,10 +6,11 @@ import {
   parsePagination, nextCursor, parseYearMonth, parseBody,
 } from '../http.js';
 import { scheduleReferenceSchema } from './expensePlanning.js';
+import { isLegacyCategoryId, mergeBudgetAliases, resolveCategoryAlias } from '../categoryAliases.js';
 
-const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
-const EXPENSE_TYPES = new Set(['NEED', 'WANT']);
-const INCOME_SOURCES = new Set([
+export const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
+export const EXPENSE_TYPES = new Set(['NEED', 'WANT']);
+export const INCOME_SOURCES = new Set([
   'SALARY', 'FREELANCE', 'BUSINESS', 'INVESTMENTS', 'RENTAL',
   'PENSION', 'SOCIAL_SECURITY', 'BONUS', 'GIFT', 'OTHER',
 ]);
@@ -18,87 +19,87 @@ const transactionValues = z.object({
   amount: z.number().finite().nonnegative(),
 });
 
-interface CfgRow {
+export interface ExpenseConfigRow {
   user_id: number;
   currency: string;
   current_year: number;
   current_month: number;
   updated_at: string;
 }
-interface YearRow { id: number; user_id: number; year: number; is_archived: number }
-interface MonthRow {
+export interface ExpenseYearRow { id: number; user_id: number; year: number; is_archived: number }
+export interface ExpenseMonthRow {
   id: number; user_id: number; expense_year_id: number; month: number; is_closed: number;
 }
-interface ExpenseRow {
+export interface ExpenseRow {
   id: number; user_id: number; expense_month_id: number; external_id: string;
   date: string; amount: number; description: string; currency: string | null;
   category: string; sub_category: string | null; expense_type: string; is_recurring: number;
   schedule_id: string | null; scheduled_date: string | null;
-  unit_amount: number | null; quantity: number | null;
+  unit_amount: number | null; quantity: number | null; position: number | null;
 }
-interface IncomeRow {
+export interface IncomeRow {
   id: number; user_id: number; expense_month_id: number; external_id: string;
   date: string; amount: number; description: string; currency: string | null;
   source: string; is_recurring: number;
-  schedule_id: string | null; scheduled_date: string | null;
+  schedule_id: string | null; scheduled_date: string | null; position: number | null;
 }
-interface BudgetRow {
+export interface BudgetRow {
   id: number; user_id: number; expense_month_id: number | null;
-  category: string; monthly_budget: number; currency: string | null;
+  category: string; monthly_budget: number; currency: string | null; position: number | null;
 }
-interface CustomCatRow {
+export interface CustomCatRow {
   id: number; user_id: number; external_id: string; name: string;
-  icon: string; color: string; default_expense_type: string;
+  icon: string; color: string; default_expense_type: string; position: number | null;
 }
-interface OverrideRow {
+export interface OverrideRow {
   id: number; user_id: number; category_id: string;
-  name: string | null; icon: string | null; color: string | null;
+  name: string | null; icon: string | null; color: string | null; position: number | null;
 }
 
-const ensureCfg = (db: Database, userId: number): CfgRow => {
-  const row = db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as CfgRow | undefined;
+const ensureCfg = (db: Database, userId: number): ExpenseConfigRow => {
+  const row = db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as ExpenseConfigRow | undefined;
   if (row) return row;
   const now = new Date();
   db.prepare(
     `INSERT INTO expense_tracker_config (user_id, currency, current_year, current_month, updated_at)
      VALUES (?, 'EUR', ?, ?, ?)`,
   ).run(userId, now.getFullYear(), now.getMonth() + 1, nowIso());
-  return db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as CfgRow;
+  return db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as ExpenseConfigRow;
 };
 
-const ensureYear = (db: Database, userId: number, year: number): YearRow => {
+export const ensureYear = (db: Database, userId: number, year: number): ExpenseYearRow => {
   const existing = db
     .prepare('SELECT * FROM expense_years WHERE user_id = ? AND year = ?')
-    .get(userId, year) as YearRow | undefined;
+    .get(userId, year) as ExpenseYearRow | undefined;
   if (existing) return existing;
   db.prepare('INSERT INTO expense_years (user_id, year) VALUES (?, ?)').run(userId, year);
-  return db.prepare('SELECT * FROM expense_years WHERE user_id = ? AND year = ?').get(userId, year) as YearRow;
+  return db.prepare('SELECT * FROM expense_years WHERE user_id = ? AND year = ?').get(userId, year) as ExpenseYearRow;
 };
 
-const ensureMonth = (db: Database, userId: number, year: number, month: number): MonthRow => {
+export const ensureMonth = (db: Database, userId: number, year: number, month: number): ExpenseMonthRow => {
   const y = ensureYear(db, userId, year);
   const existing = db
     .prepare('SELECT * FROM expense_months WHERE user_id = ? AND expense_year_id = ? AND month = ?')
-    .get(userId, y.id, month) as MonthRow | undefined;
+    .get(userId, y.id, month) as ExpenseMonthRow | undefined;
   if (existing) return existing;
   db.prepare(
     'INSERT INTO expense_months (user_id, expense_year_id, month) VALUES (?, ?, ?)',
   ).run(userId, y.id, month);
   return db
     .prepare('SELECT * FROM expense_months WHERE user_id = ? AND expense_year_id = ? AND month = ?')
-    .get(userId, y.id, month) as MonthRow;
+    .get(userId, y.id, month) as ExpenseMonthRow;
 };
 
-const ensureMonthByDate = (db: Database, userId: number, dateIso: string): MonthRow => {
+const ensureMonthByDate = (db: Database, userId: number, dateIso: string): ExpenseMonthRow => {
   const d = new Date(dateIso);
   if (Number.isNaN(d.getTime())) throw apiError(400, 'invalid_body', `Invalid date: ${dateIso}`);
   return ensureMonth(db, userId, d.getUTCFullYear(), d.getUTCMonth() + 1);
 };
 
-const mapCfg = (r: CfgRow) => ({
+const mapCfg = (r: ExpenseConfigRow) => ({
   currency: r.currency, currentYear: r.current_year, currentMonth: r.current_month,
 });
-const mapExpense = (r: ExpenseRow) => ({
+export const mapExpense = (r: ExpenseRow) => ({
   id: r.id, externalId: r.external_id, type: 'expense',
   date: r.date, amount: r.amount, description: r.description,
   currency: r.currency, category: r.category, subCategory: r.sub_category,
@@ -106,7 +107,7 @@ const mapExpense = (r: ExpenseRow) => ({
   ...(r.schedule_id ? { scheduleId: r.schedule_id, scheduledDate: r.scheduled_date } : {}),
   ...(r.unit_amount != null && r.quantity != null ? { unitAmount: r.unit_amount, quantity: r.quantity } : {}),
 });
-const mapIncome = (r: IncomeRow) => ({
+export const mapIncome = (r: IncomeRow) => ({
   id: r.id, externalId: r.external_id, type: 'income',
   date: r.date, amount: r.amount, description: r.description,
   currency: r.currency, source: r.source, isRecurring: fromBool01(r.is_recurring),
@@ -125,7 +126,7 @@ const validateOccurrence = (body: Record<string, unknown>): void => {
   }
 };
 
-const assertAvailableOccurrence = (
+export const assertAvailableOccurrence = (
   db: Database, userId: number, body: Record<string, unknown>,
   replacing?: { table: 'expense_entries' | 'income_entries'; externalId: string },
 ): void => {
@@ -159,15 +160,15 @@ const mapBudgetWithMonth = (db: Database, userId: number, r: BudgetRow) => {
   };
 };
 
-const mapCustomCat = (r: CustomCatRow) => ({
+export const mapCustomCat = (r: CustomCatRow) => ({
   externalId: r.external_id, name: r.name, icon: r.icon, color: r.color,
   defaultExpenseType: r.default_expense_type,
 });
-const mapOverride = (r: OverrideRow) => ({
+export const mapOverride = (r: OverrideRow) => ({
   categoryId: r.category_id, name: r.name, icon: r.icon, color: r.color,
 });
 
-const validateExpense = (body: Record<string, unknown>) => {
+export const validateExpense = (body: Record<string, unknown>) => {
   for (const k of ['externalId', 'date', 'amount', 'description', 'category', 'expenseType']) {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
@@ -195,19 +196,20 @@ const validateAmountBreakdown = (body: Record<string, unknown>) => {
   }
 };
 
-const EXPENSE_INSERT_SQL = `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description,
-    currency, category, sub_category, expense_type, is_recurring, schedule_id, scheduled_date, unit_amount, quantity)
+export const EXPENSE_COLS = `user_id, expense_month_id, external_id, date, amount, description,
+  currency, category, sub_category, expense_type, is_recurring, schedule_id, scheduled_date, unit_amount, quantity`;
+export const EXPENSE_INSERT_SQL = `INSERT INTO expense_entries (${EXPENSE_COLS})
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-const expenseInsertValues = (userId: number, monthId: number, e: Record<string, unknown>): unknown[] => [
+export const expenseInsertValues = (userId: number, monthId: number, e: Record<string, unknown>): unknown[] => [
   userId, monthId, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
-  e.currency != null ? String(e.currency) : null, String(e.category),
+  e.currency != null ? String(e.currency) : null, resolveCategoryAlias(String(e.category)),
   e.subCategory != null ? String(e.subCategory) : null, String(e.expenseType), bool01(e.isRecurring),
   ...scheduleValues(e),
   e.unitAmount != null ? Number(e.unitAmount) : null, e.quantity != null ? Number(e.quantity) : null,
 ];
 
-const validateIncome = (body: Record<string, unknown>) => {
+export const validateIncome = (body: Record<string, unknown>) => {
   for (const k of ['externalId', 'date', 'amount', 'description', 'source']) {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
   }
@@ -218,6 +220,44 @@ const validateIncome = (body: Record<string, unknown>) => {
   }
   if (body.currency != null && !CURRENCIES.has(String(body.currency))) {
     throw apiError(400, 'invalid_body', `Invalid currency: ${body.currency}`);
+  }
+};
+
+export const INCOME_COLS = `user_id, expense_month_id, external_id, date, amount,
+  description, currency, source, is_recurring, schedule_id, scheduled_date`;
+export const INCOME_INSERT_SQL = `INSERT INTO income_entries (${INCOME_COLS})
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+export const incomeInsertValues = (userId: number, monthId: number, e: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
+  e.currency != null ? String(e.currency) : null, String(e.source), bool01(e.isRecurring),
+  ...scheduleValues(e),
+];
+
+export const validateExpenseConfig = (body: Record<string, unknown>): void => {
+  for (const k of ['currency', 'currentYear', 'currentMonth']) {
+    if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
+  }
+  if (!CURRENCIES.has(String(body.currency))) throw apiError(400, 'invalid_body', `Invalid currency`);
+};
+
+export const validateCustomCategory = (body: Record<string, unknown>): void => {
+  for (const k of ['name', 'icon', 'color', 'defaultExpenseType']) {
+    if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
+  }
+  if (!EXPENSE_TYPES.has(String(body.defaultExpenseType))) {
+    throw apiError(400, 'invalid_body', `Invalid defaultExpenseType`);
+  }
+};
+
+/** Row position of an entity before a granular replace, so edits keep their place in the app. */
+const previousPosition = (db: Database, table: string, userId: number, externalId: string): number | null =>
+  (db.prepare(`SELECT position FROM ${table} WHERE user_id = ? AND external_id = ?`)
+    .get(userId, externalId) as { position: number | null } | undefined)?.position ?? null;
+
+const restorePosition = (db: Database, table: string, userId: number, externalId: string, position: number | null) => {
+  if (position !== null) {
+    db.prepare(`UPDATE ${table} SET position = ? WHERE user_id = ? AND external_id = ?`).run(position, userId, externalId);
   }
 };
 
@@ -232,17 +272,14 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
   router.put('/expense-tracker/config', handler((req, res) => {
     const userId = resolveUserId(req);
     const body = (req.body ?? {}) as Record<string, unknown>;
-    for (const k of ['currency', 'currentYear', 'currentMonth']) {
-      if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
-    }
-    if (!CURRENCIES.has(String(body.currency))) throw apiError(400, 'invalid_body', `Invalid currency`);
+    validateExpenseConfig(body);
     ensureCfg(db, userId);
     db.prepare(
       `UPDATE expense_tracker_config
           SET currency = ?, current_year = ?, current_month = ?, updated_at = ?
         WHERE user_id = ?`,
     ).run(String(body.currency), Number(body.currentYear), Number(body.currentMonth), nowIso(), userId);
-    res.json(mapCfg(db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as CfgRow));
+    res.json(mapCfg(db.prepare('SELECT * FROM expense_tracker_config WHERE user_id = ?').get(userId) as ExpenseConfigRow));
   }));
 
   // --- Months ---
@@ -289,28 +326,21 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
         assertAvailableOccurrence(db, userId, e);
         expIns.run(...expenseInsertValues(userId, m.id, e));
       }
-      const incIns = db.prepare(
-        `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, source, is_recurring, schedule_id, scheduled_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      );
+      const incIns = db.prepare(INCOME_INSERT_SQL);
       for (const e of incomes) {
         validateIncome(e);
         assertAvailableOccurrence(db, userId, e);
-        incIns.run(
-          userId, m.id, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
-          e.currency != null ? String(e.currency) : null, String(e.source), bool01(e.isRecurring),
-          ...scheduleValues(e),
-        );
+        incIns.run(...incomeInsertValues(userId, m.id, e));
       }
       const budIns = db.prepare(
         `INSERT INTO category_budgets (user_id, expense_month_id, category, monthly_budget, currency)
          VALUES (?, ?, ?, ?, ?)`,
       );
-      for (const b of budgets) {
-        budIns.run(userId, m.id, String(b.category), Number(b.monthlyBudget),
-          b.currency != null ? String(b.currency) : null);
-      }
+      const monthBudgets = mergeBudgetAliases(budgets.map(b => ({
+        scope: 'month', category: String(b.category), monthlyBudget: Number(b.monthlyBudget),
+        currency: b.currency != null ? String(b.currency) : null,
+      })));
+      for (const b of monthBudgets) budIns.run(userId, m.id, b.category, b.monthlyBudget, b.currency);
     });
     tx.immediate();
     res.json(getMonthData(userId, year, month));
@@ -336,7 +366,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const params: unknown[] = [userId];
     if (typeof req.query.startDate === 'string') { where.push('date >= ?'); params.push(req.query.startDate); }
     if (typeof req.query.endDate === 'string') { where.push('date <= ?'); params.push(req.query.endDate); }
-    if (typeof req.query.category === 'string') { where.push('category = ?'); params.push(req.query.category); }
+    if (typeof req.query.category === 'string') { where.push('category = ?'); params.push(resolveCategoryAlias(req.query.category)); }
     if (typeof req.query.expenseType === 'string') {
       if (!EXPENSE_TYPES.has(req.query.expenseType)) {
         throw apiError(400, 'invalid_param', `Invalid expenseType: ${req.query.expenseType}`);
@@ -379,8 +409,10 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     db.transaction(() => {
       assertAvailableOccurrence(db, userId, body, { table: 'expense_entries', externalId: req.params.externalId });
       const m = ensureMonthByDate(db, userId, String(body.date));
+      const position = previousPosition(db, 'expense_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM expense_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
       db.prepare(EXPENSE_INSERT_SQL).run(...expenseInsertValues(userId, m.id, body));
+      restorePosition(db, 'expense_entries', userId, req.params.externalId, position);
     }).immediate();
     const row = db.prepare('SELECT * FROM expense_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as ExpenseRow;
@@ -425,15 +457,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const info = db.transaction(() => {
       assertAvailableOccurrence(db, userId, body);
       const m = ensureMonthByDate(db, userId, String(body.date));
-      return db.prepare(
-        `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, source, is_recurring, schedule_id, scheduled_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).run(
-        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-        body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
-        ...scheduleValues(body),
-      );
+      return db.prepare(INCOME_INSERT_SQL).run(...incomeInsertValues(userId, m.id, body));
     }).immediate();
     const row = db.prepare('SELECT * FROM income_entries WHERE id = ?').get(info.lastInsertRowid) as IncomeRow;
     res.status(201).json(mapIncome(row));
@@ -447,16 +471,10 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     db.transaction(() => {
       assertAvailableOccurrence(db, userId, body, { table: 'income_entries', externalId: req.params.externalId });
       const m = ensureMonthByDate(db, userId, String(body.date));
+      const position = previousPosition(db, 'income_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM income_entries WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-      db.prepare(
-        `INSERT INTO income_entries (user_id, expense_month_id, external_id, date, amount, description,
-            currency, source, is_recurring, schedule_id, scheduled_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).run(
-        userId, m.id, String(body.externalId), String(body.date), Number(body.amount), String(body.description),
-        body.currency != null ? String(body.currency) : null, String(body.source), bool01(body.isRecurring),
-        ...scheduleValues(body),
-      );
+      db.prepare(INCOME_INSERT_SQL).run(...incomeInsertValues(userId, m.id, body));
+      restorePosition(db, 'income_entries', userId, req.params.externalId, position);
     }).immediate();
     const row = db.prepare('SELECT * FROM income_entries WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as IncomeRow;
@@ -500,7 +518,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
         `INSERT INTO category_budgets (user_id, expense_month_id, category, monthly_budget, currency)
          VALUES (?, ?, ?, ?, ?)`,
       );
-      for (const b of body) {
+      const scoped = body.map((b) => {
         let monthId: number | null = null;
         const mk = b.monthKey;
         if (typeof mk === 'string' && mk !== '') {
@@ -508,8 +526,13 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
           if (!match) throw apiError(400, 'invalid_body', `Invalid monthKey: ${mk}`);
           monthId = ensureMonth(db, userId, Number(match[1]), Number(match[2])).id;
         }
-        ins.run(userId, monthId, String(b.category), Number(b.monthlyBudget),
-          b.currency != null ? String(b.currency) : null);
+        return {
+          monthId, scope: String(monthId), category: String(b.category), monthlyBudget: Number(b.monthlyBudget),
+          currency: b.currency != null ? String(b.currency) : null,
+        };
+      });
+      for (const b of mergeBudgetAliases(scoped)) {
+        ins.run(userId, b.monthId, b.category, b.monthlyBudget, b.currency);
       }
     });
     tx();
@@ -520,7 +543,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
   // --- Custom categories ---
   router.get('/expense-tracker/custom-categories', handler((req, res) => {
     const rows = db
-      .prepare('SELECT * FROM custom_categories WHERE user_id = ? ORDER BY id')
+      .prepare('SELECT * FROM custom_categories WHERE user_id = ? ORDER BY position IS NULL, position, id')
       .all(resolveUserId(req)) as CustomCatRow[];
     res.json(rows.map(mapCustomCat));
   }));
@@ -528,12 +551,8 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
   router.post('/expense-tracker/custom-categories', handler((req, res) => {
     const userId = resolveUserId(req);
     const body = (req.body ?? {}) as Record<string, unknown>;
-    for (const k of ['externalId', 'name', 'icon', 'color', 'defaultExpenseType']) {
-      if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
-    }
-    if (!EXPENSE_TYPES.has(String(body.defaultExpenseType))) {
-      throw apiError(400, 'invalid_body', `Invalid defaultExpenseType`);
-    }
+    if (!('externalId' in body)) throw apiError(400, 'invalid_body', 'Missing required field: externalId');
+    validateCustomCategory(body);
     const existing = db.prepare('SELECT id FROM custom_categories WHERE user_id = ? AND external_id = ?')
       .get(userId, String(body.externalId));
     if (existing) throw apiError(409, 'conflict', `CustomCategory ${body.externalId} already exists`);
@@ -549,19 +568,16 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
   router.put('/expense-tracker/custom-categories/:externalId', handler((req, res) => {
     const userId = resolveUserId(req);
     const body = (req.body ?? {}) as Record<string, unknown>;
-    for (const k of ['name', 'icon', 'color', 'defaultExpenseType']) {
-      if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
-    }
-    if (!EXPENSE_TYPES.has(String(body.defaultExpenseType))) {
-      throw apiError(400, 'invalid_body', `Invalid defaultExpenseType`);
-    }
+    validateCustomCategory(body);
     db.transaction(() => {
+      const position = previousPosition(db, 'custom_categories', userId, req.params.externalId);
       db.prepare('DELETE FROM custom_categories WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
       db.prepare(
         `INSERT INTO custom_categories (user_id, external_id, name, icon, color, default_expense_type)
          VALUES (?, ?, ?, ?, ?, ?)`,
       ).run(userId, req.params.externalId, String(body.name), String(body.icon),
         String(body.color), String(body.defaultExpenseType));
+      restorePosition(db, 'custom_categories', userId, req.params.externalId, position);
     })();
     const row = db.prepare('SELECT * FROM custom_categories WHERE user_id = ? AND external_id = ?')
       .get(userId, req.params.externalId) as CustomCatRow;
@@ -579,7 +595,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
   // --- Category overrides (replace-full-list) ---
   router.get('/expense-tracker/category-overrides', handler((req, res) => {
     const rows = db
-      .prepare('SELECT * FROM category_overrides WHERE user_id = ? ORDER BY id')
+      .prepare('SELECT * FROM category_overrides WHERE user_id = ? ORDER BY position IS NULL, position, id')
       .all(resolveUserId(req)) as OverrideRow[];
     res.json(rows.map(mapOverride));
   }));
@@ -595,6 +611,8 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
       );
       for (const o of body) {
         if (!('categoryId' in o)) throw apiError(400, 'invalid_body', 'Missing categoryId');
+        // Retired built-in ids have no category to customize any more.
+        if (isLegacyCategoryId(String(o.categoryId))) continue;
         ins.run(userId, String(o.categoryId),
           o.name != null ? String(o.name) : null,
           o.icon != null ? String(o.icon) : null,

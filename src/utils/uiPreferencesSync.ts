@@ -16,7 +16,7 @@
 import SafeCookies from './safeCookies';
 import type { CookieAttributes } from './safeCookies';
 import { encryptData } from './cookieEncryption';
-import { getApiBaseUrl } from './apiBase';
+import { apiFetch, BackendUnavailableError } from './apiClient';
 import { logger } from './logger';
 
 export const PREF_KEY_TOUR_COMPLETED = 'tour_completed';
@@ -52,10 +52,8 @@ const writeMirroredCookie = (cookieName: string, plaintextJson: string): void =>
  * Safe to call when no backend is reachable: returns immediately.
  */
 export const syncPreferencesFromBackend = async (): Promise<void> => {
-  const baseUrl = await getApiBaseUrl();
-  if (!baseUrl) return;
   try {
-    const res = await fetch(`${baseUrl}/ui-preferences`);
+    const res = await apiFetch('/ui-preferences');
     if (!res.ok) return;
     const data = (await res.json()) as { preferences?: Record<string, string> };
     const prefs = data.preferences ?? {};
@@ -65,6 +63,7 @@ export const syncPreferencesFromBackend = async (): Promise<void> => {
       writeMirroredCookie(cookieName, value);
     }
   } catch (error) {
+    if (error instanceof BackendUnavailableError) return;
     logger.error('ui-preferences-sync', 'sync-failed', 'failed to sync UI preferences from backend', { pii: { error: (error as Error)?.message } });
   }
 };
@@ -75,10 +74,8 @@ export const syncPreferencesFromBackend = async (): Promise<void> => {
  */
 export const pushPreferenceToBackend = (key: string, value: string): void => {
   void (async () => {
-    const baseUrl = await getApiBaseUrl();
-    if (!baseUrl) return;
     try {
-      const res = await fetch(`${baseUrl}/ui-preferences/${encodeURIComponent(key)}`, {
+      const res = await apiFetch(`/ui-preferences/${encodeURIComponent(key)}`, {
         method: 'PUT',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ value }),
@@ -87,6 +84,7 @@ export const pushPreferenceToBackend = (key: string, value: string): void => {
         logger.error('ui-preferences-sync', 'push-failed', `failed to push preference ${key} to backend`, { pii: { httpStatus: res.status } });
       }
     } catch (error) {
+      if (error instanceof BackendUnavailableError) return;
       logger.error('ui-preferences-sync', 'push-failed', `failed to push preference ${key} to backend`, { pii: { error: (error as Error)?.message } });
     }
   })();
@@ -98,16 +96,15 @@ export const pushPreferenceToBackend = (key: string, value: string): void => {
  */
 export const deletePreferenceFromBackend = (key: string): void => {
   void (async () => {
-    const baseUrl = await getApiBaseUrl();
-    if (!baseUrl) return;
     try {
-      const res = await fetch(`${baseUrl}/ui-preferences/${encodeURIComponent(key)}`, {
+      const res = await apiFetch(`/ui-preferences/${encodeURIComponent(key)}`, {
         method: 'DELETE',
       });
       if (!res.ok && res.status !== 404) {
         logger.error('ui-preferences-sync', 'delete-failed', `failed to delete preference ${key} from backend`, { pii: { httpStatus: res.status } });
       }
     } catch (error) {
+      if (error instanceof BackendUnavailableError) return;
       logger.error('ui-preferences-sync', 'delete-failed', `failed to delete preference ${key} from backend`, { pii: { error: (error as Error)?.message } });
     }
   })();

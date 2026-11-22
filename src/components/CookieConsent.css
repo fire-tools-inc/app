@@ -9,7 +9,7 @@
   right: 0;
   background: rgba(18, 20, 26, 0.98);
   backdrop-filter: blur(20px);
-  box-shadow: 0 -8px 40px rgba(0, 212, 170, 0.2);
+  box-shadow: 0 -8px 40px rgba(101, 212, 196, 0.2);
   z-index: 9999;
   padding: 1.5rem;
   border-top: 2px solid var(--accent-primary);
@@ -44,7 +44,7 @@
 .cookie-banner-title {
   margin: 0 0 0.5rem 0;
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -53,7 +53,7 @@
   margin: 0 0 0.5rem 0;
   color: var(--text-secondary);
   line-height: 1.6;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .cookie-banner-description strong {
@@ -63,7 +63,7 @@
 
 .cookie-banner-links {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
 }
 
@@ -98,12 +98,12 @@
 }
 
 .cookie-btn-acknowledge {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
+  background: var(--accent-primary);
   color: var(--text-inverse);
   border: none;
   padding: 0.875rem 2rem;
   border-radius: var(--radius-md);
-  font-size: 1rem;
+  font-size: var(--text-md);
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
@@ -114,8 +114,6 @@
 }
 
 .cookie-btn-acknowledge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px var(--accent-glow-strong);
 }
 
 .cookie-btn-acknowledge:focus {
@@ -125,7 +123,6 @@
 
 .cookie-btn-acknowledge:active {
   transform: translateY(0);
-  box-shadow: var(--glow-primary);
 }
 
 @media (max-width: 768px) {
@@ -140,15 +137,15 @@
   }
 
   .cookie-banner-title {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
   .cookie-banner-description {
-    font-size: 0.9rem;
+    font-size: var(--text-base);
   }
 
   .cookie-banner-links {
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
   }
 
   .cookie-banner-actions {
@@ -158,7 +155,7 @@
   .cookie-btn-acknowledge {
     width: 100%;
     padding: 1rem;
-    font-size: 1rem;
+    font-size: var(--text-md);
     min-height: 48px;
   }
 }
@@ -173,22 +170,22 @@
   }
 
   .cookie-banner-title {
-    font-size: 1rem;
+    font-size: var(--text-md);
     margin-bottom: 0.375rem;
   }
 
   .cookie-banner-description {
-    font-size: 0.875rem;
+    font-size: var(--text-base);
     line-height: 1.5;
     margin-bottom: 0.375rem;
   }
 
   .cookie-banner-links {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
   }
 
   .cookie-btn-acknowledge {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
   }
 }
 
@@ -202,16 +199,16 @@
   }
 
   .cookie-banner-title {
-    font-size: 1.3rem;
+    font-size: var(--text-xl);
   }
 
   .cookie-banner-description {
-    font-size: 1rem;
+    font-size: var(--text-md);
   }
 
   .cookie-btn-acknowledge {
     padding: 1rem 2.5rem;
-    font-size: 1.05rem;
+    font-size: var(--text-lg);
   }
 }
 
@@ -225,20 +222,20 @@
   }
 
   .cookie-banner-title {
-    font-size: 1.5rem;
+    font-size: var(--text-xl);
   }
 
   .cookie-banner-description {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
   .cookie-banner-links {
-    font-size: 1rem;
+    font-size: var(--text-md);
   }
 
   .cookie-btn-acknowledge {
     padding: 1.25rem 3rem;
-    font-size: 1.15rem;
+    font-size: var(--text-lg);
     min-height: 56px;
   }
 }

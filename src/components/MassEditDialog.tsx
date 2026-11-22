@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Asset, AssetClass, AllocationMode } from '../types/assetAllocation';
 import { formatDisplayPercent } from '../utils/numberFormatter';
+import { MaterialIcon } from './MaterialIcon';
 
 interface MassEditDialogProps {
   isOpen: boolean;
@@ -155,9 +156,9 @@ export const MassEditDialog: React.FC<MassEditDialogProps> = ({
             <span>{t('dialogs.massEdit.total')}:</span>
             <span className="total-value">{formatDisplayPercent(total)}</span>
             {isValid ? (
-              <span className="valid-icon">✓</span>
+              <MaterialIcon name="check_circle" size="small" className="valid-icon" />
             ) : (
-              <span className="invalid-icon">✗</span>
+              <MaterialIcon name="error" size="small" className="invalid-icon" />
             )}
           </div>
 

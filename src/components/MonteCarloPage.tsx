@@ -7,6 +7,7 @@ import { calculateFIRE, getEffectiveInputs } from '../utils/fireCalculator';
 import { loadFireCalculatorInputs, loadAssetAllocation } from '../utils/cookieStorage';
 import { calculateFIREPortfolioData } from '../utils/allocationCalculator';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { MonteCarloSimulator } from './MonteCarloSimulator';
 
 export const MonteCarloPage: React.FC = () => {
@@ -69,14 +70,10 @@ export const MonteCarloPage: React.FC = () => {
   const hasValidationErrors = result?.validationErrors && result.validationErrors.length > 0;
 
   return (
-    <div className="app-container monte-carlo-container">
+    <div className="page">
+      <PageHeader title={t('monteCarlo.pageTitle')} description={t('monteCarlo.pageDescription')} />
+      <div className="app-container monte-carlo-container">
       <main className="main-content" id="main-content">
-        <header className="page-header">
-          <h2><MaterialIcon name="casino" className="page-header-icon" /> {t('monteCarlo.pageTitle')}</h2>
-          <p className="page-description">
-            {t('monteCarlo.pageDescription')}
-          </p>
-        </header>
 
         {hasValidationErrors && (
           <div className="validation-error-banner" role="alert" aria-live="polite">
@@ -94,6 +91,7 @@ export const MonteCarloPage: React.FC = () => {
           <MonteCarloSimulator inputs={inputs} />
         )}
       </main>
+      </div>
     </div>
   );
 };

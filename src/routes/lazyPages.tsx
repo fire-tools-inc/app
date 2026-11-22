@@ -105,6 +105,10 @@ const netWorthTrackerRoute = createLazyPage(
   '/net-worth-tracker',
   () => import('../components/NetWorthTrackerPage').then((module) => module.NetWorthTrackerPage),
 );
+const logMonthRoute = createLazyPage(
+  '/log-month',
+  () => import('../components/LogMonthPage').then((module) => module.LogMonthPage),
+);
 const debtPayoffRoute = createLazyPage(
   '/debt-payoff',
   () => import('../components/DebtPayoffPage').then((module) => module.DebtPayoffPage),
@@ -128,6 +132,7 @@ export const LazyPortfolioBacktestPage = portfolioBacktestRoute.Component;
 export const LazyPortfolioBreakdownPage = portfolioBreakdownRoute.Component;
 export const LazyExpenseTrackerPage = expenseTrackerRoute.Component;
 export const LazyNetWorthTrackerPage = netWorthTrackerRoute.Component;
+export const LazyLogMonthPage = logMonthRoute.Component;
 export const LazyDebtPayoffPage = debtPayoffRoute.Component;
 export const LazyQuestionnairePage = questionnaireRoute.Component;
 export const LazySettingsPage = settingsRoute.Component;
@@ -143,6 +148,7 @@ const routePreloaders: Record<string, () => Promise<void>> = {
   '/portfolio-breakdown': portfolioBreakdownRoute.preload,
   '/expense-tracker': expenseTrackerRoute.preload,
   '/net-worth-tracker': netWorthTrackerRoute.preload,
+  '/log-month': logMonthRoute.preload,
   '/debt-payoff': debtPayoffRoute.preload,
   '/questionnaire': questionnaireRoute.preload,
   '/settings': settingsRoute.preload,

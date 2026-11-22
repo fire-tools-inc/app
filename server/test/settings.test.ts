@@ -114,11 +114,38 @@ describe('PATCH /api/v1/settings', () => {
     expect((await request(app).get('/api/v1/settings')).body.llmCategorization).toEqual(config);
   });
 
+  it('stores the AI provider preset and rejects unknown providers', async () => {
+    const { app } = await makeApp();
+    const config = { provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'synthetic-key', model: 'vendor/model' };
+    const saved = await request(app).patch('/api/v1/settings').send({ llmCategorization: config });
+    expect(saved.status).toBe(200);
+    expect(saved.body.llmCategorization).toEqual(config);
+    const invalid = await request(app).patch('/api/v1/settings')
+      .send({ llmCategorization: { ...config, provider: 'unsupported-provider' }, accountName: 'Should not save' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe('invalid_body');
+    expect(JSON.stringify(invalid.body)).not.toContain('synthetic-key');
+    const current = await request(app).get('/api/v1/settings');
+    expect(current.body.llmCategorization).toEqual(config);
+    expect(current.body.accountName).not.toBe('Should not save');
+    await request(app).patch('/api/v1/settings').send({ llmCategorization: { ...config, provider: null } });
+    expect((await request(app).get('/api/v1/settings')).body.llmCategorization).not.toHaveProperty('provider');
+  });
+
   it('applies partial updates', async () => {
     const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ accountName: 'Bob' });
     expect(res.status).toBe(200);
     expect(res.body.accountName).toBe('Bob');
+  });
+
+  it('stores the UI language and rejects unsupported ones', async () => {
+    const { app } = await makeApp();
+    expect((await request(app).get('/api/v1/settings')).body).not.toHaveProperty('language');
+    expect((await request(app).patch('/api/v1/settings').send({ language: 'es' })).body.language).toBe('es');
+    expect((await request(app).patch('/api/v1/settings').send({ language: 'xx' })).status).toBe(400);
+    expect((await request(app).put('/api/v1/settings').send({ ...validSettings, language: 'fr' })).body.language).toBe('fr');
+    expect((await request(app).patch('/api/v1/settings').send({ language: null })).body).not.toHaveProperty('language');
   });
 
   it('ignores invalid decimalSeparator silently', async () => {

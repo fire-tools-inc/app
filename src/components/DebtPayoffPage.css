@@ -1,45 +1,26 @@
 .debt-payoff-page {
-  width: 100%;
-  min-width: 0;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.debt-payoff-page h2 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.debt-payoff-page .page-intro {
-  color: var(--text-secondary);
-  max-width: 760px;
-  line-height: 1.5;
-  margin: 0;
+.debt-payoff-page > .page-head {
+  margin-bottom: 0.25rem;
 }
 
 .debt-payoff-section {
   min-width: 0;
   overflow-x: auto;
-  background: var(--glass-surface);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  padding: 1.25rem 1.25rem 1.5rem;
-  box-shadow: var(--glass-shadow);
+  padding: 1.25rem;
 }
 
 .debt-payoff-section h3 {
   margin: 0 0 1rem;
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -59,7 +40,7 @@
 }
 
 .debt-payoff-field label {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -72,7 +53,7 @@
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   transition: border-color var(--transition-fast);
 }
 
@@ -92,16 +73,14 @@
   text-align: left;
   padding: 0.6rem 0.6rem;
   border-bottom: 1px solid var(--border-subtle);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--text-primary);
 }
 
 .debt-table th {
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: var(--text-sm);
 }
 
 .debt-table input,
@@ -113,7 +92,7 @@
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   box-sizing: border-box;
   transition: border-color var(--transition-fast);
 }
@@ -136,7 +115,7 @@
 
 .debt-payoff-hint {
   margin-top: 0.75rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -148,7 +127,7 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   font-weight: 600;
   transition: background var(--transition-fast);
 }
@@ -169,10 +148,11 @@
 }
 
 .debt-payoff-btn.danger {
-  background: #B91C1C;
-  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(240, 154, 163, 0.45);
+  color: var(--error);
   padding: 0.3rem 0.65rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .debt-payoff-btn.danger:hover {
@@ -196,15 +176,13 @@
 }
 
 .debt-payoff-summary-card .label {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .debt-payoff-summary-card .value {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -228,8 +206,8 @@
 }
 
 .debt-payoff-recommend {
-  background: rgba(45, 212, 191, 0.12);
-  border: 1px solid rgba(45, 212, 191, 0.4);
+  background: rgba(101, 212, 196, 0.12);
+  border: 1px solid rgba(101, 212, 196, 0.4);
   color: var(--accent-primary-light);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);

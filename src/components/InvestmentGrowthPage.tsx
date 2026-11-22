@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { NumberInput } from './NumberInput';
 import { SliderInput } from './SliderInput';
 import { Tooltip } from './Tooltip';
@@ -100,16 +101,11 @@ export function InvestmentGrowthPage() {
   const fmt = (v: number) => formatDisplayCurrency(v, currency);
 
   return (
-    <main className="investment-growth-page" id="main-content">
-      <header>
-        <h1>
-          <MaterialIcon name="trending_up" /> Investment Growth Calculator
-        </h1>
-        <p className="page-intro">
-          Project your portfolio's end value after a chosen number of years,
-          including inflation, periodic contributions, and your asset allocation.
-        </p>
-      </header>
+    <main className="page investment-growth-page" id="main-content">
+      <PageHeader
+        title="Investment Growth Calculator"
+        description="Project your portfolio's end value after a chosen number of years, including inflation, periodic contributions, and your asset allocation."
+      />
 
       <div className="ig-grid">
         {/* Inputs */}

@@ -12,10 +12,12 @@
 import { loadSettings } from './cookieSettings';
 import { logger } from './logger';
 
-interface EmbeddedBackendInfo {
+export interface EmbeddedBackendInfo {
   url: string | null;
   dbPath: string | null;
   error: string | null;
+  /** Bearer token required by the embedded API, when the desktop app set one. */
+  token?: string | null;
 }
 
 interface FireToolsBridge {
@@ -62,6 +64,31 @@ interface FireToolsBridge {
       error?: string;
     }>;
   };
+  apiAccess?: {
+    get: () => Promise<ApiAccessState>;
+    set: (opts: { enabled?: boolean; port?: number }) => Promise<ApiAccessState>;
+    regenerateToken: () => Promise<ApiAccessState>;
+    copyToken: () => Promise<{ ok: boolean; error?: string }>;
+  };
+}
+
+/** Desktop API access for other local apps, scripts and agents, as reported by the main process. */
+export interface ApiAccessState {
+  ok: boolean;
+  enabled?: boolean;
+  /** False when the embedded backend is not running (e.g. a custom backend is used). */
+  available?: boolean;
+  /** Saved fixed port. */
+  port?: number;
+  defaultPort?: number;
+  /** True when the API is served on the fixed port. */
+  listening?: boolean;
+  /** Address clients should use while access is on, including `/api/v1`. */
+  baseUrl?: string | null;
+  /** `in_use` when another program holds the port, otherwise the listen error. */
+  portError?: string | null;
+  discoveryFile?: string;
+  error?: string;
 }
 
 export interface UpdaterPrefs {
@@ -170,43 +197,48 @@ export const getEmbeddedBackendInfo = async (): Promise<EmbeddedBackendInfo | nu
   return embeddedBackendRequest;
 };
 
+export interface ResolvedBackend {
+  /** API base URL including `/api/v1`, without a trailing slash. */
+  baseUrl: string;
+  /** Bearer token to send with requests, or null when the backend has none. */
+  token: string | null;
+  mode: 'embedded' | 'custom';
+}
+
 /**
- * Returns the API base URL (including `/api/v1`) or `null` when no backend
- * is reachable (pure browser build with no custom URL configured).
+ * Resolves the backend the renderer should talk to, including its access
+ * token, or `null` when no backend is reachable (pure browser build with no
+ * custom URL configured).
  */
-export const getApiBaseUrl = async (): Promise<string | null> => {
+export const getApiBackend = async (): Promise<ResolvedBackend | null> => {
   const { backend } = loadSettings();
 
   // In custom mode honor the user's intent: never silently fall back to
   // embedded when the custom URL is missing — return null so callers surface
   // a clear "backend unreachable" error instead of querying an unexpected one.
   if (backend.mode === 'custom') {
-    return backend.customUrl ? withVersion(backend.customUrl) : null;
+    if (!backend.customUrl) return null;
+    const token = typeof backend.customToken === 'string' ? backend.customToken.trim() : '';
+    return { baseUrl: withVersion(backend.customUrl), token: token || null, mode: 'custom' };
   }
 
   const info = await getEmbeddedBackendInfo();
-  if (info?.url) return withVersion(info.url);
-  return null;
+  if (!info?.url) return null;
+  return {
+    baseUrl: withVersion(info.url),
+    token: typeof info.token === 'string' && info.token ? info.token : null,
+    mode: 'embedded',
+  };
 };
 
 /**
- * Probe a backend URL for `/api/v1/health`. Returns the parsed JSON or throws.
- * Used by the Settings "Test connection" button.
+ * Returns the API base URL (including `/api/v1`) or `null` when no backend
+ * is reachable (pure browser build with no custom URL configured).
  */
-export const probeBackend = async (
-  baseUrl: string,
-  timeoutMs = 5000
-): Promise<{ status: string; [key: string]: unknown }> => {
-  const target = `${withVersion(baseUrl)}/health`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(target, { signal: controller.signal });
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} ${res.statusText}`);
-    }
-    return (await res.json()) as { status: string };
-  } finally {
-    clearTimeout(timer);
-  }
+export const getApiBaseUrl = async (): Promise<string | null> => {
+  const backend = await getApiBackend();
+  return backend?.baseUrl ?? null;
 };
+
+/** Builds the versioned API base for an origin such as `http://localhost:3000`. */
+export const apiBaseForOrigin = (origin: string): string => withVersion(origin);

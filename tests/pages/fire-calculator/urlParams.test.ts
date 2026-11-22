@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { serializeInputsToURL, deserializeInputsFromURL, hasURLParams } from '../../../src/utils/urlParams';
+import { serializeInputsToURL, deserializeInputsFromURL, hasURLParams, rememberCalculatorQuery, selectInitialCalculatorInputs } from '../../../src/utils/urlParams';
 import { DEFAULT_INPUTS } from '../../../src/utils/defaults';
 import { CalculatorInputs } from '../../../src/types/calculator';
 
@@ -209,6 +209,26 @@ describe('urlParams', () => {
       expect(inputs.annualLaborIncome).toBe(DEFAULT_INPUTS.annualLaborIncome);
       expect(inputs.currentAnnualExpenses).toBe(DEFAULT_INPUTS.currentAnnualExpenses);
       expect(inputs.expectedStockReturn).toBe(DEFAULT_INPUTS.expectedStockReturn);
+    });
+  });
+
+  describe('selectInitialCalculatorInputs', () => {
+    const own = { ...DEFAULT_INPUTS, initialSavings: 1000 };
+    const remote = { ...DEFAULT_INPUTS, initialSavings: 2000 };
+
+    it('lets stored inputs from the database win over the query the calculator wrote itself', () => {
+      const params = serializeInputsToURL(own);
+      rememberCalculatorQuery(params);
+      expect(selectInitialCalculatorInputs(new URLSearchParams(params.toString()), remote, true)).toEqual(remote);
+    });
+
+    it('keeps shared links and local-only storage behaving as before', () => {
+      rememberCalculatorQuery(serializeInputsToURL(own));
+      const shared = serializeInputsToURL({ ...DEFAULT_INPUTS, initialSavings: 3000 });
+      expect(selectInitialCalculatorInputs(shared, remote, true).initialSavings).toBe(3000);
+      expect(selectInitialCalculatorInputs(serializeInputsToURL(own), remote, false)).toEqual(own);
+      expect(selectInitialCalculatorInputs(new URLSearchParams(), remote, false)).toEqual(remote);
+      expect(selectInitialCalculatorInputs(new URLSearchParams(), null, true)).toEqual(DEFAULT_INPUTS);
     });
   });
 });

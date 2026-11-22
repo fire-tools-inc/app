@@ -1,0 +1,24 @@
+# Fire Tools
+
+> Fire Tools is a free, open-source, local-first planner for financial independence (FIRE): FIRE calculator, Monte Carlo and withdrawal-rate simulations, asset allocation, cashflow (expenses and income) and net worth tracking. The desktop app keeps data in a local SQLite database and, after the user turns on Settings > API access, serves a REST API on a stable loopback address (default http://127.0.0.1:47820/api/v1) with a bearer token. Scripts, other apps and AI agents can use it to onboard someone, log a month or read data; writes appear in the running app within seconds.
+
+Agents should install the `using-fire-tools` skill below and call the API only through its helper script, which reads the token from the app's connection file without printing it. Ask the user before writing, never request or reveal the token, and do not use the public demo for real data: it is read-only.
+
+## Agents
+
+- [Agent skill: using-fire-tools](https://fire-tools-inc.github.io/app/agents/using-fire-tools/SKILL.md): onboarding and monthly logging workflow, ground rules, errors
+- [Agent API reference](https://fire-tools-inc.github.io/app/agents/using-fire-tools/references/api.md): connection file, state endpoints, changesets, worked onboarding example
+- [Data model](https://fire-tools-inc.github.io/app/agents/using-fire-tools/references/data-model.md): enums, expense categories with Need/Want defaults, field rules
+- [Helper script](https://fire-tools-inc.github.io/app/agents/using-fire-tools/scripts/fire-tools-api.mjs): Node.js 18+ client that adds the token and refuses non-local targets
+
+## Docs
+
+- [Use the Fire Tools API](https://fire-tools-inc.github.io/app/docs/user/api-access.html): how a user turns on API access, calls it from scripts and installs the agent skill
+- [Local API and storage sync](https://fire-tools-inc.github.io/app/docs/engineering/local-api.html): storage model, authentication, connection file, sync behaviour
+- [OpenAPI contract](https://fire-tools-inc.github.io/app/api/openapi.yaml): every route, request and response
+- [User guide](https://fire-tools-inc.github.io/app/docs/user/): what each tool does
+
+## Optional
+
+- [Source code](https://github.com/fire-tools-inc/app): MIT licensed
+- [Spreadsheet import prompts](https://fire-tools-inc.github.io/app/docs/user/spreadsheet-import.html): file-based alternative without API access

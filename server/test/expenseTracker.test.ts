@@ -113,6 +113,26 @@ describe('expense-tracker months', () => {
     expect(month.body.expenses.find((e: Record<string, unknown>) => e.externalId === 'e-s')).toMatchObject({ amount: 90, unitAmount: 45, quantity: 2 });
   });
 
+  it('stores retired categories from older clients under the merged categories', async () => {
+    const { app } = await makeApp();
+    const res = await request(app).put(`${base}/months/2024/6`).send({
+      expenses: [exp({ category: 'FEES' }), exp({ externalId: 'e-2', category: 'HOLIDAYS' })],
+      incomes: [],
+      budgets: [
+        { category: 'FEES', monthlyBudget: 10, currency: 'EUR' },
+        { category: 'BUSINESS', monthlyBudget: 40, currency: 'EUR' },
+      ],
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.expenses.map((e: { category: string }) => e.category).sort()).toEqual(['BUSINESS', 'TRAVEL']);
+    expect(res.body.budgets.filter((b: { monthKey?: string }) => b.monthKey)).toEqual([
+      expect.objectContaining({ category: 'BUSINESS', monthlyBudget: 50 }),
+    ]);
+    const overrides = await request(app).put(`${base}/category-overrides`)
+      .send([{ categoryId: 'FEES', name: 'Old' }, { categoryId: 'BUSINESS', name: 'Work' }]);
+    expect(overrides.body).toEqual([expect.objectContaining({ categoryId: 'BUSINESS', name: 'Work' })]);
+  });
+
   it('PUT invalid expenseType → 400', async () => {
     const { app } = await makeApp();
     const res = await request(app).put(`${base}/months/2024/7`).send({

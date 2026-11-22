@@ -29,6 +29,16 @@ export interface EmbedOptions {
    * encrypted mode; the caller (e.g. Electron + safeStorage) owns key storage.
    */
   passphrase?: string;
+  /**
+   * Optional bearer token required on every /api/v1 route except GET /health.
+   * The caller hands it to its own clients (e.g. the Electron renderer).
+   */
+  apiToken?: string;
+  /**
+   * Optional second token, read on every request, accepted next to `apiToken`.
+   * Electron uses it for Settings > API access so turning access off revokes it at once.
+   */
+  secondaryApiToken?: () => string | null;
   /** Optional sink that receives every formatted log line. Used by Electron
    *  to append to the on-disk log file alongside stderr output. */
   logSink?: LogSink;
@@ -53,9 +63,22 @@ export interface EmbeddedServer {
    * so it can update safeStorage atomically with the rekey result.
    */
   rekey: (req: RekeyRequest) => Promise<RekeyResult>;
-  /** Close the HTTP listener and the SQLite handle. Idempotent. */
+  /**
+   * Serves the same API on a second, fixed loopback port so other local apps
+   * and scripts have a stable address. Moves it when called with another port;
+   * rejects with the listen error (e.g. EADDRINUSE) and leaves no listener.
+   */
+  openPublicListener: (port: number) => Promise<{ port: number; url: string }>;
+  /** Stops the fixed-port listener, if any. Idempotent. */
+  closePublicListener: () => Promise<void>;
+  /** Close the HTTP listeners and the SQLite handle. Idempotent. */
   close: () => Promise<void>;
 }
+
+const closeServer = (server: Server): Promise<void> => new Promise((resolve) => {
+  server.close(() => resolve());
+  server.closeAllConnections();
+});
 
 export const startEmbeddedServer = async (
   opts: EmbedOptions,
@@ -76,6 +99,7 @@ export const startEmbeddedServer = async (
     rateLimit: { windowMs: 15 * 60 * 1000, max: 1000 },
     nodeEnv: 'production',
     passphrase: opts.passphrase,
+    apiToken: opts.apiToken,
   };
 
   const { db, dbPath } = initDb(env);
@@ -96,6 +120,7 @@ export const startEmbeddedServer = async (
     dbPath,
     disableRateLimit: true,
     adminState,
+    secondaryApiToken: opts.secondaryApiToken,
   });
 
   const server: Server = await new Promise((resolve, reject) => {
@@ -107,6 +132,32 @@ export const startEmbeddedServer = async (
   const actualPort = addr?.port ?? port;
   const url = `http://${host}:${actualPort}`;
 
+  let publicListener: { server: Server; port: number } | null = null;
+  const closePublicListener = async () => {
+    const current = publicListener;
+    publicListener = null;
+    if (current) await closeServer(current.server);
+  };
+  const openPublicListener = async (requestedPort: number) => {
+    if (!Number.isInteger(requestedPort) || requestedPort < 1024 || requestedPort > 65535) {
+      throw new RangeError(`Port must be an integer between 1024 and 65535 (got ${requestedPort}).`);
+    }
+    if (publicListener?.port === requestedPort) {
+      return { port: requestedPort, url: `http://${host}:${requestedPort}` };
+    }
+    await closePublicListener();
+    const extra: Server = await new Promise((resolve, reject) => {
+      const s = app.listen(requestedPort, host);
+      s.once('listening', () => {
+        s.off('error', reject);
+        resolve(s);
+      });
+      s.once('error', reject);
+    });
+    publicListener = { server: extra, port: requestedPort };
+    return { port: requestedPort, url: `http://${host}:${requestedPort}` };
+  };
+
   let closed = false;
   const close = async () => {
     if (closed) return;
@@ -114,6 +165,7 @@ export const startEmbeddedServer = async (
     try {
       await app.closeReceiptUploads();
     } finally {
+      await closePublicListener();
       await new Promise<void>((resolve) => {
         server.close(() => resolve());
       });
@@ -149,6 +201,8 @@ export const startEmbeddedServer = async (
       return state.encrypted;
     },
     rekey,
+    openPublicListener,
+    closePublicListener,
     close,
   };
 };

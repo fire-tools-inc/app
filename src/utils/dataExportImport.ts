@@ -15,6 +15,7 @@ import {
   convertNetWorthDataToNewCurrency,
 } from './currencyConverter';
 import { validateExpenseTrackerPlanning } from './expensePlanning';
+import { normalizeExpenseTrackerCategories } from './expenseCategoryAliases';
 
 /**
  * Interface for the complete data export
@@ -138,7 +139,7 @@ export function importAllDataFromJSON(
     assets = convertAssetsToNewCurrency(assets, sourceCurrency, targetCurrency, rates);
   }
 
-  let expenseTracker = exportData.expenseTracker;
+  let expenseTracker = exportData.expenseTracker && normalizeExpenseTrackerCategories(exportData.expenseTracker);
   if (expenseTracker) validateExpenseTrackerPlanning(expenseTracker);
   if (expenseTracker && sourceCurrency !== targetCurrency) {
     expenseTracker = convertExpenseDataToNewCurrency(
