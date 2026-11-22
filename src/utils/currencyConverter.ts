@@ -15,6 +15,7 @@ import { ExpenseTrackerData, IncomeEntry, ExpenseEntry } from '../types/expenseT
 import { CalculatorInputs } from '../types/calculator';
 import { logger } from './logger';
 import { parseExpensePlanning } from './expensePlanning';
+import { multiplyAmount } from './expenseCalculator';
 
 /**
  * Convert an amount from a given currency to EUR
@@ -390,6 +391,11 @@ function convertExpenseEntry(
   toCurrency: SupportedCurrency,
   rates: ExchangeRates
 ): ExpenseEntry {
+  if (expense.unitAmount !== undefined && expense.quantity !== undefined) {
+    // Keep amount = unitAmount × quantity after conversion.
+    const unitAmount = convertAmount(expense.unitAmount, fromCurrency, toCurrency, rates);
+    return { ...expense, unitAmount, amount: multiplyAmount(unitAmount, expense.quantity), currency: toCurrency };
+  }
   const convertedAmount = convertAmount(expense.amount, fromCurrency, toCurrency, rates);
   return {
     ...expense,

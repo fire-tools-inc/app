@@ -45,6 +45,23 @@ describe('migration runner', () => {
     }
   });
 
+  it('rolls back the amount breakdown without changing expense totals', () => {
+    const db = new Database(':memory:');
+    try {
+      runMigrations(db, path);
+      db.exec(`INSERT INTO expense_years (id, user_id, year) VALUES (1, 1, 2024);
+        INSERT INTO expense_months (id, user_id, expense_year_id, month) VALUES (1, 1, 1, 6);
+        INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount, description, category, expense_type, unit_amount, quantity)
+        VALUES (1, 1, 'e-1', '2024-06-03', 90, 'Sessions', 'HEALTHCARE', 'NEED', 45, 2)`);
+      expect(() => db.prepare("UPDATE expense_entries SET quantity = 0 WHERE external_id = 'e-1'").run()).toThrow();
+      expect(rollbackMigrations(db, path, 1).migrationsRolledBack).toEqual(['0007_expense_quantity']);
+      expect(db.prepare("SELECT * FROM expense_entries WHERE external_id = 'e-1'").get()).toMatchObject({ amount: 90 });
+      expect(db.prepare("SELECT * FROM expense_entries WHERE external_id = 'e-1'").get()).not.toHaveProperty('quantity');
+    } finally {
+      db.close();
+    }
+  });
+
   it('lists migrations with paired up/down files', () => {
     const migrations = listMigrations(path);
     expect(migrations.length).toBeGreaterThan(0);

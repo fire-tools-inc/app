@@ -5,7 +5,7 @@ import { planningFixture } from '../../tests/pages/expense-tracker/planningFixtu
 import { expectDiagnostic } from '../../tests/shared/diagnostics.js';
 import { expensePlanningSchema } from '../src/routes/expensePlanning.js';
 import { expensePlanningSchema as clientSchema } from '../../src/utils/expensePlanning.js';
-import { rollbackMigrations, runMigrations } from '../src/migrate.js';
+import { listMigrations, rollbackMigrations, runMigrations } from '../src/migrate.js';
 
 const base = '/api/v1/expense-tracker/planning';
 
@@ -100,9 +100,10 @@ describe('expense planning API', () => {
       category: 'UTILITIES', expenseType: 'NEED', scheduleId: 'schedule-1', scheduledDate: '2024-01-31',
     });
     await request(app).put(base).send(planningFixture());
-    expect(rollbackMigrations(db, 'migrations', 1).migrationsRolledBack).toEqual(['0006_expense_planning']);
+    const fromPlanning = listMigrations('migrations').filter((m) => m.id >= '0006').map((m) => `${m.id}_${m.name}`);
+    expect(rollbackMigrations(db, 'migrations', fromPlanning.length).migrationsRolledBack).toEqual([...fromPlanning].reverse());
     expect(db.prepare('SELECT amount FROM expense_entries').get()).toEqual({ amount: 100 });
-    expect(runMigrations(db, 'migrations').migrationsApplied).toEqual(['0006_expense_planning']);
+    expect(runMigrations(db, 'migrations').migrationsApplied).toEqual(fromPlanning);
     expect(db.prepare('SELECT schedule_id FROM expense_entries').get()).toEqual({ schedule_id: null });
   });
 });

@@ -736,6 +736,12 @@
     "amount": "Betrag",
     "amountRange": "Amount Range",
     "amountWithCurrency": "Amount ({{currency}})",
+    "amountEachWithCurrency": "Betrag pro Mal ({{currency}})",
+    "amountTimes": "{{amount}} × {{times}}",
+    "multipliedTotal": "Gesamt: {{total}}",
+    "multiplyAmount": "Gleicher Betrag mehrmals",
+    "multiplyAmountHint": "Zum Beispiel der Preis einer Sitzung mal die Sitzungen im Monat. Wiederkehrende Kopien behalten den Preis, nur die Anzahl ändert sich.",
+    "times": "Anzahl",
     "analytics": "Analytik",
     "backToCurrentPeriod": "Back to Current Period",
     "budget": "Budget",
@@ -853,7 +859,8 @@
     "transactions": "Transactions",
     "type": "Typ",
     "validation": {
-      "amountGreaterThanZero": "Please enter a valid amount greater than 0"
+      "amountGreaterThanZero": "Please enter a valid amount greater than 0",
+      "multipliedAmount": "Bitte gib einen Betrag und eine Anzahl größer als 0 ein"
     },
     "view": "Ansicht",
     "want": "Wunsch",

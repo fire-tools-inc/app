@@ -736,6 +736,12 @@
     "amount": "Importo",
     "amountRange": "Amount Range",
     "amountWithCurrency": "Amount ({{currency}})",
+    "amountEachWithCurrency": "Importo per volta ({{currency}})",
+    "amountTimes": "{{amount}} × {{times}}",
+    "multipliedTotal": "Totale: {{total}}",
+    "multiplyAmount": "Stesso importo più volte",
+    "multiplyAmountHint": "Ad esempio il prezzo di una seduta per le sedute del mese. Le copie ricorrenti mantengono il prezzo, quindi cambiano solo le volte.",
+    "times": "Volte",
     "analytics": "Analisi",
     "backToCurrentPeriod": "Back to Current Period",
     "budget": "Budget",
@@ -853,7 +859,8 @@
     "transactions": "Transactions",
     "type": "Tipo",
     "validation": {
-      "amountGreaterThanZero": "Please enter a valid amount greater than 0"
+      "amountGreaterThanZero": "Please enter a valid amount greater than 0",
+      "multipliedAmount": "Inserisci un importo e un numero di volte maggiori di 0"
     },
     "view": "Visualizza",
     "want": "Desiderio",

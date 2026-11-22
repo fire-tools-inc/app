@@ -804,6 +804,12 @@
     "amount": "Amount",
     "amountRange": "Amount Range",
     "amountWithCurrency": "Amount ({{currency}})",
+    "amountEachWithCurrency": "Amount each ({{currency}})",
+    "amountTimes": "{{amount}} × {{times}}",
+    "multipliedTotal": "Total: {{total}}",
+    "multiplyAmount": "Same amount several times",
+    "multiplyAmountHint": "For example one session's price times the sessions this month. Recurring copies keep the price, so only the times change.",
+    "times": "Times",
     "analytics": "Analytics",
     "backToCurrentPeriod": "Back to Current Period",
     "budget": "Budget",
@@ -921,7 +927,8 @@
     "transactions": "Transactions",
     "type": "Type",
     "validation": {
-      "amountGreaterThanZero": "Please enter a valid amount greater than 0"
+      "amountGreaterThanZero": "Please enter a valid amount greater than 0",
+      "multipliedAmount": "Please enter an amount and a number of times greater than 0"
     },
     "view": "View",
     "want": "Want",

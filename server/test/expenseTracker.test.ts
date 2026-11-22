@@ -95,6 +95,24 @@ describe('expense-tracker months', () => {
     expect(res.body.budgets).toHaveLength(1);
   });
 
+  it('stores an amount paid several times and keeps the month when a breakdown is wrong', async () => {
+    const { app } = await makeApp();
+    const session = exp({ externalId: 'e-s', amount: 90, unitAmount: 45, quantity: 2, isRecurring: true });
+    const saved = await request(app).put(`${base}/months/2024/7`).send({ expenses: [session, exp({ externalId: 'e-p' })] });
+    expect(saved.status).toBe(200);
+    expect(saved.body.expenses.map((e: Record<string, unknown>) => [e.externalId, e.unitAmount, e.quantity])).toEqual([
+      ['e-s', 45, 2], ['e-p', undefined, undefined],
+    ]);
+
+    for (const breakdown of [{ unitAmount: 45, quantity: 3 }, { unitAmount: 45 }, { unitAmount: 90, quantity: 0 }]) {
+      const rejected = await request(app).put(`${base}/months/2024/7`).send({ expenses: [exp({ externalId: 'e-s', amount: 90, ...breakdown })] });
+      expect(rejected.status).toBe(400);
+    }
+    const month = await request(app).get(`${base}/months/2024/7`);
+    expect(month.body.expenses).toHaveLength(2);
+    expect(month.body.expenses.find((e: Record<string, unknown>) => e.externalId === 'e-s')).toMatchObject({ amount: 90, unitAmount: 45, quantity: 2 });
+  });
+
   it('PUT invalid expenseType → 400', async () => {
     const { app } = await makeApp();
     const res = await request(app).put(`${base}/months/2024/7`).send({
@@ -148,6 +166,8 @@ describe('expense-tracker expenses', () => {
     const res = await request(app).post(`${base}/expenses`).send(exp());
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ externalId: 'e-1', amount: 12.5, category: 'food', expenseType: 'NEED', type: 'expense' });
+    const multiplied = await request(app).put(`${base}/expenses/e-1`).send(exp({ amount: 37.5, unitAmount: 12.5, quantity: 3 }));
+    expect(multiplied.body).toMatchObject({ amount: 37.5, unitAmount: 12.5, quantity: 3 });
   });
 
   it('POST duplicate externalId → 409', async () => {

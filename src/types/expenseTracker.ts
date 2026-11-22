@@ -71,6 +71,10 @@ export interface ExpenseEntry extends Transaction {
   category: ExpenseCategory | string; // Supports both built-in and custom category IDs
   subCategory?: string;
   expenseType: ExpenseType; // Need vs Want
+  /** Price of one occurrence when the same amount is paid several times; amount = unitAmount × quantity. */
+  unitAmount?: number;
+  /** How many times unitAmount was paid in the month. */
+  quantity?: number;
 }
 
 // Budget for a specific category

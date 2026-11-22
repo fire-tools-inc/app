@@ -5,6 +5,7 @@ import {
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '../types/currency';
 import { expensePlanningSchema, validateExpenseTrackerPlanning } from './expensePlanning';
 import { isValidCalendarDate } from './dateValidation';
+import { hasValidAmountBreakdown } from './expenseCalculator';
 
 const currency = z.custom<SupportedCurrency>(value =>
   typeof value === 'string' && SUPPORTED_CURRENCIES.some(item => item.code === value));
@@ -69,9 +70,9 @@ export function exportExpenseTrackerToCSV(data: ExpenseTrackerData): string {
   for (const year of data.years) for (const month of year.months) for (const entry of month.incomes) {
     rows.push([entry.id, entry.date, entry.amount, entry.description, entry.source, entry.currency, entry.isRecurring, entry.scheduleId, entry.scheduledDate]);
   }
-  rows.push([], ['Expense Entries'], ['ID', 'Date', 'Amount', 'Description', 'Category', 'SubCategory', 'ExpenseType', 'Currency', 'IsRecurring', 'ScheduleID', 'ScheduledDate']);
+  rows.push([], ['Expense Entries'], ['ID', 'Date', 'Amount', 'Description', 'Category', 'SubCategory', 'ExpenseType', 'Currency', 'IsRecurring', 'ScheduleID', 'ScheduledDate', 'UnitAmount', 'Quantity']);
   for (const year of data.years) for (const month of year.months) for (const entry of month.expenses) {
-    rows.push([entry.id, entry.date, entry.amount, entry.description, entry.category, entry.subCategory, entry.expenseType, entry.currency, entry.isRecurring, entry.scheduleId, entry.scheduledDate]);
+    rows.push([entry.id, entry.date, entry.amount, entry.description, entry.category, entry.subCategory, entry.expenseType, entry.currency, entry.isRecurring, entry.scheduleId, entry.scheduledDate, entry.unitAmount, entry.quantity]);
   }
   rows.push([], ['Monthly Budgets'], ['Year', 'Month', 'Category', 'MonthlyBudget', 'Currency']);
   for (const year of data.years) for (const month of year.months) for (const budget of month.budgets) {
@@ -173,7 +174,10 @@ export function importExpenseTrackerFromCSV(csv: string): ExpenseTrackerData {
       const expense: ExpenseEntry = {
         ...base, type: 'expense', category: value('Category', true), expenseType,
         ...(value('SubCategory') ? { subCategory: value('SubCategory') } : {}),
+        ...(value('UnitAmount') ? { unitAmount: number('UnitAmount') } : {}),
+        ...(value('Quantity') ? { quantity: number('Quantity') } : {}),
       };
+      if (!hasValidAmountBreakdown(expense)) throw new Error('Invalid amount breakdown in CSV.');
       target.expenses.push(expense);
     }
   }

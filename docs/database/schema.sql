@@ -294,6 +294,9 @@ CREATE TABLE IF NOT EXISTS expense_entries (
     is_recurring       INTEGER NOT NULL DEFAULT 0 CHECK (is_recurring IN (0,1)),
     schedule_id        TEXT,
     scheduled_date     TEXT,
+    -- Optional price × times breakdown; when present, amount = unit_amount × quantity
+    unit_amount        REAL CHECK (unit_amount IS NULL OR unit_amount > 0),
+    quantity           REAL CHECK (quantity IS NULL OR quantity > 0),
     CHECK ((schedule_id IS NULL AND scheduled_date IS NULL)
         OR (schedule_id IS NOT NULL AND scheduled_date IS NOT NULL)),
     UNIQUE (user_id, external_id),

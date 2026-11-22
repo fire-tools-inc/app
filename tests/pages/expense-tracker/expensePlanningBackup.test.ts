@@ -38,6 +38,21 @@ describe('cashflow planning backups', () => {
     expect(() => importAllDataFromJSON(JSON.stringify(backup), 'EUR')).toThrow();
   });
 
+  it('keeps an amount paid several times through CSV and currency changes', () => {
+    const data = cashflowFixture();
+    data.years[0].months[0].expenses.push({
+      id: 'sessions', type: 'expense', date: '2024-01-15', amount: 90, unitAmount: 45, quantity: 2,
+      currency: 'EUR', description: 'Synthetic sessions', category: 'HEALTHCARE', expenseType: 'NEED', isRecurring: true,
+    });
+    const csv = exportExpenseTrackerToCSV(data);
+    expect(importExpenseTrackerFromCSV(csv)).toEqual(data);
+    expect(() => importExpenseTrackerFromCSV(csv.replace(',45,2', ',45,3'))).toThrow('Invalid amount breakdown in CSV.');
+
+    const converted = convertExpenseDataToNewCurrency(data, 'EUR', 'USD', DEFAULT_FALLBACK_RATES).years[0].months[0].expenses[0];
+    const unit = convertAmount(45, 'EUR', 'USD', DEFAULT_FALLBACK_RATES);
+    expect(converted).toMatchObject({ unitAmount: unit, quantity: 2, amount: Math.round(unit * 200) / 100, currency: 'USD' });
+  });
+
   it('accepts legacy CSV headers and explicitly preserves current planning on restore', () => {
     const legacy = [
       'Expense Tracker Data Export', 'Currency,EUR', 'Expense Entries',

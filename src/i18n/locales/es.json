@@ -736,6 +736,12 @@
     "amount": "Importe",
     "amountRange": "Amount Range",
     "amountWithCurrency": "Amount ({{currency}})",
+    "amountEachWithCurrency": "Importe por vez ({{currency}})",
+    "amountTimes": "{{amount}} × {{times}}",
+    "multipliedTotal": "Total: {{total}}",
+    "multiplyAmount": "Mismo importe varias veces",
+    "multiplyAmountHint": "Por ejemplo, el precio de una sesión por las sesiones del mes. Las copias recurrentes conservan el precio, así que solo cambian las veces.",
+    "times": "Veces",
     "analytics": "Analítica",
     "backToCurrentPeriod": "Back to Current Period",
     "budget": "Presupuesto",
@@ -853,7 +859,8 @@
     "transactions": "Transactions",
     "type": "Tipo",
     "validation": {
-      "amountGreaterThanZero": "Please enter a valid amount greater than 0"
+      "amountGreaterThanZero": "Please enter a valid amount greater than 0",
+      "multipliedAmount": "Introduce un importe y un número de veces mayores que 0"
     },
     "view": "Ver",
     "want": "Deseo",

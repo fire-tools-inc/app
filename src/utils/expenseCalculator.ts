@@ -554,3 +554,17 @@ export function copyRecurringTransactionsToNewMonth(
     expenses: recurringExpenses,
   };
 }
+
+/** Total of an amount paid several times, rounded to cents. */
+export function multiplyAmount(unitAmount: number, quantity: number): number {
+  return Math.round(unitAmount * quantity * 100) / 100;
+}
+
+/** True when an expense has no amount breakdown, or one whose total is its amount. */
+export function hasValidAmountBreakdown(entry: Pick<ExpenseEntry, 'amount' | 'unitAmount' | 'quantity'>): boolean {
+  const { amount, unitAmount, quantity } = entry;
+  if (unitAmount === undefined && quantity === undefined) return true;
+  return typeof unitAmount === 'number' && typeof quantity === 'number'
+    && Number.isFinite(unitAmount) && Number.isFinite(quantity) && unitAmount > 0 && quantity > 0
+    && Math.abs(multiplyAmount(unitAmount, quantity) - amount) < 0.005;
+}
