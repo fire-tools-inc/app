@@ -122,9 +122,9 @@ rejected token.
 Desktop only, off by default. **Settings > Agent access** lets AI agents
 running under your user account, such as GitHub Copilot CLI or Claude Code,
 read and update your data through the local API. While it is on, Fire Tools
-keeps a connection file with the local address and a token that changes at
-every launch; **Copy file path** shows where it is. Turn it off when you are
-done. See [Use Fire Tools with an AI agent](./ai-agents.md).
+keeps a connection file with the local address and an agent token that is
+renewed when you turn access on or start the app, and revoked when you turn it
+off; **Copy file path** shows where it is. Turn it off when you are done. See [Use Fire Tools with an AI agent](./ai-agents.md).
 
 ## Audit log
 

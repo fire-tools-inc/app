@@ -119,7 +119,7 @@ All errors are `{ "error": { "code", "message", "details"? } }`.
 | Status | Meaning | Do |
 | --- | --- | --- |
 | 400 `invalid_body` | A record failed validation; `details` names the collection, key and reason. Nothing was written. | Fix that record and resend. |
-| 401 `unauthorized` | Token missing or stale (the app restarted or agent access was turned off). | Rerun; the script rereads the token. If it persists, ask the person to check Settings > Agent access. |
+| 401 `unauthorized` | Token missing or revoked (the app restarted, or agent access was turned off or on again). | Rerun; the script rereads the token. If it persists, ask the person to check Settings > Agent access. |
 | 404 `not_found` | Unknown route or record. | Check the path and id. |
 | 409 `conflict` | The id already exists, or a scheduled occurrence is already recorded. | Update instead of creating. |
 | 413 `payload_too_large` | Body over the limit. | Split the changeset by month. |

@@ -45,9 +45,11 @@ export interface BuildAppOptions {
    */
   adminState?: AdminState;
   documentExtractor?: typeof extractDocumentText;
+  /** Second bearer token, read per request; only used when `env.apiToken` is set. */
+  secondaryApiToken?: () => string | null;
 }
 
-export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor }: BuildAppOptions) => {
+export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, documentExtractor, secondaryApiToken }: BuildAppOptions) => {
   const corsOptions: CorsOptions = {
     origin: (origin, cb) => {
       if (!origin) {
@@ -73,7 +75,7 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
   app.disable('x-powered-by');
   app.use(cors(corsOptions));
   // Authenticate before reading bodies; preflights were answered by cors().
-  if (env.apiToken) app.use('/api/v1', requireBearerToken(env.apiToken));
+  if (env.apiToken) app.use('/api/v1', requireBearerToken(env.apiToken, secondaryApiToken));
   // Whole-domain state documents may be large; every other route keeps 2 MB.
   const stateJson = express.json({ limit: STATE_BODY_LIMIT_BYTES });
   const defaultJson = express.json({ limit: DEFAULT_BODY_LIMIT_BYTES });
@@ -88,6 +90,8 @@ export const buildApp = ({ db, env, dbPath, disableRateLimit, adminState, docume
         standardHeaders: 'draft-7',
         legacyHeaders: false,
         message: { error: { code: 'rate_limited', message: 'Too many requests, slow down.' } },
+        // Open apps poll this cheap revision check every few seconds.
+        skip: (req) => req.method === 'GET' && req.path === '/sync/status',
       }),
     );
   }

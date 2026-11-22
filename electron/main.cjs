@@ -62,6 +62,10 @@ const externalBackendToken = (process.env.FIRETOOLS_BACKEND_TOKEN || '').trim() 
 // Every API call to the embedded backend must carry this per-launch token, so
 // other local pages and processes cannot read the database through it.
 const embeddedApiToken = crypto.randomBytes(32).toString('base64url');
+// Agents get their own token, minted whenever agent access is turned on (or
+// the app starts with it on) and revoked the moment access is turned off.
+let agentApiToken = null;
+const newApiToken = () => crypto.randomBytes(32).toString('base64url');
 
 // Path where we persist the safeStorage-encrypted passphrase blob. Kept in
 // the same userData dir as the DB so a single backup captures both.
@@ -188,6 +192,7 @@ async function startEmbedded() {
       host: '127.0.0.1',
       corsAllowAll: true,
       apiToken: embeddedApiToken,
+      secondaryApiToken: () => agentApiToken,
       passphrase: passphrase || undefined,
       // Funnel backend log lines into the same on-disk file the renderer
       // writes to, so bug-report exports contain both sides of the stack.
@@ -293,9 +298,10 @@ ipcMain.handle('fire-tools:embedded-backend-info', () => {
   };
 });
 
-// Writes or removes the agent discovery file so it always matches the saved
-// preference and the running backend. Returns the state shown in Settings.
-function syncAgentAccess() {
+// Writes or removes the agent discovery file and issues or revokes the agent
+// token so both always match the saved preference and the running backend.
+// `rotate` mints a new token even if one is active. Returns the Settings state.
+function syncAgentAccess({ rotate = false } = {}) {
   const userDataDir = app.getPath('userData');
   const prefs = agentAccess.readPrefs(userDataDir);
   if (prefs.error) logWarn('[fire-tools] could not read agent access preference:', prefs.error);
@@ -303,18 +309,22 @@ function syncAgentAccess() {
   const available = Boolean(embeddedServer);
   try {
     if (prefs.enabled && embeddedServer) {
+      if (rotate || !agentApiToken) agentApiToken = newApiToken();
       agentAccess.writeDiscovery(userDataDir, {
         apiBaseUrl: `${embeddedServer.url}/api/v1`,
-        token: embeddedApiToken,
+        token: agentApiToken,
         appVersion: app.getVersion(),
         pid: process.pid,
         startedAt: new Date().toISOString(),
       });
     } else {
+      agentApiToken = null;
       agentAccess.removeDiscovery(userDataDir);
     }
     return { ok: true, enabled: prefs.enabled, available, discoveryFile };
   } catch (err) {
+    // Never leave a token active that agents cannot discover or the user cannot see.
+    agentApiToken = null;
     logError('[fire-tools] could not update the agent discovery file:', err);
     return {
       ok: false, enabled: prefs.enabled, available, discoveryFile,
@@ -336,7 +346,7 @@ ipcMain.handle('fire-tools:agent-access-set', (_event, opts) => {
     return { ok: false, error: err && err.message ? err.message : String(err) };
   }
   logInfo(`[fire-tools] agent access ${opts.enabled ? 'enabled' : 'disabled'}`);
-  return syncAgentAccess();
+  return syncAgentAccess({ rotate: opts.enabled });
 });
 
 ipcMain.handle('fire-tools:get-db-encryption-status', () => ({
@@ -681,6 +691,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (event) => {
+  agentApiToken = null;
   try {
     agentAccess.removeDiscovery(app.getPath('userData'));
   } catch (err) {

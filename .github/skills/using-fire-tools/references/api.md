@@ -23,7 +23,9 @@ by the current OS user only, removed when the app quits or access is turned off.
   "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
 ```
 
-The token changes on every launch. Never copy it into chat or files.
+The token is issued for agents when access is turned on or the app starts, and
+stops working when access is turned off or the app quits. Never copy it into
+chat or files.
 
 ## What the app shows
 

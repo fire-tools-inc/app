@@ -125,7 +125,7 @@ this command for an untrusted download or disable Gatekeeper globally.
 | Setting | Behavior |
 |---------|----------|
 | **Backend** | Uses the embedded desktop backend by default. **Custom URL** connects backend-supported features to your own server; enter its origin, such as `http://localhost:8080`, without `/api/v1`, then test the connection, plus its access token when the server sets `API_TOKEN`. The connected database becomes the source of truth for your data. |
-| **Agent access** | Desktop only, off by default. Publishes the local API address and a per-launch token to AI agents running as your user. [Details](docs/engineering/agent-api.md). |
+| **Agent access** | Desktop only, off by default. Publishes the local API address and a separate agent token, revoked when you turn access off, to AI agents running as your user. [Details](docs/engineering/agent-api.md). |
 | **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. Choose a provider preset (local model, OpenRouter, OpenAI, Gemini, Anthropic or a custom OpenAI-compatible endpoint). No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing, paste-expense matching and ordinary imports work with AI disabled. [Details](docs/user/settings.md). |
 | **Experimental features** | Opt in to Portfolio Breakdown and document/receipt imports. |
 | **Security** | Optional desktop SQLite passphrase encryption uses the OS secure store; Linux needs an available keyring. It does not encrypt renderer storage or exports. [Details](docs/security/passphrase.md). |

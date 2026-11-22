@@ -54,7 +54,8 @@ For each domain the app compares its cache with the database:
 ## Authentication
 
 - The desktop app starts its backend on a random loopback port with a random
-  bearer token per launch. The renderer gets both through the preload bridge.
+  bearer token per launch. The renderer gets both through the preload bridge;
+  agents get a separate, revocable token (see below).
 - A standalone backend requires `Authorization: Bearer <API_TOKEN>` when the
   `API_TOKEN` environment variable is set. Set it whenever the backend is
   reachable beyond loopback. In the app, enter the token under
@@ -63,18 +64,20 @@ For each domain the app compares its cache with the database:
 
 ## Agent discovery (desktop)
 
-**Settings > Agent access** is off by default. When on, the main process writes
-`agent-api.json` (mode `0600`) next to the database:
+**Settings > Agent access** is off by default. When on, the main process mints
+a separate agent token (the embedded backend accepts it next to the app's own
+token) and writes `agent-api.json` (mode `0600`) next to the database:
 
 ```json
 { "schemaVersion": 1, "app": "Fire Tools", "appVersion": "x.y.z",
-  "apiBaseUrl": "http://127.0.0.1:53124/api/v1", "token": "<per-launch secret>",
+  "apiBaseUrl": "http://127.0.0.1:53124/api/v1", "token": "<agent secret>",
   "pid": 12345, "startedAt": "...", "guideUrl": "...", "openapiUrl": "..." }
 ```
 
-It is removed when access is turned off or the app quits. While it exists, any
-process running as the same OS user can use the API, including when the
-database is passphrase-encrypted; the settings copy says so.
+Turning access on (or starting the app with it on) issues a new agent token.
+Turning it off or quitting revokes the token at once and removes the file. While
+access is on, any process running as the same OS user can use the API, including
+when the database is passphrase-encrypted; the settings copy says so.
 Code: `electron/agentAccess.cjs`, IPC `fire-tools:agent-access-get|set`.
 
 ## Endpoints for agents

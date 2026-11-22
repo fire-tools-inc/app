@@ -91,6 +91,8 @@ interface DomainRuntime {
   conflict: boolean;
   /** Revision whose data could not be written locally; not retried until it changes. */
   failedRevision: number | null;
+  /** The database copy must be loaded again (e.g. after a refused change), even if its revision looks current. */
+  needsReload: boolean;
 }
 
 export interface BackupResult {
@@ -219,7 +221,7 @@ export class BackendSyncEngine {
     this.flushDelayMs = options.flushDelayMs ?? 100;
     this.requestTimeoutMs = options.requestTimeoutMs ?? 30_000;
     for (const domain of SYNC_DOMAINS) {
-      this.domains[domain] = { active: false, snapshot: null, viewBase: null, viewGeneration: 0, seq: 0, conflict: false, failedRevision: null };
+      this.domains[domain] = { active: false, snapshot: null, viewBase: null, viewGeneration: 0, seq: 0, conflict: false, failedRevision: null, needsReload: false };
     }
     this.status = this.computeStatus();
   }
@@ -523,7 +525,10 @@ export class BackendSyncEngine {
     }
 
     // Never synced with this database: stop recording against an old marker.
+    // Saves are not recorded until the decision completes, so any save made
+    // meanwhile (seq changes) cancels it; the next poll decides again.
     runtime.active = false;
+    const seq = runtime.seq;
     const local = adapter.readLocal();
     const localEmpty = adapter.isEmpty(local);
 
@@ -531,7 +536,7 @@ export class BackendSyncEngine {
       if (localEmpty) {
         // Agent-first onboarding: the database copy wins.
         await this.request('PATCH', `/state/${domain}`, { initialize: true });
-        await this.hydrate(domain);
+        await this.hydrate(domain, seq);
         return;
       }
       if (this.backend?.mode === 'custom') {
@@ -539,7 +544,7 @@ export class BackendSyncEngine {
         if (server.data !== null && !adapter.isEmpty(server.data)) {
           if (this.sameContent(adapter, local, server.data)) {
             await this.request('PATCH', `/state/${domain}`, { initialize: true });
-            await this.hydrate(domain);
+            await this.hydrate(domain, seq);
           } else {
             this.markConflict(domain);
           }
@@ -562,11 +567,18 @@ export class BackendSyncEngine {
     }
 
     if (localEmpty) {
-      await this.hydrate(domain);
+      await this.hydrate(domain, seq);
       return;
     }
     const server = await this.getState(domain);
     if (server.instanceId !== this.instanceId) throw new InstanceChangedError();
+    if (runtime.seq !== seq) return;
+    if (server.data === null || adapter.isEmpty(server.data)) {
+      // Nothing in the database to lose (e.g. the device was edited while an
+      // empty domain was being initialized).
+      await this.replaceWithLocal(domain);
+      return;
+    }
     if (this.sameContent(adapter, local, server.data)) {
       this.applyState(domain, server);
       return;
@@ -624,9 +636,8 @@ export class BackendSyncEngine {
   // --------------------------------------------------------------- hydrate
 
   /** Loads the backend copy into the local cache. Returns false when skipped. */
-  private async hydrate(domain: SyncDomain): Promise<boolean> {
+  private async hydrate(domain: SyncDomain, seq = this.domains[domain].seq): Promise<boolean> {
     const runtime = this.domains[domain];
-    const seq = runtime.seq;
     const state = await this.getState(domain);
     if (state.instanceId !== this.instanceId) throw new InstanceChangedError();
     // A local edit arrived meanwhile: flush it first, then load again.
@@ -664,6 +675,7 @@ export class BackendSyncEngine {
     runtime.active = true;
     runtime.conflict = false;
     runtime.failedRevision = null;
+    runtime.needsReload = false;
     this.clearIssue(domain);
     this.persist();
     if (changed && this.viewsActive) {
@@ -728,15 +740,17 @@ export class BackendSyncEngine {
       const sent = new Set(entries.map((entry) => entry.id));
       this.dropOutbox((entry) => sent.has(entry.id));
       this.addRejected(rejected);
-      let needsHydrate = rejected.length > 0;
+      const runtime = this.domains[domain];
+      if (rejected.length) runtime.needsReload = true;
       const marker = this.store.domains[domain];
       if (response && marker) {
         if (response.previousRevision === marker.revision) marker.revision = response.revision;
-        else needsHydrate = true;
+        else runtime.needsReload = true;
       }
       this.lastSavedAt = Date.now();
       this.persist();
-      if (needsHydrate && !this.hasPending(domain)) await this.hydrate(domain);
+      // Stays flagged when skipped for newer edits; a later flush or poll reloads.
+      if (runtime.needsReload && !this.hasPending(domain)) await this.hydrate(domain);
     } finally {
       this.inFlight -= 1;
       this.scheduleEmit();
@@ -825,8 +839,8 @@ export class BackendSyncEngine {
         const remote = status.domains[domain];
         return runtime.active
           && !this.hasPending(domain)
-          && remote.revision !== this.store.domains[domain]?.revision
-          && remote.revision !== runtime.failedRevision;
+          && (runtime.needsReload
+            || (remote.revision !== this.store.domains[domain]?.revision && remote.revision !== runtime.failedRevision));
       });
       await this.flushAll();
       for (const domain of changed) {

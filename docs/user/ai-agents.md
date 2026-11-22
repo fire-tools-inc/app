@@ -17,8 +17,9 @@ comfortable sharing.
 2. Go to **Settings > Agent access** and turn on **Allow local AI agents**.
 
 Fire Tools then writes a small connection file that only your user account can
-read. It holds the local address and a secret token that changes every time the
-app starts. The file is deleted when you quit the app or turn access off.
+read. It holds the local address and a secret token just for agents. A new
+token is issued every time you turn access on or the app starts; turning access
+off or quitting deletes the file and stops the token working immediately.
 
 Turn agent access off when you are done. While it is on, any program running
 under your account can read and change your Fire Tools data, including data in

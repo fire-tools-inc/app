@@ -1,5 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, onTestFinished } from 'vitest';
 import request from 'supertest';
+import Database from 'better-sqlite3';
+import { buildApp } from '../src/app.js';
+import { runMigrations } from '../src/migrate.js';
 import { makeApp, testEnv } from './helpers.js';
 import { documents, expenseTrackerDoc, toChangeset, type DomainName } from './syncFixtures.js';
 
@@ -314,6 +317,26 @@ describe('bearer token', () => {
     expect(ok.body.data).toBeNull();
   });
 
+  it('accepts a revocable second token only while it is issued', async () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, testEnv().migrationsPath);
+    let agentToken: string | null = 'synthetic-agent-token';
+    const app = buildApp({
+      db, env: { ...testEnv(), apiToken: 'synthetic-token' }, dbPath: ':memory:', disableRateLimit: true,
+      secondaryApiToken: () => agentToken,
+    });
+    onTestFinished(async () => {
+      await app.closeReceiptUploads();
+      db.close();
+    });
+    const asAgent = () => request(app).get('/api/v1/sync/status').set('Authorization', 'Bearer synthetic-agent-token');
+    expect((await asAgent()).status).toBe(200);
+    agentToken = null;
+    expect((await asAgent()).status).toBe(401);
+    expect((await request(app).get('/api/v1/sync/status').set('Authorization', 'Bearer synthetic-token')).status).toBe(200);
+  });
+
   it('keeps the health probe and CORS preflight open', async () => {
     const app = await tokenApp();
     expect((await request(app).get('/api/v1/health')).status).toBe(200);
@@ -324,6 +347,25 @@ describe('bearer token', () => {
     expect(preflight.status).toBe(204);
     expect(preflight.headers['access-control-allow-headers']).toBe('Authorization,Content-Type,x-user-id');
     expect(preflight.headers['access-control-max-age']).toBe('600');
+  });
+});
+
+describe('rate limit', () => {
+  it('does not count change polling against the request limit', async () => {
+    const db = new Database(':memory:');
+    db.pragma('foreign_keys = ON');
+    runMigrations(db, testEnv().migrationsPath);
+    const app = buildApp({ db, env: { ...testEnv(), rateLimit: { windowMs: 60_000, max: 2 } }, dbPath: ':memory:' });
+    onTestFinished(async () => {
+      await app.closeReceiptUploads();
+      db.close();
+    });
+    for (let poll = 0; poll < 5; poll += 1) {
+      expect((await request(app).get('/api/v1/sync/status')).status).toBe(200);
+    }
+    expect((await request(app).get('/api/v1/state/settings')).status).toBe(200);
+    expect((await request(app).get('/api/v1/state/settings')).status).toBe(200);
+    expect((await request(app).get('/api/v1/state/settings')).status).toBe(429);
   });
 });
 

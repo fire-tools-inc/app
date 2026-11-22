@@ -117,6 +117,20 @@ describe('three-way merge for stale views', () => {
     expect(result.currentMonth).toBe(4);
   });
 
+  it('keeps remote edits and deletions of rows a stale view only shifted', () => {
+    const base = expenseTrackerFixture();
+    march(base).expenses = [expense('a', 10), expense('b', 20), expense('c', 30), expense('d', 40)];
+    const remote = structuredClone(base);
+    march(remote).expenses = [expense('a', 10), expense('b', 25), expense('d', 40)];
+    const stale = structuredClone(base);
+    march(stale).expenses.shift();
+
+    const merged = threeWayMerge(serialize(base), serialize(stale), serialize(remote), adapter);
+    const rows = merged.collections.expenses;
+    expect(Object.keys(rows).filter((key) => key.length === 1).sort()).toEqual(['b', 'd']);
+    expect(JSON.parse(rows.b).amount).toBe(25);
+  });
+
   it('merges singleton fields changed on different sides', () => {
     const base = expenseTrackerFixture();
     const remote = { ...base, currency: 'USD' as const };

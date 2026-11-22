@@ -182,10 +182,21 @@ function mergeSingleton(base: string, ours: string, theirs: string): string {
   return canonicalStringify(merged);
 }
 
+// List order alone is not an edit: deleting or inserting a row shifts the
+// position of every later row in the same list.
+function withoutPosition(serialized: string | undefined): string | undefined {
+  if (serialized === undefined) return undefined;
+  const parsed = JSON.parse(serialized) as unknown;
+  if (!isPlainObject(parsed) || !('position' in parsed)) return serialized;
+  const { position: _position, ...rest } = parsed;
+  return canonicalStringify(rest);
+}
+
 /**
  * Three-way merge for a save made by a view that still shows `base` after
  * the backend moved to `theirs`: entities the view changed win, everything
- * it merely carried over keeps the remote version.
+ * it merely carried over (including rows it only shifted) keeps the remote
+ * version, so remote edits and deletions survive.
  */
 export function threeWayMerge(
   base: SerializedDoc,
@@ -204,7 +215,8 @@ export function threeWayMerge(
     const t = theirs.collections[collection] ?? {};
     const merged: Record<string, string> = {};
     for (const key of new Set([...Object.keys(o), ...Object.keys(t), ...Object.keys(b)])) {
-      const value = o[key] === b[key] ? t[key] : o[key];
+      const changedHere = o[key] !== b[key] && withoutPosition(o[key]) !== withoutPosition(b[key]);
+      const value = changedHere ? o[key] : t[key];
       if (value !== undefined) merged[key] = value;
     }
     collections[collection] = merged;

@@ -938,7 +938,7 @@
       "on": "Activado",
       "warning": "Mientras esté activado, cualquier programa que se ejecute con tu cuenta de usuario puede leer y modificar tus datos de Fire Tools, incluso si la base de datos está cifrada. Desactívalo cuando termines.",
       "fileLabel": "Archivo de conexión",
-      "fileHelp": "Los agentes leen de este archivo la dirección local y un token secreto. El token cambia cada vez que se inicia Fire Tools y el archivo se elimina cuando cierras la aplicación o desactivas el acceso. Nunca pegues el token en un chat.",
+      "fileHelp": "Los agentes leen de este archivo la dirección local y su propio token secreto. Se emite un token nuevo cada vez que activas el acceso o inicias Fire Tools, y deja de funcionar en cuanto desactivas el acceso o cierras la aplicación. Nunca pegues el token en un chat.",
       "copyPath": "Copiar ruta del archivo",
       "copied": "Ruta copiada",
       "copyError": "No se pudo copiar la ruta. Selecciónala y cópiala manualmente.",

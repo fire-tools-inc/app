@@ -938,7 +938,7 @@
       "on": "Activé",
       "warning": "Tant que cette option est activée, tout programme exécuté sous votre compte utilisateur peut lire et modifier vos données Fire Tools, même lorsque la base de données est chiffrée. Désactivez-la quand vous avez terminé.",
       "fileLabel": "Fichier de connexion",
-      "fileHelp": "Les agents lisent dans ce fichier l'adresse locale et un jeton secret. Le jeton change à chaque démarrage de Fire Tools et le fichier est supprimé lorsque vous quittez l'application ou désactivez l'accès. Ne collez jamais le jeton dans une conversation.",
+      "fileHelp": "Les agents lisent dans ce fichier l'adresse locale et leur propre jeton secret. Un nouveau jeton est émis chaque fois que vous activez l'accès ou démarrez Fire Tools, et il cesse de fonctionner dès que vous désactivez l'accès ou quittez l'application. Ne collez jamais le jeton dans une conversation.",
       "copyPath": "Copier le chemin du fichier",
       "copied": "Chemin copié",
       "copyError": "Impossible de copier le chemin. Sélectionnez-le et copiez-le manuellement.",

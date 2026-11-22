@@ -327,6 +327,37 @@ describe('saving changes', () => {
     expect(engine.getStatus().rejected).toEqual([]);
   });
 
+  it('reloads the database copy after a refusal even when newer edits were queued meanwhile', async () => {
+    const engine = await bootWithExpenses();
+    let editedDuringRequest = false;
+    server.validators.expenseTracker = (changeset) => {
+      const bad = changeset.upsert?.expenses?.find((item) => (item.amount as number) < 0);
+      if (!bad) return null;
+      if (!editedDuringRequest) {
+        editedDuringRequest = true;
+        const later = loadExpenseTrackerData()!;
+        march(later).expenses[0].amount = 50;
+        saveExpenseTrackerData(later);
+      }
+      return {
+        status: 400, code: 'invalid_body', message: 'Amount must be a finite non-negative number.',
+        details: { collection: 'expenses', key: bad.id, message: 'Amount must be a finite non-negative number.' },
+      };
+    };
+    const next = expenseTrackerFixture();
+    march(next).expenses.push(expense('bad-1', -5));
+    saveExpenseTrackerData(next);
+    await engine.flushNow();
+    await settle(engine);
+    await engine.flushNow();
+    await settle(engine);
+
+    expectDiagnostic('error', 'The database refused a change.');
+    expect(march(server.data('expenseTracker') as ExpenseTrackerData).expenses.map((item) => [item.id, item.amount]))
+      .toEqual([['exp-1', 50], ['exp-2', 120.5]]);
+    expect(march(loadExpenseTrackerData()!).expenses.map((item) => item.id)).toEqual(['exp-1', 'exp-2']);
+  });
+
   it('reloads the domain when someone else wrote before our change', async () => {
     const engine = await bootWithExpenses();
     server.agentWrite('expenseTracker', { upsert: { expenses: [{ ...expense('agent-1', 11), year: 2025, month: 3 }] } });
@@ -434,6 +465,26 @@ describe('failure modes and inactive storage', () => {
     await engine.retryNow();
     await settle(engine);
     expect((server.data('calculator') as { initialSavings: number }).initialSavings).toBe(calculatorFixture().initialSavings);
+  });
+
+  it('never overwrites a save made while the start-up comparison was in flight', async () => {
+    saveFireCalculatorInputs(calculatorFixture());
+    server.seed('calculator', calculatorFixture(), true);
+    const realFetch = server.fetch;
+    let edited = false;
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (!edited && String(input).endsWith('/state/calculator') && (init?.method ?? 'GET') === 'GET') {
+        edited = true;
+        saveFireCalculatorInputs({ ...calculatorFixture(), initialSavings: 777 });
+      }
+      return realFetch(input, init);
+    }));
+    const engine = createEngine();
+    await engine.init();
+    await settle(engine);
+
+    expect(edited).toBe(true);
+    expect(loadFireCalculatorInputs()?.initialSavings).toBe(777);
   });
 
   it('reports a rejected token and keeps changes queued', async () => {

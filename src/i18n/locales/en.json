@@ -1006,7 +1006,7 @@
       "on": "On",
       "warning": "While this is on, any program running under your user account can read and change your Fire Tools data, even when the database is encrypted. Turn it off when you are done.",
       "fileLabel": "Connection file",
-      "fileHelp": "Agents read the local address and a secret token from this file. The token changes every time Fire Tools starts, and the file is deleted when you quit or turn access off. Never paste the token into a chat.",
+      "fileHelp": "Agents read the local address and their own secret token from this file. A new token is issued each time you turn access on or Fire Tools starts, and it stops working as soon as you turn access off or quit. Never paste the token into a chat.",
       "copyPath": "Copy file path",
       "copied": "Path copied",
       "copyError": "Could not copy the path. Select it and copy it manually.",

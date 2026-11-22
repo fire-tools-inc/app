@@ -938,7 +938,7 @@
       "on": "An",
       "warning": "Solange dies aktiviert ist, kann jedes Programm, das unter Ihrem Benutzerkonto läuft, Ihre Fire-Tools-Daten lesen und ändern, auch wenn die Datenbank verschlüsselt ist. Schalten Sie es aus, wenn Sie fertig sind.",
       "fileLabel": "Verbindungsdatei",
-      "fileHelp": "Agenten lesen aus dieser Datei die lokale Adresse und ein geheimes Token. Das Token ändert sich bei jedem Start von Fire Tools, und die Datei wird gelöscht, wenn Sie die App beenden oder den Zugriff ausschalten. Fügen Sie das Token niemals in einen Chat ein.",
+      "fileHelp": "Agenten lesen aus dieser Datei die lokale Adresse und ein eigenes geheimes Token. Bei jedem Einschalten des Zugriffs und jedem Start von Fire Tools wird ein neues Token ausgestellt; es funktioniert nicht mehr, sobald Sie den Zugriff ausschalten oder die App beenden. Fügen Sie das Token niemals in einen Chat ein.",
       "copyPath": "Dateipfad kopieren",
       "copied": "Pfad kopiert",
       "copyError": "Der Pfad konnte nicht kopiert werden. Markieren Sie ihn und kopieren Sie ihn manuell.",

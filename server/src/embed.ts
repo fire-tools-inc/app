@@ -34,6 +34,11 @@ export interface EmbedOptions {
    * The caller hands it to its own clients (e.g. the Electron renderer).
    */
   apiToken?: string;
+  /**
+   * Optional second token, read on every request, accepted next to `apiToken`.
+   * Electron uses it for agent access so turning access off revokes it at once.
+   */
+  secondaryApiToken?: () => string | null;
   /** Optional sink that receives every formatted log line. Used by Electron
    *  to append to the on-disk log file alongside stderr output. */
   logSink?: LogSink;
@@ -102,6 +107,7 @@ export const startEmbeddedServer = async (
     dbPath,
     disableRateLimit: true,
     adminState,
+    secondaryApiToken: opts.secondaryApiToken,
   });
 
   const server: Server = await new Promise((resolve, reject) => {
