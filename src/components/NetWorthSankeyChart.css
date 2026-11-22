@@ -20,7 +20,7 @@
   text-align: center;
   color: var(--text-secondary);
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px dashed var(--border-subtle);
   gap: 0.75rem;
   min-height: 160px;
@@ -33,7 +33,7 @@
 
 .sankey-empty p {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   max-width: 320px;
   line-height: 1.5;
 }

@@ -48,12 +48,12 @@
   font-size: 2.5rem;
   color: var(--text-primary);
   margin-bottom: 1rem;
-  font-weight: bold;
+  font-weight: 600;
   font-family: var(--font-heading);
 }
 
 .not-found-message {
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   color: var(--text-secondary);
   line-height: 1.6;
   margin-bottom: 2rem;
@@ -76,20 +76,18 @@
   border-radius: var(--radius-md);
   text-decoration: none;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--text-md);
   transition: all var(--transition-base);
   min-height: 48px;
 }
 
 .btn-home {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
+  background: var(--accent-primary);
   color: var(--text-inverse);
   box-shadow: var(--glow-primary);
 }
 
 .btn-home:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px var(--accent-glow-strong);
 }
 
 .btn-home:focus {
@@ -104,9 +102,8 @@
 }
 
 .btn-calculator:hover {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
+  background: var(--accent-primary);
   color: var(--text-inverse);
-  transform: translateY(-2px);
 }
 
 .btn-calculator:focus {
@@ -121,7 +118,7 @@
 }
 
 .helpful-links h2 {
-  font-size: 1.3rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
   margin-bottom: 1rem;
   font-family: var(--font-heading);
@@ -157,7 +154,7 @@
 }
 
 .helpful-links nav ul li a:hover {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
+  background: var(--accent-primary);
   color: var(--text-inverse);
   transform: translateX(5px);
   border-color: transparent;
@@ -183,11 +180,11 @@
   }
 
   .not-found-title {
-    font-size: 2rem;
+    font-size: var(--text-2xl);
   }
 
   .not-found-message {
-    font-size: 1rem;
+    font-size: var(--text-md);
   }
 
   .not-found-actions {

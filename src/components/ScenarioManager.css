@@ -8,7 +8,7 @@
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-sm);
   padding: 0 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
@@ -42,12 +42,12 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .scenario-empty {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   margin: 0.25rem 0 0.75rem;
 }
 
@@ -77,7 +77,7 @@
   padding: 0.5rem 0.6rem;
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   text-align: left;
   transition: all var(--transition-fast);
   min-width: 0;
@@ -124,7 +124,7 @@
   border: 1px solid var(--border-accent);
   background: var(--bg-secondary);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .scenario-name-input:focus {
@@ -136,14 +136,14 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-gold));
+  background: var(--accent-primary);
   color: var(--text-inverse);
   border: none;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   white-space: nowrap;
   transition: all var(--transition-fast);
 }
@@ -160,7 +160,7 @@
 
 .scenario-limit {
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   margin: 0.5rem 0 0;
 }
 

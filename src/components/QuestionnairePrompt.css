@@ -31,7 +31,7 @@
 /* Prompt modal container */
 .questionnaire-prompt-modal {
   background: var(--bg-secondary);
-  border-radius: 16px;
+  border-radius: var(--radius-2xl);
   max-width: 420px;
   width: 100%;
   padding: 2rem;
@@ -63,7 +63,7 @@
   color: var(--text-muted);
   cursor: pointer;
   padding: 0.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.2s;
   display: flex;
   align-items: center;
@@ -80,12 +80,11 @@
   width: 80px;
   height: 80px;
   margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px var(--accent-glow);
 }
 
 .questionnaire-prompt-icon .material-icon {
@@ -97,7 +96,7 @@
 .questionnaire-prompt-title {
   margin: 0 0 1rem;
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -107,7 +106,7 @@
   margin: 0 0 1.5rem;
   color: var(--text-secondary);
   line-height: 1.6;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 /* Features list */
@@ -123,10 +122,10 @@
   align-items: center;
   gap: 0.75rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   padding: 0.5rem 0.75rem;
   background: var(--bg-tertiary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .questionnaire-prompt-feature .material-icon {
@@ -147,23 +146,20 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   font-weight: 600;
-  font-size: 1rem;
+  font-size: var(--text-md);
   cursor: pointer;
   transition: all 0.2s;
   border: none;
 }
 
 .questionnaire-prompt-btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   color: var(--bg-primary);
-  box-shadow: 0 4px 16px var(--accent-glow);
 }
 
 .questionnaire-prompt-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px var(--accent-glow);
 }
 
 .questionnaire-prompt-btn-secondary {
@@ -182,7 +178,7 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   padding: 0.5rem;
   transition: color 0.2s;
@@ -207,19 +203,19 @@
   }
 
   .questionnaire-prompt-icon .material-icon {
-    font-size: 2rem;
+    font-size: var(--text-2xl);
   }
 
   .questionnaire-prompt-title {
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
   }
 
   .questionnaire-prompt-description {
-    font-size: 0.9rem;
+    font-size: var(--text-base);
   }
 
   .questionnaire-prompt-btn {
     padding: 0.75rem 1.25rem;
-    font-size: 0.95rem;
+    font-size: var(--text-base);
   }
 }

@@ -19,7 +19,9 @@ import { useDeferredRender } from '../hooks/useDeferredRender';
 import { CalculatorInputsForm } from './CalculatorInputsForm';
 import { FIREMetrics } from './FIREMetrics';
 import { DataManagement } from './DataManagement';
+import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { ChartLoadingFallback, ChartLoadFailure } from './ChartLoadingState';
 
 const NetWorthChart = createLazyComponent(
@@ -35,6 +37,7 @@ const IncomeExpensesChart = createLazyComponent(
 );
 
 export function FIRECalculatorPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { logAuditEvent } = useAuditLog();
@@ -166,6 +169,8 @@ export function FIRECalculatorPage() {
   };
 
   return (
+    <div className="page">
+      <PageHeader title={t('fireCalculator.pageTitle')} description={t('fireCalculator.pageDescription')} />
     <div className="app-container">
       <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`} aria-label="Calculator inputs">
         <button
@@ -324,6 +329,7 @@ export function FIRECalculatorPage() {
           </>
         )}
       </main>
+    </div>
     </div>
   );
 }

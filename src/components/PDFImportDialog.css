@@ -43,8 +43,8 @@
   padding: 0.5rem;
   background: var(--bg-tertiary);
   color: var(--text-primary);
-  border: 2px solid var(--border-subtle);
-  border-radius: 6px;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-sm);
 }
 
 /* AI toggle row */
@@ -54,7 +54,7 @@
   gap: 0.6rem;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-tertiary);
 }
 
@@ -78,7 +78,7 @@
   margin: 0 !important;
   display: block !important;
   line-height: 1.35;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   cursor: pointer;
   color: var(--text-primary);
   flex: 1 1 auto;
@@ -87,7 +87,7 @@
 .pdf-import-llm-toggle .pdf-row-meta {
   display: block;
   margin-top: 0.25rem;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -96,10 +96,8 @@
   margin-left: 0.5rem;
   padding: 0.05rem 0.45rem;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   background: var(--bg-elevated);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
@@ -110,7 +108,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   min-height: 1.5em;
 }
@@ -120,9 +118,9 @@
 }
 
 .pdf-import-summary {
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-tertiary);
   color: var(--text-primary);
 }
@@ -130,14 +128,14 @@
 .pdf-import-table-wrapper {
   overflow: auto;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   max-height: 50vh;
 }
 
 .pdf-import-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .pdf-import-table th,
@@ -162,7 +160,7 @@
 }
 
 .pdf-import-table tr.low-confidence td {
-  background: rgba(251, 146, 60, 0.08);
+  background: rgba(232, 176, 127, 0.08);
 }
 
 .pdf-import-table input[type="text"],
@@ -172,8 +170,8 @@
   width: 100%;
   padding: 0.3rem 0.4rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
   box-sizing: border-box;
   background: var(--bg-tertiary);
   color: var(--text-primary);
@@ -204,7 +202,7 @@
 }
 
 .pdf-import-table .pdf-row-meta {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   margin-top: 0.2rem;
 }
@@ -214,7 +212,7 @@
   text-align: center;
   color: var(--text-secondary);
   border: 1px dashed var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .pdf-import-actions {
@@ -227,14 +225,14 @@
 .pdf-import-dialog .receipt-panel {
   padding: 1rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-tertiary);
   min-width: 0;
 }
 
 .pdf-import-dialog .receipt-panel h3 {
   margin-top: 0;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .pdf-import-dialog .receipt-panel label {
@@ -251,7 +249,7 @@
   background: var(--bg-secondary);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.5rem;
 }
 
@@ -321,7 +319,7 @@
   max-width: 100%;
   max-height: 200px;
   object-fit: contain;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .pdf-import-table-wrapper .pdf-import-table {

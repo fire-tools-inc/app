@@ -19,12 +19,12 @@
 .cashflow-planning .planning-check input { width: 20px; height: 20px; accent-color: var(--accent-primary); }
 .cashflow-planning .planning-goals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; margin-top: 1rem; }
 .cashflow-planning .planning-goal { min-width: 0; padding: 1rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-tertiary); }
-.cashflow-planning .planning-progress { height: 8px; overflow: hidden; border-radius: 8px; background: var(--bg-primary); }
+.cashflow-planning .planning-progress { height: 8px; overflow: hidden; border-radius: var(--radius-md); background: var(--bg-primary); }
 .cashflow-planning .planning-progress span { display: block; height: 100%; background: var(--accent-primary); }
 .cashflow-planning dl { display: flex; gap: 1.5rem; flex-wrap: wrap; }
 .cashflow-planning dt { color: var(--text-secondary); }
 .cashflow-planning dd { margin: .3rem 0 1rem; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.cashflow-planning .planning-totals dd { font-size: 1.35rem; }
+.cashflow-planning .planning-totals dd { font-size: var(--text-xl); }
 .cashflow-planning .planning-rule-list { list-style: none; padding: 0; margin: 1rem 0; }
 .cashflow-planning .planning-rule-list li { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border-subtle); }
 .cashflow-planning .planning-rule-list li > div { min-width: 0; }

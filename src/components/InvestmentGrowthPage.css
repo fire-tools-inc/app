@@ -1,28 +1,11 @@
 .investment-growth-page {
-  width: 100%;
-  min-width: 0;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-.investment-growth-page h1 {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: 2rem;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.investment-growth-page .page-intro {
-  color: var(--text-secondary);
-  max-width: 720px;
-  line-height: 1.5;
+.investment-growth-page > .page-head {
+  margin-bottom: 0.25rem;
 }
 
 .ig-grid {
@@ -49,7 +32,7 @@
 .ig-card h2 {
   margin: 0 0 1rem;
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -64,7 +47,7 @@
 }
 
 .ig-field label {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
   display: flex;
@@ -73,7 +56,7 @@
 }
 
 .ig-field .ig-help {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   line-height: 1.35;
 }
@@ -88,7 +71,7 @@
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   transition: border-color var(--transition-fast);
 }
 
@@ -120,7 +103,7 @@
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   color: var(--text-primary);
 }
 
@@ -148,15 +131,13 @@
 }
 
 .ig-stat .ig-stat-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .ig-stat .ig-stat-value {
   font-family: var(--font-heading);
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -190,29 +171,29 @@
 
 .ig-feedback p {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   color: var(--text-secondary);
   line-height: 1.4;
 }
 
 .ig-feedback.success {
-  border-color: rgba(34, 197, 94, 0.4);
-  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(127, 203, 164, 0.4);
+  background: rgba(127, 203, 164, 0.08);
 }
 
 .ig-feedback.warning {
-  border-color: rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(232, 176, 127, 0.4);
+  background: rgba(232, 176, 127, 0.08);
 }
 
 .ig-feedback.error {
-  border-color: rgba(239, 68, 68, 0.4);
-  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(240, 154, 163, 0.4);
+  background: rgba(240, 154, 163, 0.08);
 }
 
 .ig-feedback.info {
-  border-color: rgba(59, 130, 246, 0.35);
-  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(101, 212, 196, 0.35);
+  background: rgba(101, 212, 196, 0.08);
 }
 
 .ig-band-poor .ig-feedback-title { color: var(--error); }
@@ -226,11 +207,11 @@
   padding-left: 1.25rem;
   margin: 0;
   color: var(--error);
-  font-size: 0.88rem;
+  font-size: var(--text-base);
 }
 
 .ig-allocation-warning {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--warning);
   margin-top: 0.35rem;
 }
@@ -238,5 +219,5 @@
 .ig-help-icon {
   color: var(--text-muted);
   cursor: help;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }

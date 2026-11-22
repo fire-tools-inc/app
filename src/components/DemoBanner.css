@@ -2,7 +2,7 @@
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   padding: 0.55rem 1.5rem;
 }
 

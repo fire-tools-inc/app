@@ -134,7 +134,7 @@ export const MonteCarloLogs: React.FC<MonteCarloLogsProps> = ({
         <span className="mc-logs-subtitle">
           {t('monteCarlo.logs.recordedCount', { count: logs.length })}
         </span>
-        <span className="collapse-icon" aria-hidden="true">{isExpanded ? '▼' : '▶'}</span>
+        <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isExpanded ? ' is-open' : ''}`} />
       </button>
 
       {isExpanded && (

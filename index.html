@@ -13,14 +13,14 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html { color-scheme: dark; }
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background: #0B1415;
-        color: #EBF4F1;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI', Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: #0D1213;
+        color: #E8EEEC;
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
       }
       #root, .app { min-height: 100vh; }
-      .app { --sidebar-width: 204px; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+      .app { --sidebar-width: 212px; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
       .app--sidebar-collapsed { --sidebar-width: 84px; }
       .app-workspace { display: flex; flex-direction: column; min-width: 0; }
       .app-navigation {
@@ -30,9 +30,9 @@
         margin: 12px 0 12px 12px;
         display: flex;
         flex-direction: column;
-        background: rgba(20, 34, 36, 0.94);
-        border: 1px solid #385556;
-        border-radius: 20px;
+        background: #141B1C;
+        border: 1px solid #273233;
+        border-radius: 14px;
       }
       .app-mobile-header { display: none; }
       @media (max-width: 999px) {

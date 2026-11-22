@@ -17,22 +17,6 @@ export const AssetClassTable: React.FC<AssetClassTableProps> = ({
   const { t } = useTranslation();
   const { sortedData, requestSort, getSortIndicator } = useTableSort(assetClasses);
 
-  const getActionColor = (action: string): string => {
-    switch (action) {
-      case 'BUY':
-      case 'SAVE':
-        return 'var(--color-action-buy)';
-      case 'SELL':
-      case 'INVEST':
-        return 'var(--color-action-sell)';
-      case 'HOLD':
-        return 'var(--color-action-hold)';
-      case 'EXCLUDED':
-        return 'var(--color-action-excluded)';
-      default:
-        return '#666';
-    }
-  };
 
   return (
     <div className="asset-class-table-container">
@@ -97,8 +81,7 @@ export const AssetClassTable: React.FC<AssetClassTableProps> = ({
               </td>
               <td>
                 <span 
-                  className="action-badge"
-                  style={{ backgroundColor: getActionColor(ac.action) }}
+                  className={`action-badge action-badge--${ac.action.toLowerCase()}`}
                 >
                   {ac.action}
                 </span>

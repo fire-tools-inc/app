@@ -16,6 +16,7 @@ import { loadSettings } from '../utils/cookieSettings';
 import { getCurrencySymbol } from '../utils/currencyConverter';
 import { NumberInput } from './NumberInput';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { PrivacyBlur } from './PrivacyBlur';
 import { AbbreviatedValue } from './AbbreviatedValue';
 
@@ -117,23 +118,18 @@ export function ReverseFIRECalculatorPage() {
     result.validationErrors && result.validationErrors.length > 0;
 
   return (
+    <div className="page">
+      <PageHeader
+        title={<span id="reverse-fire-heading">Reverse FIRE Calculator</span>}
+        description="Pick a target retirement age and we'll work backwards to tell you how much you need to save each month to get there. All other parameters are shared with the FIRE Calculator."
+        actions={(
+          <Link to="/fire-calculator" className="btn btn--secondary">
+            <MaterialIcon name="local_fire_department" size="small" /> Forward FIRE
+          </Link>
+        )}
+      />
     <div className="app-container">
       <main className="main-content" id="main-content" tabIndex={-1} aria-labelledby="reverse-fire-heading">
-        <section className="fire-metrics" style={{ marginBottom: '1.5rem' }}>
-          <div className="fire-metrics-header">
-            <h3 id="reverse-fire-heading">
-              <MaterialIcon name="undo" /> Reverse FIRE Calculator
-            </h3>
-            <Link to="/fire-calculator" className="share-button">
-              <MaterialIcon name="local_fire_department" /> Forward FIRE
-            </Link>
-          </div>
-          <p style={{ marginTop: 0 }}>
-            Pick a target retirement age and we'll work backwards to tell you
-            how much you need to save each month to get there. All other
-            parameters are shared with the FIRE Calculator.
-          </p>
-        </section>
 
         <section
           className="fire-metrics"
@@ -403,6 +399,7 @@ export function ReverseFIRECalculatorPage() {
           </section>
         )}
       </main>
+    </div>
     </div>
   );
 }

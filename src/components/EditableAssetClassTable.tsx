@@ -4,6 +4,7 @@ import { AssetClassSummary, AllocationMode, AssetClass } from '../types/assetAll
 import { formatCurrency, formatPercent, formatAssetName } from '../utils/allocationCalculator';
 import { NumberInput } from './NumberInput';
 import { PrivacyBlur } from './PrivacyBlur';
+import { MaterialIcon } from './MaterialIcon';
 
 interface AssetClassTarget {
   targetMode: AllocationMode;
@@ -55,22 +56,6 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
 
   const ACTION_THRESHOLD = 100;
 
-  const getActionColor = (action: string): string => {
-    switch (action) {
-      case 'BUY':
-      case 'SAVE':
-        return 'var(--color-action-buy)';
-      case 'SELL':
-      case 'INVEST':
-        return 'var(--color-action-sell)';
-      case 'HOLD':
-        return 'var(--color-action-hold)';
-      case 'EXCLUDED':
-        return 'var(--color-action-excluded)';
-      default:
-        return '#666';
-    }
-  };
 
   const getAction = (assetClass: AssetClass, delta: number, targetMode: AllocationMode): string => {
     if (targetMode === 'OFF') {
@@ -227,8 +212,7 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
                 </td>
                 <td>
                   <span 
-                    className="action-badge"
-                    style={{ backgroundColor: getActionColor(getAction(ac.assetClass, delta, displayTargetMode)) }}
+                    className={`action-badge action-badge--${getAction(ac.assetClass, delta, displayTargetMode).toLowerCase()}`}
                   >
                     {getAction(ac.assetClass, delta, displayTargetMode)}
                   </span>
@@ -236,11 +220,11 @@ export const EditableAssetClassTable: React.FC<EditableAssetClassTableProps> = (
                 <td>
                   {isEditing ? (
                     <div className="edit-actions">
-                      <button onClick={saveEditing} className="btn-save" title={t('common.save')}>✓</button>
-                      <button onClick={cancelEditing} className="btn-cancel-edit" title={t('common.cancel')}>✕</button>
+                      <button onClick={saveEditing} className="btn-save" title={t('common.save')} aria-label={t('common.save')}><MaterialIcon name="check" size="small" /></button>
+                      <button onClick={cancelEditing} className="btn-cancel-edit" title={t('common.cancel')} aria-label={t('common.cancel')}><MaterialIcon name="close" size="small" /></button>
                     </div>
                   ) : (
-                    <button onClick={() => startEditing(ac)} className="btn-edit" title={t('common.edit')}>✎</button>
+                    <button onClick={() => startEditing(ac)} className="btn-edit" title={t('common.edit')} aria-label={t('common.edit')}><MaterialIcon name="edit" size="small" /></button>
                   )}
                 </td>
               </tr>

@@ -18,7 +18,7 @@ import {
   convertMonthlyVariationsToDisplayCurrency, 
   convertNetWorthForecastToDisplayCurrency,
 } from '../utils/currencyConverter';
-import { ASSET_CLASS_CHART_COLORS } from '../utils/chartColors';
+import { ASSET_CLASS_CHART_COLORS, CHART_THEME } from '../utils/chartColors';
 
 export type ChartViewMode = 'ytd' | 'all';
 
@@ -338,10 +338,10 @@ export function HistoricalNetWorthChart({
     
     return (
       <g transform={`translate(${x},${y})`}>
-        <text x={0} y={0} dy={12} textAnchor="middle" fill="#94A3B8" fontSize={11}>
+        <text x={0} y={0} dy={12} textAnchor="middle" fill={CHART_THEME.text} fontSize={11}>
           {month}
         </text>
-        <text x={0} y={0} dy={26} textAnchor="middle" fill="#94A3B8" fontSize={10}>
+        <text x={0} y={0} dy={26} textAnchor="middle" fill={CHART_THEME.text} fontSize={10}>
           {year}
         </text>
       </g>
@@ -360,7 +360,7 @@ export function HistoricalNetWorthChart({
     
     return (
       <g transform={`translate(${x},${y})`}>
-        <text x={0} y={0} dy={16} textAnchor="middle" fill="#94A3B8" fontSize={11}>
+        <text x={0} y={0} dy={16} textAnchor="middle" fill={CHART_THEME.text} fontSize={11}>
           {year}
         </text>
       </g>
@@ -423,22 +423,22 @@ export function HistoricalNetWorthChart({
 
       <ResponsiveContainer width="100%" height={350}>
         <LineChart data={combinedData} margin={{ top: 20, right: 30, left: 20, bottom: 30 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
           <XAxis
             dataKey="month"
             tick={tickFormatter}
-            tickLine={{ stroke: '#3A3D46' }}
+            tickLine={{ stroke: CHART_THEME.axis }}
             height={50}
             interval={viewMode === 'all' ? 0 : 'preserveStartEnd'}
-            stroke="#3A3D46"
+            stroke={CHART_THEME.axis}
           />
           <YAxis
-            tick={{ fontSize: 12, fill: '#94A3B8' }}
-            tickLine={{ stroke: '#3A3D46' }}
+            tick={{ fontSize: 12, fill: CHART_THEME.text }}
+            tickLine={{ stroke: CHART_THEME.axis }}
             tickFormatter={(value) => `${symbol}${formatChartCurrency(value, isPrivacyMode)}`}
             width={80}
             domain={yAxisDomain}
-            stroke="#3A3D46"
+            stroke={CHART_THEME.axis}
           />
           <Tooltip
             formatter={(value, name) => {
@@ -488,31 +488,31 @@ export function HistoricalNetWorthChart({
                 displayName,
               ];
             }}
-            labelStyle={{ color: '#F8FAFC', fontWeight: 'bold' }}
+            labelStyle={{ color: CHART_THEME.textStrong, fontWeight: 'bold' }}
             contentStyle={{
-              background: '#1A1D26',
-              border: '1px solid #2DD4BF',
+              background: CHART_THEME.tooltipBackground,
+              border: `1px solid ${CHART_THEME.tooltipBorder}`,
               borderRadius: '8px',
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              color: '#F8FAFC',
+              color: CHART_THEME.textStrong,
             }}
-            itemStyle={{ color: '#F8FAFC' }}
+            itemStyle={{ color: CHART_THEME.textStrong }}
           />
           <Legend
             wrapperStyle={{ paddingTop: '20px' }}
             formatter={(value) => {
               const valueStr = String(value);
-              if (valueStr === 'netWorth') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency })}</span>;
-              if (valueStr === 'forecast') return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.forecastCurrency', { currency })}</span>;
+              if (valueStr === 'netWorth') return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency })}</span>;
+              if (valueStr === 'forecast') return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.forecastCurrency', { currency })}</span>;
               if (valueStr.startsWith('netWorth_')) {
                 const curr = valueStr.replace('netWorth_', '');
-                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency: curr })}</span>;
+                return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.netWorthCurrency', { currency: curr })}</span>;
               }
               if (valueStr.startsWith('forecast_')) {
                 const curr = valueStr.replace('forecast_', '');
-                return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{t('charts.forecastCurrency', { currency: curr })}</span>;
+                return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{t('charts.forecastCurrency', { currency: curr })}</span>;
               }
-              return <span style={{ color: '#F8FAFC', fontSize: '12px' }}>{value}</span>;
+              return <span style={{ color: CHART_THEME.textStrong, fontSize: '12px' }}>{value}</span>;
             }}
           />
           
@@ -597,7 +597,7 @@ export function HistoricalNetWorthChart({
       {/* Forecast confidence indicator */}
       {showForecast && forecast.length > 0 && (
         <div className={`forecast-confidence-box ${forecast[0]?.confidenceLevel?.toLowerCase() || 'low'}`}>
-          <span className="forecast-confidence-icon">ℹ️</span>
+          <MaterialIcon name="info" size="small" className="forecast-confidence-icon" />
           <span className="forecast-confidence-text">
             <strong>Forecast confidence: {forecast[0]?.confidenceLevel}</strong>
             {' '}(based on {forecast[0]?.basedOnMonths} months of data

@@ -4,7 +4,9 @@ import { Sankey, Tooltip } from 'recharts';
 import { MonthlySnapshot } from '../types/netWorthTracker';
 import { SupportedCurrency, SUPPORTED_CURRENCIES } from '../types/currency';
 import { buildSankeyData } from '../utils/sankeyDataBuilder';
+import { MaterialIcon } from './MaterialIcon';
 import './NetWorthSankeyChart.css';
+import { CHART_THEME } from '../utils/chartColors';
 
 interface NetWorthSankeyChartProps {
   snapshot: MonthlySnapshot;
@@ -37,10 +39,10 @@ interface NodeRendererProps {
 }
 
 /** Label background halo so "above" category labels stay readable over flows. */
-const LABEL_HALO = '#0B0E14';
+const LABEL_HALO = CHART_THEME.background;
 
 function CustomNode({ x, y, width, height, payload, currency, isPrivacyMode }: NodeRendererProps) {
-  const fill = payload.fill ?? '#2DD4BF';
+  const fill = payload.fill ?? CHART_THEME.tooltipBorder;
   // Role comes from the graph (level), not a brittle x-threshold.
   const level = payload.level ?? (x < 200 ? 0 : 2);
   const valueLabel = formatAmount(payload.value, currency, isPrivacyMode);
@@ -78,8 +80,8 @@ function CustomNode({ x, y, width, height, payload, currency, isPrivacyMode }: N
           dominantBaseline="middle"
           fontSize={11}
         >
-          <tspan fill="#F8FAFC" fontWeight={600}>{payload.name}</tspan>
-          <tspan fill="#94A3B8" fontWeight={500}>{`  ${valueLabel}`}</tspan>
+          <tspan fill={CHART_THEME.textStrong} fontWeight={600}>{payload.name}</tspan>
+          <tspan fill={CHART_THEME.text} fontWeight={500}>{`  ${valueLabel}`}</tspan>
         </text>
       </g>
     );
@@ -98,7 +100,7 @@ function CustomNode({ x, y, width, height, payload, currency, isPrivacyMode }: N
         y={cy - 6}
         textAnchor={textAnchor}
         dominantBaseline="middle"
-        fill="#F8FAFC"
+        fill={CHART_THEME.textStrong}
         fontSize={11}
         fontWeight={500}
       >
@@ -109,7 +111,7 @@ function CustomNode({ x, y, width, height, payload, currency, isPrivacyMode }: N
         y={cy + 8}
         textAnchor={textAnchor}
         dominantBaseline="middle"
-        fill="#94A3B8"
+        fill={CHART_THEME.text}
         fontSize={10}
       >
         {valueLabel}
@@ -143,8 +145,8 @@ function CustomLink({
   index,
   payload,
 }: LinkRendererProps) {
-  const sourceFill = payload.source.fill ?? '#2DD4BF';
-  const targetFill = payload.target.fill ?? '#94A3B8';
+  const sourceFill = payload.source.fill ?? CHART_THEME.tooltipBorder;
+  const targetFill = payload.target.fill ?? CHART_THEME.text;
   const gradientId = `lg-${index}`;
 
   // Recharts passes sourceY/targetY as the CENTRE line of the band (it strokes
@@ -193,7 +195,7 @@ export function NetWorthSankeyChart({
   if (sankeyData.nodes.length === 0) {
     return (
       <div className="sankey-empty" role="status" aria-label={t('netWorth.sankey.noData')}>
-        <span className="sankey-empty-icon" aria-hidden="true">📊</span>
+        <MaterialIcon name="account_tree" size="large" className="sankey-empty-icon" />
         <p>{t('netWorth.sankey.noData')}</p>
       </div>
     );
@@ -230,8 +232,8 @@ export function NetWorthSankeyChart({
             borderRadius: '8px',
             color: 'var(--text-primary)',
           }}
-          labelStyle={{ color: '#94A3B8' }}
-          itemStyle={{ color: '#F8FAFC' }}
+          labelStyle={{ color: CHART_THEME.text }}
+          itemStyle={{ color: CHART_THEME.textStrong }}
         />
       </Sankey>
     </div>

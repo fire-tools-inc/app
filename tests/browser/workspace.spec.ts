@@ -8,10 +8,10 @@ const routeHeadings: Record<string, { name: string; level: number }> = {
   'expense-tracker': { name: 'Cashflow Tracker', level: 1 },
   'net-worth-tracker': { name: 'Net Worth Tracker', level: 1 },
   'portfolio-breakdown': { name: 'Portfolio Breakdown', level: 1 },
-  'fire-calculator': { name: 'FIRE Metrics', level: 3 },
+  'fire-calculator': { name: 'FIRE Calculator', level: 1 },
   'investment-growth': { name: 'Investment Growth Calculator', level: 1 },
-  'withdrawal-rate': { name: 'Withdrawal Rate Simulator', level: 2 },
-  'debt-payoff': { name: 'Debt Payoff Calculator', level: 2 },
+  'withdrawal-rate': { name: 'Withdrawal Rate Simulator', level: 1 },
+  'debt-payoff': { name: 'Debt Payoff Calculator', level: 1 },
   'portfolio-backtest': { name: 'Portfolio backtest', level: 1 },
 };
 

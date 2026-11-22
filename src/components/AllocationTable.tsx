@@ -31,22 +31,6 @@ export const AllocationTable: React.FC<AllocationTableProps> = ({
 
   const { sortedData, requestSort, getSortIndicator } = useTableSort<TableRow>(tableData);
 
-  const getActionColor = (action: string): string => {
-    switch (action) {
-      case 'BUY':
-      case 'SAVE':
-        return 'var(--color-action-buy)';
-      case 'SELL':
-      case 'INVEST':
-        return 'var(--color-action-sell)';
-      case 'HOLD':
-        return 'var(--color-action-hold)';
-      case 'EXCLUDED':
-        return 'var(--color-action-excluded)';
-      default:
-        return '#666';
-    }
-  };
 
   const handleTargetModeChange = (assetId: string, mode: string) => {
     const targetMode = mode as AllocationMode;
@@ -158,8 +142,7 @@ export const AllocationTable: React.FC<AllocationTableProps> = ({
                 </td>
                 <td>
                   <span 
-                    className="action-badge"
-                    style={{ backgroundColor: getActionColor(delta.action) }}
+                    className={`action-badge action-badge--${delta.action.toLowerCase()}`}
                   >
                     {delta.action}
                   </span>

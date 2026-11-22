@@ -123,21 +123,18 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
   return (
     <section className="monte-carlo-section" aria-labelledby="monte-carlo-heading">
       <div data-tour="monte-carlo-overview">
-        <h2 id="monte-carlo-heading">
-          <MaterialIcon name="casino" className="page-header-icon" /> {t('monteCarlo.pageTitle')}
-          <button 
-            className="privacy-eye-btn"
+        <div className="monte-carlo-toolbar">
+          <h2 id="monte-carlo-heading">{t('monteCarlo.simulationSettings')}</h2>
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
             onClick={togglePrivacyMode}
-            title={isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
             aria-pressed={isPrivacyMode}
-            style={{ marginLeft: '0.5rem' }}
           >
-            <MaterialIcon name={isPrivacyMode ? 'visibility_off' : 'visibility'} size="small" />
+            <MaterialIcon name={isPrivacyMode ? 'visibility' : 'visibility_off'} size="small" />
+            {isPrivacyMode ? t('common.showValues') : t('common.hideValues')}
           </button>
-        </h2>
-        <p className="section-description">
-          {t('monteCarlo.sectionDescription')}
-        </p>
+        </div>
       </div>
 
       {/* Base Data Section - Non-editable simulation parameters */}
@@ -155,7 +152,7 @@ export const MonteCarloSimulator: React.FC<MonteCarloSimulatorProps> = ({ inputs
           <span className="mc-base-data-subtitle">
             {t('monteCarlo.baseData.subtitle')}
           </span>
-          <span className="collapse-icon" aria-hidden="true">{isBaseDataExpanded ? '▼' : '▶'}</span>
+          <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${isBaseDataExpanded ? ' is-open' : ''}`} />
         </button>
         
         {isBaseDataExpanded && (

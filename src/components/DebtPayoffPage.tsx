@@ -13,6 +13,7 @@ import {
 import { formatDisplayCurrency } from '../utils/numberFormatter';
 import { logger } from '../utils/logger';
 import { DebtRepaymentChart } from './DebtRepaymentChart';
+import { PageHeader } from './PageHeader';
 import './DebtPayoffPage.css';
 
 const DEFAULT_DEBTS: Debt[] = [
@@ -102,14 +103,11 @@ export function DebtPayoffPage() {
   };
 
   return (
-    <main className="debt-payoff-page" id="main-content">
-      <h2>Debt Payoff Calculator</h2>
-      <p>
-        Plan how to pay off your debts using either the snowball method
-        (smallest balance first, for psychological wins) or the avalanche
-        method (highest interest rate first, mathematically optimal). Choose
-        a fixed monthly budget or a target payoff timeline.
-      </p>
+    <main className="page debt-payoff-page" id="main-content">
+      <PageHeader
+        title="Debt Payoff Calculator"
+        description="Plan how to pay off your debts using either the snowball method (smallest balance first, for psychological wins) or the avalanche method (highest interest rate first, mathematically optimal). Choose a fixed monthly budget or a target payoff timeline."
+      />
 
       <section className="debt-payoff-section" aria-label="Your debts">
         <h3>Your debts</h3>

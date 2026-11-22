@@ -4,6 +4,7 @@ import { YearProjection } from '../types/calculator';
 import { formatCurrency } from '../utils/allocationCalculator';
 import { calculateXAxisInterval } from '../utils/chartHelper';
 import { ChartZoomControls } from './ChartZoomControls';
+import { CHART_THEME } from '../utils/chartColors';
 
 // Privacy placeholder for blurred values
 const PRIVACY_PLACEHOLDER = '***';
@@ -67,30 +68,30 @@ export const NetWorthChart: React.FC<NetWorthChartProps> = ({
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data} aria-label={t('charts.netWorthChartAriaLabel')}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
+          <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
           <XAxis 
             dataKey="age" 
-            label={{ value: t('charts.ageLabel'), position: 'insideBottom', offset: -5, fill: '#94A3B8' }}
+            label={{ value: t('charts.ageLabel'), position: 'insideBottom', offset: -5, fill: CHART_THEME.text }}
             interval={calculateXAxisInterval(data.length)}
             padding={{ left: 10, right: 10 }}
-            tick={{ fill: '#94A3B8' }}
-            stroke="#3A3D46"
+            tick={{ fill: CHART_THEME.text }}
+            stroke={CHART_THEME.axis}
           />
           <YAxis 
             tickFormatter={formatYAxis}
             domain={[0, 'auto']}
             allowDataOverflow={false}
-            tick={{ fill: '#94A3B8' }}
-            stroke="#3A3D46"
+            tick={{ fill: CHART_THEME.text }}
+            stroke={CHART_THEME.axis}
           />
           <Tooltip 
             formatter={(value) => isPrivacyMode ? PRIVACY_PLACEHOLDER : formatCurrency(Number(value))} 
             labelFormatter={(label) => t('charts.ageTooltipLabel', { age: label })}
-            contentStyle={{ background: '#1A1D26', border: '1px solid #2DD4BF', borderRadius: '8px', color: '#F8FAFC' }}
-            labelStyle={{ color: '#F8FAFC' }}
-            itemStyle={{ color: '#F8FAFC' }}
+            contentStyle={{ background: CHART_THEME.tooltipBackground, border: `1px solid ${CHART_THEME.tooltipBorder}`, borderRadius: '8px', color: CHART_THEME.textStrong }}
+            labelStyle={{ color: CHART_THEME.textStrong }}
+            itemStyle={{ color: CHART_THEME.textStrong }}
           />
-          <Legend wrapperStyle={{ paddingTop: '12px', color: '#F8FAFC' }} />
+          <Legend wrapperStyle={{ paddingTop: '12px', color: CHART_THEME.textStrong }} />
           <Line type="monotone" dataKey="Net Worth" name={t('charts.netWorth')} stroke="var(--accent-primary)" strokeWidth={2} dot={false} isAnimationActive={false} />
           <Line type="monotone" dataKey="FIRE Target" name={t('charts.fireTarget')} stroke="var(--success)" strokeWidth={2} strokeDasharray="5 5" dot={false} isAnimationActive={false} />
         </LineChart>

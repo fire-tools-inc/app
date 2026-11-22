@@ -398,7 +398,7 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                 </p>
                 {isConfirmMode && !allConfirmed ? (
                   <p className="dca-note">
-                    ✍️ {t('dialogs.dca.enterActualSharesNote')}
+                    <MaterialIcon name="edit_note" size="small" /> {t('dialogs.dca.enterActualSharesNote')}
                   </p>
                 ) : !isConfirmMode && (
                   <p className="dca-note">
@@ -593,10 +593,10 @@ export const DCAHelperDialog: React.FC<DCAHelperDialogProps> = ({
                     </span>
                   </p>
                   {Math.abs(totalDeviation.deviationPercent) <= DEVIATION_CLOSE_THRESHOLD && (
-                    <p className="success-message">✅ {t('dialogs.dca.feedback.greatJob')}</p>
+                    <p className="success-message"><MaterialIcon name="check_circle" size="small" /> {t('dialogs.dca.feedback.greatJob')}</p>
                   )}
                   {Math.abs(totalDeviation.deviationPercent) > DEVIATION_CLOSE_THRESHOLD && Math.abs(totalDeviation.deviationPercent) <= DEVIATION_FAR_THRESHOLD && (
-                    <p className="info-message">ℹ️ {t('dialogs.dca.feedback.reasonablyClose')}</p>
+                    <p className="info-message"><MaterialIcon name="info" size="small" /> {t('dialogs.dca.feedback.reasonablyClose')}</p>
                   )}
                   {Math.abs(totalDeviation.deviationPercent) > DEVIATION_FAR_THRESHOLD && (
                     <p className="warning-message"><MaterialIcon name="warning" /> {t('dialogs.dca.feedback.significantDeviation')}</p>

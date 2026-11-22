@@ -196,22 +196,6 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
     return acc;
   }, {} as Record<AssetClass, Asset[]>);
 
-  const getActionColor = (action: string): string => {
-    switch (action) {
-      case 'BUY':
-      case 'SAVE':
-        return 'var(--color-action-buy)';
-      case 'SELL':
-      case 'INVEST':
-        return 'var(--color-action-sell)';
-      case 'HOLD':
-        return 'var(--color-action-hold)';
-      case 'EXCLUDED':
-        return 'var(--color-action-excluded)';
-      default:
-        return '#666';
-    }
-  };
 
   const startEditing = (asset: Asset) => {
     setEditingAsset(asset.id);
@@ -427,7 +411,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
               onClick={() => toggleCollapse(assetClass as AssetClass)}
             >
               <div className="class-header-left">
-                <span className="collapse-icon">{isCollapsed ? '▶' : '▼'}</span>
+                <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!isCollapsed ? ' is-open' : ''}`} />
                 <span className={`asset-class-badge ${assetClass.toLowerCase()}`}>
                   {formatAssetName(assetClass)}
                 </span>
@@ -525,7 +509,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                               {asset.name}
                               {asset.institutionName && (
                                 <span className="institution-badge" title={t('tables.bankBrokerTitle', { name: asset.institutionName })}>
-                                  🏦
+                                  <MaterialIcon name="account_balance" size="small" />
                                 </span>
                               )}
                             </span>
@@ -547,7 +531,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                               title={t('tables.copyIsinTooltip', { isin: asset.isin })}
                             >
                               {asset.ticker}
-                              <span className="copy-icon">📋</span>
+                              <MaterialIcon name="content_copy" size="small" className="copy-icon" />
                               {copiedIsin === asset.id && <span className="copied-tooltip">{t('tables.copied')}</span>}
                             </span>
                           ) : (
@@ -667,8 +651,7 @@ export const CollapsibleAllocationTable: React.FC<CollapsibleAllocationTableProp
                         </td>
                         <td>
                           <span 
-                            className="action-badge"
-                            style={{ backgroundColor: getActionColor(delta.action) }}
+                            className={`action-badge action-badge--${delta.action.toLowerCase()}`}
                           >
                             {delta.action}
                           </span>

@@ -9,28 +9,24 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
-  color: white;
+  background: var(--accent-primary);
+  color: var(--text-inverse);
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px var(--accent-glow);
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
   z-index: 1000;
   opacity: 0.9;
 }
 
 .scroll-to-top-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--accent-glow-strong);
   opacity: 1;
 }
 
 .scroll-to-top-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px var(--accent-glow);
 }
 
 .scroll-to-top-button:focus {

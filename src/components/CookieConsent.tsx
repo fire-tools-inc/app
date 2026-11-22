@@ -73,7 +73,7 @@ export function CookieConsent() {
       <div className="cookie-banner-content">
         <div className="cookie-banner-text">
           <h2 id="cookie-title" className="cookie-banner-title">
-            🍪 {t('cookieConsent.title')}
+            {t('cookieConsent.title')}
           </h2>
           <p id="cookie-description" className="cookie-banner-description">
             {t('cookieConsent.descriptionStart')}<strong>{t('cookieConsent.strictlyNecessary')}</strong>{t('cookieConsent.descriptionMiddle')}

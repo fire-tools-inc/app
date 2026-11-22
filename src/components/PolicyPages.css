@@ -6,7 +6,7 @@
 .policy-page {
   flex: 1;
   background: var(--bg-secondary);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   margin: 2rem auto;
   max-width: 1000px;
   width: 100%;
@@ -24,7 +24,7 @@
   color: var(--text-primary);
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -32,7 +32,7 @@
 
 .last-updated {
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 2px solid var(--border-subtle);
@@ -44,21 +44,21 @@
 
 .policy-section h2 {
   color: var(--text-primary);
-  font-size: 1.8rem;
+  font-size: var(--text-2xl);
   margin-bottom: 1rem;
   margin-top: 2rem;
 }
 
 .policy-section h3 {
   color: var(--text-secondary);
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   margin-bottom: 0.75rem;
   margin-top: 1.5rem;
 }
 
 .policy-section h4 {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   margin-bottom: 0.5rem;
   margin-top: 1rem;
 }
@@ -67,7 +67,7 @@
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 1rem;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .policy-section ul {
@@ -79,7 +79,7 @@
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 0.5rem;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .policy-section a {
@@ -100,7 +100,7 @@
 .policy-section code {
   background: var(--bg-tertiary);
   padding: 0.2rem 0.4rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-family: 'Monaco', 'Courier New', monospace;
   font-size: 0.9em;
   color: var(--accent-gold);
@@ -117,12 +117,12 @@
   border-collapse: collapse;
   margin: 1.5rem 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .policy-table thead {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   color: var(--text-inverse);
 }
 
@@ -130,14 +130,14 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .policy-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 .policy-table tbody tr:hover {
@@ -158,13 +158,13 @@
   width: 100%;
   border-collapse: collapse;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   min-width: 700px;
 }
 
 .cookie-table thead {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-gold) 100%);
+  background: var(--accent-primary);
   color: var(--text-inverse);
 }
 
@@ -172,7 +172,7 @@
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   white-space: nowrap;
 }
 
@@ -180,13 +180,13 @@
   padding: 1rem;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   vertical-align: top;
 }
 
 .cookie-table td:first-child {
   font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--accent-gold);
 }
 
@@ -200,23 +200,23 @@
 
 /* Info box */
 .info-box {
-  background: rgba(45, 212, 191, 0.1);
-  border-left: 4px solid var(--accent-primary);
-  padding: 1.5rem;
+  background: var(--accent-surface);
+  border: 1px solid var(--border-accent);
+  padding: 1.25rem;
   margin: 1.5rem 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .info-box h4 {
   color: var(--accent-primary);
   margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
 }
 
 .info-box p {
   color: var(--text-secondary);
   margin-bottom: 0;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
 }
 
 /* Responsive design */
@@ -224,7 +224,7 @@
   .policy-page {
     padding: 0 1rem;
     margin: 1rem auto;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
   }
 
   .policy-container {
@@ -232,20 +232,20 @@
   }
 
   .policy-container h1 {
-    font-size: 2rem;
+    font-size: var(--text-2xl);
   }
 
   .policy-section h2 {
-    font-size: 1.5rem;
+    font-size: var(--text-xl);
   }
 
   .policy-section h3 {
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
   }
 
   .policy-section p,
   .policy-section li {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
   }
 
   .policy-section ul {
@@ -254,7 +254,7 @@
 
   .policy-table,
   .cookie-table {
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
   }
 
   .policy-table th,
@@ -272,19 +272,19 @@
 
 @media (max-width: 480px) {
   .policy-container h1 {
-    font-size: 1.75rem;
+    font-size: var(--text-2xl);
   }
 
   .policy-section h2 {
-    font-size: 1.3rem;
+    font-size: var(--text-xl);
   }
 
   .policy-section h3 {
-    font-size: 1.1rem;
+    font-size: var(--text-lg);
   }
 
   .last-updated {
-    font-size: 0.9rem;
+    font-size: var(--text-base);
   }
 
   .policy-table th,
@@ -292,7 +292,7 @@
   .cookie-table th,
   .cookie-table td {
     padding: 0.5rem 0.35rem;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
   }
 
   .info-box {
@@ -300,11 +300,11 @@
   }
 
   .info-box h4 {
-    font-size: 1rem;
+    font-size: var(--text-md);
   }
 
   .info-box p {
-    font-size: 0.9rem;
+    font-size: var(--text-base);
   }
 }
 
@@ -323,12 +323,12 @@
   }
 
   .policy-section h2 {
-    font-size: 2rem;
+    font-size: var(--text-2xl);
   }
 
   .policy-section p,
   .policy-section li {
-    font-size: 1.05rem;
+    font-size: var(--text-lg);
   }
 }
 

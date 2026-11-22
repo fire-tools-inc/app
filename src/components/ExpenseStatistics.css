@@ -4,7 +4,7 @@
   margin-bottom: 2rem;
   background: var(--glass-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
 }
 
 .expense-statistics h4 {
@@ -39,7 +39,7 @@
   box-sizing: border-box;
   padding: 0.5rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
@@ -55,19 +55,19 @@
   margin: 0;
   padding: 1rem;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--bg-tertiary);
 }
 
 .expense-statistics-metrics dt,
 .expense-statistics-help {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .expense-statistics-metrics dd {
   margin: 0.5rem 0 0;
-  font-size: 1.3rem;
+  font-size: var(--text-xl);
   font-family: var(--font-data);
   color: var(--text-primary);
   overflow-wrap: anywhere;

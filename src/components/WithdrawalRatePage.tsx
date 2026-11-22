@@ -34,8 +34,10 @@ import { logger } from '../utils/logger';
 import { useAuditLog } from '../contexts/AuditLogContext';
 import { formatDisplayCurrency, formatDisplayPercent } from '../utils/numberFormatter';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { SliderInput } from './SliderInput';
 import { PrivacyBlur } from './PrivacyBlur';
+import { CHART_THEME } from '../utils/chartColors';
 
 const DEFAULT_RETIREMENT_YEARS = 30;
 const DEFAULT_NUM_SIMULATIONS = 1000;
@@ -72,9 +74,9 @@ function successRateClass(rate: number): string {
 }
 
 function successRateColor(rate: number): string {
-  if (rate >= 90) return '#22C55E';
-  if (rate >= 75) return '#F59E0B';
-  return '#EF4444';
+  if (rate >= 90) return CHART_THEME.success;
+  if (rate >= 75) return CHART_THEME.warning;
+  return CHART_THEME.error;
 }
 
 export const WithdrawalRatePage: React.FC = () => {
@@ -224,19 +226,13 @@ export const WithdrawalRatePage: React.FC = () => {
     : [];
 
   return (
-    <div className="app-container">
+    <div className="page">
+      <PageHeader
+        title="Withdrawal Rate Simulator"
+        description={'Explore how long your portfolio is likely to last at different withdrawal rates. Drag the slider to see results update live. The famous "4% rule" comes from the Trinity Study and assumes a 30-year retirement with a 95%+ historical success rate.'}
+      />
+      <div className="app-container">
       <main className="main-content" id="main-content">
-        <header className="page-header">
-          <h2>
-            <MaterialIcon name="trending_down" className="page-header-icon" /> Withdrawal Rate Simulator
-          </h2>
-          <p className="page-description">
-            Explore how long your portfolio is likely to last at different
-            withdrawal rates. Drag the slider to see results update live.
-            The famous "4% rule" comes from the Trinity Study and assumes a
-            30-year retirement with a 95%+ historical success rate.
-          </p>
-        </header>
 
         {error && (
           <div className="validation-error-banner" role="alert" aria-live="polite">
@@ -284,7 +280,7 @@ export const WithdrawalRatePage: React.FC = () => {
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label htmlFor="wr-rate">
                 {t(`withdrawalRate.short.${inputRateType}`)}: <strong>{withdrawalRate.toFixed(1)}%</strong>{' '}
-                <span style={{ color: '#94A3B8', fontWeight: 'normal' }}>
+                <span style={{ color: CHART_THEME.text, fontWeight: 'normal' }}>
                   (≈{' '}
                   <PrivacyBlur isPrivacyMode={isPrivacyMode}>
                     {formatDisplayCurrency(currentAnnualWithdrawal, defaultCurrency)}
@@ -404,7 +400,7 @@ export const WithdrawalRatePage: React.FC = () => {
                   >
                     <div className="result-label">
                       {t(`withdrawalRate.types.${card.type}`)}{' '}
-                      <span style={{ color: isEntered ? undefined : '#94A3B8', fontWeight: 600 }}>
+                      <span style={{ color: isEntered ? undefined : CHART_THEME.text, fontWeight: 600 }}>
                         ·{' '}
                         {isEntered
                           ? t('withdrawalRate.results.youEntered')
@@ -455,7 +451,7 @@ export const WithdrawalRatePage: React.FC = () => {
             <h3 id="wr-chart-heading">
               <MaterialIcon name="bar_chart" /> Success rate by withdrawal rate
               {isComputing && (
-                <span style={{ marginLeft: '0.5rem', color: '#94A3B8', fontSize: '0.9rem' }}>
+                <span style={{ marginLeft: '0.5rem', color: CHART_THEME.text, fontSize: '0.9rem' }}>
                   (recomputing…)
                 </span>
               )}
@@ -467,39 +463,39 @@ export const WithdrawalRatePage: React.FC = () => {
             </p>
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={chartData} margin={{ top: 30, right: 20, left: 0, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2A2D36" />
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} />
                 <XAxis
                   dataKey="rate"
-                  tick={{ fontSize: 12, fill: '#94A3B8' }}
-                  stroke="#3A3D46"
+                  tick={{ fontSize: 12, fill: CHART_THEME.text }}
+                  stroke={CHART_THEME.axis}
                   label={{
                     value: 'Initial withdrawal rate',
                     position: 'insideBottom',
                     offset: -5,
-                    fill: '#94A3B8',
+                    fill: CHART_THEME.text,
                   }}
                 />
                 <YAxis
                   domain={[0, 100]}
-                  tick={{ fill: '#94A3B8' }}
-                  stroke="#3A3D46"
+                  tick={{ fill: CHART_THEME.text }}
+                  stroke={CHART_THEME.axis}
                   label={{
                     value: 'Success rate (%)',
                     angle: -90,
                     position: 'insideLeft',
                     offset: 14,
-                    fill: '#94A3B8',
+                    fill: CHART_THEME.text,
                   }}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: '#1A1D26',
-                    border: '1px solid #2DD4BF',
+                    background: CHART_THEME.tooltipBackground,
+                    border: `1px solid ${CHART_THEME.tooltipBorder}`,
                     borderRadius: '8px',
-                    color: '#F8FAFC',
+                    color: CHART_THEME.textStrong,
                   }}
-                  itemStyle={{ color: '#F8FAFC' }}
-                  labelStyle={{ color: '#F8FAFC', fontWeight: 600 }}
+                  itemStyle={{ color: CHART_THEME.textStrong }}
+                  labelStyle={{ color: CHART_THEME.textStrong, fontWeight: 600 }}
                   cursor={{ fill: 'rgba(45, 212, 191, 0.08)' }}
                   formatter={(value, name) =>
                     name === 'successRate'
@@ -524,12 +520,12 @@ export const WithdrawalRatePage: React.FC = () => {
                       chartData[0],
                     ).rateValue
                   }%`}
-                  stroke="#F8FAFC"
+                  stroke={CHART_THEME.textStrong}
                   strokeDasharray="5 5"
                   label={{
                     value: 'Selected',
                     position: 'insideTopRight',
-                    fill: '#F8FAFC',
+                    fill: CHART_THEME.textStrong,
                     fontSize: 12,
                     offset: 8,
                   }}
@@ -539,6 +535,7 @@ export const WithdrawalRatePage: React.FC = () => {
           </section>
         )}
       </main>
+      </div>
     </div>
   );
 };

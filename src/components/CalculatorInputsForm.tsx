@@ -139,7 +139,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
         >
           <h3>
             <MaterialIcon name="local_fire_department" /> {t('fireCalculator.sections.fireStyle')}{' '}
-            <span className="collapse-icon-small" aria-hidden="true">{openSections.fireStyle ? '▼' : '▶'}</span>
+            <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.fireStyle ? ' is-open' : ''}`} />
           </h3>
         </button>
         {openSections.fireStyle && (
@@ -223,7 +223,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           <h3>
             <MaterialIcon name="savings" /> {t('fireCalculator.sections.initialValues')}
             {inputs.useAssetAllocationValue && <span className="calculated-label"> - {t('fireCalculator.fromAssetAllocation')}</span>}
-            <span className="collapse-icon-small" aria-hidden="true">{openSections.initialValues ? '▼' : '▶'}</span>
+            <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.initialValues ? ' is-open' : ''}`} />
           </h3>
         </button>
         {openSections.initialValues && (<div id="initial-values-content" className="form-section-content">
@@ -267,7 +267,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           <h3>
             <MaterialIcon name="pie_chart" /> {t('fireCalculator.sections.assetAllocation')}
             {inputs.useAssetAllocationValue && <span className="calculated-label"> - {t('fireCalculator.fromAssetAllocation')}</span>}
-            <span className="collapse-icon-small" aria-hidden="true">{openSections.assetAllocation ? '▼' : '▶'}</span>
+            <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.assetAllocation ? ' is-open' : ''}`} />
           </h3>
         </button>
         {openSections.assetAllocation && (<div id="asset-allocation-content" className="form-section-content">
@@ -347,7 +347,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.income}
           aria-controls="income-content"
         >
-          <h3><MaterialIcon name="payments" /> {t('fireCalculator.sections.income')} <span className="collapse-icon-small" aria-hidden="true">{openSections.income ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="payments" /> {t('fireCalculator.sections.income')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.income ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.income && (<div id="income-content" className="form-section-content">
         <div className="form-group">
@@ -402,7 +402,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.pension}
           aria-controls="pension-content"
         >
-          <h3><MaterialIcon name="account_balance" /> {t('fireCalculator.sections.pension')} <span className="collapse-icon-small" aria-hidden="true">{openSections.pension ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="account_balance" /> {t('fireCalculator.sections.pension')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.pension ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.pension && (<div id="pension-content" className="form-section-content">
         <div className="form-group">
@@ -444,7 +444,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.expenses}
           aria-controls="expenses-content"
         >
-          <h3><MaterialIcon name="shopping_cart" /> {t('fireCalculator.sections.expenses')} <span className="collapse-icon-small" aria-hidden="true">{openSections.expenses ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="shopping_cart" /> {t('fireCalculator.sections.expenses')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.expenses ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.expenses && (<div id="expenses-content" className="form-section-content">
         <div className="form-group">
@@ -505,7 +505,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.fireParams}
           aria-controls="fire-params-content"
         >
-          <h3><MaterialIcon name="gps_fixed" /> {t('fireCalculator.sections.fireParams')} <span className="collapse-icon-small" aria-hidden="true">{openSections.fireParams ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="gps_fixed" /> {t('fireCalculator.sections.fireParams')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.fireParams ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.fireParams && (<div id="fire-params-content" className="form-section-content">
         <div className="form-group">
@@ -547,7 +547,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.expectedReturns}
           aria-controls="expected-returns-content"
         >
-          <h3><MaterialIcon name="trending_up" /> {t('fireCalculator.sections.expectedReturns')} <span className="collapse-icon-small" aria-hidden="true">{openSections.expectedReturns ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="trending_up" /> {t('fireCalculator.sections.expectedReturns')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.expectedReturns ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.expectedReturns && (<div id="expected-returns-content" className="form-section-content">
         <div className="form-group">
@@ -598,7 +598,7 @@ export const CalculatorInputsForm: React.FC<CalculatorInputsProps> = ({ inputs, 
           aria-expanded={openSections.options}
           aria-controls="options-content"
         >
-          <h3><MaterialIcon name="settings" /> {t('fireCalculator.sections.options')} <span className="collapse-icon-small" aria-hidden="true">{openSections.options ? '▼' : '▶'}</span></h3>
+          <h3><MaterialIcon name="settings" /> {t('fireCalculator.sections.options')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${openSections.options ? ' is-open' : ''}`} /></h3>
         </button>
         {openSections.options && (<div id="options-content" className="form-section-content">
         <div className="form-group checkbox-group">

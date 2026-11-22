@@ -14,7 +14,7 @@
 .about-header h3,
 .about-subheader h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .about-subheader {
@@ -26,7 +26,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   padding: 0.25rem 0.6rem;
 }
 
@@ -53,8 +53,8 @@
   color: var(--text-primary, #111);
   border: 1px solid var(--border-subtle, transparent);
   padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
 }
 
 .about-status {
@@ -84,12 +84,12 @@
 .about-deps-table th {
   font-weight: 600;
   color: var(--text-secondary, #555);
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .about-dep-tag {
   display: inline-block;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   background: var(--bg-elevated, #e0e7ff);
   color: var(--accent-primary, #3730a3);
   border: 1px solid var(--border-subtle, transparent);
