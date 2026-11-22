@@ -471,7 +471,6 @@
   height: 100%;
   background: var(--bg-secondary);
   border-radius: var(--radius-sm);
-  transition: width 0.5s ease;
 }
 
 /* Empty State */

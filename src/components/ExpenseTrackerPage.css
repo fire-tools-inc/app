@@ -164,7 +164,6 @@
 .rule-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 0.3s ease;
 }
 
 .rule-bar-fill.needs {
@@ -720,7 +719,6 @@
 .budget-progress-fill {
   height: 100%;
   background: var(--success);
-  transition: width 0.3s ease;
 }
 
 .budget-progress-fill.warning {
