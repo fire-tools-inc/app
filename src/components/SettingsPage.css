@@ -320,6 +320,7 @@
 
 .settings-page .ai-features-settings .toggle-btn {
   min-width: 0;
+  min-height: 44px;
 }
 
 .settings-page .ai-model-settings {

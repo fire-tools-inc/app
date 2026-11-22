@@ -1402,6 +1402,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 /* ============================================================================
    CHARTS
    ============================================================================ */
+/* Recharts measures legends with the inherited line height; keep it compact so
+   wrapped legends never squeeze or crop the plot. */
+.recharts-wrapper {
+  line-height: normal;
+}
+
 .charts-section {
   margin-bottom: 2rem;
 }

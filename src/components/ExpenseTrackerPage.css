@@ -267,6 +267,7 @@
 
 .transaction-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -1157,7 +1158,8 @@
   }
 
   .transaction-actions .btn-add {
-    flex: 1;
+    flex: 1 1 auto;
+    justify-content: center;
   }
 
   .filter-controls {
