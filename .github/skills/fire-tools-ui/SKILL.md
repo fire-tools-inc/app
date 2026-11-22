@@ -1,7 +1,7 @@
 ---
 name: fire-tools-ui
 description: >-
-  Maintain Fire Tools' dark glass interface, sidebar, responsive pages and
+  Maintain Fire Tools' calm dark design system, sidebar, responsive pages and
   portfolio charts. Use for navigation changes, CSS/theme work, chart colors,
   layout regressions, accessibility fixes or screenshot-driven UI refinement
   in this repository.
@@ -55,8 +55,18 @@ route's stylesheet.
 - Scope chart/table CSS to its page. Dense histograms/Sankey diagrams should
   scroll locally with keyboard support instead of clipping data or shrinking
   labels. Test SVG/text bounds and minimum usable plot height.
-- Use glass for surfaces, not neon section gradients or excessive blur. Avoid
-  animating width/padding/margins, and respect reduced motion.
+- Build pages from the shared system in `src/App.css`: a `.page` root with
+  `PageHeader` (title, description, actions; no eyebrow), flat graphite panels
+  with hairline borders, and the `.btn`, `.field`, `.data-table`, `.badge`,
+  `.callout` and `.segmented` primitives. Map new values onto the type, radius
+  and control-height tokens instead of hard-coded sizes.
+- Avoid gradients, glows, hover lifts, emojis, uppercase micro-labels, colored
+  side stripes and card-in-card nesting. Figures use tabular numerals in the
+  UI font, not monospace. Avoid animating width/padding/margins, and respect
+  reduced motion.
+- Recharts measures legends with the inherited line height; keep the
+  `.recharts-wrapper` reset and move long legends out of fixed-height plots.
+  Linux CI fonts are wider than macOS ones, so check dense legends at 320px.
 - Give page content `min-width: 0` and responsive layouts relative to its
   workspace, not the whole viewport. Scrolling tables must not widen the page.
 - Keep `index.html` critical shell styles synchronized with the full CSS.

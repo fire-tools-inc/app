@@ -9,7 +9,7 @@ focused skills below for the task at hand.
 
 | Task | Skill |
 | --- | --- |
-| Navigation, layouts, dark glass styling, charts and accessibility | [fire-tools-ui](.github/skills/fire-tools-ui/SKILL.md) |
+| Navigation, layouts, design-system styling, charts and accessibility | [fire-tools-ui](.github/skills/fire-tools-ui/SKILL.md) |
 | Profiling, simulations, render cost, settings reads and bundle loading | [fire-tools-performance](.github/skills/fire-tools-performance/SKILL.md) |
 | Persistence, synchronization, imports, API validation and database changes | [fire-tools-data-integrity](.github/skills/fire-tools-data-integrity/SKILL.md) |
 
@@ -96,7 +96,9 @@ doing so. Blur mode hides values visually, not from code or exports.
   region. Do not let drag regions consume clicks on controls.
 - Navigation labels come from `src/constants/navbarLabels.ts` and remain
   **English-only**. Localize other UI through `src/i18n/` in all five languages.
-- Use `App.css` tokens and `src/utils/chartColors.ts`. A portfolio class should
+- Use `App.css` tokens and primitives (`.page`, `PageHeader`, `.btn`, `.field`,
+  `.data-table`, `.badge`, `.callout`, `.segmented`) and `src/utils/chartColors.ts`
+  (including `CHART_THEME` for axes and tooltips). A portfolio class should
   keep the same readable color across allocation, breakdown and net-worth flows.
 - Keep text opaque and readable. Avoid saturated section backgrounds, colored
   text gradients, excessive blur and later CSS rules that undo shared styles.
