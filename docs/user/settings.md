@@ -37,10 +37,10 @@ currencies you choose to send, never your history, files or other data. See
 [AI categorization](../pdf-import.md#optional-openai-compatible-categorization)
 for the endpoint details.
 
-The master preference is saved with the renderer's encrypted settings and
-applies immediately in that app/browser profile. The backend settings API and
-`settings.json` sidecar also retain `aiFeaturesEnabled` on export/import, but
-do not automatically synchronize it with renderer settings.
+The master preference applies immediately and is saved with your other
+settings in the database, so the backend settings API and `settings.json`
+sidecar show the same value. Model configuration, including API keys, stays on
+this device.
 
 ## Currency
 
@@ -88,6 +88,43 @@ self-hosted builds keep them opt-in (all off until you enable them here).
 - **Clear all data** — wipes your local store (SQLite DB on desktop, encrypted
   cookies in browser). The app reloads empty. There is no undo; export first
   if you might want the data back.
+
+### Database sync
+
+With the desktop app's embedded backend, or a custom backend under
+**Settings > Backend**, the database is the source of truth for settings, the
+FIRE calculator, asset allocation, cashflow and net worth. Changes made
+through the API (for example by an [AI agent](./ai-agents.md)) appear in the
+open app within a few seconds. The app opens once your data has loaded, or
+after 8 seconds on the copy kept on this device if the database does not
+answer.
+
+- **Database sync** in **Settings > Data** shows whether changes are being
+  saved, are all saved, or are waiting offline, with a **Retry now** button.
+  Changes made offline stay on this device and are sent when the database is
+  reachable again.
+- If this device and the database hold different data, a banner asks which
+  copy to keep: **Use the database copy** or **Replace the database with this
+  device's data**. Nothing is overwritten until you choose. The first time the
+  desktop app syncs data that already exists on this device, it backs up the
+  database before copying the device's data into it.
+- If the database refuses a change (for example an invalid amount), the app
+  shows the saved data again and lists the refused change with the reason.
+- Backend connection settings, the access token, update, logging and AI model
+  settings stay on this device and are never sent to the database.
+
+For a custom backend started with `API_TOKEN`, enter the same value in
+**Access token** next to the backend URL. **Test connection** reports a
+rejected token.
+
+### Agent access
+
+Desktop only, off by default. **Settings > Agent access** lets AI agents
+running under your user account, such as GitHub Copilot CLI or Claude Code,
+read and update your data through the local API. While it is on, Fire Tools
+keeps a connection file with the local address and a token that changes at
+every launch; **Copy file path** shows where it is. Turn it off when you are
+done. See [Use Fire Tools with an AI agent](./ai-agents.md).
 
 ## Audit log
 

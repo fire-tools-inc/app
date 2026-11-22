@@ -9,6 +9,7 @@ instead.
 
 - [Backend deployment (Docker Compose)](./backend-deploy.md)
 - [API & custom clients (OpenAPI)](./api-client.md)
+- [Agent API and storage sync](./agent-api.md)
 - [Database & schema](./database.md)
 - [Migrations & rollbacks](./migrations.md)
 - [Audit log](./audit-log.md)
@@ -63,10 +64,13 @@ instead.
   storage value. Saved settings are reconstructed with independent nested
   fields, so formatting many cells does not repeatedly decrypt the payload or
   leak cached mutations between readers. Treat shared defaults as immutable.
-- **Client storage** — frontend domain stores still use encrypted cookies and
-  localStorage, with localStorage authoritative in Electron. Supported UI
-  preferences mirror the backend, but not every domain page is an API client.
-  The read-only browser demo does not require a backend.
+- **Client storage** - whenever a backend is reachable, SQLite is the source
+  of truth for settings, the FIRE calculator, asset allocation, cashflow and
+  net worth. The renderer keeps an encrypted cache and an outbox of unsent
+  changes, and refreshes when another API client writes. See
+  [Agent API and storage sync](./agent-api.md). Without a backend, encrypted
+  cookies/localStorage stay authoritative. The read-only browser demo does
+  not require a backend.
 - **Backend** — a small Node.js + Express service in `server/`. SQLite is the
   supported storage driver; the schema is Postgres-compatible, but the
   Postgres driver remains deferred.
@@ -120,7 +124,7 @@ instead.
   exists and uses its real unpacked path; it never falls back to a first-use
   download. The 23.5 MB data file is not part of the renderer bundle.
   `receipts` retains original photo
-  BLOBs before OCR; renderer financial writes remain localStorage-authoritative.
+  BLOBs before OCR; financial entries created from them sync like any other edit.
   Batch import persists once and uses content-derived receipt transaction IDs.
   `receipt-pairings` opens an opt-in, upload-only listener with a 30-minute
   capability. Phone IndexedDB retains originals until storage acknowledgement.

@@ -10,7 +10,9 @@ description: >-
 # Fire Tools data integrity work
 
 Read `AGENTS.md` first. Identify the real authoritative store before editing:
-the backend is implemented, but frontend domain stores are not all API clients.
+with a reachable backend, SQLite owns settings, calculator, asset allocation,
+cashflow and net worth (renderer storage is a cache plus outbox); other
+renderer stores and backend-less browsers keep local storage authoritative.
 Never hide a write failure behind a default object or silently switch stores.
 
 ## Trace the boundary
@@ -21,6 +23,8 @@ Never hide a write failure behind a default object or silently switch stores.
 | Cached preferences | `src/utils/cookieSettings.ts` |
 | Browser/Electron storage precedence | `src/utils/safeCookies.ts` |
 | Backend preference mirroring | `src/utils/uiPreferencesSync.ts`, `src/utils/apiBase.ts` |
+| Backend-authoritative domain sync and outbox | `src/utils/backendSync/`, `server/src/routes/sync.ts`, `server/src/sync/` |
+| API auth and agent discovery | `src/utils/apiClient.ts`, `server/src/auth.ts`, `electron/agentAccess.cjs` |
 | Asset Allocation / Net Worth conversion | `src/utils/dataSync.ts` |
 | Imports and exports | `src/utils/dataExportImport.ts`, `src/utils/csvExport.ts` |
 | Spreadsheet (.xlsx) backfill | `src/utils/xlsxReader.ts`, `src/utils/workbookImport.ts`, `src/utils/workbookImportApply.ts` (ids `wb-`), `src/utils/expenseWorkbook.ts` (ids `wbe-`, detail outranks `wb-` monthly totals), `src/utils/operationsWorkbook.ts` (operation ids `wbo-`, average cost only when quantities match) |

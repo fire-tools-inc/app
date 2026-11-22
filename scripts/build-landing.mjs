@@ -3,7 +3,7 @@
 // the OpenAPI contract under dist/api/ (yaml + ReDoc viewer). The SPA lives in
 // dist/demo/ (vite outDir), so the two never collide.
 import { cp, mkdir, access, copyFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -50,6 +50,13 @@ try {
 
 await mkdir(apiDest, { recursive: true });
 await copyFile(openapiSrc, resolve(apiDest, 'openapi.yaml'));
+
+// Agent skill for people who let an AI agent operate their data (see /llms.txt).
+// Evals are maintainer test prompts, not part of the published skill.
+const skillSrc = resolve(repoRoot, '.github', 'skills', 'using-fire-tools');
+const skillDest = resolve(outRoot, 'agents', 'using-fire-tools');
+await cp(skillSrc, skillDest, { recursive: true, filter: (s) => relative(skillSrc, s).split(/[\\/]/)[0] !== 'evals' });
+console.error(`[build-landing] published agent skill at ${skillDest}`);
 try {
   await copyFile(faviconSrc, resolve(apiDest, 'fire-icon.svg'));
 } catch (err) {

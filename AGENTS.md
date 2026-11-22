@@ -39,15 +39,29 @@ benchmark results.
 
 ### Storage boundaries
 
-Frontend domain stores still use the synchronous helpers in
-`src/utils/cookieStorage.ts` and `cookieSettings.ts`. Do not assume every domain
-screen is already wired to the backend.
+When a backend is reachable (desktop embedded or a custom URL), SQLite is the
+source of truth for five domains: settings, calculator, assetAllocation,
+expenseTracker and netWorth. Pages still use the synchronous helpers in
+`src/utils/cookieStorage.ts` and `cookieSettings.ts`; those write an encrypted
+cache and hand the new document to `src/utils/backendSync/`, which diffs it
+into entity changesets, persists an outbox and sends `PATCH /state/{domain}`.
+Remote writes (any route) bump SQLite revisions; the app polls
+`/sync/status`, rehydrates and remounts the page. See
+[agent API and storage sync](docs/engineering/agent-api.md).
 
+- Keep every save going through those helpers so the outbox sees it; never
+  write the cache directly for these domains. Hydration writes the cache with
+  recording disabled.
+- Device-local settings (`backend`, `updater`, logging, `llmCategorization`)
+  never leave the device. Scenarios, debt payoff, audit log and notifications
+  remain renderer-only.
 - Small stores use encrypted `SafeCookies`; Expense and Net Worth histories
   use encrypted `localStorage` because they can exceed cookie limits.
 - `SafeCookies` makes `localStorage` authoritative inside Electron, where
   `file://` cookie writes do not work. In browsers, cookies remain authoritative
   with a local-storage fallback.
+- The embedded API requires the per-launch bearer token. Agent access
+  (`electron/agentAccess.cjs`) is opt-in and must stay off by default.
 - `uiPreferencesSync.ts` mirrors supported backend preferences into local
   stores without blocking application startup.
 - The local backend owns its SQLite data and optional passphrase encryption.
