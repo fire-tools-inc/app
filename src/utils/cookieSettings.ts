@@ -11,6 +11,7 @@ import {
 } from '../types/currency';
 import { AssetClass } from '../types/assetAllocation';
 import { LlmCategorizationConfig } from '../types/pdfImport';
+import { isLlmProvider } from './llmProviders';
 import { encryptData, decryptData } from './cookieEncryption';
 import { IS_DEMO_MODE } from './demoMode';
 import { logger } from './logger';
@@ -248,6 +249,12 @@ export function mergeUpdaterSettings(input: unknown): UpdaterSettings {
   };
 }
 
+/** Copy a saved model configuration, dropping an unknown provider so the preset is inferred from the URL. */
+function normalizeLlmConfig(config: LlmCategorizationConfig): LlmCategorizationConfig {
+  const { provider, ...rest } = config;
+  return isLlmProvider(provider) ? { ...rest, provider } : { ...rest };
+}
+
 /**
  * Load user settings from encrypted storage
  * @returns The saved settings, or DEFAULT_SETTINGS if none saved
@@ -303,7 +310,7 @@ export function loadSettings(): UserSettings {
             ...(parsed.backend || {}),
           },
           updater: mergeUpdaterSettings(parsed.updater),
-          llmCategorization: parsed.llmCategorization ? { ...parsed.llmCategorization } : undefined,
+          llmCategorization: parsed.llmCategorization ? normalizeLlmConfig(parsed.llmCategorization) : undefined,
         };
       }
     }
@@ -411,6 +418,9 @@ export function validateSettings(settings: Partial<UserSettings>): { isValid: bo
   }
   if (settings.aiFeaturesEnabled !== undefined && typeof settings.aiFeaturesEnabled !== 'boolean') {
     errors.push('aiFeaturesEnabled must be a boolean');
+  }
+  if (settings.llmCategorization?.provider !== undefined && !isLlmProvider(settings.llmCategorization.provider)) {
+    errors.push('AI provider must be one of the listed presets');
   }
 
   if (settings.backend !== undefined) {

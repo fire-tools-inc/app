@@ -26,6 +26,7 @@ interface SettingsRow {
   llm_base_url: string | null;
   llm_api_key: string | null;
   llm_model: string | null;
+  llm_provider: string | null;
 }
 
 interface NotifPrefRow {
@@ -77,10 +78,14 @@ const mapSettings = (row: SettingsRow) => {
       baseUrl: row.llm_base_url,
       apiKey: row.llm_api_key ?? '',
       model: row.llm_model,
+      ...(row.llm_provider ? { provider: row.llm_provider } : {}),
     };
   }
   return out;
 };
+
+/** OpenAI-compatible provider presets accepted for the AI model configuration. */
+export const LLM_PROVIDERS = new Set(['local', 'openrouter', 'openai', 'gemini', 'anthropic', 'custom']);
 
 const mapNotifPref = (row: NotifPrefRow) => ({
   enableInAppNotifications: fromBool01(row.enable_in_app_notifications),
@@ -129,6 +134,16 @@ const applySettingsPatch = (db: Database, userId: number, patch: SettingsBody): 
   if ('aiFeaturesEnabled' in patch && typeof patch.aiFeaturesEnabled !== 'boolean') {
     throw apiError(400, 'invalid_body', 'aiFeaturesEnabled must be a boolean.');
   }
+  const llmPatch = patch.llmCategorization;
+  if (llmPatch !== undefined && llmPatch !== null && (typeof llmPatch !== 'object' || Array.isArray(llmPatch))) {
+    throw apiError(400, 'invalid_body', 'llmCategorization must be an object or null.');
+  }
+  if (llmPatch && 'provider' in llmPatch) {
+    const provider = (llmPatch as Record<string, unknown>).provider;
+    if (provider !== null && (typeof provider !== 'string' || !LLM_PROVIDERS.has(provider))) {
+      throw apiError(400, 'invalid_body', 'llmCategorization.provider must be a supported provider.');
+    }
+  }
   ensureSettings(db, userId);
   const sets: string[] = [];
   const vals: unknown[] = [];
@@ -162,11 +177,13 @@ const applySettingsPatch = (db: Database, userId: number, patch: SettingsBody): 
     set('llm_base_url', null);
     set('llm_api_key', null);
     set('llm_model', null);
+    set('llm_provider', null);
   } else if (patch.llmCategorization && typeof patch.llmCategorization === 'object') {
     const llm = patch.llmCategorization as Record<string, unknown>;
     if (typeof llm.baseUrl === 'string') set('llm_base_url', llm.baseUrl);
     if (typeof llm.apiKey === 'string') set('llm_api_key', llm.apiKey);
     if (typeof llm.model === 'string') set('llm_model', llm.model);
+    if (llm.provider === null || typeof llm.provider === 'string') set('llm_provider', llm.provider);
   }
   if (sets.length === 0) return;
   set('updated_at', nowIso());

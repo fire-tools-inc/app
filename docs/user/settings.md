@@ -12,12 +12,30 @@ the model is local or hosted. Disabling cancels pending categorization and
 retains endpoint URLs, API keys and model IDs. Local OCR, PDF.js/LiteParse
 parsing, receipt capture/pairing and ordinary imports remain available.
 
-Enabling AI does not send data automatically: each import still requires
-**Use AI categorization** consent. New and legacy settings preserve this
-per-import opt-in behavior; no model is configured by default.
-Expand **Model configuration** here to configure an
-[OpenAI-compatible local or hosted endpoint](../pdf-import.md#optional-openai-compatible-categorization),
-even when experimental document imports or AI are currently disabled.
+Enabling AI does not send data automatically: each document import still
+requires **Use AI categorization** consent, and the Cashflow quick add asks for
+confirmation before **Improve with AI** sends anything. New and legacy settings
+preserve this per-action opt-in behavior; no model is configured by default.
+
+Expand **Model configuration** here to choose a **Provider**, even when
+experimental document imports or AI are currently disabled:
+
+- **Local model** (Ollama, LM Studio, llama.cpp, vLLM): runs on your computer
+  and needs no key. Ollama's address is prefilled; LM Studio uses
+  `http://localhost:1234/v1`. If requests are blocked, allow the app in the
+  server's CORS settings (`OLLAMA_ORIGINS`, or **Enable CORS** in LM Studio).
+- **OpenRouter**, **OpenAI**, **Google Gemini** and **Anthropic Claude**:
+  hosted services that need an API key. Fire Tools calls their
+  OpenAI-compatible endpoints directly from this device.
+- **Other OpenAI-compatible endpoint**: any server that implements the
+  chat/completions API and allows requests from the app.
+
+Selecting a provider fills in its base URL, which you can still edit, and
+shows an example model ID. Settings saved before providers existed keep
+working. Hosted providers receive only the descriptions, amounts and
+currencies you choose to send, never your history, files or other data. See
+[AI categorization](../pdf-import.md#optional-openai-compatible-categorization)
+for the endpoint details.
 
 The master preference is saved with the renderer's encrypted settings and
 applies immediately in that app/browser profile. The backend settings API and

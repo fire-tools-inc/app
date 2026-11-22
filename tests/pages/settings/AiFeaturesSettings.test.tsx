@@ -31,6 +31,21 @@ describe('bulk AI feature settings', () => {
     expect(screen.getByLabelText('Model')).toBeTruthy();
   });
 
+  it('fills the endpoint from a provider preset while keeping older configurations working', () => {
+    renderSettings();
+    fireEvent.click(screen.getByText('Model configuration'));
+    const provider = screen.getByLabelText('Provider') as HTMLSelectElement;
+    expect(provider.value).toBe('local');
+    expect(screen.getByText(/OLLAMA_ORIGINS/)).toBeTruthy();
+    fireEvent.change(provider, { target: { value: 'openrouter' } });
+    expect(loadSettings().llmCategorization).toEqual({ ...model, provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1' });
+    expect((screen.getByLabelText('Base URL') as HTMLInputElement).value).toBe('https://openrouter.ai/api/v1');
+    expect((screen.getByLabelText('Model') as HTMLInputElement).placeholder).toBe('openai/gpt-4o-mini');
+    expect(screen.getByText(/Required by this provider/)).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Base URL'), { target: { value: 'https://gateway.example/v1' } });
+    expect(loadSettings().llmCategorization).toMatchObject({ provider: 'openrouter', baseUrl: 'https://gateway.example/v1' });
+  });
+
   it('reflects preference changes made while Settings remains mounted', () => {
     renderSettings();
     act(() => { saveSettings({ ...loadSettings(), aiFeaturesEnabled: false }); });

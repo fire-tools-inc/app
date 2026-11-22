@@ -1921,11 +1921,21 @@ components:
         portfolioBreakdown: { type: boolean, default: false }
         pdfImport:          { type: boolean, default: false }
 
+    LlmProvider:
+      type: string
+      enum: [local, openrouter, openai, gemini, anthropic, custom]
+      description: >-
+        Preset that filled in the OpenAI-compatible endpoint. Omitted for
+        configurations saved before presets existed; clients then treat
+        loopback URLs as `local` and other URLs as `custom`. Unknown values
+        are rejected with `400 invalid_body`.
+
     LlmCategorizationConfig:
       type: object
       required: [baseUrl, apiKey, model]
       properties:
-        baseUrl: { type: string }
+        provider: { $ref: '#/components/schemas/LlmProvider' }
+        baseUrl: { type: string, description: 'OpenAI-compatible base URL without /chat/completions.' }
         apiKey:  { type: string, format: password, description: 'May be empty for unauthenticated local OpenAI-compatible models.' }
         model:   { type: string }
 
@@ -2417,7 +2427,12 @@ components:
         amount:       { type: number }
         description:  { type: string }
         currency:     { $ref: '#/components/schemas/SupportedCurrency' }
-        category:     { type: string, description: 'Built-in ExpenseCategory id or custom category id' }
+        category:
+          type: string
+          description: >-
+            Built-in ExpenseCategory id or custom category id. The retired ids
+            `FEES` and `HOLIDAYS` are accepted from older clients and stored as
+            `BUSINESS` and `TRAVEL`.
         subCategory:  { type: string, nullable: true }
         expenseType:  { $ref: '#/components/schemas/ExpenseType' }
         isRecurring:  { type: boolean }
@@ -2577,7 +2592,12 @@ components:
       type: object
       required: [category, monthlyBudget]
       properties:
-        category:      { type: string }
+        category:
+          type: string
+          description: >-
+            Built-in or custom category id. Budgets for the retired `FEES` and
+            `HOLIDAYS` ids are added to the `BUSINESS` and `TRAVEL` budget of the
+            same month (or the global list) when the currencies match.
         monthlyBudget: { type: number }
         currency:      { $ref: '#/components/schemas/SupportedCurrency' }
         monthKey:
@@ -2598,7 +2618,7 @@ components:
       type: object
       required: [categoryId]
       properties:
-        categoryId: { type: string, description: 'Built-in ExpenseCategory id' }
+        categoryId: { type: string, description: 'Built-in ExpenseCategory id. Overrides for the retired FEES and HOLIDAYS ids are ignored.' }
         name:       { type: string, nullable: true }
         icon:       { type: string, nullable: true }
         color:      { type: string, nullable: true }

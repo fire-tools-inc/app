@@ -303,7 +303,7 @@ const CATEGORY_RULES: CategoryRule[] = [
     patterns: [/tuition|school\s*fees|università|university|college|udemy|coursera|edx|book\s*store|libreria/i],
   },
   {
-    category: 'FEES',
+    category: 'BUSINESS',
     expenseType: 'NEED',
     patterns: [/bank\s*fee|service\s*charge|atm\s*fee|interest\s*charge|commission|commissione/i],
   },

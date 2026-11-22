@@ -214,6 +214,7 @@ interface SettingsRow {
   llm_base_url: string | null;
   llm_api_key: string | null;
   llm_model: string | null;
+  llm_provider: string | null;
 }
 
 interface NotifPrefRow {
@@ -273,6 +274,7 @@ const rowToSettings = (row: SettingsRow): Record<string, unknown> => {
       baseUrl: row.llm_base_url,
       apiKey: row.llm_api_key ?? '',
       model: row.llm_model,
+      ...(row.llm_provider ? { provider: row.llm_provider } : {}),
     };
   }
   return out;

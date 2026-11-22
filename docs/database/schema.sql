@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS user_settings (
     llm_base_url                     TEXT,
     llm_api_key                      TEXT,                          -- store encrypted server-side
     llm_model                        TEXT,
+    llm_provider                     TEXT                           -- LlmProvider preset; NULL for older configs
+        CHECK (llm_provider IS NULL OR llm_provider IN ('local','openrouter','openai','gemini','anthropic','custom')),
     updated_at                       TEXT    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -364,6 +366,29 @@ CREATE TABLE IF NOT EXISTS category_overrides (
     icon         TEXT,
     color        TEXT,
     UNIQUE (user_id, category_id)
+);
+
+-- Values changed by migration 0008 (FEES -> BUSINESS, HOLIDAYS -> TRAVEL), kept
+-- so its rollback can restore rows that were not edited after the merge.
+CREATE TABLE IF NOT EXISTS expense_category_merge_backup (
+    id               INTEGER PRIMARY KEY,
+    user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    source_table     TEXT    NOT NULL,
+    record_key       TEXT,
+    legacy_row_id    INTEGER,
+    expense_month_id INTEGER,
+    legacy_value     TEXT    NOT NULL,
+    merged_value     TEXT,
+    amount           REAL,
+    currency         TEXT,
+    target_row_id    INTEGER,
+    target_amount    REAL,
+    target_currency  TEXT,
+    merged_amount    REAL,
+    summed           INTEGER NOT NULL DEFAULT 0 CHECK (summed IN (0, 1)),
+    name             TEXT,
+    icon             TEXT,
+    color            TEXT
 );
 
 -- -----------------------------------------------------------------------------

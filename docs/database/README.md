@@ -23,6 +23,24 @@ expense rows for an amount paid several times (for example sessions at a fixed
 price). The API requires both or neither and checks that `amount` equals their
 product. Rolling back drops the breakdown; every expense keeps its total.
 
+`0008_expense_category_merge` retires the built-in `FEES` and `HOLIDAYS`
+categories: expense rows, document import drafts and planning schedules/rules
+move to `BUSINESS` ("Business & Fees") and `TRAVEL` ("Travel & Holidays").
+When a month (or the global list) has budgets for both ids, the amounts are
+added together if their currencies match; otherwise the surviving budget is
+kept. Overrides of the retired ids are removed. Every changed value is
+recorded in `expense_category_merge_backup`. The rollback restores rows that
+still hold the merged value; rows edited after the merge (including a merged
+budget whose total changed) keep their current category, so export a backup
+before rolling back. API writes from older clients that still send the retired
+ids are mapped forward the same way.
+
+`0009_llm_provider` adds the nullable `user_settings.llm_provider` preset
+(`local`, `openrouter`, `openai`, `gemini`, `anthropic` or `custom`). Existing
+configurations keep `NULL` and clients infer `local` for loopback URLs and
+`custom` otherwise. Rolling back removes only the preset; the base URL, key and
+model are retained.
+
 `0005_ai_features` adds the per-user `ai_features_enabled` permission with a
 default of `1`, preserving existing per-action AI opt-in behavior. Its rollback
 removes this permission only; endpoint credentials, model IDs, receipts and

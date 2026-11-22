@@ -114,6 +114,24 @@ describe('PATCH /api/v1/settings', () => {
     expect((await request(app).get('/api/v1/settings')).body.llmCategorization).toEqual(config);
   });
 
+  it('stores the AI provider preset and rejects unknown providers', async () => {
+    const { app } = await makeApp();
+    const config = { provider: 'openrouter', baseUrl: 'https://openrouter.ai/api/v1', apiKey: 'synthetic-key', model: 'vendor/model' };
+    const saved = await request(app).patch('/api/v1/settings').send({ llmCategorization: config });
+    expect(saved.status).toBe(200);
+    expect(saved.body.llmCategorization).toEqual(config);
+    const invalid = await request(app).patch('/api/v1/settings')
+      .send({ llmCategorization: { ...config, provider: 'unsupported-provider' }, accountName: 'Should not save' });
+    expect(invalid.status).toBe(400);
+    expect(invalid.body.error.code).toBe('invalid_body');
+    expect(JSON.stringify(invalid.body)).not.toContain('synthetic-key');
+    const current = await request(app).get('/api/v1/settings');
+    expect(current.body.llmCategorization).toEqual(config);
+    expect(current.body.accountName).not.toBe('Should not save');
+    await request(app).patch('/api/v1/settings').send({ llmCategorization: { ...config, provider: null } });
+    expect((await request(app).get('/api/v1/settings')).body.llmCategorization).not.toHaveProperty('provider');
+  });
+
   it('applies partial updates', async () => {
     const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ accountName: 'Bob' });

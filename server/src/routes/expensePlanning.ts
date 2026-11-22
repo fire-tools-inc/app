@@ -3,10 +3,13 @@ import type { Database } from 'better-sqlite3';
 import { z } from 'zod';
 import { apiError, handler, nowIso, parseBody, resolveUserId } from '../http.js';
 import { logger } from '../logger.js';
+import { resolveCategoryAlias } from '../categoryAliases.js';
 
 const date = z.iso.date().refine(value => value >= '1900-01-01' && value <= '2100-12-31');
 const id = z.string().min(1).refine(value => value.trim() === value);
 const name = z.string().refine(value => value.trim().length > 0);
+/** Retired built-in ids are stored as the category that absorbed them. */
+const categoryId = id.transform(resolveCategoryAlias);
 const amount = z.number().finite().nonnegative();
 const currency = z.enum(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
 const source = z.enum([
@@ -23,7 +26,7 @@ const scheduleBase = {
   enabled: z.boolean(), archived: z.boolean(),
 };
 const schedule = z.discriminatedUnion('kind', [
-  z.object({ ...scheduleBase, kind: z.literal('expense'), category: id, expenseType }).strict(),
+  z.object({ ...scheduleBase, kind: z.literal('expense'), category: categoryId, expenseType }).strict(),
   z.object({ ...scheduleBase, kind: z.literal('income'), source }).strict(),
 ]).refine(value => !value.endDate || value.endDate >= value.startDate, {
   message: 'End date must not precede start date.', path: ['endDate'],
@@ -41,7 +44,7 @@ const match = z.object({
 });
 const ruleBase = { id, name, enabled: z.boolean(), priority: z.number().int().nonnegative(), match };
 const rule = z.discriminatedUnion('kind', [
-  z.object({ ...ruleBase, kind: z.literal('expense'), category: id, expenseType }).strict(),
+  z.object({ ...ruleBase, kind: z.literal('expense'), category: categoryId, expenseType }).strict(),
   z.object({ ...ruleBase, kind: z.literal('income'), source }).strict(),
 ]);
 

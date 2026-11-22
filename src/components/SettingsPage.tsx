@@ -26,6 +26,7 @@ import {
 import type { NetWorthTrackerData } from '../types/netWorthTracker';
 import { Tooltip } from './Tooltip';
 import { MaterialIcon } from './MaterialIcon';
+import { PageHeader } from './PageHeader';
 import { WorkbookImportDialog, downloadWorkbookTemplateFile } from './WorkbookImportDialog';
 import { ExpenseWorkbookImportDialog, downloadExpenseTemplateFile } from './ExpenseWorkbookImportDialog';
 import { OperationsWorkbookImportDialog, downloadOperationsTemplateFile } from './OperationsWorkbookImportDialog';
@@ -50,6 +51,8 @@ import {
 } from '../utils/updater';
 import { API_ENDPOINTS, type ApiEndpoint } from '../utils/apiCatalog';
 import { IS_DEMO_MODE } from '../utils/demoMode';
+import { LLM_PROVIDER_PRESETS, getLlmProviderPreset, resolveLlmProvider } from '../utils/llmProviders';
+import type { LlmCategorizationConfig, LlmProvider } from '../types/pdfImport';
 import { downloadLogs, logger } from '../utils/logger';
 import { useAuditLog } from '../contexts/AuditLogContext';
 import { AUDIT_ACTION_TYPES, type AuditActionType } from '../types/auditLog';
@@ -467,6 +470,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
     onSettingsChange?.(newSettings);
     logAuditEvent('UPDATE_SETTINGS', { setting: String(key) });
     showMessage('success', t('settings.messages.settingsSaved'));
+  };
+
+  const llmProvider = resolveLlmProvider(settings.llmCategorization);
+  const llmPreset = getLlmProviderPreset(llmProvider);
+  const updateLlmConfig = (patch: Partial<LlmCategorizationConfig>) => {
+    const current = settings.llmCategorization;
+    handleSettingChange('llmCategorization', {
+      provider: llmProvider,
+      baseUrl: current?.baseUrl ?? '',
+      apiKey: current?.apiKey ?? '',
+      model: current?.model ?? '',
+      ...patch,
+    });
   };
 
   // Audit log: newest-first, filtered by action type and date range.
@@ -1212,14 +1228,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
   }
 
   return (
-    <main className="settings-page" id="main-content" tabIndex={-1}>
+    <main className="page settings-page" id="main-content" tabIndex={-1}>
+      <PageHeader title={t('settings.title')} />
       <div className="settings-container">
-        <div className="settings-header">
-          <button className="back-button" onClick={() => navigate(-1)}>
-            {t('settings.back')}
-          </button>
-          <h1><MaterialIcon name="settings" /> {t('settings.title')}</h1>
-        </div>
 
         {message && (
           <div className={`settings-message ${message.type}`} role={message.type === 'error' ? 'alert' : 'status'}>
@@ -1257,18 +1268,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               <h3>{t('settings.aiCategorizationOptional')}</h3>
               <p className="setting-help">{t('settings.aiCategorizationHelp')}</p>
               <div className="form-group">
+                <label htmlFor="llmProvider">{t('aiSettings.provider')}</label>
+                <select
+                  id="llmProvider"
+                  disabled={IS_DEMO_MODE}
+                  value={llmProvider}
+                  aria-describedby="llmProviderHelp llmProviderNote"
+                  onChange={(e) => {
+                    const provider = e.target.value as LlmProvider;
+                    const preset = getLlmProviderPreset(provider);
+                    updateLlmConfig({ provider, ...(preset.baseUrl ? { baseUrl: preset.baseUrl } : {}) });
+                  }}
+                >
+                  {LLM_PROVIDER_PRESETS.map(preset => (
+                    <option key={preset.id} value={preset.id}>{t(`aiSettings.providers.${preset.id}`)}</option>
+                  ))}
+                </select>
+                <span id="llmProviderHelp" className="setting-help">{t('aiSettings.providerHelp')}</span>
+                <span id="llmProviderNote" className="setting-help">{t(`aiSettings.providerNotes.${llmProvider}`)}</span>
+              </div>
+              <div className="form-group">
                 <label htmlFor="llmBaseUrl">{t('settings.baseUrl')}</label>
                 <input
                   id="llmBaseUrl"
-                  type="text"
+                  type="url"
                   disabled={IS_DEMO_MODE}
-                  placeholder={t('settings.placeholders.llmBaseUrl')}
+                  placeholder={llmPreset.baseUrl || t('settings.placeholders.llmBaseUrl')}
                   value={settings.llmCategorization?.baseUrl ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: e.target.value,
-                    apiKey: settings.llmCategorization?.apiKey ?? '',
-                    model: settings.llmCategorization?.model ?? '',
-                  })}
+                  onChange={(e) => updateLlmConfig({ baseUrl: e.target.value })}
                 />
               </div>
               <div className="form-group">
@@ -1276,16 +1303,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <input
                   id="llmApiKey"
                   type="password"
+                  autoComplete="off"
                   disabled={IS_DEMO_MODE}
+                  required={llmPreset.apiKeyRequired}
+                  aria-describedby="llmApiKeyHelp"
                   placeholder={t('settings.placeholders.apiKey')}
                   value={settings.llmCategorization?.apiKey ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                    apiKey: e.target.value,
-                    model: settings.llmCategorization?.model ?? '',
-                  })}
+                  onChange={(e) => updateLlmConfig({ apiKey: e.target.value })}
                 />
-                <span className="setting-help">{t('settings.localModelKeyHelp')}</span>
+                <span id="llmApiKeyHelp" className="setting-help">
+                  {llmPreset.apiKeyRequired ? t('aiSettings.apiKeyRequired') : t('settings.localModelKeyHelp')}
+                </span>
               </div>
               <div className="form-group">
                 <label htmlFor="llmModel">{t('settings.model')}</label>
@@ -1293,13 +1321,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                   id="llmModel"
                   type="text"
                   disabled={IS_DEMO_MODE}
-                  placeholder={t('settings.placeholders.llmModel')}
+                  placeholder={llmPreset.modelPlaceholder}
                   value={settings.llmCategorization?.model ?? ''}
-                  onChange={(e) => handleSettingChange('llmCategorization', {
-                    baseUrl: settings.llmCategorization?.baseUrl ?? '',
-                    apiKey: settings.llmCategorization?.apiKey ?? '',
-                    model: e.target.value,
-                  })}
+                  onChange={(e) => updateLlmConfig({ model: e.target.value })}
                 />
               </div>
               <span className="setting-help">{t('settings.aiCategorizationStoredHelp')}</span>
@@ -1315,7 +1339,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('language')}
             aria-controls="language-content"
           >
-            <h2><MaterialIcon name="language" /> {t('settings.language')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('language') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="language" /> {t('settings.language')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('language')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('language') && (
             <div id="language-content" className="collapsible-content">
@@ -1332,7 +1356,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('account')}
             aria-controls="account-content"
           >
-            <h2><MaterialIcon name="person" /> {t('settings.sections.account')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('account') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="person" /> {t('settings.sections.account')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('account')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('account') && (
             <div id="account-content" className="collapsible-content">
@@ -1366,7 +1390,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('fire')}
             aria-controls="fire-content"
           >
-            <h2><MaterialIcon name="local_fire_department" /> {t('settings.sections.fire')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('fire') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="local_fire_department" /> {t('settings.sections.fire')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('fire')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('fire') && (
             <div id="fire-content" className="collapsible-content">
@@ -1434,7 +1458,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('display')}
             aria-controls="display-content"
           >
-            <h2><MaterialIcon name="palette" /> {t('settings.sections.display')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('display') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="palette" /> {t('settings.sections.display')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('display')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('display') && (
             <div id="display-content" className="collapsible-content">
@@ -1609,7 +1633,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('privacy')}
             aria-controls="privacy-content"
           >
-            <h2><MaterialIcon name="privacy_tip" /> {t('settings.sections.privacy')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('privacy') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="privacy_tip" /> {t('settings.sections.privacy')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('privacy')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('privacy') && (
             <div id="privacy-content" className="collapsible-content">
@@ -1663,7 +1687,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
                 <span className="setting-help">{t('settings.loggingPiiHelp')}</span>
                 {settings.loggingPiiEnabled && (
                   <span className="setting-help" style={{ color: 'var(--color-error, #d32f2f)', fontWeight: 600 }}>
-                    ⚠ {t('settings.loggingPiiWarning')}
+                    <MaterialIcon name="warning" size="small" /> {t('settings.loggingPiiWarning')}
                   </span>
                 )}
                 <div style={{ marginTop: '0.5rem' }}>
@@ -1753,7 +1777,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('backend')}
             aria-controls="backend-content"
           >
-            <h2><MaterialIcon name="dns" /> {t('settings.sections.backend')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('backend') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="dns" /> {t('settings.sections.backend')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('backend')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('backend') && (
             <div id="backend-content" className="collapsible-content">
@@ -1848,7 +1872,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
               aria-expanded={!collapsedSections.has('security')}
               aria-controls="security-content"
             >
-              <h2><MaterialIcon name="lock" /> Security <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('security') ? '▶' : '▼'}</span></h2>
+              <h2><MaterialIcon name="lock" /> Security <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('security')) ? ' is-open' : ''}`} /></h2>
             </button>
             {!collapsedSections.has('security') && (
               <div id="security-content" className="collapsible-content">
@@ -2007,7 +2031,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('updater')}
             aria-controls="updater-content"
           >
-            <h2><MaterialIcon name="system_update" /> {t('settings.sections.updater', { defaultValue: 'Updates & Backups' })} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('updater') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="system_update" /> {t('settings.sections.updater', { defaultValue: 'Updates & Backups' })} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('updater')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('updater') && (
             <div id="updater-content" className="collapsible-content">
@@ -2220,7 +2244,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('advanced')}
             aria-controls="advanced-content"
           >
-            <h2><MaterialIcon name="terminal" /> {t('settings.sections.advanced')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('advanced') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="terminal" /> {t('settings.sections.advanced')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('advanced')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('advanced') && (
             <div id="advanced-content" className="collapsible-content">
@@ -2347,7 +2371,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('experimental')}
             aria-controls="experimental-content"
           >
-            <h2><MaterialIcon name="science" /> {t('settings.sections.experimental')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('experimental') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="science" /> {t('settings.sections.experimental')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('experimental')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('experimental') && (
             <div id="experimental-content" className="collapsible-content">
@@ -2413,7 +2437,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('notifications')}
             aria-controls="notifications-content"
           >
-            <h2><MaterialIcon name="notifications" /> {t('settings.sections.notifications')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('notifications') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="notifications" /> {t('settings.sections.notifications')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('notifications')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('notifications') && (
             <div id="notifications-content" className="collapsible-content">
@@ -2563,7 +2587,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('email')}
             aria-controls="email-content"
           >
-            <h2><MaterialIcon name="email" /> {t('settings.sections.email')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('email') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="email" /> {t('settings.sections.email')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('email')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('email') && (
             <div id="email-content" className="collapsible-content">
@@ -2636,7 +2660,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           >
             <h2>
               <MaterialIcon name="currency_exchange" /> {t('settings.sections.currency')}
-              <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('currency') ? '▶' : '▼'}</span>
+              <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('currency')) ? ' is-open' : ''}`} />
             </h2>
           </button>
           {!collapsedSections.has('currency') && (
@@ -2697,7 +2721,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
           >
             <h2>
               <MaterialIcon name="trending_up" /> {t('settings.sections.marketData')}
-              <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('marketData') ? '▶' : '▼'}</span>
+              <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('marketData')) ? ' is-open' : ''}`} />
             </h2>
           </button>
           {!collapsedSections.has('marketData') && (
@@ -2818,7 +2842,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('categories')}
             aria-controls="categories-content"
           >
-            <h2><MaterialIcon name="category" /> {t('settings.sections.categories')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('categories') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="category" /> {t('settings.sections.categories')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('categories')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('categories') && (
             <div id="categories-content" className="collapsible-content">
@@ -2843,7 +2867,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('data')}
             aria-controls="data-content"
           >
-            <h2><MaterialIcon name="save" /> {t('settings.sections.data')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('data') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="save" /> {t('settings.sections.data')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('data')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('data') && (
             <div id="data-content" className="collapsible-content">
@@ -3033,7 +3057,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('support')}
             aria-controls="support-content"
           >
-            <h2><MaterialIcon name="help" /> {t('settings.sections.support')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('support') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="help" /> {t('settings.sections.support')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('support')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('support') && (
             <div id="support-content" className="collapsible-content">
@@ -3156,7 +3180,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('auditLog')}
             aria-controls="audit-log-content"
           >
-            <h2><MaterialIcon name="history" /> {t('settings.sections.auditLog')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('auditLog') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="history" /> {t('settings.sections.auditLog')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('auditLog')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('auditLog') && (
             <div id="audit-log-content" className="collapsible-content">
@@ -3273,7 +3297,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsChange }) 
             aria-expanded={!collapsedSections.has('about')}
             aria-controls="about-content"
           >
-            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <span className="collapse-icon-small" aria-hidden="true">{collapsedSections.has('about') ? '▶' : '▼'}</span></h2>
+            <h2><MaterialIcon name="info" /> {t('settings.sections.about')} <MaterialIcon name="expand_more" size="small" className={`collapse-chevron${!(collapsedSections.has('about')) ? ' is-open' : ''}`} /></h2>
           </button>
           {!collapsedSections.has('about') && (
             <div id="about-content" className="collapsible-content">

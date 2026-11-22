@@ -6,6 +6,7 @@ import {
   parsePagination, nextCursor, parseYearMonth, parseBody,
 } from '../http.js';
 import { scheduleReferenceSchema } from './expensePlanning.js';
+import { isLegacyCategoryId, mergeBudgetAliases, resolveCategoryAlias } from '../categoryAliases.js';
 
 const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
 const EXPENSE_TYPES = new Set(['NEED', 'WANT']);
@@ -201,7 +202,7 @@ const EXPENSE_INSERT_SQL = `INSERT INTO expense_entries (user_id, expense_month_
 
 const expenseInsertValues = (userId: number, monthId: number, e: Record<string, unknown>): unknown[] => [
   userId, monthId, String(e.externalId), String(e.date), Number(e.amount), String(e.description),
-  e.currency != null ? String(e.currency) : null, String(e.category),
+  e.currency != null ? String(e.currency) : null, resolveCategoryAlias(String(e.category)),
   e.subCategory != null ? String(e.subCategory) : null, String(e.expenseType), bool01(e.isRecurring),
   ...scheduleValues(e),
   e.unitAmount != null ? Number(e.unitAmount) : null, e.quantity != null ? Number(e.quantity) : null,
@@ -307,10 +308,11 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
         `INSERT INTO category_budgets (user_id, expense_month_id, category, monthly_budget, currency)
          VALUES (?, ?, ?, ?, ?)`,
       );
-      for (const b of budgets) {
-        budIns.run(userId, m.id, String(b.category), Number(b.monthlyBudget),
-          b.currency != null ? String(b.currency) : null);
-      }
+      const monthBudgets = mergeBudgetAliases(budgets.map(b => ({
+        scope: 'month', category: String(b.category), monthlyBudget: Number(b.monthlyBudget),
+        currency: b.currency != null ? String(b.currency) : null,
+      })));
+      for (const b of monthBudgets) budIns.run(userId, m.id, b.category, b.monthlyBudget, b.currency);
     });
     tx.immediate();
     res.json(getMonthData(userId, year, month));
@@ -336,7 +338,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
     const params: unknown[] = [userId];
     if (typeof req.query.startDate === 'string') { where.push('date >= ?'); params.push(req.query.startDate); }
     if (typeof req.query.endDate === 'string') { where.push('date <= ?'); params.push(req.query.endDate); }
-    if (typeof req.query.category === 'string') { where.push('category = ?'); params.push(req.query.category); }
+    if (typeof req.query.category === 'string') { where.push('category = ?'); params.push(resolveCategoryAlias(req.query.category)); }
     if (typeof req.query.expenseType === 'string') {
       if (!EXPENSE_TYPES.has(req.query.expenseType)) {
         throw apiError(400, 'invalid_param', `Invalid expenseType: ${req.query.expenseType}`);
@@ -500,7 +502,7 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
         `INSERT INTO category_budgets (user_id, expense_month_id, category, monthly_budget, currency)
          VALUES (?, ?, ?, ?, ?)`,
       );
-      for (const b of body) {
+      const scoped = body.map((b) => {
         let monthId: number | null = null;
         const mk = b.monthKey;
         if (typeof mk === 'string' && mk !== '') {
@@ -508,8 +510,13 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
           if (!match) throw apiError(400, 'invalid_body', `Invalid monthKey: ${mk}`);
           monthId = ensureMonth(db, userId, Number(match[1]), Number(match[2])).id;
         }
-        ins.run(userId, monthId, String(b.category), Number(b.monthlyBudget),
-          b.currency != null ? String(b.currency) : null);
+        return {
+          monthId, scope: String(monthId), category: String(b.category), monthlyBudget: Number(b.monthlyBudget),
+          currency: b.currency != null ? String(b.currency) : null,
+        };
+      });
+      for (const b of mergeBudgetAliases(scoped)) {
+        ins.run(userId, b.monthId, b.category, b.monthlyBudget, b.currency);
       }
     });
     tx();
@@ -595,6 +602,8 @@ export const buildExpenseTrackerRouter = (db: Database): Router => {
       );
       for (const o of body) {
         if (!('categoryId' in o)) throw apiError(400, 'invalid_body', 'Missing categoryId');
+        // Retired built-in ids have no category to customize any more.
+        if (isLegacyCategoryId(String(o.categoryId))) continue;
         ins.run(userId, String(o.categoryId),
           o.name != null ? String(o.name) : null,
           o.icon != null ? String(o.icon) : null,

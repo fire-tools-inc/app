@@ -23,6 +23,7 @@ import {
 } from './demoMode';
 import { logger } from './logger';
 import { validateExpenseTrackerPlanning } from './expensePlanning';
+import { normalizeExpenseTrackerCategories } from './expenseCategoryAliases';
 
 // Cookie keys
 const ASSET_ALLOCATION_KEY = 'fire-calculator-asset-allocation';
@@ -374,6 +375,19 @@ export function saveExpenseTrackerData(data: ExpenseTrackerData): void {
   }
 }
 
+/** Store data whose retired category ids were mapped forward; the migrated copy is still used if the write fails. */
+function persistCategoryMigration(data: ExpenseTrackerData): void {
+  try {
+    validateExpenseTrackerPlanning(data);
+    localStorage.setItem(EXPENSE_TRACKER_KEY, encryptData(JSON.stringify(data)));
+    logger.systemEvent('cookie-storage', 'migrate', 'merged retired expense categories in saved cashflow data');
+  } catch (error) {
+    logger.error('cookie-storage', 'category-migration-failed', 'merged expense categories could not be saved; they will be saved with the next edit', {
+      pii: { error: error instanceof Error ? error.message : String(error) },
+    });
+  }
+}
+
 /**
  * Load Expense Tracker data from encrypted localStorage
  */
@@ -403,7 +417,9 @@ export function loadExpenseTrackerData(): ExpenseTrackerData | null {
       if (decryptedData) {
         const parsed = JSON.parse(decryptedData);
         if (isValidExpenseTrackerData(parsed)) {
-          return parsed;
+          const migrated = normalizeExpenseTrackerCategories(parsed);
+          if (migrated !== parsed) persistCategoryMigration(migrated);
+          return migrated;
         }
       }
     }

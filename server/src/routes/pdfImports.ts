@@ -4,6 +4,7 @@ import {
   handler, resolveUserId, apiError, nowIso, parseIntParam,
   parsePagination, nextCursor, bool01,
 } from '../http.js';
+import { resolveCategoryAlias } from '../categoryAliases.js';
 
 const DOC_TYPES_OPENAPI = new Set(['auto', 'receipt', 'invoice', 'bank_statement', 'payslip']);
 // PdfDocType (used in stored drafts) excludes 'auto'
@@ -230,7 +231,7 @@ export const buildPdfImportsRouter = (db: Database): Router => {
         if (d.kind === 'expense') {
           const expenseType = d.suggestedExpenseType && EXPENSE_TYPES.has(d.suggestedExpenseType)
             ? d.suggestedExpenseType : 'NEED';
-          const category = d.suggestedCategory ?? 'OTHER';
+          const category = resolveCategoryAlias(d.suggestedCategory ?? 'OTHER');
           const currency = d.currency && CURRENCIES.has(d.currency) ? d.currency : null;
           db.prepare(
             `INSERT INTO expense_entries (user_id, expense_month_id, external_id, date, amount,

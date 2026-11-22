@@ -134,18 +134,26 @@ see [deployment instructions](deployment/README.md#receipt-phone-uploads).
 
 ## Optional OpenAI-compatible categorization
 
-Configure an **OpenAI-compatible chat/completions endpoint** and **model** in
-**Settings > AI features > Model configuration**, then explicitly tick
-**Use AI categorization** for an import.
-Authentication is optional: leave the key blank for an unauthenticated local
-server. A key is sent as a bearer token only when provided.
+Choose a **Provider** in **Settings > AI features > Model configuration**,
+check the prefilled base URL and enter a **model**, then explicitly tick
+**Use AI categorization** for an import (or confirm **Improve with AI** in the
+Cashflow quick add). Every provider is called through its OpenAI-compatible
+chat/completions API directly from this device. A key is sent as a bearer
+token only when provided; local servers usually need none.
 
-| Service | Base URL | Example model |
-| --- | --- | --- |
-| Ollama | `http://localhost:11434/v1` | A model already downloaded locally |
-| LM Studio | `http://localhost:1234/v1` | Your loaded local model ID |
-| llama.cpp / vLLM | Your local server's `/v1` URL | Its configured model ID |
-| OpenAI or hosted compatible server | Its `/v1` URL | Your selected model ID |
+| Provider preset | Base URL | Key | Notes |
+| --- | --- | --- | --- |
+| Local model | `http://localhost:11434/v1` (Ollama); LM Studio uses `http://localhost:1234/v1`; llama.cpp/vLLM use their `/v1` URL | Optional | If requests are blocked, allow the app origin with `OLLAMA_ORIGINS` or turn on **Enable CORS** in LM Studio. |
+| OpenRouter | `https://openrouter.ai/api/v1` | Required | Model IDs look like `vendor/model`. |
+| OpenAI | `https://api.openai.com/v1` | Required | |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | Required (Gemini API key) | Google's OpenAI compatibility layer. |
+| Anthropic Claude | `https://api.anthropic.com/v1` | Required | Anthropic's OpenAI SDK compatibility layer, which Anthropic describes as intended mainly for testing. Fire Tools adds the `anthropic-dangerous-direct-browser-access` header Anthropic requires for requests made directly from an app. |
+| Other OpenAI-compatible endpoint | Any `/v1` URL | Optional | The server must allow cross-origin requests from the app. |
+
+Configurations saved before presets existed keep working: a loopback base URL
+is treated as **Local model** and any other URL as **Other OpenAI-compatible
+endpoint**. GitHub Models is not offered because GitHub retired that service on
+30 July 2026.
 
 Full `/chat/completions` URLs and query parameters are supported. The request
 does not require the optional `response_format` parameter, which many local
@@ -176,5 +184,5 @@ photo or edit the draft; no parser can guarantee financial correctness.
 | Phone cannot connect | Check the Wi-Fi link, firewall, upload port and lease; do not use the computer-only loopback link. |
 | Container link uses an internal address | Supply the host's private Wi-Fi upload address before pairing. |
 | Phone send fails | Keep the queue; reconnect or re-pair at the same origin, then retry. |
-| Categorization unavailable | Enable AI in Settings and configure endpoint and model; a key is unnecessary for unauthenticated local models. |
+| Categorization unavailable | Enable AI in Settings, choose a provider and configure the endpoint and model; hosted providers need an API key, local models usually do not. |
 | Imported entries appear in another month | The tracker navigates to the earliest imported date. |
