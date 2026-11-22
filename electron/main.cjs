@@ -18,6 +18,15 @@ const isMac = process.platform === 'darwin';
 // notifications, the menu bar, and About panel to "Fire Tools".
 app.setName('Fire Tools');
 
+// Unpackaged runs can point at a separate profile so experiments with a branch
+// never migrate or overwrite the real desktop data. Set before the single
+// instance lock so the isolated run does not collide with the installed app.
+const isolatedUserData = !app.isPackaged ? process.env.FIRE_TOOLS_USER_DATA_DIR?.trim() : '';
+if (isolatedUserData) {
+  app.setPath('userData', path.resolve(isolatedUserData));
+  console.log(`[fire-tools] using isolated profile ${app.getPath('userData')}`);
+}
+
 // Resolve the brand icon once. Used for native notifications and the macOS
 // Dock so the user always sees the Fire Tools logo regardless of how the
 // app is launched (dev electron binary vs packaged app).

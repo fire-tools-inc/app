@@ -37,6 +37,24 @@ npm run electron:rebuild
 ELECTRON_RENDERER_URL=http://127.0.0.1:5190 node scripts/electron-dev.mjs
 ```
 
+### Test a branch with a copy of your data
+
+`npm run electron:dev` and the installed app share the same profile (database,
+renderer storage and backups), so running a branch would apply its migrations
+to your real data. Unpackaged runs accept `FIRE_TOOLS_USER_DATA_DIR` to use a
+separate profile instead. Quit the installed app, copy its profile and point
+the dev app at the copy:
+
+```sh
+cp -R "$HOME/Library/Application Support/Fire Tools" /tmp/fire-tools-test-profile
+rm -f /tmp/fire-tools-test-profile/Singleton*
+FIRE_TOOLS_USER_DATA_DIR=/tmp/fire-tools-test-profile npm run electron:dev
+```
+
+On Windows the profile lives in `%APPDATA%\Fire Tools`, on Linux in
+`~/.config/Fire Tools`. Packaged apps ignore the variable. The isolated run has
+its own single-instance lock, so it can stay open next to the installed app.
+
 ## Startup troubleshooting
 
 If macOS Gatekeeper blocks a downloaded release, follow the
