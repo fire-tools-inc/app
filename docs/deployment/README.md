@@ -76,6 +76,7 @@ docker compose --profile postgres up -d
 | `CORS_ALLOW_ALL`       | `false`                          | `true` opens CORS — only for trusted local stacks. |
 | `RATE_LIMIT_WINDOW_MS` | `900000`                         | Sliding window for the rate limiter. |
 | `RATE_LIMIT_MAX`       | `300`                            | Max requests per window per IP. |
+| `API_TOKEN`            | unset                            | When set, `/api/v1` routes except `GET /health` require `Authorization: Bearer <token>`. |
 
 ## Volumes & backup
 

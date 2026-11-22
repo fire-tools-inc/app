@@ -9,33 +9,33 @@ import {
 // Enums (mirror OpenAPI + 0001_initial.up.sql CHECK constraints)
 // =============================================================================
 
-const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
-const HOLDING_ASSET_CLASSES = new Set([
+export const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
+export const HOLDING_ASSET_CLASSES = new Set([
   'STOCKS', 'BONDS', 'ETF', 'CRYPTO', 'REAL_ESTATE',
   'PRIVATE_EQUITY', 'VEHICLE', 'COLLECTIBLE', 'ART',
   'COMMODITIES', 'OTHER',
 ]);
-const SYNC_ASSET_CLASSES = new Set([
+export const SYNC_ASSET_CLASSES = new Set([
   'STOCKS', 'BONDS', 'CASH', 'CRYPTO', 'REAL_ESTATE',
   'COMMODITIES', 'VEHICLE', 'COLLECTIBLE', 'ART',
 ]);
-const TARGET_MODES = new Set(['PERCENTAGE', 'OFF', 'SET']);
-const ACCOUNT_TYPES = new Set(['SAVINGS', 'CHECKING', 'BROKERAGE', 'CREDIT_CARD', 'OTHER']);
-const PENSION_TYPES = new Set(['STATE', 'PRIVATE', 'EMPLOYER', 'OTHER']);
-const DEBT_TYPES = new Set(['CREDIT_CARD', 'PERSONAL_LOAN', 'STUDENT_LOAN', 'CAR_LOAN', 'MORTGAGE', 'OTHER']);
-const TAX_TYPES = new Set(['INCOME_TAX', 'PROPERTY_TAX', 'CAPITAL_GAINS_TAX', 'OTHER']);
-const OPERATION_TYPES = new Set([
+export const TARGET_MODES = new Set(['PERCENTAGE', 'OFF', 'SET']);
+export const ACCOUNT_TYPES = new Set(['SAVINGS', 'CHECKING', 'BROKERAGE', 'CREDIT_CARD', 'OTHER']);
+export const PENSION_TYPES = new Set(['STATE', 'PRIVATE', 'EMPLOYER', 'OTHER']);
+export const DEBT_TYPES = new Set(['CREDIT_CARD', 'PERSONAL_LOAN', 'STUDENT_LOAN', 'CAR_LOAN', 'MORTGAGE', 'OTHER']);
+export const TAX_TYPES = new Set(['INCOME_TAX', 'PROPERTY_TAX', 'CAPITAL_GAINS_TAX', 'OTHER']);
+export const OPERATION_TYPES = new Set([
   'PURCHASE', 'SALE', 'DIVIDEND', 'EXPENSE_REIMBURSEMENT',
   'GIFT_RECEIVED', 'GIFT_GIVEN', 'TAX_PAID', 'CASH_TRANSFER',
   'PENSION_CONTRIBUTION', 'PENSION_ADJUSTMENT', 'PRICE_UPDATE', 'OTHER',
 ]);
-const DEPRECIATION_METHODS = new Set(['STRAIGHT_LINE', 'DECLINING_BALANCE', 'MANUAL']);
+export const DEPRECIATION_METHODS = new Set(['STRAIGHT_LINE', 'DECLINING_BALANCE', 'MANUAL']);
 
 // =============================================================================
 // Row types
 // =============================================================================
 
-interface CfgRow {
+export interface NetWorthConfigRow {
   user_id: number;
   default_currency: string;
   current_year: number;
@@ -45,12 +45,12 @@ interface CfgRow {
   sync_with_asset_allocation: number;
   updated_at: string;
 }
-interface YearRow { id: number; user_id: number; year: number; is_archived: number }
-interface MonthRow {
+export interface NetWorthYearRow { id: number; user_id: number; year: number; is_archived: number }
+export interface NetWorthMonthRow {
   id: number; user_id: number; net_worth_year_id: number; month: number;
   is_frozen: number; frozen_date: string | null; month_note: string | null;
 }
-interface HoldingRow {
+export interface HoldingRow {
   id: number; user_id: number; net_worth_month_id: number;
   external_id: string; ticker: string; name: string;
   shares: number; price_per_share: number; acquisition_price: number | null;
@@ -66,44 +66,46 @@ interface HoldingRow {
   mortgage_interest_rate: number | null; mortgage_term_years: number | null;
   mortgage_remaining_years: number | null; mortgage_monthly_payment: number | null;
   mortgage_start_date: string | null; mortgage_lender: string | null;
+  position: number | null;
 }
-interface CashRow {
+export interface CashRow {
   id: number; user_id: number; net_worth_month_id: number; external_id: string;
   account_name: string; account_type: string; balance: number; currency: string;
   note: string | null; institution_code: string | null; institution_name: string | null;
   shares: number | null; price_per_share: number | null;
   target_mode: string | null; target_percent: number | null; target_value: number | null;
   sync_sub_asset_type: string | null;
+  position: number | null;
 }
-interface PensionRow {
+export interface PensionRow {
   id: number; user_id: number; net_worth_month_id: number; external_id: string;
   name: string; current_value: number; currency: string; pension_type: string;
-  note: string | null;
+  note: string | null; position: number | null;
 }
-interface DebtRow {
+export interface DebtRow {
   id: number; user_id: number; net_worth_month_id: number; external_id: string;
   name: string; debt_type: string; current_balance: number;
   interest_rate: number | null; monthly_payment: number | null;
-  currency: string; note: string | null; creditor: string | null;
+  currency: string; note: string | null; creditor: string | null; position: number | null;
 }
-interface TaxRow {
+export interface TaxRow {
   id: number; user_id: number; net_worth_month_id: number; external_id: string;
   name: string; tax_type: string; amount: number; due_date: string | null;
-  currency: string; note: string | null; is_paid: number;
+  currency: string; note: string | null; is_paid: number; position: number | null;
 }
-interface OpRow {
+export interface OpRow {
   id: number; user_id: number; net_worth_month_id: number; external_id: string;
   date: string; type: string; description: string; amount: number; currency: string;
   related_asset_external_id: string | null; related_account_external_id: string | null;
-  note: string | null;
+  note: string | null; position: number | null;
 }
 
 // =============================================================================
 // Ensure config / year / month (auto-create on demand)
 // =============================================================================
 
-const ensureCfg = (db: Database, userId: number): CfgRow => {
-  const row = db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as CfgRow | undefined;
+const ensureCfg = (db: Database, userId: number): NetWorthConfigRow => {
+  const row = db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as NetWorthConfigRow | undefined;
   if (row) return row;
   const now = new Date();
   db.prepare(
@@ -112,37 +114,37 @@ const ensureCfg = (db: Database, userId: number): CfgRow => {
         show_pension_in_net_worth, include_unrealized_gains, sync_with_asset_allocation, updated_at)
      VALUES (?, 'EUR', ?, ?, 1, 1, 0, ?)`,
   ).run(userId, now.getUTCFullYear(), now.getUTCMonth() + 1, nowIso());
-  return db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as CfgRow;
+  return db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as NetWorthConfigRow;
 };
 
-const ensureNwYear = (db: Database, userId: number, year: number): YearRow => {
+export const ensureNwYear = (db: Database, userId: number, year: number): NetWorthYearRow => {
   const existing = db
     .prepare('SELECT * FROM net_worth_years WHERE user_id = ? AND year = ?')
-    .get(userId, year) as YearRow | undefined;
+    .get(userId, year) as NetWorthYearRow | undefined;
   if (existing) return existing;
   db.prepare('INSERT INTO net_worth_years (user_id, year) VALUES (?, ?)').run(userId, year);
-  return db.prepare('SELECT * FROM net_worth_years WHERE user_id = ? AND year = ?').get(userId, year) as YearRow;
+  return db.prepare('SELECT * FROM net_worth_years WHERE user_id = ? AND year = ?').get(userId, year) as NetWorthYearRow;
 };
 
-const ensureNwMonth = (db: Database, userId: number, year: number, month: number): MonthRow => {
+export const ensureNwMonth = (db: Database, userId: number, year: number, month: number): NetWorthMonthRow => {
   const y = ensureNwYear(db, userId, year);
   const existing = db
     .prepare('SELECT * FROM net_worth_months WHERE user_id = ? AND net_worth_year_id = ? AND month = ?')
-    .get(userId, y.id, month) as MonthRow | undefined;
+    .get(userId, y.id, month) as NetWorthMonthRow | undefined;
   if (existing) return existing;
   db.prepare(
     'INSERT INTO net_worth_months (user_id, net_worth_year_id, month) VALUES (?, ?, ?)',
   ).run(userId, y.id, month);
   return db
     .prepare('SELECT * FROM net_worth_months WHERE user_id = ? AND net_worth_year_id = ? AND month = ?')
-    .get(userId, y.id, month) as MonthRow;
+    .get(userId, y.id, month) as NetWorthMonthRow;
 };
 
 // =============================================================================
 // Mappers (snake_case row → camelCase JSON)
 // =============================================================================
 
-const mapCfg = (r: CfgRow) => ({
+const mapCfg = (r: NetWorthConfigRow) => ({
   defaultCurrency: r.default_currency,
   currentYear: r.current_year,
   currentMonth: r.current_month,
@@ -151,7 +153,7 @@ const mapCfg = (r: CfgRow) => ({
   syncWithAssetAllocation: fromBool01(r.sync_with_asset_allocation),
 });
 
-const mapHolding = (r: HoldingRow) => {
+export const mapHolding = (r: HoldingRow) => {
   const out: Record<string, unknown> = {
     id: r.id,
     externalId: r.external_id,
@@ -206,7 +208,7 @@ const mapHolding = (r: HoldingRow) => {
   return out;
 };
 
-const mapCash = (r: CashRow) => ({
+export const mapCash = (r: CashRow) => ({
   id: r.id, externalId: r.external_id,
   accountName: r.account_name, accountType: r.account_type,
   balance: r.balance, currency: r.currency,
@@ -218,26 +220,26 @@ const mapCash = (r: CashRow) => ({
   syncSubAssetType: r.sync_sub_asset_type,
 });
 
-const mapPension = (r: PensionRow) => ({
+export const mapPension = (r: PensionRow) => ({
   id: r.id, externalId: r.external_id, name: r.name,
   currentValue: r.current_value, currency: r.currency,
   pensionType: r.pension_type, note: r.note,
 });
 
-const mapDebt = (r: DebtRow) => ({
+export const mapDebt = (r: DebtRow) => ({
   id: r.id, externalId: r.external_id, name: r.name,
   debtType: r.debt_type, currentBalance: r.current_balance,
   interestRate: r.interest_rate, monthlyPayment: r.monthly_payment,
   currency: r.currency, note: r.note, creditor: r.creditor,
 });
 
-const mapTax = (r: TaxRow) => ({
+export const mapTax = (r: TaxRow) => ({
   id: r.id, externalId: r.external_id, name: r.name,
   taxType: r.tax_type, amount: r.amount, dueDate: r.due_date,
   currency: r.currency, note: r.note, isPaid: fromBool01(r.is_paid),
 });
 
-const mapOp = (r: OpRow) => ({
+export const mapOp = (r: OpRow) => ({
   id: r.id, externalId: r.external_id, date: r.date,
   type: r.type, description: r.description,
   amount: r.amount, currency: r.currency,
@@ -262,7 +264,7 @@ const requireEnum = (val: unknown, name: string, set: Set<string>) => {
   }
 };
 
-const validateHolding = (body: Record<string, unknown>) => {
+export const validateHolding = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'ticker', 'name', 'shares', 'pricePerShare', 'currency', 'assetClass']);
   requireEnum(body.currency, 'currency', CURRENCIES);
   requireEnum(body.assetClass, 'assetClass', HOLDING_ASSET_CLASSES);
@@ -282,32 +284,32 @@ const validateHolding = (body: Record<string, unknown>) => {
   }
 };
 
-const validateCash = (body: Record<string, unknown>) => {
+export const validateCash = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'accountName', 'accountType', 'balance', 'currency']);
   requireEnum(body.accountType, 'accountType', ACCOUNT_TYPES);
   requireEnum(body.currency, 'currency', CURRENCIES);
   if (body.targetMode != null) requireEnum(body.targetMode, 'targetMode', TARGET_MODES);
 };
 
-const validatePension = (body: Record<string, unknown>) => {
+export const validatePension = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'name', 'currentValue', 'currency', 'pensionType']);
   requireEnum(body.currency, 'currency', CURRENCIES);
   requireEnum(body.pensionType, 'pensionType', PENSION_TYPES);
 };
 
-const validateDebt = (body: Record<string, unknown>) => {
+export const validateDebt = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'name', 'debtType', 'currentBalance', 'currency']);
   requireEnum(body.debtType, 'debtType', DEBT_TYPES);
   requireEnum(body.currency, 'currency', CURRENCIES);
 };
 
-const validateTax = (body: Record<string, unknown>) => {
+export const validateTax = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'name', 'taxType', 'amount', 'currency', 'isPaid']);
   requireEnum(body.taxType, 'taxType', TAX_TYPES);
   requireEnum(body.currency, 'currency', CURRENCIES);
 };
 
-const validateOp = (body: Record<string, unknown>) => {
+export const validateOp = (body: Record<string, unknown>) => {
   requireFields(body, ['externalId', 'date', 'type', 'description', 'amount', 'currency']);
   requireEnum(body.type, 'type', OPERATION_TYPES);
   requireEnum(body.currency, 'currency', CURRENCIES);
@@ -315,7 +317,7 @@ const validateOp = (body: Record<string, unknown>) => {
 
 // SQL fragments
 
-const HOLDING_COLS = `user_id, net_worth_month_id, external_id, ticker, name,
+export const HOLDING_COLS = `user_id, net_worth_month_id, external_id, ticker, name,
   shares, price_per_share, acquisition_price, currency, asset_class,
   note, isin, is_primary_residence,
   target_mode, target_percent, target_value,
@@ -326,9 +328,10 @@ const HOLDING_COLS = `user_id, net_worth_month_id, external_id, ticker, name,
   mortgage_principal_amount, mortgage_current_balance, mortgage_interest_rate,
   mortgage_term_years, mortgage_remaining_years, mortgage_monthly_payment,
   mortgage_start_date, mortgage_lender`;
-const HOLDING_PLACEHOLDERS = HOLDING_COLS.split(',').map(() => '?').join(', ');
+const placeholders = (cols: string): string => cols.split(',').map(() => '?').join(', ');
+const HOLDING_PLACEHOLDERS = placeholders(HOLDING_COLS);
 
-const bindHolding = (userId: number, monthId: number, h: Record<string, unknown>): unknown[] => {
+export const bindHolding = (userId: number, monthId: number, h: Record<string, unknown>): unknown[] => {
   const vd = (h.vehicleDepreciation ?? null) as Record<string, unknown> | null;
   const m = (h.mortgageInfo ?? null) as Record<string, unknown> | null;
   return [
@@ -362,83 +365,110 @@ const bindHolding = (userId: number, monthId: number, h: Record<string, unknown>
   ];
 };
 
+export const CASH_COLS = `user_id, net_worth_month_id, external_id,
+  account_name, account_type, balance, currency, note,
+  institution_code, institution_name, shares, price_per_share,
+  target_mode, target_percent, target_value, sync_sub_asset_type`;
+
+export const bindCash = (userId: number, monthId: number, c: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(c.externalId),
+  String(c.accountName), String(c.accountType), Number(c.balance), String(c.currency),
+  c.note != null ? String(c.note) : null,
+  c.institutionCode != null ? String(c.institutionCode) : null,
+  c.institutionName != null ? String(c.institutionName) : null,
+  c.shares != null ? Number(c.shares) : null,
+  c.pricePerShare != null ? Number(c.pricePerShare) : null,
+  c.targetMode != null ? String(c.targetMode) : null,
+  c.targetPercent != null ? Number(c.targetPercent) : null,
+  c.targetValue != null ? Number(c.targetValue) : null,
+  c.syncSubAssetType != null ? String(c.syncSubAssetType) : null,
+];
+
 const insertCash = (db: Database, userId: number, monthId: number, c: Record<string, unknown>) => {
-  db.prepare(
-    `INSERT INTO cash_entries (user_id, net_worth_month_id, external_id,
-        account_name, account_type, balance, currency, note,
-        institution_code, institution_name, shares, price_per_share,
-        target_mode, target_percent, target_value, sync_sub_asset_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    userId, monthId, String(c.externalId),
-    String(c.accountName), String(c.accountType), Number(c.balance), String(c.currency),
-    c.note != null ? String(c.note) : null,
-    c.institutionCode != null ? String(c.institutionCode) : null,
-    c.institutionName != null ? String(c.institutionName) : null,
-    c.shares != null ? Number(c.shares) : null,
-    c.pricePerShare != null ? Number(c.pricePerShare) : null,
-    c.targetMode != null ? String(c.targetMode) : null,
-    c.targetPercent != null ? Number(c.targetPercent) : null,
-    c.targetValue != null ? Number(c.targetValue) : null,
-    c.syncSubAssetType != null ? String(c.syncSubAssetType) : null,
-  );
+  db.prepare(`INSERT INTO cash_entries (${CASH_COLS}) VALUES (${placeholders(CASH_COLS)})`)
+    .run(...bindCash(userId, monthId, c));
 };
+
+export const PENSION_COLS = `user_id, net_worth_month_id, external_id,
+  name, current_value, currency, pension_type, note`;
+
+export const bindPension = (userId: number, monthId: number, p: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(p.externalId),
+  String(p.name), Number(p.currentValue), String(p.currency), String(p.pensionType),
+  p.note != null ? String(p.note) : null,
+];
 
 const insertPension = (db: Database, userId: number, monthId: number, p: Record<string, unknown>) => {
-  db.prepare(
-    `INSERT INTO pension_entries (user_id, net_worth_month_id, external_id,
-        name, current_value, currency, pension_type, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    userId, monthId, String(p.externalId),
-    String(p.name), Number(p.currentValue), String(p.currency), String(p.pensionType),
-    p.note != null ? String(p.note) : null,
-  );
+  db.prepare(`INSERT INTO pension_entries (${PENSION_COLS}) VALUES (${placeholders(PENSION_COLS)})`)
+    .run(...bindPension(userId, monthId, p));
 };
+
+export const DEBT_COLS = `user_id, net_worth_month_id, external_id,
+  name, debt_type, current_balance, interest_rate, monthly_payment,
+  currency, note, creditor`;
+
+export const bindDebt = (userId: number, monthId: number, d: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(d.externalId),
+  String(d.name), String(d.debtType), Number(d.currentBalance),
+  d.interestRate != null ? Number(d.interestRate) : null,
+  d.monthlyPayment != null ? Number(d.monthlyPayment) : null,
+  String(d.currency), d.note != null ? String(d.note) : null,
+  d.creditor != null ? String(d.creditor) : null,
+];
 
 const insertDebt = (db: Database, userId: number, monthId: number, d: Record<string, unknown>) => {
-  db.prepare(
-    `INSERT INTO debt_entries (user_id, net_worth_month_id, external_id,
-        name, debt_type, current_balance, interest_rate, monthly_payment,
-        currency, note, creditor)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    userId, monthId, String(d.externalId),
-    String(d.name), String(d.debtType), Number(d.currentBalance),
-    d.interestRate != null ? Number(d.interestRate) : null,
-    d.monthlyPayment != null ? Number(d.monthlyPayment) : null,
-    String(d.currency), d.note != null ? String(d.note) : null,
-    d.creditor != null ? String(d.creditor) : null,
-  );
+  db.prepare(`INSERT INTO debt_entries (${DEBT_COLS}) VALUES (${placeholders(DEBT_COLS)})`)
+    .run(...bindDebt(userId, monthId, d));
 };
+
+export const TAX_COLS = `user_id, net_worth_month_id, external_id,
+  name, tax_type, amount, due_date, currency, note, is_paid`;
+
+export const bindTax = (userId: number, monthId: number, t: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(t.externalId),
+  String(t.name), String(t.taxType), Number(t.amount),
+  t.dueDate != null ? String(t.dueDate) : null,
+  String(t.currency), t.note != null ? String(t.note) : null,
+  bool01(t.isPaid),
+];
 
 const insertTax = (db: Database, userId: number, monthId: number, t: Record<string, unknown>) => {
-  db.prepare(
-    `INSERT INTO tax_entries (user_id, net_worth_month_id, external_id,
-        name, tax_type, amount, due_date, currency, note, is_paid)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    userId, monthId, String(t.externalId),
-    String(t.name), String(t.taxType), Number(t.amount),
-    t.dueDate != null ? String(t.dueDate) : null,
-    String(t.currency), t.note != null ? String(t.note) : null,
-    bool01(t.isPaid),
-  );
+  db.prepare(`INSERT INTO tax_entries (${TAX_COLS}) VALUES (${placeholders(TAX_COLS)})`)
+    .run(...bindTax(userId, monthId, t));
 };
 
+export const OPERATION_COLS = `user_id, net_worth_month_id, external_id,
+  date, type, description, amount, currency,
+  related_asset_external_id, related_account_external_id, note`;
+
+export const bindOp = (userId: number, monthId: number, o: Record<string, unknown>): unknown[] => [
+  userId, monthId, String(o.externalId),
+  String(o.date), String(o.type), String(o.description), Number(o.amount), String(o.currency),
+  o.relatedAssetId != null ? String(o.relatedAssetId) : null,
+  o.relatedAccountId != null ? String(o.relatedAccountId) : null,
+  o.note != null ? String(o.note) : null,
+];
+
 const insertOp = (db: Database, userId: number, monthId: number, o: Record<string, unknown>) => {
-  db.prepare(
-    `INSERT INTO financial_operations (user_id, net_worth_month_id, external_id,
-        date, type, description, amount, currency,
-        related_asset_external_id, related_account_external_id, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(
-    userId, monthId, String(o.externalId),
-    String(o.date), String(o.type), String(o.description), Number(o.amount), String(o.currency),
-    o.relatedAssetId != null ? String(o.relatedAssetId) : null,
-    o.relatedAccountId != null ? String(o.relatedAccountId) : null,
-    o.note != null ? String(o.note) : null,
-  );
+  db.prepare(`INSERT INTO financial_operations (${OPERATION_COLS}) VALUES (${placeholders(OPERATION_COLS)})`)
+    .run(...bindOp(userId, monthId, o));
+};
+
+export const validateNetWorthConfig = (body: Record<string, unknown>): void => {
+  requireFields(body, ['defaultCurrency', 'currentYear', 'currentMonth',
+    'showPensionInNetWorth', 'includeUnrealizedGains']);
+  requireEnum(body.defaultCurrency, 'defaultCurrency', CURRENCIES);
+};
+
+/** Row position of an entity before a granular replace, so edits keep their place in the app. */
+const previousPosition = (db: Database, table: string, userId: number, externalId: string): number | null =>
+  (db.prepare(`SELECT position FROM ${table} WHERE user_id = ? AND external_id = ?`)
+    .get(userId, externalId) as { position: number | null } | undefined)?.position ?? null;
+
+const restorePosition = (db: Database, table: string, userId: number, externalId: string, position: number | null) => {
+  if (position !== null) {
+    db.prepare(`UPDATE ${table} SET position = ? WHERE user_id = ? AND external_id = ?`).run(position, userId, externalId);
+  }
 };
 
 // =============================================================================
@@ -456,9 +486,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
   router.put('/net-worth/config', handler((req, res) => {
     const userId = resolveUserId(req);
     const body = (req.body ?? {}) as Record<string, unknown>;
-    requireFields(body, ['defaultCurrency', 'currentYear', 'currentMonth',
-      'showPensionInNetWorth', 'includeUnrealizedGains']);
-    requireEnum(body.defaultCurrency, 'defaultCurrency', CURRENCIES);
+    validateNetWorthConfig(body);
     ensureCfg(db, userId);
     db.prepare(
       `UPDATE net_worth_config
@@ -471,26 +499,26 @@ export const buildNetWorthRouter = (db: Database): Router => {
       bool01(body.showPensionInNetWorth), bool01(body.includeUnrealizedGains),
       bool01(body.syncWithAssetAllocation), nowIso(), userId,
     );
-    res.json(mapCfg(db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as CfgRow));
+    res.json(mapCfg(db.prepare('SELECT * FROM net_worth_config WHERE user_id = ?').get(userId) as NetWorthConfigRow));
   }));
 
   // --- Snapshot of a single month ---
   const getMonth = (userId: number, year: number, month: number) => {
     const m = ensureNwMonth(db, userId, year, month);
     const assets = (db.prepare(
-      'SELECT * FROM asset_holdings WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM asset_holdings WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as HoldingRow[]).map(mapHolding);
     const cashEntries = (db.prepare(
-      'SELECT * FROM cash_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM cash_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as CashRow[]).map(mapCash);
     const pensions = (db.prepare(
-      'SELECT * FROM pension_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM pension_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as PensionRow[]).map(mapPension);
     const debts = (db.prepare(
-      'SELECT * FROM debt_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM debt_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as DebtRow[]).map(mapDebt);
     const taxes = (db.prepare(
-      'SELECT * FROM tax_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM tax_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as TaxRow[]).map(mapTax);
     const operations = (db.prepare(
       'SELECT * FROM financial_operations WHERE user_id = ? AND net_worth_month_id = ? ORDER BY date, id',
@@ -508,11 +536,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const cfg = ensureCfg(db, userId);
     const years = db.prepare(
       'SELECT * FROM net_worth_years WHERE user_id = ? ORDER BY year',
-    ).all(userId) as YearRow[];
+    ).all(userId) as NetWorthYearRow[];
     const yearsOut = years.map((y) => {
       const months = db.prepare(
         'SELECT * FROM net_worth_months WHERE user_id = ? AND net_worth_year_id = ? ORDER BY month',
-      ).all(userId, y.id) as MonthRow[];
+      ).all(userId, y.id) as NetWorthMonthRow[];
       return {
         year: y.year,
         isArchived: fromBool01(y.is_archived),
@@ -610,7 +638,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const m = ensureNwMonth(db, userId, year, month);
     const rows = db.prepare(
-      'SELECT * FROM asset_holdings WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM asset_holdings WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as HoldingRow[];
     res.json(rows.map(mapHolding));
   }));
@@ -643,6 +671,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
       }
       db.prepare(`INSERT INTO asset_holdings (${HOLDING_COLS}) VALUES (${HOLDING_PLACEHOLDERS})`)
         .run(...bindHolding(userId, m.id, { ...body, externalId: req.params.externalId }));
+      restorePosition(db, 'asset_holdings', userId, req.params.externalId, existing?.position ?? null);
     });
     tx();
     const row = db.prepare(
@@ -666,7 +695,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const m = ensureNwMonth(db, userId, year, month);
     const rows = db.prepare(
-      'SELECT * FROM cash_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM cash_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as CashRow[];
     res.json(rows.map(mapCash));
   }));
@@ -691,9 +720,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     validateCash(body);
     const m = ensureNwMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const position = previousPosition(db, 'cash_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM cash_entries WHERE user_id = ? AND external_id = ?')
         .run(userId, req.params.externalId);
       insertCash(db, userId, m.id, { ...body, externalId: req.params.externalId });
+      restorePosition(db, 'cash_entries', userId, req.params.externalId, position);
     });
     tx();
     const row = db.prepare(
@@ -716,7 +747,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const m = ensureNwMonth(db, userId, year, month);
     const rows = db.prepare(
-      'SELECT * FROM pension_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM pension_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as PensionRow[];
     res.json(rows.map(mapPension));
   }));
@@ -741,9 +772,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     validatePension(body);
     const m = ensureNwMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const position = previousPosition(db, 'pension_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM pension_entries WHERE user_id = ? AND external_id = ?')
         .run(userId, req.params.externalId);
       insertPension(db, userId, m.id, { ...body, externalId: req.params.externalId });
+      restorePosition(db, 'pension_entries', userId, req.params.externalId, position);
     });
     tx();
     const row = db.prepare(
@@ -766,7 +799,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const m = ensureNwMonth(db, userId, year, month);
     const rows = db.prepare(
-      'SELECT * FROM debt_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM debt_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as DebtRow[];
     res.json(rows.map(mapDebt));
   }));
@@ -791,9 +824,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     validateDebt(body);
     const m = ensureNwMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const position = previousPosition(db, 'debt_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM debt_entries WHERE user_id = ? AND external_id = ?')
         .run(userId, req.params.externalId);
       insertDebt(db, userId, m.id, { ...body, externalId: req.params.externalId });
+      restorePosition(db, 'debt_entries', userId, req.params.externalId, position);
     });
     tx();
     const row = db.prepare(
@@ -816,7 +851,7 @@ export const buildNetWorthRouter = (db: Database): Router => {
     const { year, month } = parseYearMonth(req.params.year, req.params.month);
     const m = ensureNwMonth(db, userId, year, month);
     const rows = db.prepare(
-      'SELECT * FROM tax_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY id',
+      'SELECT * FROM tax_entries WHERE user_id = ? AND net_worth_month_id = ? ORDER BY position IS NULL, position, id',
     ).all(userId, m.id) as TaxRow[];
     res.json(rows.map(mapTax));
   }));
@@ -841,9 +876,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     validateTax(body);
     const m = ensureNwMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const position = previousPosition(db, 'tax_entries', userId, req.params.externalId);
       db.prepare('DELETE FROM tax_entries WHERE user_id = ? AND external_id = ?')
         .run(userId, req.params.externalId);
       insertTax(db, userId, m.id, { ...body, externalId: req.params.externalId });
+      restorePosition(db, 'tax_entries', userId, req.params.externalId, position);
     });
     tx();
     const row = db.prepare(
@@ -898,9 +935,11 @@ export const buildNetWorthRouter = (db: Database): Router => {
     validateOp(body);
     const m = ensureNwMonth(db, userId, year, month);
     const tx = db.transaction(() => {
+      const position = previousPosition(db, 'financial_operations', userId, req.params.externalId);
       db.prepare('DELETE FROM financial_operations WHERE user_id = ? AND external_id = ?')
         .run(userId, req.params.externalId);
       insertOp(db, userId, m.id, { ...body, externalId: req.params.externalId });
+      restorePosition(db, 'financial_operations', userId, req.params.externalId, position);
     });
     tx();
     const row = db.prepare(

@@ -10,7 +10,7 @@ interface CfgRow {
   updated_at: string;
 }
 
-interface AssetRow {
+export interface AssetRow {
   id: number;
   user_id: number;
   external_id: string;
@@ -41,9 +41,12 @@ interface AssetRow {
   mortgage_start_date: string | null;
   mortgage_property_value: number | null;
   mortgage_lender: string | null;
+  position: number | null;
 }
 
-const ASSET_CLASSES = new Set([
+interface TargetRow { asset_class: string; target_mode: string; target_percent: number | null }
+
+export const ASSET_CLASSES = new Set([
   'STOCKS', 'BONDS', 'CASH', 'CRYPTO', 'REAL_ESTATE',
   'COMMODITIES', 'VEHICLE', 'COLLECTIBLE', 'ART',
 ]);
@@ -58,7 +61,7 @@ const SUB_ASSET_TYPES = new Set([
   'WATCH', 'WINE', 'JEWELRY', 'SPORTS_MEMORABILIA', 'OTHER_COLLECTIBLE',
   'PAINTING', 'SCULPTURE', 'DIGITAL_ART', 'OTHER_ART', 'NONE',
 ]);
-const TARGET_MODES = new Set(['PERCENTAGE', 'OFF', 'SET']);
+export const TARGET_MODES = new Set(['PERCENTAGE', 'OFF', 'SET']);
 const CURRENCIES = new Set(['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'AUD', 'CAD']);
 
 const mapConfig = (row: CfgRow) => ({
@@ -77,7 +80,7 @@ const ensureConfig = (db: Database, userId: number): CfgRow => {
   return db.prepare('SELECT * FROM asset_allocation_config WHERE user_id = ?').get(userId) as CfgRow;
 };
 
-const mapAsset = (row: AssetRow) => {
+export const mapAsset = (row: AssetRow) => {
   const hasMortgage =
     row.mortgage_principal_amount != null ||
     row.mortgage_current_balance != null ||
@@ -120,7 +123,7 @@ const mapAsset = (row: AssetRow) => {
   return out;
 };
 
-const validateAsset = (body: Record<string, unknown>): void => {
+export const validateAsset = (body: Record<string, unknown>): void => {
   const required = ['externalId', 'name', 'ticker', 'assetClass', 'subAssetType', 'currentValue', 'targetMode'];
   for (const k of required) {
     if (!(k in body)) throw apiError(400, 'invalid_body', `Missing required field: ${k}`);
@@ -139,7 +142,7 @@ const validateAsset = (body: Record<string, unknown>): void => {
   }
 };
 
-const assetParams = (userId: number, body: Record<string, unknown>) => {
+export const assetParams = (userId: number, body: Record<string, unknown>) => {
   const m = (body.mortgageData ?? null) as Record<string, unknown> | null;
   return [
     userId,
@@ -174,13 +177,55 @@ const assetParams = (userId: number, body: Record<string, unknown>) => {
   ];
 };
 
-const ASSET_COLUMNS = `user_id, external_id, name, ticker, isin, asset_class, sub_asset_type,
+export const ASSET_COLUMNS = `user_id, external_id, name, ticker, isin, asset_class, sub_asset_type,
   current_value, shares, price_per_share, acquisition_price, original_currency, original_value,
   target_mode, target_value, target_percent, institution_code, institution_name, is_primary_residence,
   market_price, mortgage_principal_amount, mortgage_current_balance, mortgage_interest_rate,
   mortgage_term_years, mortgage_remaining_years, mortgage_monthly_payment, mortgage_start_date,
   mortgage_property_value, mortgage_lender`;
 const ASSET_PLACEHOLDERS = ASSET_COLUMNS.split(',').map(() => '?').join(', ');
+
+export type AssetClassTargets = Record<string, { targetMode: string; targetPercent?: number }>;
+
+/** Validates a Record<AssetClass, { targetMode, targetPercent? }>; any subset of classes is accepted. */
+export const parseAssetClassTargets = (body: unknown): AssetClassTargets => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    throw apiError(400, 'invalid_body', 'Asset class targets must be an object keyed by asset class.');
+  }
+  const out: AssetClassTargets = {};
+  for (const [assetClass, raw] of Object.entries(body as Record<string, unknown>)) {
+    if (!ASSET_CLASSES.has(assetClass)) throw apiError(400, 'invalid_body', `Invalid asset class: ${assetClass}`);
+    const target = (raw ?? {}) as Record<string, unknown>;
+    if (typeof raw !== 'object' || Array.isArray(raw) || !TARGET_MODES.has(String(target.targetMode))) {
+      throw apiError(400, 'invalid_body', `Invalid targetMode for ${assetClass}`);
+    }
+    const percent = target.targetPercent;
+    if (percent != null && (typeof percent !== 'number' || !Number.isFinite(percent))) {
+      throw apiError(400, 'invalid_body', `targetPercent for ${assetClass} must be a finite number`);
+    }
+    out[assetClass] = { targetMode: String(target.targetMode), ...(percent != null ? { targetPercent: percent } : {}) };
+  }
+  return out;
+};
+
+/** Saved targets, or null when none are stored. */
+export const readAssetClassTargets = (db: Database, userId: number): AssetClassTargets | null => {
+  const rows = db.prepare('SELECT asset_class, target_mode, target_percent FROM asset_class_targets WHERE user_id = ?')
+    .all(userId) as TargetRow[];
+  if (rows.length === 0) return null;
+  return Object.fromEntries(rows.map(row => [row.asset_class, {
+    targetMode: row.target_mode, ...(row.target_percent != null ? { targetPercent: row.target_percent } : {}),
+  }]));
+};
+
+export const replaceAssetClassTargets = (db: Database, userId: number, targets: AssetClassTargets | null): void => {
+  db.prepare('DELETE FROM asset_class_targets WHERE user_id = ?').run(userId);
+  const insert = db.prepare(`INSERT INTO asset_class_targets (user_id, asset_class, target_mode, target_percent)
+    VALUES (?, ?, ?, ?)`);
+  for (const [assetClass, target] of Object.entries(targets ?? {})) {
+    insert.run(userId, assetClass, target.targetMode, target.targetPercent ?? null);
+  }
+};
 
 export const buildAssetAllocationRouter = (db: Database): Router => {
   const router = Router();
@@ -219,6 +264,23 @@ export const buildAssetAllocationRouter = (db: Database): Router => {
   );
 
   router.get(
+    '/asset-allocation/targets',
+    handler((req, res) => {
+      res.json(readAssetClassTargets(db, resolveUserId(req)) ?? {});
+    }),
+  );
+
+  router.put(
+    '/asset-allocation/targets',
+    handler((req, res) => {
+      const userId = resolveUserId(req);
+      const targets = parseAssetClassTargets(req.body);
+      db.transaction(() => replaceAssetClassTargets(db, userId, targets)).immediate();
+      res.json(readAssetClassTargets(db, userId) ?? {});
+    }),
+  );
+
+  router.get(
     '/asset-allocation/assets',
     handler((req, res) => {
       const userId = resolveUserId(req);
@@ -232,7 +294,7 @@ export const buildAssetAllocationRouter = (db: Database): Router => {
         sql += ' AND asset_class = ?';
         params.push(assetClass);
       }
-      sql += ' ORDER BY id ASC';
+      sql += ' ORDER BY position IS NULL, position, id';
       const rows = db.prepare(sql).all(...params) as AssetRow[];
       res.json(rows.map(mapAsset));
     }),
@@ -278,8 +340,11 @@ export const buildAssetAllocationRouter = (db: Database): Router => {
       body.externalId = req.params.externalId;
       validateAsset(body);
       db.transaction(() => {
+        const previous = db.prepare('SELECT position FROM assets WHERE user_id = ? AND external_id = ?')
+          .get(userId, req.params.externalId) as { position: number | null } | undefined;
         db.prepare('DELETE FROM assets WHERE user_id = ? AND external_id = ?').run(userId, req.params.externalId);
-        db.prepare(`INSERT INTO assets (${ASSET_COLUMNS}) VALUES (${ASSET_PLACEHOLDERS})`).run(...assetParams(userId, body));
+        db.prepare(`INSERT INTO assets (${ASSET_COLUMNS}, position) VALUES (${ASSET_PLACEHOLDERS}, ?)`)
+          .run(...assetParams(userId, body), previous?.position ?? null);
       })();
       const row = db
         .prepare('SELECT * FROM assets WHERE user_id = ? AND external_id = ?')

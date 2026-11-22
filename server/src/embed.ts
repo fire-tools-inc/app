@@ -29,6 +29,11 @@ export interface EmbedOptions {
    * encrypted mode; the caller (e.g. Electron + safeStorage) owns key storage.
    */
   passphrase?: string;
+  /**
+   * Optional bearer token required on every /api/v1 route except GET /health.
+   * The caller hands it to its own clients (e.g. the Electron renderer).
+   */
+  apiToken?: string;
   /** Optional sink that receives every formatted log line. Used by Electron
    *  to append to the on-disk log file alongside stderr output. */
   logSink?: LogSink;
@@ -76,6 +81,7 @@ export const startEmbeddedServer = async (
     rateLimit: { windowMs: 15 * 60 * 1000, max: 1000 },
     nodeEnv: 'production',
     passphrase: opts.passphrase,
+    apiToken: opts.apiToken,
   };
 
   const { db, dbPath } = initDb(env);

@@ -65,6 +65,17 @@ describe('PUT /api/v1/calculator/inputs', () => {
     expect(res.body.error.code).toBe('invalid_body');
   });
 
+  it('stores the FIRE variant fields and keeps them when an older client omits them', async () => {
+    const { app } = await makeApp();
+    const variant = { fireType: 'barista', leanExpenseMultiplier: 0.6, fatExpenseMultiplier: 2.5, baristaAnnualIncome: 15000, coastTargetAge: 55 };
+    expect((await request(app).put('/api/v1/calculator/inputs').send({ ...fullInputs, ...variant })).body).toMatchObject(variant);
+    const legacy = await request(app).put('/api/v1/calculator/inputs').send({ ...fullInputs, initialSavings: 1 });
+    expect(legacy.body).toMatchObject({ ...variant, initialSavings: 1 });
+    const invalid = await request(app).put('/api/v1/calculator/inputs').send({ ...fullInputs, fireType: 'turbo' });
+    expect(invalid.status).toBe(400);
+    expect((await request(app).get('/api/v1/calculator/inputs')).body.fireType).toBe('barista');
+  });
+
   it('rejects missing single field', async () => {
     const { app } = await makeApp();
     const { maxAge: _x, ...partial } = fullInputs;

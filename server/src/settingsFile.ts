@@ -215,6 +215,7 @@ interface SettingsRow {
   llm_api_key: string | null;
   llm_model: string | null;
   llm_provider: string | null;
+  language: string | null;
 }
 
 interface NotifPrefRow {
@@ -268,6 +269,7 @@ const rowToSettings = (row: SettingsRow): Record<string, unknown> => {
       row.experimental_features_json,
       {},
     ),
+    ...(row.language ? { language: row.language } : {}),
   };
   if (row.llm_base_url && row.llm_model) {
     out.llmCategorization = {

@@ -6,9 +6,22 @@ info:
     REST API contract for the Fire Tools backend (local-deployment / Electron).
 
     The Node.js + Express backend is implemented for local Docker and Electron
-    deployments. Existing renderer domain stores are not all API clients:
-    financial histories still use encrypted localStorage; small stores use
-    SafeCookies. Receipt originals are stored in the local backend SQLite DB.
+    deployments. When the app is connected to a backend (the desktop app's
+    embedded backend, or Settings > Backend), the SQLite database is the source
+    of truth for five domains the app displays: settings, FIRE calculator
+    inputs, asset allocation, cashflow (expense tracker) and net worth. Writes
+    to those domains, through the granular routes or `/state/{domain}`, show up
+    in the running app within about 3 seconds. Other routes (questionnaire,
+    notifications, Monte Carlo runs, portfolio metadata, users) are stored in
+    the database only and are not shown in the app. Receipt originals are
+    stored in the local backend SQLite DB.
+
+    Agent onboarding
+    ----------------
+    1. `GET /sync/status` to discover the domains and their revisions.
+    2. `GET /state/{domain}` to read the document the app shows.
+    3. `PATCH /state/{domain}` with a Changeset to add or change items
+       (or use the granular routes), then read the document again.
 
     Conventions
     -----------
@@ -20,8 +33,13 @@ info:
     * Pagination: cursor-style (`?cursor=&limit=`) on list endpoints that can grow large
     * IDs: every resource exposes a numeric server `id` **and** a stable
       `externalId` (client-minted) — clients pass `externalId` on upsert.
-    * Auth: single-user deployments accept unauthenticated requests; the bearer
-      scheme below is reserved for multi-tenant deployments and is opt-in.
+    * Auth: without a configured token every request runs unauthenticated as
+      the single local user. When the server has a token (`API_TOKEN`, or the
+      desktop app's per-launch token), every route except `GET /health` needs
+      `Authorization: Bearer <token>`; otherwise it answers
+      `401 unauthorized`.
+    * Body limits: 2 MB JSON (`413 payload_too_large`); `/state/{domain}`
+      accepts up to 50 MB.
   license:
     name: MIT
     url: https://github.com/fire-tools-inc/app/blob/main/LICENSE
@@ -62,8 +80,16 @@ tags:
     description: Read-mostly lookup of supported banks/brokers with OpenBanking support flag
   - name: UiPreferences
     description: Generic per-user UI preferences (tour, banners, dismissable prompts)
+  - name: Sync
+    description: >-
+      Whole-domain documents the app reads and writes: settings, calculator,
+      assetAllocation, expenseTracker and netWorth. Revisions change on every
+      write, including writes through the granular routes.
 
-security: []   # default: no auth (single-user). Per-operation may require bearer.
+# Optional bearer token: required only when the server is started with one.
+security:
+  - {}
+  - bearerAuth: []
 
 # =============================================================================
 # Paths
@@ -76,7 +102,9 @@ paths:
     get:
       tags: [System]
       summary: Liveness probe
+      description: Always open, even when the server requires a bearer token.
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Service is up
@@ -85,12 +113,139 @@ paths:
               schema: { $ref: '#/components/schemas/Health' }
 
   # ---------------------------------------------------------------------------
+  # Sync: whole-domain documents the app displays
+  # ---------------------------------------------------------------------------
+  /sync/status:
+    get:
+      tags: [Sync]
+      summary: Revision and initialization of every synced domain
+      description: >-
+        All five domains are always listed; `revision` is 0 for a domain that
+        was never written. Revisions change on every write (state routes and
+        granular routes) and are only meaningful for equality checks. The app
+        polls this every few seconds and reloads a domain whose revision changed.
+      operationId: getSyncStatus
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /state/{domain}:
+    parameters:
+      - $ref: '#/components/parameters/SyncDomainPath'
+    get:
+      tags: [Sync]
+      summary: Read the document the app shows for a domain
+      description: >-
+        `data` is the app's own document shape (see the `*Document` schemas):
+        optional keys are omitted rather than null, ids are the client-minted
+        string ids, list items keep the order the app shows. `data` is null
+        when the domain was never written. Years and months are sorted
+        ascending.
+      operationId: getDomainState
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DomainState' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Sync]
+      summary: Merge a changeset into a domain
+      description: >-
+        Applies deletes (items, then months, then years), then `set`, then
+        upserts (years, months, items) in one transaction. Upserts insert or
+        update by key and may move an item to another month; missing months and
+        years are created. Deleting a month or year deletes its items. Any
+        invalid item rejects the whole request and nothing is written.
+      operationId: patchDomainState
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Changeset' }
+            examples:
+              addExpense:
+                summary: Add an expense and a month budget to March 2025
+                value:
+                  upsert:
+                    expenses:
+                      - id: txn-agent-0001
+                        type: expense
+                        date: '2025-03-04'
+                        amount: 42.5
+                        description: Weekly groceries
+                        category: GROCERIES
+                        expenseType: NEED
+                        year: 2025
+                        month: 3
+                    monthBudgets:
+                      - { category: GROCERIES, monthlyBudget: 400, year: 2025, month: 3 }
+              netWorthMonth:
+                summary: Record a cash balance and a pension value for January 2025
+                value:
+                  upsert:
+                    cashEntries:
+                      - { id: nw-agent-cash, accountName: Checking, accountType: CHECKING, balance: 2500, currency: EUR, year: 2025, month: 1 }
+                    pensions:
+                      - { id: nw-agent-pension, name: Workplace pension, currentValue: 18000, currency: EUR, pensionType: EMPLOYER, year: 2025, month: 1 }
+              deleteItems:
+                summary: Delete an expense and a whole month
+                value:
+                  delete:
+                    expenses: [txn-agent-0001]
+                    months: ['2024-12']
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangesetResult' }
+        '400': { $ref: '#/components/responses/InvalidChange' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/ConflictingChange' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+    put:
+      tags: [Sync]
+      summary: Replace a domain with a changeset
+      description: >-
+        Deletes every item of the domain for the user, then applies the
+        changeset like PATCH, in one transaction. An empty changeset clears the
+        domain (`data` becomes null). For `settings` the synced fields are reset
+        to defaults instead and the AI model configuration is kept. If anything
+        is invalid the previous data is kept.
+      operationId: replaceDomainState
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Changeset' }
+      responses:
+        '200':
+          description: Applied
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangesetResult' }
+        '400': { $ref: '#/components/responses/InvalidChange' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/ConflictingChange' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+
+  # ---------------------------------------------------------------------------
   # Users (only useful for multi-tenant deployments; single-user uses id=1)
   # ---------------------------------------------------------------------------
   /users/me:
     get:
       tags: [Users]
       summary: Get the current user (or the bootstrap user in single-user mode)
+      description: Stored in the database only and not shown in the app.
       operationId: getCurrentUser
       responses:
         '200':
@@ -149,6 +304,7 @@ paths:
     get:
       tags: [Settings, Notifications]
       summary: Get notification preferences
+      description: Stored in the database only and not shown in the app.
       operationId: getNotificationPreferences
       responses:
         '200':
@@ -159,6 +315,7 @@ paths:
     put:
       tags: [Settings, Notifications]
       summary: Replace notification preferences
+      description: Stored in the database only and not shown in the app.
       operationId: replaceNotificationPreferences
       requestBody:
         required: true
@@ -245,6 +402,7 @@ paths:
     get:
       tags: [Notifications]
       summary: List notifications
+      description: Stored in the database only and not shown in the app.
       operationId: listNotifications
       parameters:
         - { in: query, name: unreadOnly, schema: { type: boolean, default: false } }
@@ -259,6 +417,7 @@ paths:
     post:
       tags: [Notifications]
       summary: Create a notification (typically server-generated)
+      description: Stored in the database only and not shown in the app.
       operationId: createNotification
       requestBody:
         required: true
@@ -278,6 +437,7 @@ paths:
     get:
       tags: [Notifications]
       summary: Get a notification
+      description: Stored in the database only and not shown in the app.
       operationId: getNotification
       responses:
         '200':
@@ -289,6 +449,7 @@ paths:
     patch:
       tags: [Notifications]
       summary: Update a notification (e.g. mark read)
+      description: Stored in the database only and not shown in the app.
       operationId: updateNotification
       requestBody:
         required: true
@@ -307,6 +468,7 @@ paths:
     delete:
       tags: [Notifications]
       summary: Delete a notification
+      description: Stored in the database only and not shown in the app.
       operationId: deleteNotification
       responses:
         '204': { description: Deleted }
@@ -315,6 +477,7 @@ paths:
     post:
       tags: [Notifications]
       summary: Mark every unread notification as read
+      description: Stored in the database only and not shown in the app.
       operationId: markAllNotificationsRead
       responses:
         '200':
@@ -363,6 +526,7 @@ paths:
     get:
       tags: [MonteCarlo]
       summary: List saved Monte Carlo runs
+      description: Stored in the database only and not shown in the app.
       operationId: listMonteCarloRuns
       parameters:
         - $ref: '#/components/parameters/Cursor'
@@ -376,6 +540,7 @@ paths:
     post:
       tags: [MonteCarlo]
       summary: Save a Monte Carlo run
+      description: Stored in the database only and not shown in the app.
       operationId: createMonteCarloRun
       requestBody:
         required: true
@@ -395,6 +560,7 @@ paths:
     get:
       tags: [MonteCarlo]
       summary: Get a Monte Carlo run (including logs if stored)
+      description: Stored in the database only and not shown in the app.
       operationId: getMonteCarloRun
       responses:
         '200':
@@ -406,6 +572,7 @@ paths:
     delete:
       tags: [MonteCarlo]
       summary: Delete a Monte Carlo run
+      description: Stored in the database only and not shown in the app.
       operationId: deleteMonteCarloRun
       responses:
         '204': { description: Deleted }
@@ -417,6 +584,7 @@ paths:
     get:
       tags: [AssetAllocation]
       summary: Get asset allocation config
+      description: Stored in the database only and not shown in the app.
       operationId: getAssetAllocationConfig
       responses:
         '200':
@@ -427,6 +595,7 @@ paths:
     put:
       tags: [AssetAllocation]
       summary: Replace asset allocation config
+      description: Stored in the database only and not shown in the app.
       operationId: replaceAssetAllocationConfig
       requestBody:
         required: true
@@ -509,6 +678,36 @@ paths:
       responses:
         '204': { description: Deleted }
 
+  /asset-allocation/targets:
+    get:
+      tags: [AssetAllocation]
+      summary: Get the asset class targets
+      description: Returns `{}` when no targets are saved.
+      operationId: getAssetClassTargets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetClassTargets' }
+    put:
+      tags: [AssetAllocation]
+      summary: Replace the asset class targets
+      description: Classes missing from the body have no target afterwards.
+      operationId: replaceAssetClassTargets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetClassTargets' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetClassTargets' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
   # ---------------------------------------------------------------------------
   # Expense tracker
   # ---------------------------------------------------------------------------
@@ -516,7 +715,9 @@ paths:
     get:
       tags: [ExpenseTracker]
       summary: Get the local backend cashflow planning document
-      description: Returns empty planning state when absent without creating data. Renderer storage remains independent.
+      description: >-
+        Returns empty planning state when absent without creating data. The
+        document is part of the `expenseTracker` state the app shows.
       operationId: getExpensePlanning
       responses:
         '200':
@@ -1325,6 +1526,7 @@ paths:
     get:
       tags: [Questionnaire]
       summary: List questionnaire result history
+      description: Stored in the database only and not shown in the app.
       operationId: listQuestionnaireResults
       responses:
         '200':
@@ -1337,6 +1539,7 @@ paths:
     post:
       tags: [Questionnaire]
       summary: Persist a completed questionnaire result
+      description: Stored in the database only and not shown in the app.
       operationId: createQuestionnaireResult
       requestBody:
         required: true
@@ -1354,6 +1557,7 @@ paths:
     get:
       tags: [Questionnaire]
       summary: Get the most recent questionnaire result
+      description: Stored in the database only and not shown in the app.
       operationId: getLatestQuestionnaireResult
       responses:
         '200':
@@ -1654,6 +1858,7 @@ paths:
     get:
       tags: [PortfolioBreakdown]
       summary: Get cached asset metadata for a ticker
+      description: Stored in the database only and not shown in the app.
       operationId: getAssetMetadata
       responses:
         '200':
@@ -1665,6 +1870,7 @@ paths:
     put:
       tags: [PortfolioBreakdown]
       summary: Upsert cached asset metadata
+      description: Stored in the database only and not shown in the app.
       operationId: replaceAssetMetadata
       requestBody:
         required: true
@@ -1682,6 +1888,9 @@ paths:
     get:
       tags: [PortfolioBreakdown]
       summary: Compute portfolio breakdown across one or more dimensions
+      description: >-
+        Computed from the database holdings and cached metadata. The app computes
+        its own breakdown; this result is not shown in the app.
       operationId: getPortfolioBreakdown
       parameters:
         - in: query
@@ -1806,10 +2015,12 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
       description: |
-        Reserved for multi-tenant deployments. Single-user deployments leave
-        this off.
+        Opaque token. Required only when the server was started with one
+        (`API_TOKEN` for standalone servers; the desktop app generates one per
+        launch for its embedded backend). Every route except `GET /health`
+        then needs `Authorization: Bearer <token>`. Tokens are compared in
+        constant time. CORS preflight requests never need it.
 
   parameters:
     IdPath:
@@ -1833,6 +2044,11 @@ components:
       name: month
       required: true
       schema: { type: integer, minimum: 1, maximum: 12 }
+    SyncDomainPath:
+      in: path
+      name: domain
+      required: true
+      schema: { $ref: '#/components/schemas/SyncDomain' }
     Cursor:
       in: query
       name: cursor
@@ -1869,6 +2085,30 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: The server requires a bearer token and none or a wrong one was sent (`unauthorized`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PayloadTooLarge:
+      description: The JSON body exceeds the route's limit (`payload_too_large`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    InvalidChange:
+      description: >-
+        `invalid_body`: the changeset or one of its items is invalid. Nothing
+        was written. `details` names the item.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ChangesetError' }
+    ConflictingChange:
+      description: >-
+        `conflict`: an item collides with saved data, for example a scheduled
+        occurrence that is already recorded. Nothing was written.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ChangesetError' }
 
   schemas:
     # -- Shared --------------------------------------------------------------
@@ -1989,6 +2229,7 @@ components:
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
         aiFeaturesEnabled:      { type: boolean, default: true, description: 'Master permission for hosted/local AI model calls. Per-action opt-in is still required; local OCR and document imports are unaffected.' }
+        language:               { type: string, enum: [en, it, fr, de, es], description: 'UI language. Omitted until set; send null in a PATCH to clear it.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     UserSettingsPatch:
@@ -2007,6 +2248,7 @@ components:
         searchThreshold:        { type: integer }
         experimentalFeatures:   { $ref: '#/components/schemas/ExperimentalFeatures' }
         aiFeaturesEnabled:      { type: boolean, description: 'Enable or disable all AI model calls without clearing endpoint/model configuration. Does not disable local OCR or imports.' }
+        language:               { type: string, enum: [en, it, fr, de, es], nullable: true, description: 'UI language; null clears it.' }
         llmCategorization:      { $ref: '#/components/schemas/LlmCategorizationConfig' }
 
     # -- Notifications -------------------------------------------------------
@@ -2178,6 +2420,15 @@ components:
         useAssetAllocationValue:      { type: boolean }
         useExpenseTrackerExpenses:    { type: boolean }
         useExpenseTrackerIncome:      { type: boolean }
+        fireType:
+          type: string
+          enum: [standard, lean, barista, coast, fat]
+          default: standard
+          description: FIRE variant. The variant fields are optional on writes; omitted ones keep their saved values.
+        leanExpenseMultiplier:        { type: number, default: 0.7, description: 'Lean FIRE: share of fireAnnualExpenses.' }
+        fatExpenseMultiplier:         { type: number, default: 2, description: 'Fat FIRE: multiple of fireAnnualExpenses.' }
+        baristaAnnualIncome:          { type: number, default: 20000, description: 'Barista FIRE: part-time annual income.' }
+        coastTargetAge:               { type: integer, default: 65, description: 'Coast FIRE: age at which the portfolio should reach the target.' }
 
     MonteCarloFixedParameters:
       type: object
@@ -2398,6 +2649,20 @@ components:
         mortgageData:     { $ref: '#/components/schemas/MortgageData' }
         isPrimaryResidence: { type: boolean }
         marketPrice:      { type: number, nullable: true }
+
+    AssetClassTargets:
+      type: object
+      description: Target per asset class, keyed by AssetClass. Any subset of classes may be present.
+      additionalProperties:
+        type: object
+        required: [targetMode]
+        properties:
+          targetMode:    { $ref: '#/components/schemas/AllocationMode' }
+          targetPercent: { type: number }
+      example:
+        STOCKS: { targetMode: PERCENTAGE, targetPercent: 80 }
+        BONDS: { targetMode: PERCENTAGE, targetPercent: 20 }
+        CASH: { targetMode: SET }
 
     AssetAllocationConfig:
       type: object
@@ -3198,3 +3463,357 @@ components:
               - { type: number }
               - { type: boolean }
           description: 'Non-sensitive primitive key/value context for the action'
+
+    # -- Sync: whole-domain documents ----------------------------------------
+    SyncDomain:
+      type: string
+      enum: [settings, calculator, assetAllocation, expenseTracker, netWorth]
+
+    SyncDomainStatus:
+      type: object
+      required: [revision, initialized]
+      properties:
+        revision:    { type: integer, description: 'Changes on every write; compare for equality only.' }
+        initialized: { type: boolean, description: 'True once a client marked the database as the source of truth for the domain.' }
+
+    SyncStatus:
+      type: object
+      required: [instanceId, domains]
+      properties:
+        instanceId: { type: string, description: 'Random id of this database; changes when the database is replaced.' }
+        domains:
+          type: object
+          required: [settings, calculator, assetAllocation, expenseTracker, netWorth]
+          properties:
+            settings:        { $ref: '#/components/schemas/SyncDomainStatus' }
+            calculator:      { $ref: '#/components/schemas/SyncDomainStatus' }
+            assetAllocation: { $ref: '#/components/schemas/SyncDomainStatus' }
+            expenseTracker:  { $ref: '#/components/schemas/SyncDomainStatus' }
+            netWorth:        { $ref: '#/components/schemas/SyncDomainStatus' }
+
+    DomainState:
+      type: object
+      required: [domain, instanceId, revision, initialized, data]
+      properties:
+        domain:      { $ref: '#/components/schemas/SyncDomain' }
+        instanceId:  { type: string }
+        revision:    { type: integer }
+        initialized: { type: boolean }
+        data:
+          type: object
+          nullable: true
+          description: Null when the domain was never written.
+          oneOf:
+            - $ref: '#/components/schemas/SyncedSettings'
+            - $ref: '#/components/schemas/CalculatorInputs'
+            - $ref: '#/components/schemas/AssetAllocationDocument'
+            - $ref: '#/components/schemas/ExpenseTrackerDocument'
+            - $ref: '#/components/schemas/NetWorthDocument'
+
+    Changeset:
+      type: object
+      additionalProperties: false
+      description: |
+        Changes to one domain. Items are the app's document entities plus
+        placement fields: `position` (0-based index in the list the app shows;
+        omitted items go last), and `year`/`month` for items that live in a
+        month. Optional fields may be omitted or null.
+
+        | Domain | `set` | collections (`upsert` item, `delete` key) |
+        | --- | --- | --- |
+        | settings | `settings`: SyncedSettings | none |
+        | calculator | `inputs`: CalculatorInputs or null (deletes) | none |
+        | assetAllocation | `assetClassTargets`: AssetClassTargets or null | `assets`: AssetDocument, key `id` |
+        | expenseTracker | `config`: `{ currency, currentYear, currentMonth }`; `planning`: ExpensePlanningData or null | `years` (`{ year, isArchived? }`, key `"2025"`), `months` (`{ year, month, isClosed? }`, key `"2025-03"`), `expenses`, `incomes` (key `id`), `monthBudgets` (CategoryBudgetDocument with year/month, key `"2025-03\|GROCERIES"`), `globalBudgets` (key = category), `customCategories`, `categoryOverrides` (key `id`) |
+        | netWorth | `config`: `{ defaultCurrency, currentYear, currentMonth, settings: { showPensionInNetWorth, includeUnrealizedGains, syncWithAssetAllocation? } }` | `years`, `months` (`{ year, month, isFrozen, frozenDate?, monthNote? }`), `assets` (holdings), `cashEntries`, `pensions`, `debts`, `taxes`, `operations` (key `id`) |
+
+        Ids are unique per collection across all months: upserting an
+        existing id updates it and can move it to another month. A key may
+        appear only once per collection. The same validation as the granular
+        routes applies (non-negative amounts, real calendar dates, enums,
+        currencies, `amount = unitAmount x quantity`, unique scheduled
+        occurrences). Retired category ids FEES and HOLIDAYS are stored as
+        BUSINESS and TRAVEL.
+      properties:
+        initialize:
+          type: boolean
+          description: 'Marks the database as the source of truth for the domain. `{ "initialize": true }` alone writes nothing else.'
+        set:
+          type: object
+          description: Singletons by name.
+          additionalProperties: true
+        upsert:
+          type: object
+          description: Items to insert or update, by collection.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+              properties:
+                position: { type: integer, minimum: 0, nullable: true }
+                year:     { type: integer, minimum: 1900, maximum: 2200 }
+                month:    { type: integer, minimum: 1, maximum: 12 }
+        delete:
+          type: object
+          description: Keys to delete, by collection. Missing keys are ignored.
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    ChangesetResult:
+      type: object
+      required: [domain, revision, previousRevision, initialized]
+      properties:
+        domain:           { $ref: '#/components/schemas/SyncDomain' }
+        revision:         { type: integer, description: 'Revision after this write.' }
+        previousRevision: { type: integer, description: 'Revision just before this write, read in the same transaction. If it differs from the one you last saw, someone else wrote in between.' }
+        initialized:      { type: boolean }
+
+    ChangesetError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code:    { type: string, enum: [invalid_body, conflict] }
+            message: { type: string }
+            details:
+              type: object
+              required: [collection, key, message]
+              properties:
+                collection: { type: string, nullable: true, description: 'Collection name, or "set" for singletons.' }
+                key:        { type: string, nullable: true, description: 'Item key, singleton name, or "#index" when the item has no key.' }
+                message:    { type: string }
+
+    SyncedSettings:
+      type: object
+      description: >-
+        Settings the app keeps in the database. Device-local settings (backend,
+        updater, logging, AI model configuration) are not part of it; unknown
+        keys are ignored on writes.
+      required:
+        - accountName
+        - decimalSeparator
+        - decimalPlaces
+        - currencySettings
+        - privacyMode
+        - dateFormat
+        - fireAssetClassInclusion
+        - includePrimaryResidenceInFIRE
+        - searchThreshold
+        - experimentalFeatures
+        - aiFeaturesEnabled
+      properties:
+        accountName:      { type: string, maxLength: 100 }
+        decimalSeparator: { type: string, enum: ['.', ','] }
+        decimalPlaces:    { type: integer, minimum: 0, maximum: 4 }
+        currencySettings: { $ref: '#/components/schemas/CurrencySettings' }
+        privacyMode:      { type: boolean }
+        country:          { type: string }
+        dateFormat:       { type: string, enum: [DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD] }
+        fireAssetClassInclusion: { $ref: '#/components/schemas/AssetClassInclusionMap' }
+        includePrimaryResidenceInFIRE: { type: boolean }
+        searchThreshold:  { type: number, minimum: 0 }
+        experimentalFeatures: { $ref: '#/components/schemas/ExperimentalFeatures' }
+        aiFeaturesEnabled: { type: boolean }
+        language:         { type: string, enum: [en, it, fr, de, es] }
+
+    AssetDocument:
+      type: object
+      required: [id, name, ticker, assetClass, subAssetType, currentValue, targetMode, isPrimaryResidence]
+      properties:
+        id:               { type: string }
+        name:             { type: string }
+        ticker:           { type: string }
+        isin:             { type: string }
+        assetClass:       { $ref: '#/components/schemas/AssetClass' }
+        subAssetType:     { $ref: '#/components/schemas/SubAssetType' }
+        currentValue:     { type: number }
+        shares:           { type: number }
+        pricePerShare:    { type: number }
+        acquisitionPrice: { type: number }
+        originalCurrency: { $ref: '#/components/schemas/SupportedCurrency' }
+        originalValue:    { type: number }
+        targetMode:       { $ref: '#/components/schemas/AllocationMode' }
+        targetValue:      { type: number }
+        targetPercent:    { type: number }
+        institutionCode:  { type: string }
+        institutionName:  { type: string }
+        mortgageData:     { $ref: '#/components/schemas/MortgageData' }
+        isPrimaryResidence: { type: boolean }
+        marketPrice:      { type: number }
+
+    AssetAllocationDocument:
+      type: object
+      required: [assets, assetClassTargets]
+      properties:
+        assets:
+          type: array
+          items: { $ref: '#/components/schemas/AssetDocument' }
+        assetClassTargets:
+          type: object
+          nullable: true
+          description: AssetClassTargets, or null when none are saved.
+          additionalProperties:
+            type: object
+            required: [targetMode]
+            properties:
+              targetMode:    { $ref: '#/components/schemas/AllocationMode' }
+              targetPercent: { type: number }
+
+    TransactionDocument:
+      type: object
+      required: [id, date, amount, description, isRecurring]
+      properties:
+        id:            { type: string }
+        date:          { type: string, format: date }
+        amount:        { type: number, minimum: 0 }
+        description:   { type: string }
+        currency:      { $ref: '#/components/schemas/SupportedCurrency' }
+        isRecurring:   { type: boolean }
+        scheduleId:    { type: string, description: 'Paired with scheduledDate; not allowed with isRecurring.' }
+        scheduledDate: { type: string, format: date }
+
+    ExpenseDocument:
+      allOf:
+        - $ref: '#/components/schemas/TransactionDocument'
+        - type: object
+          required: [type, category, expenseType]
+          properties:
+            type:        { type: string, enum: [expense] }
+            category:    { type: string, description: 'Built-in ExpenseCategory id or custom category id.' }
+            subCategory: { type: string }
+            expenseType: { $ref: '#/components/schemas/ExpenseType' }
+            unitAmount:  { type: number, description: 'Paired with quantity; amount = unitAmount x quantity.' }
+            quantity:    { type: number }
+
+    IncomeDocument:
+      allOf:
+        - $ref: '#/components/schemas/TransactionDocument'
+        - type: object
+          required: [type, source]
+          properties:
+            type:   { type: string, enum: [income] }
+            source: { $ref: '#/components/schemas/IncomeSource' }
+
+    CategoryBudgetDocument:
+      type: object
+      required: [category, monthlyBudget]
+      properties:
+        category:      { type: string }
+        monthlyBudget: { type: number }
+        currency:      { $ref: '#/components/schemas/SupportedCurrency' }
+
+    ExpenseMonthDocument:
+      type: object
+      required: [year, month, isClosed, incomes, expenses, budgets]
+      properties:
+        year:     { type: integer }
+        month:    { type: integer, minimum: 1, maximum: 12 }
+        isClosed: { type: boolean }
+        incomes:
+          type: array
+          items: { $ref: '#/components/schemas/IncomeDocument' }
+        expenses:
+          type: array
+          items: { $ref: '#/components/schemas/ExpenseDocument' }
+        budgets:
+          type: array
+          items: { $ref: '#/components/schemas/CategoryBudgetDocument' }
+
+    ExpenseTrackerDocument:
+      type: object
+      required: [years, currentYear, currentMonth, currency, globalBudgets]
+      description: >-
+        The app's cashflow data. `customCategories`, `categoryOverrides` and
+        `planning` are omitted when empty. Without a saved config, currency is
+        EUR and the current year and month are today's.
+      properties:
+        years:
+          type: array
+          items:
+            type: object
+            required: [year, isArchived, months]
+            properties:
+              year:       { type: integer }
+              isArchived: { type: boolean }
+              months:
+                type: array
+                items: { $ref: '#/components/schemas/ExpenseMonthDocument' }
+        currentYear:  { type: integer }
+        currentMonth: { type: integer, minimum: 1, maximum: 12 }
+        currency:     { $ref: '#/components/schemas/SupportedCurrency' }
+        globalBudgets:
+          type: array
+          items: { $ref: '#/components/schemas/CategoryBudgetDocument' }
+        customCategories:
+          type: array
+          items:
+            type: object
+            required: [id, name, icon, color, defaultExpenseType]
+            properties:
+              id:                 { type: string }
+              name:               { type: string }
+              icon:               { type: string }
+              color:              { type: string }
+              defaultExpenseType: { $ref: '#/components/schemas/ExpenseType' }
+        categoryOverrides:
+          type: array
+          items:
+            type: object
+            required: [id]
+            properties:
+              id:    { type: string, description: 'Built-in ExpenseCategory id.' }
+              name:  { type: string }
+              icon:  { type: string }
+              color: { type: string }
+        planning: { $ref: '#/components/schemas/ExpensePlanningData' }
+
+    NetWorthMonthDocument:
+      type: object
+      required: [year, month, assets, cashEntries, pensions, operations, debts, taxes, isFrozen]
+      description: >-
+        Items use the same fields as the granular net worth schemas with `id`
+        set to the client id (no `externalId`, no numeric id). Optional fields
+        are omitted when empty. Computed totals are not stored.
+      properties:
+        year:        { type: integer }
+        month:       { type: integer, minimum: 1, maximum: 12 }
+        assets:      { type: array, items: { type: object, additionalProperties: true }, description: 'AssetHolding fields' }
+        cashEntries: { type: array, items: { type: object, additionalProperties: true }, description: 'CashEntry fields' }
+        pensions:    { type: array, items: { type: object, additionalProperties: true }, description: 'PensionEntry fields' }
+        operations:  { type: array, items: { type: object, additionalProperties: true }, description: 'FinancialOperation fields' }
+        debts:       { type: array, items: { type: object, additionalProperties: true }, description: 'DebtEntry fields' }
+        taxes:       { type: array, items: { type: object, additionalProperties: true }, description: 'TaxEntry fields' }
+        isFrozen:    { type: boolean }
+        frozenDate:  { type: string }
+        monthNote:   { type: string }
+
+    NetWorthDocument:
+      type: object
+      required: [years, currentYear, currentMonth, defaultCurrency, settings]
+      properties:
+        years:
+          type: array
+          items:
+            type: object
+            required: [year, isArchived, months]
+            properties:
+              year:       { type: integer }
+              isArchived: { type: boolean }
+              months:
+                type: array
+                items: { $ref: '#/components/schemas/NetWorthMonthDocument' }
+        currentYear:     { type: integer }
+        currentMonth:    { type: integer, minimum: 1, maximum: 12 }
+        defaultCurrency: { $ref: '#/components/schemas/SupportedCurrency' }
+        settings:
+          type: object
+          required: [showPensionInNetWorth, includeUnrealizedGains, syncWithAssetAllocation]
+          properties:
+            showPensionInNetWorth:   { type: boolean }
+            includeUnrealizedGains:  { type: boolean }
+            syncWithAssetAllocation: { type: boolean }

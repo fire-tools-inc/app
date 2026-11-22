@@ -214,3 +214,27 @@ describe('asset-allocation assets', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('asset-allocation targets', () => {
+  it('replaces and returns the asset class targets', async () => {
+    const { app } = await makeApp();
+    expect((await request(app).get('/api/v1/asset-allocation/targets')).body).toEqual({});
+    const targets = { STOCKS: { targetMode: 'PERCENTAGE', targetPercent: 75 }, CASH: { targetMode: 'SET' } };
+    const put = await request(app).put('/api/v1/asset-allocation/targets').send(targets);
+    expect(put.status).toBe(200);
+    expect(put.body).toEqual(targets);
+    await request(app).put('/api/v1/asset-allocation/targets').send({ BONDS: { targetMode: 'OFF' } });
+    expect((await request(app).get('/api/v1/asset-allocation/targets')).body).toEqual({ BONDS: { targetMode: 'OFF' } });
+  });
+
+  it('rejects unknown classes and modes without changing the saved targets', async () => {
+    const { app } = await makeApp();
+    await request(app).put('/api/v1/asset-allocation/targets').send({ STOCKS: { targetMode: 'OFF' } });
+    for (const body of [{ ETF: { targetMode: 'OFF' } }, { STOCKS: { targetMode: 'MAX' } }, { STOCKS: { targetMode: 'PERCENTAGE', targetPercent: '50' } }, []]) {
+      const res = await request(app).put('/api/v1/asset-allocation/targets').send(body);
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('invalid_body');
+    }
+    expect((await request(app).get('/api/v1/asset-allocation/targets')).body).toEqual({ STOCKS: { targetMode: 'OFF' } });
+  });
+});

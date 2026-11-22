@@ -79,6 +79,16 @@ Endpoints:
 as `PUT /settings/notifications`) but accepts partial `settings` patches.
 See [`../docs/api/openapi.yaml`](../docs/api/openapi.yaml).
 
+## What the app reads
+
+When the app is connected to this backend, SQLite is the source of truth for
+settings, FIRE calculator inputs, asset allocation, cashflow and net worth.
+`GET /sync/status` reports a revision per domain (bumped by triggers on every
+write, migration `0010_backend_sync`); `GET/PATCH/PUT /state/{domain}` read
+and write whole-domain documents in the app's own shapes
+(`src/routes/sync.ts`, `src/sync/`). Writes through the granular routes show
+up in the app too. See [`../docs/api/README.md`](../docs/api/README.md#what-the-app-shows).
+
 ## Tests
 
 ```sh
@@ -100,6 +110,7 @@ all migrations applied, then exercise the routers via `supertest`.
 | `CORS_ALLOW_ALL`      | `false`                         | Set to `true` only for trusted local-only deployments                |
 | `RATE_LIMIT_WINDOW_MS`| `900000` (15 min)               | Sliding window for rate limiter                                       |
 | `RATE_LIMIT_MAX`      | `300`                           | Max requests per window per IP                                        |
+| `API_TOKEN`           | unset                           | When set, `/api/v1` routes except `GET /health` require `Authorization: Bearer <token>` |
 | `NODE_ENV`            | `development`                   | `production` in Docker                                                |
 
 ## Build & run

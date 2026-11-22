@@ -5,15 +5,43 @@ database. This document describes the schema in [`schema.sql`](./schema.sql).
 
 The SQLite backend in [`server/`](../../server/) is implemented and runs
 paired migrations on startup. The reference DDL also uses PostgreSQL-compatible
-conventions, but a PostgreSQL driver is not implemented. Existing renderer
-financial stores remain localStorage/SafeCookies stores; receipt originals
-are stored in the backend database.
+conventions, but a PostgreSQL driver is not implemented. When the app is
+connected to a backend, this database is the source of truth for settings,
+FIRE calculator inputs, asset allocation, cashflow and net worth (see
+`0010_backend_sync` below); receipt originals are stored here too.
+
+`0010_backend_sync` makes the database the store the app reads:
+
+- `sync_meta` holds a random `instance_id` so clients can tell a replaced or
+  restored database from the one they synchronized with.
+- `sync_domains` keeps one `revision` per user and domain (`settings`,
+  `calculator`, `assetAllocation`, `expenseTracker`, `netWorth`) plus
+  `initialized_at`. `AFTER INSERT/UPDATE/DELETE` triggers on every table of a
+  domain bump its revision, so writes through any route (or a manual SQL
+  edit) reach the running app. Revisions are compared for equality only.
+- A nullable `position` on list tables (`assets`, expense/income entries,
+  budgets, custom categories, overrides and the six net worth item tables)
+  keeps the order the app shows. Rows without a position, such as ones
+  created through the granular routes, sort after positioned rows in creation
+  order (`ORDER BY position IS NULL, position, id`).
+- `calculator_inputs` gains the FIRE variant fields (`fire_type`,
+  `lean_expense_multiplier`, `fat_expense_multiplier`,
+  `barista_annual_income`, `coast_target_age`); `user_settings` gains the
+  nullable UI `language`; `asset_class_targets` stores the per-class targets
+  of the Asset Allocation page.
+
+Rolling back drops positions (lists fall back to creation order), asset class
+targets, the FIRE variant inputs, the language, revisions, initialization
+markers and the instance id. Clients must re-initialize afterwards; export a
+backup before rolling back. The instance id (`randomblob`) and the triggers
+use SQLite syntax; a PostgreSQL deployment needs `gen_random_bytes` and
+trigger functions instead.
 
 `0006_expense_planning` adds a per-user `expense_planning.payload_json`
 document plus optional `schedule_id`/`scheduled_date` linkage on expense and
 income rows. GET/PUT `/expense-tracker/planning` validates the complete
-versioned document before atomic replacement. It does not migrate or
-automatically mirror the renderer's authoritative Cashflow snapshot.
+versioned document before atomic replacement. Since `0010_backend_sync` it is
+the same document the app shows as Cashflow planning.
 Occurrence duplication is rejected across income/expense API writes within
 the user's scope. Rolling back removes planning/linkage but preserves recorded
 transaction amounts/history; export a backup before rollback.
@@ -112,6 +140,8 @@ erDiagram
     users ||--o{ monte_carlo_runs : owns
     users ||--o| asset_allocation_config : has
     users ||--o{ assets : owns
+    users ||--o{ asset_class_targets : sets
+    users ||--o{ sync_domains : tracks
     users ||--o| expense_tracker_config : has
     users ||--o{ expense_years : owns
     expense_years ||--o{ expense_months : contains
@@ -156,8 +186,15 @@ erDiagram
 
 ### Asset allocation
 - **`asset_allocation_config`** — display currency, tolerance, allow-negative.
+  Stored in the database only; the app does not read it.
 - **`assets`** — every holding with class, sub-type, target mode, mortgage
-  fields (for real estate), and Yahoo-fetched market price.
+  fields (for real estate), Yahoo-fetched market price and list position.
+- **`asset_class_targets`**: target mode and percentage per asset class.
+
+### Synchronization
+- **`sync_meta`**: database-wide key/value metadata (`instance_id`).
+- **`sync_domains`**: per-user revision and initialization of each domain
+  the app reads from the database.
 
 ### Cashflow tracker (expenses + income)
 - **`expense_tracker_config`** — currency, current year/month focus.

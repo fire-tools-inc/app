@@ -139,6 +139,15 @@ describe('PATCH /api/v1/settings', () => {
     expect(res.body.accountName).toBe('Bob');
   });
 
+  it('stores the UI language and rejects unsupported ones', async () => {
+    const { app } = await makeApp();
+    expect((await request(app).get('/api/v1/settings')).body).not.toHaveProperty('language');
+    expect((await request(app).patch('/api/v1/settings').send({ language: 'es' })).body.language).toBe('es');
+    expect((await request(app).patch('/api/v1/settings').send({ language: 'xx' })).status).toBe(400);
+    expect((await request(app).put('/api/v1/settings').send({ ...validSettings, language: 'fr' })).body.language).toBe('fr');
+    expect((await request(app).patch('/api/v1/settings').send({ language: null })).body).not.toHaveProperty('language');
+  });
+
   it('ignores invalid decimalSeparator silently', async () => {
     const { app } = await makeApp();
     const res = await request(app).patch('/api/v1/settings').send({ decimalSeparator: 'X' });
