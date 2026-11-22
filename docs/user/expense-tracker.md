@@ -46,6 +46,8 @@ category keeps its own.
 
 ### Quick add: paste a month of expenses
 
+![Quick add dialog with pasted expenses and suggested categories](./screenshots/quick-import.png)
+
 Select **Paste expenses** next to **Add Expense** to log many expenses at
 once for the selected month. Type or paste one expense per line, for example:
 

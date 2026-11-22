@@ -91,7 +91,6 @@ export function HomePage() {
     <main className="homepage" id="main-content" tabIndex={-1}>
       <header className="dashboard-header">
         <div>
-          <p className="dashboard-eyebrow">{t('app.tagline')}</p>
           <h1>{t('dashboard.title')}</h1>
           <p className="dashboard-description">{t('dashboard.description')}</p>
         </div>

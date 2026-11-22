@@ -406,12 +406,11 @@ export function QuickExpenseImport({
                       </select>
                     </td>
                     <td data-label={t('quickImport.table.type')}>
-                      <div className="quick-import__type" role="group" aria-label={t('quickImport.table.typeFor', { description: name })}>
+                      <div className="segmented quick-import__type" role="group" aria-label={t('quickImport.table.typeFor', { description: name })}>
                         {(['NEED', 'WANT'] as const).map(type => (
                           <button
                             key={type}
                             type="button"
-                            className={`btn btn--sm ${row.expenseType === type ? 'btn--primary' : 'btn--ghost'}`}
                             aria-pressed={row.expenseType === type}
                             onClick={() => updateRow(row.id, { expenseType: type })}
                           >

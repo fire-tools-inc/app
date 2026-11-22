@@ -21,7 +21,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: var(--bg-overlay);
+  background: rgba(5, 9, 10, 0.72);
 }
 
 .quick-import--dialog {
@@ -29,10 +29,10 @@
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
   padding: 1.25rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
 }
 
 .quick-import__header {
@@ -78,9 +78,6 @@
   justify-content: flex-end;
 }
 
-.quick-import .btn {
-  min-height: 44px;
-}
 
 .quick-import__consent p {
   margin: 0 0 0.5rem;
@@ -113,7 +110,6 @@
 
 .quick-import__table .input {
   min-width: 0;
-  min-height: 44px;
 }
 
 .quick-import__table td:nth-child(3) .input {
@@ -130,15 +126,14 @@
 }
 
 .quick-import__check {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0.75rem 0.5rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0.5rem 0.5rem;
   accent-color: var(--accent-primary);
 }
 
 .quick-import__type {
-  display: inline-flex;
-  gap: 0.25rem;
+  white-space: nowrap;
 }
 
 .quick-import__table tr.is-invalid {

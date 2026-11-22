@@ -21,7 +21,7 @@ services. See [Security & Privacy](#security--privacy) for the boundaries.
 > data and do not persist financial edits. Running a backend does not turn the
 > browser demo into the full desktop app.
 
-![Fire Tools dashboard showing net worth history, portfolio value and FIRE progress](docs/user/screenshots/homepage.png)
+![Fire Tools dashboard showing net worth, portfolio value, monthly balance, FIRE progress and the monthly check-in](docs/user/screenshots/homepage.png)
 
 *Dashboard preview with synthetic demo data.*
 
@@ -38,7 +38,8 @@ endpoint. Always verify with your broker. Request limits are shown in
 | Feature | Description |
 |---------|-------------|
 | **Home dashboard** | Saved net worth history, current allocation, monthly cashflow, FIRE-target progress, upcoming commitments and savings goals. [Guide](docs/user/homepage.md). |
-| **Dark glass workspace** | Branded, collapsible sidebar, teal accents and readable financial data. Collapse to named icons for more page space; dark mode remains the default. |
+| **Log month** | A guided monthly check-in from the dashboard: income, expenses, investments and pension changes, then a review of savings rate and net worth. Every step is optional. [Guide](docs/user/homepage.md#log-month). |
+| **Calm dark workspace** | Consistent page headers, readable tables and tabular figures, a collapsible sidebar and teal accents for actions and state. Dark mode remains the default. |
 | **FIRE Calculator** | Projections based on savings, expenses and expected returns; **Standard, Lean, Fat, Barista and Coast** variants; saved scenarios and shareable input URLs. [Guide](docs/user/fire-calculator.md). |
 | **Reverse FIRE Calculator** | Compute the monthly savings needed to retire by a target age. |
 | **Monte Carlo Simulations** | Up to 100,000 cancellable background-worker runs, volatility, black-swan modelling and opt-in detailed logs. [Guide](docs/user/monte-carlo.md). |
@@ -49,6 +50,7 @@ endpoint. Always verify with your broker. Request limits are shown in
 | **Portfolio Backtest** | Buy-and-hold historical analysis with return, volatility and drawdown metrics. Missing market history uses labelled, deterministic asset-class assumptions. [Guide](docs/user/backtesting.md). |
 | **Debt Payoff Calculator** | Snowball/avalanche strategies, fixed-budget or fixed-timeline modes, and a repayment timeline chart. |
 | **Cashflow Tracker** | Income/expense categorization, budgets, 50/30/20 analysis, and YTD/yearly/custom-range totals and averages. [Guide](docs/user/expense-tracker.md). |
+| **Paste expenses** | Paste a month of expenses as plain text. A local BM25 matcher suggests categories from your own history and a multilingual vocabulary; AI refinement is optional and per-action. [Guide](docs/user/expense-tracker.md). |
 | **Cashflow Planning** | Recurring bills/income, explicit payment confirmation, and 30/90/365-day cashflow forecasts. [Guide](docs/user/cashflow-planning.md). |
 | **Savings Goals** | Manually earmarked sinking funds, deadlines and required monthly contributions, without changing net worth. |
 | **Offline Import Rules** | Review-first local categorization rules; manual overrides win and matched rows need no AI. |
@@ -122,7 +124,7 @@ this command for an untrusted download or disable Gatekeeper globally.
 | Setting | Behavior |
 |---------|----------|
 | **Backend** | Uses the embedded desktop backend by default. **Custom URL** connects backend-supported features to your own server; enter its origin, such as `http://localhost:8080`, without `/api/v1`, then test the connection. It does not migrate renderer financial stores. |
-| **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing and ordinary imports work with AI disabled. |
+| **AI features** | Disable or enable all local/hosted model calls without clearing model configuration. Choose a provider preset (local model, OpenRouter, OpenAI, Gemini, Anthropic or a custom OpenAI-compatible endpoint). No model is configured by default, and each categorization action requires consent. Local OCR, receipt pairing, paste-expense matching and ordinary imports work with AI disabled. [Details](docs/user/settings.md). |
 | **Experimental features** | Opt in to Portfolio Breakdown and document/receipt imports. |
 | **Security** | Optional desktop SQLite passphrase encryption uses the OS secure store; Linux needs an available keyring. It does not encrypt renderer storage or exports. [Details](docs/security/passphrase.md). |
 | **Updates & Backups** | Packaged desktop apps check GitHub Releases by default; automatic downloads are off. Configure checks, downloads and database snapshots here. [Details](docs/engineering/auto-updater.md). |
@@ -286,8 +288,9 @@ See [storage details](docs/database/README.md) and
 - **External requests:** market prices, metadata, exchange rates and backtests
   use Yahoo Finance; allocation can refresh prices when opened. Packaged market
   requests use the third-party `corsproxy.io` proxy. Model categorization sends
-  selected import data to your configured endpoint only with per-action
-  consent. Packaged desktop update checks contact GitHub by default.
+  selected import data (descriptions, amounts and currencies) to your
+  configured endpoint only with per-action consent; your expense history
+  never leaves the device. Packaged desktop update checks contact GitHub by default.
 - **Encryption boundaries:** renderer AES storage uses a key shipped in the
   app, so it is not protection against JavaScript execution or a compromised
   local account. Optional [desktop passphrase encryption](docs/security/passphrase.md)

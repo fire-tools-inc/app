@@ -3,207 +3,156 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fire Tools — Plan your path to financial independence</title>
-    <meta name="description" content="Open-source FIRE planning suite. Free, private, runs in your browser, on your desktop or self-hosted." />
+    <title>Fire Tools: plan your path to financial independence</title>
+    <meta name="description" content="Open-source, local-first FIRE planning workspace. Track cash flow and net worth every month, plan retirement and keep your data on your device." />
     <link rel="icon" type="image/svg+xml" href="./fire-icon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header">
       <a class="brand" href="./"><img src="./fire-icon.svg" alt="" class="brand-icon" /> Fire Tools</a>
-      <nav>
-        <a href="#features">Features</a>
+      <nav aria-label="Primary">
+        <a href="#monthly">Monthly routine</a>
+        <a href="#features">Tools</a>
         <a href="#download">Download</a>
-        <a href="./api/" rel="noopener">API</a>
-        <a href="./docs/user/" rel="noopener">User docs</a>
-        <a href="./docs/engineering/" rel="noopener">Engineering docs</a>
+        <a href="./docs/user/">Docs</a>
+        <a href="./api/">API</a>
         <a href="https://github.com/fire-tools-inc/app" rel="noopener">GitHub</a>
         <a class="cta" href="./demo/">Open the demo</a>
       </nav>
     </header>
 
-    <main>
+    <main id="main">
       <section class="hero">
-        <p class="eyebrow">Growing wealth is simple. Most people make it complicated.</p>
-        <h1>Build the boring portfolio. <span class="accent">Retire on your terms.</span></h1>
-        <p class="lede">
-          Grow your skills. Trade them for a better salary. Save what you can without sacrificing your life.
-          Max out tax-advantaged accounts (401k, ISA, pension). Dump the rest into low-cost, globally diversified index ETFs.
-        </p>
-        <p class="lede"><strong>Don't know how to do all of that?</strong> Fire Tools does the math for you.</p>
-        <div class="hero-cta">
-          <a class="btn primary" href="./demo/">Open the demo</a>
-          <a class="btn ghost" href="#download">Download desktop</a>
-          <a class="btn ghost" href="https://github.com/fire-tools-inc/app" rel="noopener">View on GitHub</a>
+        <div class="hero-copy">
+          <h1>Build the boring portfolio. <span class="accent">Retire on your terms.</span></h1>
+          <p class="lede">
+            Grow your skills. Trade them for a better salary. Save what you can without sacrificing your life.
+            Max out tax-advantaged accounts (401k, ISA, pension). Put the rest into low-cost, globally diversified index ETFs.
+          </p>
+          <p class="lede"><strong>Don't know how to do all of that?</strong> Fire Tools does the math for you, on your own device.</p>
+          <div class="hero-cta">
+            <a class="btn primary" href="./demo/">Open the demo</a>
+            <a class="btn" href="#download">Download desktop</a>
+            <a class="btn ghost" href="https://github.com/fire-tools-inc/app" rel="noopener">View on GitHub</a>
+          </div>
         </div>
+        <figure class="app-frame">
+          <img
+            src="./docs/user/screenshots/homepage.png"
+            width="1440" height="900"
+            alt="Fire Tools dashboard with net worth, portfolio value, monthly balance and FIRE progress, a net worth history chart and the monthly check-in."
+          />
+          <figcaption>Dashboard with sample data. Your numbers never leave your device.</figcaption>
+        </figure>
       </section>
 
-      <section class="preview" aria-label="Sample projection">
-        <h2>What it looks like</h2>
-        <p class="preview-sub">Mock data — your own numbers stay on your device.</p>
-
-        <div class="preview-grid">
-          <article class="preview-card preview-card--wide">
-            <header>
-              <h3>Net worth projection</h3>
-              <span class="preview-tag">Sample · 30 yr</span>
-            </header>
-            <svg class="preview-chart" viewBox="0 0 600 220" role="img" aria-labelledby="chart-title">
-              <title id="chart-title">Projected net worth growing from €50k to €1.2M over 30 years</title>
-              <defs>
-                <linearGradient id="fillGrad" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#00D4AA" stop-opacity="0.35" />
-                  <stop offset="100%" stop-color="#00D4AA" stop-opacity="0" />
-                </linearGradient>
-              </defs>
-              <g stroke="rgba(148,163,184,0.15)" stroke-width="1">
-                <line x1="40" y1="40"  x2="580" y2="40"  />
-                <line x1="40" y1="90"  x2="580" y2="90"  />
-                <line x1="40" y1="140" x2="580" y2="140" />
-                <line x1="40" y1="190" x2="580" y2="190" />
-              </g>
-              <g fill="#94A3B8" font-size="10" font-family="DM Sans, sans-serif">
-                <text x="6"   y="44">€1.2M</text>
-                <text x="6"   y="94">€800k</text>
-                <text x="6"   y="144">€400k</text>
-                <text x="14"  y="194">€50k</text>
-                <text x="40"  y="210">Y0</text>
-                <text x="175" y="210">Y10</text>
-                <text x="310" y="210">Y20</text>
-                <text x="555" y="210">Y30</text>
-              </g>
-              <path
-                d="M40,190 L94,184 L148,176 L202,164 L256,148 L310,128 L364,104 L418,82 L472,62 L526,48 L580,40 L580,190 L40,190 Z"
-                fill="url(#fillGrad)" />
-              <path
-                d="M40,190 L94,184 L148,176 L202,164 L256,148 L310,128 L364,104 L418,82 L472,62 L526,48 L580,40"
-                fill="none" stroke="#00D4AA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-              <circle cx="580" cy="40" r="4" fill="#00D4AA" />
-            </svg>
-          </article>
-
-          <article class="preview-card">
-            <header>
-              <h3>Asset allocation</h3>
-              <span class="preview-tag">Globally diversified</span>
-            </header>
-            <div class="alloc-bar" role="img" aria-label="80% global stocks, 12% bonds, 5% real estate, 3% cash">
-              <span class="alloc-seg seg-stocks"  style="width:80%"></span>
-              <span class="alloc-seg seg-bonds"   style="width:12%"></span>
-              <span class="alloc-seg seg-re"      style="width:5%"></span>
-              <span class="alloc-seg seg-cash"    style="width:3%"></span>
-            </div>
-            <ul class="alloc-legend">
-              <li><span class="dot seg-stocks"></span>Global stock ETFs<b>80%</b></li>
-              <li><span class="dot seg-bonds"></span>Bond ETFs<b>12%</b></li>
-              <li><span class="dot seg-re"></span>REITs<b>5%</b></li>
-              <li><span class="dot seg-cash"></span>Cash buffer<b>3%</b></li>
-            </ul>
-          </article>
-
-          <article class="preview-card">
-            <header>
-              <h3>Years to FIRE</h3>
-              <span class="preview-tag">50% savings rate</span>
-            </header>
-            <p class="preview-big">17<span class="preview-big-unit">years</span></p>
-            <p class="preview-foot">Target €1.0M · 7% real return · 2.5% inflation</p>
-          </article>
+      <section id="monthly" class="section split">
+        <div class="section-copy">
+          <h2>A ten-minute monthly routine</h2>
+          <p>
+            <strong>Log month</strong> walks you through the same four steps every month, then shows how the month moved
+            your savings rate and net worth. Skip any step; every tool stays available on its own.
+          </p>
+          <ol class="steps">
+            <li><strong>Income</strong><span>Salary, freelance work and other income, with a copy from last month.</span></li>
+            <li><strong>Expenses</strong><span>Paste the month's spending as plain text and review suggested categories.</span></li>
+            <li><strong>Investments</strong><span>Update holdings and cash balances, starting from last month's snapshot.</span></li>
+            <li><strong>Pension</strong><span>Record pension values and see the change since last month.</span></li>
+          </ol>
         </div>
+        <figure class="app-frame">
+          <img
+            src="./docs/user/screenshots/log-month.png"
+            width="1440" height="900"
+            loading="lazy"
+            alt="The Log month flow with steps for income, expenses, investments and pension."
+          />
+        </figure>
       </section>
 
-      <section id="features" class="features">
-        <h2>Tools for every part of your plan</h2>
-        <div class="grid">
-          <article>
-            <h3>Dashboard</h3>
-            <p>Start with your net worth, portfolio allocation, monthly cash flow and progress toward your saved FIRE target.</p>
-            <a class="feature-link" href="./demo/">Open the dashboard</a>
-          </article>
-          <article>
-            <h3>FIRE calculator</h3>
-            <p>Project years to financial independence with Standard, Lean, Fat, Barista and Coast FIRE. Save scenarios or share them by URL.</p>
-            <a class="feature-link" href="./demo/fire-calculator">Plan your FIRE target</a>
-          </article>
-          <article>
-            <h3>Reverse FIRE calculator</h3>
-            <p>Choose your target retirement age and work out the monthly savings needed to get there.</p>
-            <a class="feature-link" href="./demo/reverse-fire-calculator">Calculate required savings</a>
-          </article>
-          <article>
-            <h3>Monte Carlo</h3>
-            <p>Stress-test your plan across randomized returns, market volatility and black-swan events, with optional detailed logs.</p>
-            <a class="feature-link" href="./demo/monte-carlo">Run simulations</a>
-          </article>
-          <article>
-            <h3>Asset allocation</h3>
-            <p>Manage holdings, set allocation targets, review buy/sell/hold suggestions and plan contributions with the DCA helper.</p>
-            <a class="feature-link" href="./demo/asset-allocation">Manage a portfolio</a>
-          </article>
-          <article>
-            <h3>Cashflow tracker</h3>
-            <p>Record income and expenses, set category budgets, review the 50/30/20 rule and import or export CSV files. PDF import is an opt-in preview.</p>
-            <a class="feature-link" href="./demo/expense-tracker">Track cash flow</a>
-          </article>
-          <article>
-            <h3>Net worth tracker</h3>
-            <p>Keep monthly snapshots of assets, cash, pensions, debts and taxes. Review your history without losing earlier balances.</p>
-            <a class="feature-link" href="./demo/net-worth-tracker">Track net worth</a>
-          </article>
-          <article>
-            <h3>Investment growth</h3>
-            <p>Project portfolio growth from recurring contributions, expected returns and inflation.</p>
-            <a class="feature-link" href="./demo/investment-growth">Project investment growth</a>
-          </article>
-          <article>
-            <h3>Portfolio backtest</h3>
-            <p>Compare your allocation with historical returns and inspect growth, volatility, drawdowns and yearly results.</p>
-            <a class="feature-link" href="./demo/portfolio-backtest">Backtest a portfolio</a>
-          </article>
-          <article>
-            <h3>Withdrawal rate</h3>
-            <p>Explore retirement portfolio longevity at different withdrawal rates, grounded in the Trinity Study.</p>
-            <a class="feature-link" href="./demo/withdrawal-rate">Test a withdrawal rate</a>
-          </article>
-          <article>
-            <h3>Debt payoff</h3>
-            <p>Compare snowball and avalanche strategies, choose a repayment budget or timeline, and see the interest cost.</p>
-            <a class="feature-link" href="./demo/debt-payoff">Plan debt repayment</a>
-          </article>
-          <article>
-            <h3>FIRE questionnaire</h3>
-            <p>Explore a FIRE approach based on your goals, finances and risk tolerance.</p>
-            <a class="feature-link" href="./demo/questionnaire">Take the questionnaire</a>
-          </article>
-          <article>
-            <h3>Portfolio breakdown <span class="badge">Preview</span></h3>
-            <p>Explore holdings by sector, region, currency and provider. Enable this experimental view in the desktop app's Settings.</p>
-            <a class="feature-link" href="./demo/portfolio-breakdown">Explore portfolio breakdown</a>
-          </article>
+      <section class="section split split--reverse">
+        <div class="section-copy">
+          <h2>Paste a month of expenses</h2>
+          <p>
+            Write expenses the way you remember them, such as <code>cinema 12.50</code> or <code>03/11 groceries 54,20</code>.
+            Fire Tools matches each line to a category with a BM25 search over your own history and a built-in
+            multilingual vocabulary. It runs locally and learns how you file things.
+          </p>
+          <ul class="checklist">
+            <li>Your import rules always win, then your own past expenses, then common terms.</li>
+            <li>Need or want stays your choice for every expense.</li>
+            <li>Optional AI refinement uses the provider you configure: a local model such as Ollama or LM Studio, OpenRouter, OpenAI, Gemini, Anthropic or any OpenAI-compatible endpoint. Only descriptions and amounts are sent, and only when you ask.</li>
+          </ul>
         </div>
-        <p class="features-note">The browser demo uses sample data and does not save edits. Download the local-first desktop app for your own finances, or run its SQLite backend with Docker Compose.</p>
+        <figure class="app-frame">
+          <img
+            src="./docs/user/screenshots/quick-import.png"
+            width="1440" height="900"
+            loading="lazy"
+            alt="Quick add dialog with pasted expenses, suggested categories and confidence for each line."
+          />
+        </figure>
       </section>
 
-      <section id="download" class="download">
+      <section id="features" class="section">
+        <h2>Every tool in one workspace</h2>
+        <p class="section-lede">The same tools as the app sidebar. Each link opens the read-only demo.</p>
+        <div class="tool-groups">
+          <div class="tool-group">
+            <h3>Tracking</h3>
+            <dl class="tool-list">
+              <div><dt><a href="./demo/">Dashboard</a></dt><dd>Net worth, portfolio, monthly cash flow and FIRE progress at a glance, plus the monthly check-in.</dd></div>
+              <div><dt><a href="./demo/expense-tracker">Cashflow</a></dt><dd>Income, expenses, budgets and the 50/30/20 check. CSV, workbook and document imports, scheduled bills and savings goals.</dd></div>
+              <div><dt><a href="./demo/net-worth-tracker">Net worth</a></dt><dd>Monthly snapshots of holdings, cash, pensions, debts and taxes, with history and a wealth flow diagram.</dd></div>
+              <div><dt><a href="./demo/asset-allocation">Asset allocation</a></dt><dd>Targets per asset class, buy, sell or hold suggestions and a DCA helper for new contributions.</dd></div>
+              <div><dt><a href="./demo/portfolio-breakdown">Portfolio breakdown <span class="badge">Preview</span></a></dt><dd>Holdings by sector, region, currency and provider. Enable it in the desktop app's Settings.</dd></div>
+            </dl>
+          </div>
+          <div class="tool-group">
+            <h3>Planning</h3>
+            <dl class="tool-list">
+              <div><dt><a href="./demo/fire-calculator">FIRE calculator</a></dt><dd>Years to financial independence for Standard, Lean, Fat, Barista and Coast FIRE. Save scenarios or share them by URL.</dd></div>
+              <div><dt><a href="./demo/reverse-fire-calculator">Reverse FIRE</a></dt><dd>Pick a retirement age and work out the monthly savings needed to reach it.</dd></div>
+              <div><dt><a href="./demo/monte-carlo">Monte Carlo</a></dt><dd>Stress-test your plan with randomized returns, volatility and black-swan events.</dd></div>
+              <div><dt><a href="./demo/investment-growth">Investment growth</a></dt><dd>Project growth from contributions, expected returns and inflation.</dd></div>
+              <div><dt><a href="./demo/withdrawal-rate">Withdrawal rate</a></dt><dd>Portfolio longevity at different withdrawal rates, grounded in the Trinity Study.</dd></div>
+              <div><dt><a href="./demo/portfolio-backtest">Portfolio backtest</a></dt><dd>Your allocation against historical returns: growth, drawdowns and yearly results.</dd></div>
+              <div><dt><a href="./demo/debt-payoff">Debt payoff</a></dt><dd>Snowball or avalanche, by budget or by timeline, with the total interest cost.</dd></div>
+              <div><dt><a href="./demo/questionnaire">FIRE questionnaire</a></dt><dd>A FIRE approach suggested from your goals, finances and risk tolerance.</dd></div>
+            </dl>
+          </div>
+        </div>
+        <p class="note">The browser demo uses sample data and does not save edits. Download the local-first desktop app for your own finances, or run its SQLite backend with Docker Compose.</p>
+      </section>
+
+      <section class="section privacy">
+        <h2>Local-first by design</h2>
+        <ul class="facts">
+          <li><strong>Your data stays local.</strong> The desktop app stores everything on your machine, with optional passphrase encryption for the database.</li>
+          <li><strong>No accounts, no analytics.</strong> There is nothing to sign up for and no tracking.</li>
+          <li><strong>External calls are explicit.</strong> Market prices come from Yahoo Finance; AI categorization only runs with the provider you configure and per-action consent.</li>
+        </ul>
+      </section>
+
+      <section id="download" class="section download">
         <h2>Get Fire Tools</h2>
-        <div class="grid">
+        <div class="download-options">
           <article>
             <h3>Desktop</h3>
-            <p>macOS, Windows, Linux. Built with Electron — full read/write app, offline-first, your data stays local.</p>
-            <a class="btn primary" href="https://github.com/fire-tools-inc/app/releases">Releases</a>
+            <p>macOS, Windows and Linux. The full read/write app, offline-first, with your data on your device.</p>
+            <a class="btn primary" href="https://github.com/fire-tools-inc/app/releases">Download a release</a>
           </article>
           <article>
             <h3>Self-host</h3>
-            <p>Run the SQLite backend and read-only web demo with Docker Compose. Connect the desktop app to save and manage your data.</p>
-            <a class="btn primary" href="./docs/engineering/backend-deploy.html">Deployment guide</a>
+            <p>Run the SQLite backend and read-only web demo with Docker Compose, then connect the desktop app.</p>
+            <a class="btn" href="./docs/engineering/backend-deploy.html">Deployment guide</a>
           </article>
           <article>
             <h3>Mobile</h3>
-            <p>Flutter app, tracked in <a href="https://github.com/fire-tools-inc/app/issues/134">#134</a>. Coming as a separate repo.</p>
-            <button class="btn primary is-disabled" type="button" disabled aria-disabled="true" title="Coming soon">Planned · coming soon</button>
+            <p>A Flutter app is tracked in <a href="https://github.com/fire-tools-inc/app/issues/134">#134</a> and will live in a separate repository.</p>
+            <button class="btn is-disabled" type="button" disabled aria-disabled="true">Planned</button>
           </article>
         </div>
         <div class="macos-install">
