@@ -4,7 +4,7 @@ Base URL: `apiBaseUrl` from the connection file (desktop, usually
 `http://127.0.0.1:47820/api/v1`) or `FIRE_TOOLS_API_URL` (self-hosted).
 Every route except `GET /health` needs `Authorization: Bearer <token>`; the
 helper script adds it. Full contract: the OpenAPI document at
-<https://fire-tools-inc.github.io/app/api/>.
+<https://fire-tools-inc.synctune.it/api/>.
 
 ## Connection file (desktop)
 

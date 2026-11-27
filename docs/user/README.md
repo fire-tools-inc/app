@@ -31,7 +31,7 @@ walkthrough and a screenshot so you can see exactly what to expect.
 - **Self-hosted** — see the
   [engineering docs](../engineering/README.md) for the Docker Compose stack.
 - **Web demo** — try it instantly at
-  <https://fire-tools-inc.github.io/app/demo/>. It's a read-only preview seeded
+  <https://fire-tools-inc.synctune.it/demo/>. It's a read-only preview seeded
   with sample data (nothing you type is saved) — install the desktop app or
   self-host to keep your own data.
 
@@ -64,7 +64,7 @@ this command for an untrusted download or disable Gatekeeper globally.
   saved to the database. In a browser without a backend this copy is the only
   store. Scenarios, debt payoff plans and notifications stay on the device.
 
-The hosted [web demo](https://fire-tools-inc.github.io/app/demo/) is read-only:
+The hosted [web demo](https://fire-tools-inc.synctune.it/demo/) is read-only:
 it loads sample data and doesn't persist anything you type. Use the desktop app
 or the self-hosted stack for real planning.
 

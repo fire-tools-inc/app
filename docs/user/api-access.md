@@ -61,7 +61,7 @@ print(json.load(urllib.request.urlopen(req)))
 
 The connection file lives in `%APPDATA%\Fire Tools\` on Windows and
 `~/.config/Fire Tools/` on Linux. Every route, request and response is in the
-[API reference](https://fire-tools-inc.github.io/app/api/); the
+[API reference](https://fire-tools-inc.synctune.it/api/); the
 [engineering guide](../engineering/local-api.md) explains how changes sync.
 
 ## Connect an AI agent
@@ -73,7 +73,7 @@ categories. For GitHub Copilot CLI and other agents that read
 
 ```sh
 dir="$HOME/.agents/skills/using-fire-tools"
-base="https://fire-tools-inc.github.io/app/agents/using-fire-tools"
+base="https://fire-tools-inc.synctune.it/agents/using-fire-tools"
 mkdir -p "$dir/scripts" "$dir/references"
 for f in SKILL.md scripts/fire-tools-api.mjs references/api.md references/data-model.md; do
   curl -fsSL "$base/$f" -o "$dir/$f"

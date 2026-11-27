@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './MaterialIcon';
 import { logger } from '../utils/logger';
 import type { ApiAccessState } from '../utils/apiBase';
+import { sitePageUrl } from '../utils/buildInfo';
 import './ApiAccessSection.css';
 
-const API_GUIDE_URL = 'https://fire-tools-inc.github.io/app/docs/user/api-access.html';
-const API_REFERENCE_URL = 'https://fire-tools-inc.github.io/app/api/';
+const API_GUIDE_URL = sitePageUrl('docs/user/api-access.html');
+const API_REFERENCE_URL = sitePageUrl('api/');
 
 type CopyTarget = 'address' | 'token' | 'path';
 
@@ -254,14 +255,16 @@ export function ApiAccessSection({ collapsed, onToggle, hidden, sectionKey }: Ap
             </>
           )}
 
-          <div className="api-access-actions">
-            <button type="button" className="btn btn-ghost" onClick={() => openLink(API_GUIDE_URL)}>
-              <MaterialIcon name="menu_book" size="small" /> {t('settings.apiAccess.guide')}
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={() => openLink(API_REFERENCE_URL)}>
-              <MaterialIcon name="description" size="small" /> {t('settings.apiAccess.reference')}
-            </button>
-          </div>
+          {API_GUIDE_URL && API_REFERENCE_URL && (
+            <div className="api-access-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => openLink(API_GUIDE_URL)}>
+                <MaterialIcon name="menu_book" size="small" /> {t('settings.apiAccess.guide')}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={() => openLink(API_REFERENCE_URL)}>
+                <MaterialIcon name="description" size="small" /> {t('settings.apiAccess.reference')}
+              </button>
+            </div>
+          )}
 
           <p className="visually-hidden" role="status" aria-live="polite">{notice}</p>
           {problem && <p className="callout callout--danger" role="alert">{problem}</p>}

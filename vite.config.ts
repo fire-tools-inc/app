@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { execSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync, createReadStream } from 'node:fs'
+import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
+
+const { resolveSiteUrl } = createRequire(import.meta.url)('./electron/siteUrls.cjs') as {
+  resolveSiteUrl: (homepage: string | undefined, repoUrl: string) => string
+}
 
 const pkg = JSON.parse(
   readFileSync(resolve(process.cwd(), 'package.json'), 'utf-8'),
@@ -46,9 +51,7 @@ const normalizeRepoUrl = (raw: string | undefined | null): string => {
 const resolveRepoUrl = (): string => {
   if (process.env.APP_REPO_URL) return normalizeRepoUrl(process.env.APP_REPO_URL)
   const fromPkg =
-    typeof pkg.repository === 'string'
-      ? pkg.repository
-      : pkg.repository?.url ?? pkg.homepage
+    typeof pkg.repository === 'string' ? pkg.repository : pkg.repository?.url
   const normalized = normalizeRepoUrl(fromPkg)
   if (normalized) return normalized
   try {
@@ -90,9 +93,9 @@ const APP_COMMIT_HASH = resolveCommitHash()
 const APP_BUILD_TIME = process.env.BUILD_TIME ?? new Date().toISOString()
 const APP_REPO_URL = resolveRepoUrl()
 
-// Resolve the GitHub owner/repo so the Pages base path and public site URL
-// track the repository automatically — surviving repo renames / org moves with
-// no code edits. CI provides GITHUB_REPOSITORY; local builds fall back to the
+// Resolve the GitHub owner/repo so the fallback GitHub Pages URL tracks the
+// repository automatically — surviving repo renames / org moves with no code
+// edits. CI provides GITHUB_REPOSITORY; local builds fall back to the
 // normalized repository URL from package.json / the git remote.
 const resolveGitHubSlug = (): { owner: string; repo: string } | null => {
   const env = process.env.GITHUB_REPOSITORY
@@ -105,19 +108,22 @@ const resolveGitHubSlug = (): { owner: string; repo: string } | null => {
 }
 
 const GITHUB_SLUG = resolveGitHubSlug()
-// GitHub Pages serves a project site under /<repo>/; the SPA lives at /demo.
-const PAGES_BASE = GITHUB_SLUG ? `/${GITHUB_SLUG.repo}/demo/` : '/demo/'
-// Absolute public URL of the deployed SPA, e.g. https://owner.github.io/repo/demo/
-const APP_PAGES_URL = GITHUB_SLUG
-  ? `https://${GITHUB_SLUG.owner}.github.io${PAGES_BASE}`
-  : ''
+// Public website root, e.g. https://fire-tools-inc.synctune.it/. package.json
+// "homepage" (custom domain) wins; otherwise the GitHub Pages project site
+// https://<owner>.github.io/<repo>/. See electron/siteUrls.cjs.
+const APP_SITE_URL = resolveSiteUrl(
+  pkg.homepage,
+  GITHUB_SLUG ? `https://github.com/${GITHUB_SLUG.owner}/${GITHUB_SLUG.repo}` : '',
+)
+// The landing page sits at the site root; the SPA lives under demo/.
+const PAGES_BASE = `${APP_SITE_URL ? new URL(APP_SITE_URL).pathname : '/'}demo/`
 const isPagesBuild = (mode: string): boolean => mode === 'production'
 
-if (!GITHUB_SLUG) {
+if (!APP_SITE_URL) {
   console.warn(
-    '[vite] Could not resolve the GitHub owner/repo from $GITHUB_REPOSITORY or ' +
-      'package.json "repository". The GitHub Pages base path falls back to "/demo/", ' +
-      'which will 404 on a project site served under /<repo>/.',
+    '[vite] Could not resolve the public site from package.json "homepage", ' +
+      '$GITHUB_REPOSITORY or package.json "repository". The GitHub Pages base path ' +
+      'falls back to "/demo/" and website links fall back to the repository or are hidden.',
   )
 }
 
@@ -278,7 +284,7 @@ export default defineConfig(({ mode, command }) => ({
     __APP_BUILD_TIME__: JSON.stringify(APP_BUILD_TIME),
     __APP_DEPENDENCIES__: JSON.stringify(featuredDependencies),
     __APP_REPO_URL__: JSON.stringify(APP_REPO_URL),
-    __APP_PAGES_URL__: JSON.stringify(APP_PAGES_URL),
+    __APP_SITE_URL__: JSON.stringify(APP_SITE_URL),
   },
   server: {
     proxy: {

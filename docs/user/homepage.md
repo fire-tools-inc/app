@@ -1,7 +1,7 @@
 # Dashboard & navigation
 
 Home opens your financial dashboard. The tool catalogue lives on the
-[website](https://fire-tools-inc.github.io/app/#features); every tool remains
+[website](https://fire-tools-inc.synctune.it/#features); every tool remains
 reachable from the sidebar.
 
 ![Homepage](./screenshots/homepage.png)
