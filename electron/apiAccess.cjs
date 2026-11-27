@@ -5,13 +5,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { API_GUIDE_URL, OPENAPI_URL } = require('./siteUrls.cjs');
 
 const PREFS_FILE = 'api-access.json';
 const DISCOVERY_FILE = 'local-api.json';
 const DISCOVERY_SCHEMA_VERSION = 1;
 const DEFAULT_PORT = 47820;
-const GUIDE_URL = 'https://fire-tools-inc.github.io/app/docs/user/api-access.html';
-const OPENAPI_URL = 'https://fire-tools-inc.github.io/app/api/openapi.yaml';
 
 function prefsPath(userDataDir) {
   return path.join(userDataDir, PREFS_FILE);
@@ -100,7 +99,7 @@ function writeDiscovery(userDataDir, { apiBaseUrl, token, appVersion, pid, start
     stablePort,
     pid,
     startedAt,
-    guideUrl: GUIDE_URL,
+    guideUrl: API_GUIDE_URL,
     openapiUrl: OPENAPI_URL,
   };
   writeFileAtomic(discoveryPath(userDataDir), `${JSON.stringify(payload, null, 2)}\n`);

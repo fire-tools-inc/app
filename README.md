@@ -13,7 +13,7 @@ optional model-assisted imports and desktop update checks can contact external
 services. See [Security & Privacy](#security--privacy) for the boundaries.
 
 **[Download the desktop app](https://github.com/fire-tools-inc/app/releases)**
-| **[Try the live demo](https://fire-tools-inc.github.io/app/demo/)**
+| **[Try the live demo](https://fire-tools-inc.synctune.it/demo/)**
 | **[Read the user guide](docs/user/README.md)**
 
 > **Use the desktop app to keep your own financial data.** Normal HTTP(S)
@@ -225,7 +225,7 @@ contacting market services.
 | Mode | What works today | Details |
 |------|------------------|---------|
 | **Desktop** | Full local planning UI, renderer-local financial stores and an embedded SQLite backend. | [Install](#install-the-desktop-app) or [build from source](#quick-start). |
-| **Web demo** | Mock-data, read-only financial preview on the public site, Vite or a self-hosted HTTP(S) server. | [Live demo](https://fire-tools-inc.github.io/app/demo/). |
+| **Web demo** | Mock-data, read-only financial preview on the public site, Vite or a self-hosted HTTP(S) server. | [Live demo](https://fire-tools-inc.synctune.it/demo/). |
 | **Docker Compose** | SQLite backend with a persistent volume, plus nginx serving the demo/website and proxying `/api/`. The desktop app can use this backend through Custom URL. | [Deployment guide](docs/deployment/README.md). |
 
 To run the container stack from a clone:

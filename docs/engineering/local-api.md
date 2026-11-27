@@ -1,7 +1,7 @@
 # Local API and storage sync
 
 Fire Tools exposes one REST API (`/api/v1`, described in
-[OpenAPI](https://fire-tools-inc.github.io/app/api/)) for the app itself and
+[OpenAPI](https://fire-tools-inc.synctune.it/api/)) for the app itself and
 any other client: scripts, other apps, custom frontends and AI agents.
 Whatever a client writes through it is what the
 app shows: the database is the source of truth whenever a backend is

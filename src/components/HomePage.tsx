@@ -2,6 +2,7 @@ import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDeferredRender } from '../hooks/useDeferredRender';
 import { saveSettings } from '../utils/cookieSettings';
+import { sitePageUrl } from '../utils/buildInfo';
 import { formatDashboardMonth, loadDashboardData } from '../utils/dashboard';
 import { createLazyComponent } from '../utils/lazyComponent';
 import { logger } from '../utils/logger';
@@ -54,7 +55,7 @@ export function HomePage() {
   );
   const percent = (amount: number) => <PrivacyBlur isPrivacyMode={privacy}>{formatDisplayPercent(amount)}</PrivacyBlur>;
   const cashflowPath = `/expense-tracker?year=${data.currentPeriod.slice(0, 4)}&month=${Number(data.currentPeriod.slice(5))}`;
-  const toolsUrl = __APP_PAGES_URL__ ? new URL('../#features', __APP_PAGES_URL__).href : `${__APP_REPO_URL__}#readme`;
+  const toolsUrl = sitePageUrl('#features') ?? `${__APP_REPO_URL__}#readme`;
   const netWorthHistory = historyRange === 'recent' ? data.netWorth.history.slice(-12) : data.netWorth.history;
   const fire = data.fire;
 

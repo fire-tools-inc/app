@@ -104,7 +104,7 @@ Please be patient - this is an open source project maintained by volunteers.
 ### Live Demo
 
 Try the read-only demo (seeded sample data, nothing is saved):
-<https://fire-tools-inc.github.io/app/demo/>. For real use, download the
+<https://fire-tools-inc.synctune.it/demo/>. For real use, download the
 [desktop app](https://github.com/fire-tools-inc/app/releases).
 
 ## What We Don't Support

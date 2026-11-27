@@ -6,19 +6,19 @@ Agents should install the `using-fire-tools` skill below and call the API only t
 
 ## Agents
 
-- [Agent skill: using-fire-tools](https://fire-tools-inc.github.io/app/agents/using-fire-tools/SKILL.md): onboarding and monthly logging workflow, ground rules, errors
-- [Agent API reference](https://fire-tools-inc.github.io/app/agents/using-fire-tools/references/api.md): connection file, state endpoints, changesets, worked onboarding example
-- [Data model](https://fire-tools-inc.github.io/app/agents/using-fire-tools/references/data-model.md): enums, expense categories with Need/Want defaults, field rules
-- [Helper script](https://fire-tools-inc.github.io/app/agents/using-fire-tools/scripts/fire-tools-api.mjs): Node.js 18+ client that adds the token and refuses non-local targets
+- [Agent skill: using-fire-tools](https://fire-tools-inc.synctune.it/agents/using-fire-tools/SKILL.md): onboarding and monthly logging workflow, ground rules, errors
+- [Agent API reference](https://fire-tools-inc.synctune.it/agents/using-fire-tools/references/api.md): connection file, state endpoints, changesets, worked onboarding example
+- [Data model](https://fire-tools-inc.synctune.it/agents/using-fire-tools/references/data-model.md): enums, expense categories with Need/Want defaults, field rules
+- [Helper script](https://fire-tools-inc.synctune.it/agents/using-fire-tools/scripts/fire-tools-api.mjs): Node.js 18+ client that adds the token and refuses non-local targets
 
 ## Docs
 
-- [Use the Fire Tools API](https://fire-tools-inc.github.io/app/docs/user/api-access.html): how a user turns on API access, calls it from scripts and installs the agent skill
-- [Local API and storage sync](https://fire-tools-inc.github.io/app/docs/engineering/local-api.html): storage model, authentication, connection file, sync behaviour
-- [OpenAPI contract](https://fire-tools-inc.github.io/app/api/openapi.yaml): every route, request and response
-- [User guide](https://fire-tools-inc.github.io/app/docs/user/): what each tool does
+- [Use the Fire Tools API](https://fire-tools-inc.synctune.it/docs/user/api-access.html): how a user turns on API access, calls it from scripts and installs the agent skill
+- [Local API and storage sync](https://fire-tools-inc.synctune.it/docs/engineering/local-api.html): storage model, authentication, connection file, sync behaviour
+- [OpenAPI contract](https://fire-tools-inc.synctune.it/api/openapi.yaml): every route, request and response
+- [User guide](https://fire-tools-inc.synctune.it/docs/user/): what each tool does
 
 ## Optional
 
 - [Source code](https://github.com/fire-tools-inc/app): MIT licensed
-- [Spreadsheet import prompts](https://fire-tools-inc.github.io/app/docs/user/spreadsheet-import.html): file-based alternative without API access
+- [Spreadsheet import prompts](https://fire-tools-inc.synctune.it/docs/user/spreadsheet-import.html): file-based alternative without API access

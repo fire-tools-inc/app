@@ -138,7 +138,7 @@ instead.
   count. Wide history charts use local keyboard scrolling and accessible data
   tables rather than viewport-wide overflow.
 - **Container builds** — `build:self-hosted` uses `/demo/` with fingerprinted
-  assets, rather than the repository-prefixed Pages path. `.dockerignore`
+  assets, rather than the stable asset names of the GitHub Pages build. `.dockerignore`
   keeps host dependencies and generated outputs out of the build context.
   Bundled SQLite binaries remove the compiler/APT installation steps and their
   debconf/missing-manpage notices. The backend runs Node directly as PID 1;
@@ -149,7 +149,7 @@ instead.
   Build errors and database-open failures still fail the image build.
 - **Contract** — [OpenAPI 3.0.3](https://github.com/fire-tools-inc/app/blob/main/docs/api/openapi.yaml).
   Source of truth for both server routes and any generated client. Also
-  published at [`/app/api/`](https://fire-tools-inc.github.io/app/api/).
+  published at [`/api/`](https://fire-tools-inc.synctune.it/api/).
 
 ## Why a local-first backend?
 
@@ -224,5 +224,5 @@ default; use `npm run test:browser -- --workers=2` to reproduce CI concurrency.
 
 - [Project README](https://github.com/fire-tools-inc/app)
 - [Issue tracker](https://github.com/fire-tools-inc/app/issues)
-- [Live OpenAPI viewer](https://fire-tools-inc.github.io/app/api/)
+- [Live OpenAPI viewer](https://fire-tools-inc.synctune.it/api/)
 - [Mobile repo plan](https://github.com/fire-tools-inc/app/blob/main/docs/mobile/README.md)

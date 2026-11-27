@@ -9,10 +9,13 @@ system fonts and no external font or script requests. Tracks issue
 
 `npm run build:landing` copies the contents of `website/` to `dist/`
 (the site root) so it ships at the GitHub Pages root. The SPA lives
-under `dist/demo/`. The live URLs are:
+under `dist/demo/`. GitHub Pages serves it on the custom domain set in
+`package.json` `homepage` (see
+[GitHub Pages deploy](../docs/engineering/github-pages.md#custom-domain)).
+The live URLs are:
 
-- `https://fire-tools-inc.github.io/app/`: this landing page
-- `https://fire-tools-inc.github.io/app/demo/`: the read-only demo app
+- `https://fire-tools-inc.synctune.it/`: this landing page
+- `https://fire-tools-inc.synctune.it/demo/`: the read-only demo app
 
 ## Screenshots
 

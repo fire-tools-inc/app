@@ -46,6 +46,16 @@ export const buildInfo: BuildInfo = {
       : readGlobal('__APP_REPO_URL__', ''),
 };
 
+/**
+ * Absolute URL of a page on the public website (landing, docs, API viewer),
+ * or `null` when the build could not resolve the site.
+ */
+export const sitePageUrl = (path: string): string | null => {
+  const siteUrl =
+    typeof __APP_SITE_URL__ !== 'undefined' ? __APP_SITE_URL__ : readGlobal('__APP_SITE_URL__', '');
+  return siteUrl ? new URL(path, siteUrl).href : null;
+};
+
 export const formatCommit = (commit: string): string => {
   if (!commit || commit === 'unknown') return commit || 'unknown';
   return commit.length > 7 ? commit.slice(0, 7) : commit;
